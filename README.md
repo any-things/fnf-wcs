@@ -1,2 +1,2 @@
-# fnf-wcs
-F&amp;F WCS
+# operato-fnf-wcs
+Operato FnF WCS 구축

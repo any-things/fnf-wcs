@@ -15,28 +15,20 @@ import org.springframework.web.bind.annotation.RestController;
 
 import operato.fnf.wcs.entity.WmsMheHr;
 import xyz.elidom.dbist.dml.Page;
-import xyz.elidom.orm.IQueryManager;
-import xyz.elidom.orm.manager.DataSourceManager;
 import xyz.elidom.orm.system.annotation.service.ApiDesc;
 import xyz.elidom.orm.system.annotation.service.ServiceDesc;
 import xyz.elidom.sys.system.service.DynamicDataSourceService;
-import xyz.elidom.util.BeanUtil;
 
 @RestController
 @Transactional
 @ResponseStatus(HttpStatus.OK)
 @RequestMapping("/rest/wms_mhe_hr")
 @ServiceDesc(description = "WMS MHE HR Service API")
-public class WnsMheHrController extends DynamicDataSourceService {
+public class WmsMheHrController extends DynamicDataSourceService {
 
 	@Override
 	protected Class<?> entityClass() {
 		return WmsMheHr.class;
-	}
-	
-	@Override
-	protected IQueryManager queryManager() {
-		return BeanUtil.get(DataSourceManager.class).getQueryManager(this.entityClass());
 	}
 
 

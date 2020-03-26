@@ -2,8 +2,6 @@ package operato.fnf.wcs.entity;
 
 import java.util.Date;
 
-import org.springframework.context.annotation.Primary;
-
 import xyz.elidom.dbist.annotation.Column;
 import xyz.elidom.dbist.annotation.ColumnType;
 import xyz.elidom.dbist.annotation.DataSourceType;
@@ -13,7 +11,9 @@ import xyz.elidom.dbist.annotation.Index;
 import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.Table;
 
-@Table(name = "mhe_hr", idStrategy = GenerationRule.UUID, dataSourceType=DataSourceType.DATASOURCE, uniqueFields="whCd,workUnit", indexes = {
+@Table(name = "mhe_hr", idStrategy = GenerationRule.UUID
+     , dataSourceType=DataSourceType.DATASOURCE 
+     , uniqueFields="whCd,workUnit", indexes = {
 	@Index(name = "mhe_hr_id01", columnList = "wh_cd,wave_no", unique = false)
 })
 public class WmsMheHr extends xyz.elidom.orm.entity.basic.AbstractStamp {

@@ -192,6 +192,7 @@ public class RtnReceiveBatchService extends AbstractQueryService {
 			for(WmsMheRtnInvn wmsOrder : wmsOrders) {
 				Order order = new Order();
 				
+				order.setShopCd(wmsOrder.getStrrId());
 				order.setSkuCd(wmsOrder.getItemCd());
 				order.setSkuBarcd(wmsOrder.getBarcode());
 				order.setOrderQty(wmsOrder.getInvnQty());
@@ -205,6 +206,7 @@ public class RtnReceiveBatchService extends AbstractQueryService {
 				order.setComCd(item.getComCd());
 				order.setEquipType(item.getEquipType());
 				order.setStatus(Order.STATUS_WAIT);
+				
 				
 				order.setOrderNo(jobSeq + "-" + wmsOrder.getItemCd()); // TODO
 				order.setOrderLineNo(wmsOrder.getItemCd()); // TODO

@@ -11,6 +11,10 @@ import xyz.elidom.dbist.annotation.Index;
 import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.Table;
 
+/*
+ * 피킹/분배 지시 내역을 송신하고, 확정 수량을 수신
+ * PAS, DAS
+ */
 @Table(name = "mhe_hr", idStrategy = GenerationRule.UUID
      , dataSourceType=DataSourceType.DATASOURCE 
      , uniqueFields="whCd,workUnit", indexes = {

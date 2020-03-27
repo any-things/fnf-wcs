@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import operato.fnf.wcs.entity.WmsMheHr;
 import operato.fnf.wcs.entity.WmsMheRtnInvn;
 import operato.logis.das.query.store.RtnQueryStore;
 import xyz.anythings.base.LogisConstants;
@@ -96,18 +95,10 @@ public class RtnReceiveBatchService extends AbstractQueryService {
 	private List<BatchReceiptItem> getWmfIfToReceiptItems(BatchReceipt receipt, String jobType) {
 		
 		IQueryManager dsQueryManager = null;
-		Map<String,Object> params = ValueUtil.newMap("whCd,comCd,areaCd,stageCd,jobType,jobDate",
-				this.whCd,receipt.getComCd(), receipt.getAreaCd(), receipt.getStageCd(), jobType, receipt.getJobDate());
+		Map<String,Object> params = ValueUtil.newMap("whCd,comCd,areaCd,stageCd,jobType,jobDate,jobSeq",
+				this.whCd,receipt.getComCd(), receipt.getAreaCd(), receipt.getStageCd(), jobType, receipt.getJobDate(), 0);
 		
-		if(ValueUtil.isEqualIgnoreCase(jobType, LogisConstants.JOB_TYPE_DAS)) {
-			dsQueryManager = this.getDataSourceQueryManager(WmsMheHr.class);
-			// TODO DAS 주문 
-			params.put("jobSeq", 0);
-		} else {
-			dsQueryManager = this.getDataSourceQueryManager(WmsMheRtnInvn.class);
-			params.put("jobSeq", 0);
-		}		
-		
+		dsQueryManager = this.getDataSourceQueryManager(WmsMheRtnInvn.class);
 		return dsQueryManager.selectListBySql(this.batchQueryStore.getWmsIfToReceiptDataQuery(), params, BatchReceiptItem.class, 0, 0);
 	}
 	
@@ -123,7 +114,7 @@ public class RtnReceiveBatchService extends AbstractQueryService {
 		List<BatchReceiptItem> items = receipt.getItems();
 		 
 		for(BatchReceiptItem item : items) {
-			if(ValueUtil.isEqualIgnoreCase(LogisConstants.JOB_TYPE_DAS, item.getJobType()) || ValueUtil.isEqualIgnoreCase(LogisConstants.JOB_TYPE_RTN, item.getJobType())) {
+			if(ValueUtil.isEqualIgnoreCase(LogisConstants.JOB_TYPE_RTN, item.getJobType())) {
 				this.startToReceiveData(receipt, item);
 			}
 		}
@@ -140,7 +131,7 @@ public class RtnReceiveBatchService extends AbstractQueryService {
 	 */
 	private BatchReceipt startToReceiveData(BatchReceipt receipt, BatchReceiptItem item, Object ... params) {		
 		// 1. jobSeq
-		int jobSeq = JobBatch.getMaxJobSeq(receipt.getDomainId(), receipt.getComCd(), receipt.getAreaCd(), receipt.getStageCd(), receipt.getJobDate());		
+		int jobSeq = JobBatch.getMaxJobSeq(receipt.getDomainId(), receipt.getComCd(), receipt.getAreaCd(), receipt.getStageCd(), receipt.getJobDate()) + 1;		
 		boolean exceptionOccurred = false;
 		
 		try {
@@ -157,7 +148,7 @@ public class RtnReceiveBatchService extends AbstractQueryService {
 			JobBatch batch = JobBatch.createJobBatch(item.getBatchId(), jobSeq, receipt, item);
 			
 			// 5. 데이터 복사  
-			this.cloneData(item.getBatchId(), jobSeq, item);
+			this.cloneData(item.getBatchId(), receipt.getJobDate(), jobSeq, item);
 			
 			// 6. JobBatch 상태 변경  
 			batch.updateStatusImmediately(LogisConstants.isB2CJobType(batch.getJobType())? JobBatch.STATUS_READY : JobBatch.STATUS_WAIT);
@@ -188,19 +179,9 @@ public class RtnReceiveBatchService extends AbstractQueryService {
 	 * @return
 	 */
 	@Transactional(propagation=Propagation.REQUIRES_NEW) 
-	private void cloneData(String batchId, int jobSeq, BatchReceiptItem item) throws Exception {
+	private void cloneData(String batchId, String jobDate, int jobSeq, BatchReceiptItem item) throws Exception {
 		
-		List<Order> orderList = null;
-		if(ValueUtil.isEqualIgnoreCase(item.getJobType(), LogisConstants.JOB_TYPE_DAS)) {
-			orderList = this.getWmsDasOrders(batchId,jobSeq,item);
-		} else {
-			orderList = this.getWmsRtnOrders(batchId,jobSeq,item);
-		}
-		
-		this.queryManager.insertBatch(orderList);
-	}
-	
-	private List<Order> getWmsRtnOrders(String batchId, int jobSeq, BatchReceiptItem item){
+		List<Order> orderList = new ArrayList<Order>();
 		IQueryManager dsQueryManager = this.getDataSourceQueryManager(WmsMheRtnInvn.class);
 		Query condition = new Query();
 		condition.setFilter("wh_cd" , this.whCd);
@@ -208,33 +189,30 @@ public class RtnReceiveBatchService extends AbstractQueryService {
 		List<WmsMheRtnInvn> wmsOrders = dsQueryManager.selectList(WmsMheRtnInvn.class, condition);
 		
 		if(ValueUtil.isNotEmpty(wmsOrders)) {
-			List<Order> orderList = new ArrayList<Order>(wmsOrders.size());
-			
 			for(WmsMheRtnInvn wmsOrder : wmsOrders) {
 				Order order = new Order();
 				
-				order.setComCd(item.getComCd());
 				order.setSkuCd(wmsOrder.getItemCd());
 				order.setSkuBarcd(wmsOrder.getBarcode());
 				order.setOrderQty(wmsOrder.getInvnQty());
 				
-				
 				order.setBatchId(batchId);
+				order.setJobDate(jobDate);
 				order.setJobType(item.getJobType());
 				order.setAreaCd(item.getAreaCd());
 				order.setStageCd(item.getStageCd());
 				order.setJobSeq(jobSeq);
+				order.setComCd(item.getComCd());
+				order.setEquipType(item.getEquipType());
 				order.setStatus(Order.STATUS_WAIT);
+				
+				order.setOrderNo(jobSeq + "-" + wmsOrder.getItemCd()); // TODO
+				order.setOrderLineNo(wmsOrder.getItemCd()); // TODO
 
 				orderList.add(order);
 			}
-			return orderList;
 		}
-		return null;
-	}
-	private List<Order> getWmsDasOrders(String batchId, int jobSeq, BatchReceiptItem item){
-//		IQueryManager dsQueryManager = this.getDataSourceQueryManager(WmsMheHr.class);
-		return new ArrayList<Order>();
+		AnyOrmUtil.insertBatch(orderList,100);
 	}
 	
 	/**

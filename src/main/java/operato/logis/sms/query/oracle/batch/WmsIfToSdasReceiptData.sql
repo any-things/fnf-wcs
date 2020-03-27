@@ -1,0 +1,22 @@
+SELECT WORK_UNIT AS WMS_BATCH_NO
+     , WAVE_NO AS WCS_BATCH_NO
+     , :comCd AS COM_CD
+     , :areaCd AS AREA_CD
+     , :stageCd AS STAGE_CD
+     , :jobType AS JOB_TYPE
+     , :equipType AS EQUIP_TYPE
+     , MHE_NO AS EQUIP_CD
+     , COUNT(*) AS TOTAL_ORDERS
+     , SUM(PICK_QTY) AS TOTAL_PCS
+     , SUM(1) AS TOTAL_RECORDS
+     , 'order' AS ITEM_TYPE
+     , 'W' AS STATUS
+     , 0 AS SKIP_FLAG
+     , WORKSEQ_NO AS JOB_SEQ
+  FROM MHE_HR 
+ WHERE WH_CD = :whCd
+   AND WORK_DATE = :jobDate
+   AND BIZ_TYPE = :bizType
+   AND STATUS = :status
+ GROUP BY WORK_UNIT, WAVE_NO, MHE_NO, WORKSEQ_NO
+ ORDER BY WORK_UNIT, WAVE_NO, MHE_NO, WORKSEQ_NO	

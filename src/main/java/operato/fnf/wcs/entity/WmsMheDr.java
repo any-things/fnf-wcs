@@ -173,8 +173,8 @@ public class WmsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "indirect_item_yn", nullable = true, length = 1)
 	private String indirectItemYn;
 
-	@Column (name = "assort_in_yn", nullable = true, length = 10)
-	private Integer assortInYn;
+	@Column (name = "assort_in_qty", nullable = true, length = 10)
+	private Integer assortInQty;
 
 	@Column (name = "item_bcd", nullable = true, length = 20)
 	private String itemBcd;
@@ -561,12 +561,12 @@ public class WmsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 		this.indirectItemYn = indirectItemYn;
 	}
 
-	public Integer getAssortInYn() {
-		return assortInYn;
+	public Integer getAssortInQty() {
+		return assortInQty;
 	}
 
-	public void setAssortInYn(Integer assortInYn) {
-		this.assortInYn = assortInYn;
+	public void setAssortInQty(Integer assortInQty) {
+		this.assortInQty = assortInQty;
 	}
 
 	public String getItemBcd() {

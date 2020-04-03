@@ -22,7 +22,7 @@ import xyz.elidom.sys.system.service.DynamicDataSourceService;
 @RestController
 @Transactional
 @ResponseStatus(HttpStatus.OK)
-@RequestMapping("/rest/assort_item")
+@RequestMapping("/rest/wms_assort_item")
 @ServiceDesc(description = "WMS Assort Item Service API")
 public class WmsAssortItemController extends DynamicDataSourceService {
 

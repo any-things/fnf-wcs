@@ -199,7 +199,7 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 			item.updateStatusImmediately(LogisConstants.COMMON_STATUS_RUNNING, null);
 			
 			// 4. JobBatch 생성 
-			JobBatch batch = JobBatch.createJobBatch(item.getBatchId(), item.getJobSeq(), receipt, item);
+			JobBatch batch = JobBatch.createJobBatch(item.getBatchId(), ValueUtil.toString(item.getJobSeq()), receipt, item);
 			
 			// 5. 데이터 복사  
 			this.cloneData(item.getBatchId(), jobSeq, item);

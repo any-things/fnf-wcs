@@ -32,4 +32,28 @@ public class WmsWcsBrand extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "strr_nm", nullable = false, length = 20)
 	private String strrNm;
 
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public String getStrrId() {
+		return strrId;
+	}
+
+	public void setStrrId(String strrId) {
+		this.strrId = strrId;
+	}
+
+	public String getStrrNm() {
+		return strrNm;
+	}
+
+	public void setStrrNm(String strrNm) {
+		this.strrNm = strrNm;
+	}
+
 }

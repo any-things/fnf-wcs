@@ -97,7 +97,7 @@ public class JobBatch extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	/**
 	 * 브랜드 코드
 	 */
-	@Column (name = "bran_cd", length = 2)
+	@Column (name = "brand_cd", length = 2)
 	private String brandCd;
 	
 	/**

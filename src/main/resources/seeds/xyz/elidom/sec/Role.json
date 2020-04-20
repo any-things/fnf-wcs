@@ -1,0 +1,32 @@
+[
+        {
+                "id": "7AAB0D8A-2673-1DC7-E053-8B010A803CD3",
+                "name": "admin",
+                "description": "시스템 관리자"
+        },
+        {
+                "id": "7AAB0D8A-2675-1DC7-E053-8B010A803CD3",
+                "name": "guest",
+                "description": "게스트"
+        },
+        {
+                "id": "b636f7f6-a9ec-46ba-aed3-a7902b57d932",
+                "name": "kiosk",
+                "description": "KIOSK 작업자"
+        },
+        {
+                "id": "7AAB0D8A-2676-1DC7-E053-8B010A803CD3",
+                "name": "manager",
+                "description": "매니저"
+        },
+        {
+                "id": "7AAB0D8A-2677-1DC7-E053-8B010A803CD3",
+                "name": "mpi",
+                "description": "MPI 관리자"
+        },
+        {
+                "id": "7AAB0D8A-2678-1DC7-E053-8B010A803CD3",
+                "name": "pda",
+                "description": "PDA 전체 작업자"
+        }
+]

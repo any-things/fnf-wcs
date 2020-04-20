@@ -1,0 +1,187 @@
+[
+        {
+                "id": "guest",
+                "domain": {
+                        "id": 1000,
+                        "name": "ANY",
+                        "brandName": "Operato"
+                },
+                "login": "guest",
+                "email": "guest",
+                "encryptedPassword": "84983c60f7daadc1cb8698621f802c0d9f9a3c3c295c810748fb048115c186ec",
+                "signInCount": 0,
+                "currentSignInAt": "Apr 8, 2020 5:51:48 PM",
+                "lastSignInAt": "Apr 6, 2020 11:24:52 AM",
+                "name": "guest",
+                "locale": "ko-KR",
+                "superUser": false,
+                "adminFlag": false,
+                "operatorFlag": false,
+                "activeFlag": true,
+                "accountType": "user"
+        },
+        {
+                "id": "shortstop",
+                "domain": {
+                        "id": 1000,
+                        "name": "ANY",
+                        "brandName": "Operato"
+                },
+                "login": "shortstop",
+                "email": "shortstop",
+                "encryptedPassword": "9b961baf5bf22569b1245590765ba09b75a8256c3bced5091e149971cbc8a018",
+                "signInCount": 0,
+                "name": "shortstop",
+                "locale": "ko-KR",
+                "superUser": false,
+                "adminFlag": true,
+                "operatorFlag": false,
+                "activeFlag": true,
+                "accountType": "user"
+        },
+        {
+                "id": "manager",
+                "domain": {
+                        "id": 1000,
+                        "name": "ANY",
+                        "brandName": "Operato"
+                },
+                "login": "manager",
+                "email": "manager",
+                "encryptedPassword": "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918",
+                "signInCount": 0,
+                "currentSignInAt": "Mar 27, 2020 12:58:44 PM",
+                "lastSignInAt": "Mar 27, 2020 12:57:42 PM",
+                "name": "운영자",
+                "locale": "ko-KR",
+                "superUser": false,
+                "adminFlag": false,
+                "operatorFlag": false,
+                "activeFlag": true,
+                "accountType": "user",
+                "passwordExpireDate": "2020-09-23"
+        },
+        {
+                "id": "dscho",
+                "domain": {
+                        "id": 1000,
+                        "name": "ANY",
+                        "brandName": "Operato"
+                },
+                "login": "dscho",
+                "email": "dscho",
+                "encryptedPassword": "139ee6d61e923eab320bf532c14f64eb7736e59d4109f930d40a4f58d0f64896",
+                "signInCount": 0,
+                "currentSignInAt": "Apr 20, 2020 9:14:31 AM",
+                "lastSignInAt": "Apr 16, 2020 9:48:52 AM",
+                "name": "조동수",
+                "locale": "ko-KR",
+                "superUser": false,
+                "adminFlag": true,
+                "operatorFlag": false,
+                "activeFlag": true,
+                "accountType": "user",
+                "passwordExpireDate": "2020-09-23"
+        },
+        {
+                "id": "mpi",
+                "domain": {
+                        "id": 1000,
+                        "name": "ANY",
+                        "brandName": "Operato"
+                },
+                "login": "mpi",
+                "email": "mpi",
+                "encryptedPassword": "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918",
+                "resetPasswordToken": "d0249891215839c6e48f3a85889d32ae2e609e02cf867f4d659481fa65321695",
+                "resetPasswordSentAt": "Jan 10, 2019 5:02:48 PM",
+                "signInCount": 0,
+                "currentSignInAt": "Dec 7, 2018 4:08:43 AM",
+                "lastSignInAt": "Dec 5, 2018 9:57:57 PM",
+                "name": "MPI 관리자",
+                "locale": "ko-KR",
+                "superUser": false,
+                "adminFlag": false,
+                "operatorFlag": false,
+                "activeFlag": true,
+                "accountType": "user"
+        },
+        {
+                "id": "kiosk",
+                "domain": {
+                        "id": 1000,
+                        "name": "ANY",
+                        "brandName": "Operato"
+                },
+                "login": "kiosk",
+                "email": "kiosk",
+                "encryptedPassword": "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918",
+                "signInCount": 0,
+                "currentSignInAt": "Dec 2, 2018 1:23:20 PM",
+                "lastSignInAt": "Dec 2, 2018 1:14:54 PM",
+                "name": "KIOSK 작업자",
+                "locale": "ko-KR",
+                "superUser": false,
+                "adminFlag": false,
+                "operatorFlag": false,
+                "activeFlag": true,
+                "accountType": "user"
+        },
+        {
+                "id": "super",
+                "domain": {
+                        "id": 1000,
+                        "name": "ANY",
+                        "brandName": "Operato"
+                },
+                "login": "super",
+                "email": "super",
+                "encryptedPassword": "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918",
+                "signInCount": 0,
+                "name": "수퍼유저",
+                "locale": "ko-KR",
+                "superUser": false,
+                "adminFlag": true,
+                "operatorFlag": false,
+                "activeFlag": true,
+                "accountType": "user"
+        },
+        {
+                "id": "tablet",
+                "domain": {
+                        "id": 1000,
+                        "name": "ANY",
+                        "brandName": "Operato"
+                },
+                "login": "tablet",
+                "email": "tablet",
+                "encryptedPassword": "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918",
+                "signInCount": 0,
+                "name": "Tablet 작업자",
+                "locale": "ko-KR",
+                "superUser": false,
+                "adminFlag": false,
+                "operatorFlag": false,
+                "activeFlag": true,
+                "accountType": "user"
+        },
+        {
+                "id": "pda",
+                "domain": {
+                        "id": 1000,
+                        "name": "ANY",
+                        "brandName": "Operato"
+                },
+                "login": "pda",
+                "email": "pda",
+                "encryptedPassword": "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918",
+                "signInCount": 0,
+                "name": "PDA 작업자",
+                "locale": "ko-KR",
+                "superUser": false,
+                "adminFlag": false,
+                "operatorFlag": false,
+                "activeFlag": true,
+                "accountType": "user"
+        }
+]

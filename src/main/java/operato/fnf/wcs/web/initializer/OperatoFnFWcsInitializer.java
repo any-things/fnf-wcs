@@ -45,16 +45,16 @@ public class OperatoFnFWcsInitializer {
 	public void refresh(ContextRefreshedEvent event) {
 		this.logger.info("FnF WCS module refreshing...");
 		
+		this.configSet.addConfig(this.module.getName(), this.module);
+		this.configSet.setApplicationModule(this.module.getName());
+		this.scanServices();
+		
 		this.logger.info("FnF WCS module refreshed!");
 	}
 
 	@EventListener({ ApplicationReadyEvent.class })
 	void ready(ApplicationReadyEvent event) {
 		this.logger.info("FnF WCS module initializing...");
-		
-		this.configSet.addConfig(this.module.getName(), this.module);
-		this.configSet.setApplicationModule(this.module.getName());
-		this.scanServices();
 		
 		this.logger.info("FnF WCS module initialized!");
 	}

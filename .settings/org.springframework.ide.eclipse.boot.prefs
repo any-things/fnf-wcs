@@ -1,2 +1,2 @@
 eclipse.preferences.version=1
-spring.boot.launch.profile.history=oracle;postgres;dev;
+spring.boot.launch.profile.history=postgres;oracle;dev;

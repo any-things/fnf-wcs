@@ -4,9 +4,7 @@ import java.util.Date;
 
 import xyz.elidom.dbist.annotation.Column;
 import xyz.elidom.dbist.annotation.ColumnType;
-import xyz.elidom.dbist.annotation.DataSourceType;
 import xyz.elidom.dbist.annotation.GenerationRule;
-import xyz.elidom.dbist.annotation.Ignore;
 import xyz.elidom.dbist.annotation.Index;
 import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.Table;
@@ -14,21 +12,20 @@ import xyz.elidom.dbist.annotation.Table;
 /*
  * 상세 분배 지시내역 - DAS, DPS
  */
-@Table(name = "mhe_dr", idStrategy = GenerationRule.UUID, dataSourceType=DataSourceType.DATASOURCE, uniqueFields="whCd,workUnit,shiptoId,locationCd,itemCd", indexes = {
-	@Index(name = "mhe_dr_01", columnList = "wh_cd,work_unit,shipto_id,location_cd,item_cd", unique = true)
+@Table(name = "mhe_dr", idStrategy = GenerationRule.UUID, uniqueFields="whCd,workUnit,shiptoId,locationCd,itemCd", indexes = {
+	@Index(name = "ix_mhe_dr_01", columnList = "wh_cd,work_unit,shipto_id,location_cd,item_cd", unique = true)
 })
-public class WmsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
+public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
 	/**
 	 * SerialVersion UID
 	 */
 	private static final long serialVersionUID = -5836349611745073509L;
 
-	@Ignore
+	@PrimaryKey
+	@Column (name = "id", nullable = false, length = 40)
 	private String id;
 	
-	
-	@PrimaryKey
 	@Column (name = "wh_cd", nullable = false, length = 20)
 	private String whCd;
 	
@@ -41,7 +38,6 @@ public class WmsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "work_date", nullable = false, length = 8)
 	private String workDate;
 
-	@PrimaryKey
 	@Column (name = "work_unit", nullable = false, length = 20)
 	private String workUnit;
 	

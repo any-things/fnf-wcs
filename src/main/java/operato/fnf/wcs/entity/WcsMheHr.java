@@ -4,9 +4,7 @@ import java.util.Date;
 
 import xyz.elidom.dbist.annotation.Column;
 import xyz.elidom.dbist.annotation.ColumnType;
-import xyz.elidom.dbist.annotation.DataSourceType;
 import xyz.elidom.dbist.annotation.GenerationRule;
-import xyz.elidom.dbist.annotation.Ignore;
 import xyz.elidom.dbist.annotation.Index;
 import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.Table;
@@ -14,27 +12,26 @@ import xyz.elidom.dbist.annotation.Table;
 /*
  * 피킹/분배 지시 내역을 송신하고, 확정 수량을 수신 - DAS, DPS
  */
-@Table(name = "mhe_hr", idStrategy = GenerationRule.UUID, dataSourceType=DataSourceType.DATASOURCE, uniqueFields="whCd,workUnit", indexes = {
-	@Index(name = "mhe_hr_01", columnList = "wh_cd,work_unit", unique = true)
+@Table(name = "mhe_hr", idStrategy = GenerationRule.UUID, uniqueFields="whCd,workUnit", indexes = {
+	@Index(name = "ix_mhe_hr_01", columnList = "wh_cd,work_unit", unique = true)
 })
-public class WmsMheHr extends xyz.elidom.orm.entity.basic.AbstractStamp {
+public class WcsMheHr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
 	/**
 	 * SerialVersion UID
 	 */
 	private static final long serialVersionUID = -8555254391446018815L;
 
-	@Ignore
-	private String id;
-
 	@PrimaryKey
+	@Column (name = "id", nullable = false, length = 40)
+	private String id;
+	
 	@Column (name = "wh_cd", nullable = false, length = 20)
 	private String whCd;
 
 	@Column (name = "strr_id", nullable = false, length = 20)
 	private String strrId;
 
-	@PrimaryKey
 	@Column (name = "work_date", nullable = false, length = 8)
 	private String workDate;
   

@@ -126,12 +126,6 @@ public class JobBatch extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	 */
 	@Column (name = "job_date", nullable = false, length = 10)
 	private String jobDate;
-	
-	/**
-	 * 반품 배치인 경우 반품 등록 가능일 To
-	 */
-	@Column (name = "job_date_to", length = 10)
-	private String jobDateTo;
 
 	@Column (name = "job_seq", nullable = false, length = 12)
 	private String jobSeq;
@@ -171,6 +165,9 @@ public class JobBatch extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 
 	@Column (name = "result_pcs", length = 12)
 	private Integer resultPcs;
+	
+	@Column (name = "result_box_qty", length = 12)
+	private Integer resultBoxQty;
 
 	@Column (name = "progress_rate", length = 19)
 	private Float progressRate;
@@ -182,7 +179,7 @@ public class JobBatch extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	private Float uph;
 	
 	@Column (name = "equip_runtime", length = 12)
-	private Integer equipRuntime;
+	private Float equipRuntime;
 
 	@Column (name = "instructed_at", type = xyz.elidom.dbist.annotation.ColumnType.DATETIME)
 	private Date instructedAt;
@@ -296,14 +293,6 @@ public class JobBatch extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 		this.jobDate = jobDate;
 	}
 
-	public String getJobDateTo() {
-		return jobDateTo;
-	}
-
-	public void setJobDateTo(String jobDateTo) {
-		this.jobDateTo = jobDateTo;
-	}
-
 	public String getJobSeq() {
 		return jobSeq;
 	}
@@ -408,6 +397,14 @@ public class JobBatch extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 		this.resultPcs = resultPcs;
 	}
 
+	public Integer getResultBoxQty() {
+		return resultBoxQty;
+	}
+
+	public void setResultBoxQty(Integer resultBoxQty) {
+		this.resultBoxQty = resultBoxQty;
+	}
+
 	public Float getProgressRate() {
 		return progressRate;
 	}
@@ -432,11 +429,11 @@ public class JobBatch extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 		this.uph = uph;
 	}
 
-	public Integer getEquipRuntime() {
+	public Float getEquipRuntime() {
 		return equipRuntime;
 	}
 
-	public void setEquipRuntime(Integer equipRuntime) {
+	public void setEquipRuntime(Float equipRuntime) {
 		this.equipRuntime = equipRuntime;
 	}
 

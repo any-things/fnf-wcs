@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import operato.logis.dps.DpsConstants;
 import operato.logis.dps.query.store.DpsBatchQueryStore;
 import operato.logis.dps.service.util.DpsStageJobConfigUtil;
+import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.BatchReceipt;
 import xyz.anythings.base.entity.BatchReceiptItem;
 import xyz.anythings.base.entity.JobBatch;
@@ -20,7 +21,6 @@ import xyz.anythings.base.entity.Order;
 import xyz.anythings.base.entity.OrderPreprocess;
 import xyz.anythings.base.event.main.BatchReceiveEvent;
 import xyz.anythings.base.service.util.BatchJobConfigUtil;
-import xyz.anythings.base.util.LogisBaseUtil;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.anythings.sys.util.AnyEntityUtil;
 import xyz.anythings.sys.util.AnyOrmUtil;
@@ -40,10 +40,18 @@ import xyz.elidom.util.ValueUtil;
 public class DpsReceiveBatchService extends AbstractQueryService {
 
 	/**
+	 * FnF 센터 코드
+	 */
+	private String whCd = "ICF";
+	/**
+	 * 작업 유형
+	 */
+	private String DAS_JOB_TYPE = "SHIPBYDPS";
+	/**
 	 * 배치 관련 쿼리 스토어 
 	 */
 	@Autowired
-	private DpsBatchQueryStore batchQueryStore;
+	private DpsBatchQueryStore dpsQueryStore;
 
 	/**
 	 * 주문 정보 수신을 위한 수신 서머리 정보 조회
@@ -78,7 +86,7 @@ public class DpsReceiveBatchService extends AbstractQueryService {
 		
 		// 3 수신 아이템 데이터 생성 
 		for(BatchReceiptItem item : receiptItems) {
-			item.setBatchId(LogisBaseUtil.newReceiptJobBatchId(receipt.getDomainId()));
+			item.setBatchId(item.getWmsBatchNo());
 			item.setBatchReceiptId(receipt.getId());
 			this.queryManager.insert(item);
 		}
@@ -95,9 +103,10 @@ public class DpsReceiveBatchService extends AbstractQueryService {
 	 * @return
 	 */
 	private List<BatchReceiptItem> getWmfIfToReceiptItems(BatchReceipt receipt) {
-		Map<String,Object> params = ValueUtil.newMap("domainId,comCd,areaCd,stageCd,jobDate",
-				receipt.getDomainId(), receipt.getComCd(), receipt.getAreaCd(), receipt.getStageCd(), receipt.getJobDate());
-		return AnyEntityUtil.searchItems(receipt.getDomainId(), false, BatchReceiptItem.class, this.batchQueryStore.getOrderSummaryToReceive(), params);
+		String workDate = receipt.getJobDate().replace(LogisConstants.DASH, LogisConstants.EMPTY_STRING);
+		Map<String, Object> params = ValueUtil.newMap("whCd,jobType,jobDate,status", this.whCd, this.DAS_JOB_TYPE, workDate, "A");
+		String sql = this.dpsQueryStore.getOrderSummaryToReceive();
+		return AnyEntityUtil.searchItems(receipt.getDomainId(), false, BatchReceiptItem.class, sql, params);
 	}
 	
 	/**
@@ -134,7 +143,7 @@ public class DpsReceiveBatchService extends AbstractQueryService {
 		
 		for(BatchReceiptItem item : items) {
 			if(ValueUtil.isEqualIgnoreCase(DpsConstants.JOB_TYPE_DPS, item.getJobType())) {
-				this.startToReceiveData(receipt, item);
+				//this.startToReceiveData(receipt, item);
 			}
 		}
 	}
@@ -168,8 +177,7 @@ public class DpsReceiveBatchService extends AbstractQueryService {
 		// TODO : 데이터 복사 방식 / 컬럼 설정에서 가져오기 
 		String[] sourceFields = {"WMS_BATCH_NO", "WCS_BATCH_NO", "JOB_DATE", "JOB_SEQ", "JOB_TYPE", "ORDER_DATE", "ORDER_NO", "ORDER_LINE_NO", "ORDER_DETAIL_ID", "CUST_ORDER_NO", "CUST_ORDER_LINE_NO", "COM_CD", "AREA_CD", "STAGE_CD", "EQUIP_TYPE", "EQUIP_CD", "EQUIP_NM", "SUB_EQUIP_CD", "SHOP_CD", "SHOP_NM", "SKU_CD", "SKU_BARCD", "SKU_NM", "BOX_TYPE_CD", "BOX_IN_QTY", "ORDER_QTY", "PICKED_QTY", "BOXED_QTY", "CANCEL_QTY", "BOX_ID", "INVOICE_ID", "ORDER_TYPE", "CLASS_CD", "PACK_TYPE", "VEHICLE_NO", "LOT_NO", "FROM_ZONE_CD", "FROM_CELL_CD", "TO_ZONE_CD", "TO_CELL_CD", mappingColumn};
 		String[] targetFields = {"WMS_BATCH_NO", "WCS_BATCH_NO", "JOB_DATE", "JOB_SEQ", "JOB_TYPE", "ORDER_DATE", "ORDER_NO", "ORDER_LINE_NO", "ORDER_DETAIL_ID", "CUST_ORDER_NO", "CUST_ORDER_LINE_NO", "COM_CD", "AREA_CD", "STAGE_CD", "EQUIP_TYPE", "EQUIP_CD", "EQUIP_NM", "SUB_EQUIP_CD", "SHOP_CD", "SHOP_NM", "SKU_CD", "SKU_BARCD", "SKU_NM", "BOX_TYPE_CD", "BOX_IN_QTY", "ORDER_QTY", "PICKED_QTY", "BOXED_QTY", "CANCEL_QTY", "BOX_ID", "INVOICE_ID", "ORDER_TYPE", "CLASS_CD", "PACK_TYPE", "VEHICLE_NO", "LOT_NO", "FROM_ZONE_CD", "FROM_CELL_CD", "TO_ZONE_CD", "TO_CELL_CD", "CLASS_CD"};
-		String fieldNames = "COM_CD,AREA_CD,STAGE_CD,WMS_BATCH_NO,IF_FLAG";
-		int jobSeq = JobBatch.getMaxJobSeq(receipt.getDomainId(), receipt.getComCd(), receipt.getAreaCd(), receipt.getAreaCd(), receipt.getJobDate());		
+		String fieldNames = "COM_CD,AREA_CD,STAGE_CD,WMS_BATCH_NO,IF_FLAG";	
 		boolean exceptionOccurred = false;
 		
 		try {
@@ -178,18 +186,15 @@ public class DpsReceiveBatchService extends AbstractQueryService {
 				item.updateStatusImmediately(DpsConstants.COMMON_STATUS_SKIPPED, null);
 				return receipt;
 			}
-						
-			// 3. 작업 차수  
-			++jobSeq;
-			
+
 			// 4. BatchReceiptItem 상태 업데이트  - 진행 중 
 			item.updateStatusImmediately(DpsConstants.COMMON_STATUS_RUNNING, null);
 			
 			// 5. JobBatch 생성 
-			JobBatch batch = JobBatch.createJobBatch(item.getBatchId(), ValueUtil.toString(jobSeq), receipt, item);
+			JobBatch batch = JobBatch.createJobBatch(item.getBatchId(), item.getJobSeq(), receipt, item);
 			
 			// 6. 데이터 복사  
-			this.cloneData(item.getBatchId(), jobSeq, "wms_if_orders", sourceFields, targetFields, fieldNames, item.getComCd(), item.getAreaCd(), item.getStageCd(), item.getWmsBatchNo(), DpsConstants.N_CAP_STRING);
+			this.cloneData(item.getBatchId(), item.getJobSeq(), "wms_if_orders", sourceFields, targetFields, fieldNames, item.getComCd(), item.getAreaCd(), item.getStageCd(), item.getWmsBatchNo(), DpsConstants.N_CAP_STRING);
 			
 			// 7. JobBatch 상태 변경  
 			batch.updateStatusImmediately(DpsConstants.isB2CJobType(batch.getJobType())? JobBatch.STATUS_READY : JobBatch.STATUS_WAIT);
@@ -224,7 +229,7 @@ public class DpsReceiveBatchService extends AbstractQueryService {
 	 * @return
 	 */
 	@Transactional(propagation=Propagation.REQUIRES_NEW) 
-	private void cloneData(String batchId, int jobSeq
+	private void cloneData(String batchId, String jobSeq
 								, String sourceTable
 								, String[] sourceFields, String[] targetFields
 								, String fieldNames, Object ... fieldValues) throws Exception {
@@ -313,7 +318,7 @@ public class DpsReceiveBatchService extends AbstractQueryService {
 		// 3. 취소 상태 , seq = 0 셋팅 
 		for(Order order : orderList) {
 			order.setStatus(Order.STATUS_CANCEL);
-			order.setJobSeq(0);
+			order.setJobSeq("0");
 		}
 		
 		// 4. 배치 update

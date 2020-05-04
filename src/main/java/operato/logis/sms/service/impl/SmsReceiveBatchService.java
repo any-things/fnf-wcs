@@ -19,7 +19,6 @@ import xyz.anythings.base.entity.Order;
 import xyz.anythings.base.entity.OrderPreprocess;
 import xyz.anythings.base.event.main.BatchReceiveEvent;
 import xyz.anythings.base.service.util.BatchJobConfigUtil;
-import xyz.anythings.base.util.LogisBaseUtil;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.anythings.sys.util.AnyEntityUtil;
 import xyz.anythings.sys.util.AnyOrmUtil;
@@ -97,7 +96,7 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 		
 		// 3 수신 아이템 데이터 생성 
 		for(BatchReceiptItem item : receiptItems) {
-			item.setBatchId(LogisBaseUtil.newReceiptJobBatchId(receipt.getDomainId()));
+			item.setBatchId(item.getWmsBatchNo());
 			item.setBatchReceiptId(receipt.getId());
 			this.queryManager.insert(item);
 		}
@@ -185,7 +184,6 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 	 */
 	private BatchReceipt startToReceiveData(BatchReceipt receipt, BatchReceiptItem item, Object ... params) {		
 		// 1. TODO : 데이터 복사 방식 / 컬럼 설정에서 가져오기 
-		int jobSeq = JobBatch.getMaxJobSeq(receipt.getDomainId(), receipt.getComCd(), receipt.getAreaCd(), receipt.getAreaCd(), receipt.getJobDate());		
 		boolean exceptionOccurred = false;
 		
 		try {
@@ -202,7 +200,7 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 			JobBatch batch = JobBatch.createJobBatch(item.getBatchId(), ValueUtil.toString(item.getJobSeq()), receipt, item);
 			
 			// 5. 데이터 복사  
-			this.cloneData(item.getBatchId(), jobSeq, item);
+			this.cloneData(item.getBatchId(), receipt.getJobSeq(), item);
 			
 			// 6. 셀과 매핑될 필드명을 스테이지 별 설정에서 조회 
 			/*String classCd = StageJobConfigUtil.getCellMappingTargetField(item.getStageCd(), item.getJobType());
@@ -245,12 +243,13 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 	 * @return
 	 */
 	@Transactional(propagation=Propagation.REQUIRES_NEW) 
-	private void cloneData(String batchId, int jobSeq, BatchReceiptItem item) throws Exception {		
+	private void cloneData(String batchId, String jobSeq, BatchReceiptItem item) throws Exception {		
 		// 1. 조회  
 		List<Order> targetList = null;
 		
 		if(ValueUtil.isEqual(item.getJobType(), SmsConstants.JOB_TYPE_SDAS)) {
 			targetList = this.getWmsSdasOrders(batchId, jobSeq, item);
+			
 		} else if(ValueUtil.isEqual(item.getJobType(), SmsConstants.JOB_TYPE_SRTN)) {
 			targetList = this.getWmsSrtnOrders(batchId, jobSeq, item);
 		}
@@ -316,7 +315,7 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 		// 3. 취소 상태 , seq = 0 셋팅 
 		for(Order order : orderList) {
 			order.setStatus(Order.STATUS_CANCEL);
-			order.setJobSeq(0);
+			order.setJobSeq("0");
 		}
 		
 		// 4. 배치 update
@@ -385,7 +384,7 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 	/**
 	 * WMS 테이블에서 조회후 SDAS Orders 데이터 생성
 	 */
-	private List<Order> getWmsSdasOrders(String batchId, int jobSeq, BatchReceiptItem item) {
+	private List<Order> getWmsSdasOrders(String batchId, String jobSeq, BatchReceiptItem item) {
 		Map<String, Object> sqlParams = ValueUtil.newMap(
 				"batchId,jobType,orderLineNo,comCd,areaCd,stageCd,equipType,wh_cd,work_unit", batchId, item.getJobType(), 0,
 				item.getComCd(), item.getAreaCd(), item.getStageCd(), item.getEquipType(), this.whCd,
@@ -402,7 +401,7 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 	/**
 	 * WMS 테이블에서 조회후 SRTN Orders 데이터 생성
 	 */
-	private List<Order> getWmsSrtnOrders(String batchId, int jobSeq, BatchReceiptItem item) {
+	private List<Order> getWmsSrtnOrders(String batchId, String jobSeq, BatchReceiptItem item) {
 //		Query condition = new Query();
 //		condition.addFilter("wh_cd", this.whCd);
 //		condition.addFilter("work_unit", item.getWmsBatchNo());

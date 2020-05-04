@@ -86,6 +86,14 @@ public class WcsMheHr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "pas_chute_tcd", length = 10)
 	private String pasChuteTcd;
 
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
 	public String getWhCd() {
 		return whCd;
 	}

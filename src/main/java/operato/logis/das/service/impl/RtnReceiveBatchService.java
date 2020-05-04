@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import operato.fnf.wcs.entity.WmsMheHr;
 import operato.fnf.wcs.entity.WmsMheRtnInvn;
 import operato.logis.das.query.store.RtnQueryStore;
 import xyz.anythings.base.LogisConstants;
@@ -20,7 +21,6 @@ import xyz.anythings.base.entity.Order;
 import xyz.anythings.base.entity.OrderPreprocess;
 import xyz.anythings.base.event.main.BatchReceiveEvent;
 import xyz.anythings.base.service.util.BatchJobConfigUtil;
-import xyz.anythings.base.util.LogisBaseUtil;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.anythings.sys.util.AnyEntityUtil;
 import xyz.anythings.sys.util.AnyOrmUtil;
@@ -30,23 +30,27 @@ import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.util.ValueUtil;
 
 /**
- * 반품 주문 수신용 서비스
+ * FnF 반품 주문 수신용 서비스
  * 
  * @author shortstop
  */
 @Component
 public class RtnReceiveBatchService extends AbstractQueryService {
 	
-	
-	String whCd = "ICF";
-	
+	/**
+	 * FnF 센터 코드
+	 */
+	private String whCd = "ICF";
+	/**
+	 * 작업 유형
+	 */
+	private String RTN_JOB_TYPE = "SHIPBYRTN";
 	/**
 	 * 반품 관련 쿼리 스토어 
 	 */
 	@Autowired
-	private RtnQueryStore batchQueryStore;
+	private RtnQueryStore rtnQueryStore;
 
-	
 	/**
 	 * 주문 정보 수신을 위한 수신 서머리 정보 조회
 	 *  
@@ -54,10 +58,8 @@ public class RtnReceiveBatchService extends AbstractQueryService {
 	 */
 	@EventListener(classes = BatchReceiveEvent.class, condition = "#event.isExecuted() == false and #event.eventType == 10 and #event.eventStep == 1 and (#event.jobType == 'RTN')")
 	public void handleReadyToReceive(BatchReceiveEvent event) { 
-		BatchReceipt receipt = event.getReceiptData();
-		String jobType = event.getJobType();
-		
-		receipt = this.createReadyToReceiveData(receipt,jobType);
+		BatchReceipt receipt = event.getReceiptData();		
+		receipt = this.createReadyToReceiveData(receipt);
 		event.setReceiptData(receipt);
 		event.setExecuted(true);
 	}
@@ -66,17 +68,15 @@ public class RtnReceiveBatchService extends AbstractQueryService {
 	 * 배치 수신 서머리 데이터 생성 
 	 * 
 	 * @param receipt
-	 * @param jobType
-	 * @param params
 	 * @return
 	 */
-	private BatchReceipt createReadyToReceiveData(BatchReceipt receipt, String jobType, Object ... params) {
+	private BatchReceipt createReadyToReceiveData(BatchReceipt receipt) {
 		// 1. WMS IF 테이블에서 수신 대상 데이터 확인
-		List<BatchReceiptItem> receiptItems = this.getWmfIfToReceiptItems(receipt, jobType);
+		List<BatchReceiptItem> receiptItems = this.getWmfIfToReceiptItems(receipt);
 		
 		// 2. 수신 아이템 데이터 생성 
 		for(BatchReceiptItem item : receiptItems) {
-			item.setBatchId(LogisBaseUtil.newReceiptJobBatchId(receipt.getDomainId()));
+			item.setBatchId(item.getWmsBatchNo());
 			item.setBatchReceiptId(receipt.getId());
 			this.queryManager.insert(item);
 		}
@@ -92,14 +92,12 @@ public class RtnReceiveBatchService extends AbstractQueryService {
 	 * @param receipt
 	 * @return
 	 */
-	private List<BatchReceiptItem> getWmfIfToReceiptItems(BatchReceipt receipt, String jobType) {
-		
-		IQueryManager dsQueryManager = null;
-		Map<String,Object> params = ValueUtil.newMap("whCd,comCd,areaCd,stageCd,jobType,jobDate,jobSeq",
-				this.whCd,receipt.getComCd(), receipt.getAreaCd(), receipt.getStageCd(), jobType, receipt.getJobDate(), 0);
-		
-		dsQueryManager = this.getDataSourceQueryManager(WmsMheRtnInvn.class);
-		return dsQueryManager.selectListBySql(this.batchQueryStore.getWmsIfToReceiptDataQuery(), params, BatchReceiptItem.class, 0, 0);
+	private List<BatchReceiptItem> getWmfIfToReceiptItems(BatchReceipt receipt) {
+		String workDate = receipt.getJobDate().replace(LogisConstants.DASH, LogisConstants.EMPTY_STRING);
+		Map<String, Object> params = ValueUtil.newMap("whCd,jobType,jobDate,status", this.whCd, this.RTN_JOB_TYPE, workDate, "A");
+		IQueryManager dsQueryManager = this.getDataSourceQueryManager(WmsMheHr.class);
+		String sql = this.rtnQueryStore.getOrderSummaryToReceive();
+		return dsQueryManager.selectListBySql(sql, params, BatchReceiptItem.class, 0, 0);
 	}
 	
 	
@@ -118,7 +116,8 @@ public class RtnReceiveBatchService extends AbstractQueryService {
 				this.startToReceiveData(receipt, item);
 			}
 		}
-		 
+		
+		event.setExecuted(true);
 	}
 	
 	/**
@@ -131,24 +130,24 @@ public class RtnReceiveBatchService extends AbstractQueryService {
 	 */
 	private BatchReceipt startToReceiveData(BatchReceipt receipt, BatchReceiptItem item, Object ... params) {		
 		// 1. jobSeq
-		int jobSeq = JobBatch.getMaxJobSeq(receipt.getDomainId(), receipt.getComCd(), receipt.getAreaCd(), receipt.getStageCd(), receipt.getJobDate()) + 1;		
+		//int jobSeq = JobBatch.getMaxJobSeq(receipt.getDomainId(), receipt.getComCd(), receipt.getAreaCd(), receipt.getStageCd(), receipt.getJobDate()) + 1;		
 		boolean exceptionOccurred = false;
 		
 		try {
 			// 2. skip 이면 pass
 			if(item.getSkipFlag()) {
-				item.updateStatusImmediately(LogisConstants.COMMON_STATUS_SKIPPED, null);
+				item.updateStatusImmediately(LogisConstants.COMMON_STATUS_SKIPPED, item.getMessage());
 				return receipt;
 			}
 						
 			// 3. BatchReceiptItem 상태 업데이트  - 진행 중 
-			item.updateStatusImmediately(LogisConstants.COMMON_STATUS_RUNNING, null);
+			item.updateStatusImmediately(LogisConstants.COMMON_STATUS_RUNNING, item.getMessage());
 			
 			// 4. JobBatch 생성 
-			JobBatch batch = JobBatch.createJobBatch(item.getBatchId(), ValueUtil.toString(jobSeq), receipt, item);
+			JobBatch batch = JobBatch.createJobBatch(item.getBatchId(), item.getJobSeq(), receipt, item);
 			
 			// 5. 데이터 복사  
-			this.cloneData(item.getBatchId(), receipt.getJobDate(), jobSeq, item);
+			this.cloneData(item.getBatchId(), receipt.getJobDate(), item.getJobSeq(), item);
 			
 			// 6. JobBatch 상태 변경  
 			batch.updateStatusImmediately(LogisConstants.isB2CJobType(batch.getJobType())? JobBatch.STATUS_READY : JobBatch.STATUS_WAIT);
@@ -176,27 +175,25 @@ public class RtnReceiveBatchService extends AbstractQueryService {
 	
 	/**
 	 * 데이터 복제
+	 * 
 	 * @return
 	 */
 	@Transactional(propagation=Propagation.REQUIRES_NEW) 
-	private void cloneData(String batchId, String jobDate, int jobSeq, BatchReceiptItem item) throws Exception {
+	private void cloneData(String batchId, String jobDate, String jobSeq, BatchReceiptItem item) throws Exception {
 		
 		List<Order> orderList = new ArrayList<Order>();
 		IQueryManager dsQueryManager = this.getDataSourceQueryManager(WmsMheRtnInvn.class);
 		Query condition = new Query();
 		condition.setFilter("wh_cd" , this.whCd);
-		
 		List<WmsMheRtnInvn> wmsOrders = dsQueryManager.selectList(WmsMheRtnInvn.class, condition);
 		
 		if(ValueUtil.isNotEmpty(wmsOrders)) {
 			for(WmsMheRtnInvn wmsOrder : wmsOrders) {
 				Order order = new Order();
-				
 				order.setShopCd(wmsOrder.getStrrId());
 				order.setSkuCd(wmsOrder.getItemCd());
 				order.setSkuBarcd(wmsOrder.getBarcode());
 				order.setOrderQty(wmsOrder.getInvnQty());
-				
 				order.setBatchId(batchId);
 				order.setJobDate(jobDate);
 				order.setJobType(item.getJobType());
@@ -206,15 +203,15 @@ public class RtnReceiveBatchService extends AbstractQueryService {
 				order.setComCd(item.getComCd());
 				order.setEquipType(item.getEquipType());
 				order.setStatus(Order.STATUS_WAIT);
-				
-				
 				order.setOrderNo(jobSeq + "-" + wmsOrder.getItemCd()); // TODO
 				order.setOrderLineNo(wmsOrder.getItemCd()); // TODO
-
 				orderList.add(order);
 			}
 		}
-		AnyOrmUtil.insertBatch(orderList,100);
+		
+		if(ValueUtil.isNotEmpty(orderList)) {
+			AnyOrmUtil.insertBatch(orderList, 100);
+		}
 	}
 	
 	/**
@@ -261,7 +258,7 @@ public class RtnReceiveBatchService extends AbstractQueryService {
 		// 3. 취소 상태 , seq = 0 셋팅 
 		for(Order order : orderList) {
 			order.setStatus(Order.STATUS_CANCEL);
-			order.setJobSeq(0);
+			order.setJobSeq("0");
 		}
 		
 		// 4. 배치 update
@@ -323,7 +320,7 @@ public class RtnReceiveBatchService extends AbstractQueryService {
 		Map<String,Object> params = ValueUtil.newMap("wcsBatchNo,wmsBatchNo,stageCd,jobSeq,jobDate",
 				item.getWcsBatchNo(),item.getWmsBatchNo(),item.getStageCd(),item.getJobSeq(),jobDate);
  
-		this.queryManager.executeBySql(this.batchQueryStore.getWmsIfToReceiptUpdateQuery(), params);
+		this.queryManager.executeBySql(this.rtnQueryStore.getWmsIfToReceiptUpdateQuery(), params);
 	}
 	
 }

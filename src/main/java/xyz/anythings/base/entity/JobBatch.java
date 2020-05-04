@@ -579,6 +579,7 @@ public class JobBatch extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 		batch.setBatchGroupId(batchId);
 		batch.setWmsBatchNo(receiptItem.getWmsBatchNo());
 		batch.setWcsBatchNo(receiptItem.getWcsBatchNo());
+		batch.setTitle(receiptItem.getMessage());
 		batch.setComCd(receiptItem.getComCd());
 		batch.setJobType(receiptItem.getJobType());
 		batch.setJobDate(batchReceipt.getJobDate());
@@ -588,6 +589,8 @@ public class JobBatch extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 		batch.setEquipType(receiptItem.getEquipType());
 		batch.setEquipCd(receiptItem.getEquipCd());
 		batch.setEquipNm(LogisConstants.EMPTY_STRING);
+		batch.setBrandCd(receiptItem.getBrandCd());
+		batch.setSeasonCd(receiptItem.getSeasonCd());
 		batch.setParentOrderQty(receiptItem.getTotalOrders());
 		batch.setParentPcs(receiptItem.getTotalPcs());
 		batch.setBatchOrderQty(receiptItem.getTotalOrders());

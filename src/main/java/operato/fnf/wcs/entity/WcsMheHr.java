@@ -9,8 +9,10 @@ import xyz.elidom.dbist.annotation.Index;
 import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.Table;
 
-/*
+/**
  * 피킹/분배 지시 내역을 송신하고, 확정 수량을 수신 - DAS, DPS
+ * 
+ * @author shortstop
  */
 @Table(name = "mhe_hr", idStrategy = GenerationRule.UUID, uniqueFields="whCd,workUnit", indexes = {
 	@Index(name = "ix_mhe_hr_01", columnList = "wh_cd,work_unit", unique = true)
@@ -41,6 +43,9 @@ public class WcsMheHr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "biz_type", length = 10)
 	private String bizType;
 	
+	@Column (name = "descr", length = 200)
+	private String descr;
+	
 	@Column (name = "mhe_no", length = 10)
 	private String mheNo;
 
@@ -50,12 +55,18 @@ public class WcsMheHr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "workseq_no", length = 20)
 	private String workseqNo;
 	
+	@Column (name = "pas_chute_tcd", length = 10)
+	private String pasChuteTcd;
+	
 	@Column (name = "pick_qty", length = 10)
 	private Integer pickQty;
 	
 	@Column (name = "cmpt_qty", length = 10)
 	private Integer cmptQty;
 	
+	/**
+	 * 상태 A: 최초, [W: WCS 수신], B: MHE 수신, C: MHE 완료, F: WCS 최종처리
+	 */
 	@Column (name = "status", length = 1)
 	private String status;
 	
@@ -65,6 +76,9 @@ public class WcsMheHr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "cnf_datetime", type = ColumnType.DATETIME)
 	private Date cnfDatetime;
 	
+	/**
+	 * WCS 최종 완료 처리 시간
+	 */
 	@Column (name = "end_datetime", type = ColumnType.DATETIME)
 	private Date endDatetime;
 
@@ -74,17 +88,17 @@ public class WcsMheHr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "ins_person_id", length = 20)
 	private String insPersonId;
 
-	@Column (name = "descr", length = 200)
-	private String descr;
-
+	/**
+	 * WCS 결과 처리 여부
+	 */
 	@Column (name = "prcs_yn", length = 1)
 	private String prcsYn;
 
+	/**
+	 * WCS 결과 처리 시간
+	 */
 	@Column (name = "prcs_datetime", type = ColumnType.DATETIME)
 	private Date prcsDatetime;
-	
-	@Column (name = "pas_chute_tcd", length = 10)
-	private String pasChuteTcd;
 
 	public String getId() {
 		return id;
@@ -134,6 +148,14 @@ public class WcsMheHr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 		this.bizType = bizType;
 	}
 
+	public String getDescr() {
+		return descr;
+	}
+
+	public void setDescr(String descr) {
+		this.descr = descr;
+	}
+
 	public String getMheNo() {
 		return mheNo;
 	}
@@ -156,6 +178,14 @@ public class WcsMheHr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setWorkseqNo(String workseqNo) {
 		this.workseqNo = workseqNo;
+	}
+
+	public String getPasChuteTcd() {
+		return pasChuteTcd;
+	}
+
+	public void setPasChuteTcd(String pasChuteTcd) {
+		this.pasChuteTcd = pasChuteTcd;
 	}
 
 	public Integer getPickQty() {
@@ -222,14 +252,6 @@ public class WcsMheHr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 		this.insPersonId = insPersonId;
 	}
 
-	public String getDescr() {
-		return descr;
-	}
-
-	public void setDescr(String descr) {
-		this.descr = descr;
-	}
-
 	public String getPrcsYn() {
 		return prcsYn;
 	}
@@ -244,14 +266,6 @@ public class WcsMheHr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setPrcsDatetime(Date prcsDatetime) {
 		this.prcsDatetime = prcsDatetime;
-	}
-
-	public String getPasChuteTcd() {
-		return pasChuteTcd;
-	}
-
-	public void setPasChuteTcd(String pasChuteTcd) {
-		this.pasChuteTcd = pasChuteTcd;
 	}
 
 }

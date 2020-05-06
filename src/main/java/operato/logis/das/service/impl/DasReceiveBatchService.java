@@ -153,7 +153,7 @@ public class DasReceiveBatchService extends AbstractQueryService {
 		} catch(Exception e) {
 			exceptionOccurred = true;
 			String errMsg = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
-			errMsg = errMsg.length() > 400 ? errMsg.substring(0,400) : errMsg;
+			errMsg = errMsg.length() > 400 ? errMsg.substring(0, 400) : errMsg;
 			item.updateStatusImmediately(LogisConstants.COMMON_STATUS_ERROR, errMsg);
 		}
 		
@@ -173,7 +173,7 @@ public class DasReceiveBatchService extends AbstractQueryService {
 	 * @param item
 	 * @throws Exception
 	 */
-	@Transactional(propagation=Propagation.REQUIRES_NEW) 
+	@Transactional(propagation = Propagation.REQUIRES_NEW) 
 	private void cloneData(BatchReceipt receipt, BatchReceiptItem item) throws Exception {
 		// 1. WMS 데이터소스 조회 
 		IQueryManager dsQueryManager = this.getDataSourceQueryManager(WmsMheHr.class);
@@ -206,7 +206,7 @@ public class DasReceiveBatchService extends AbstractQueryService {
 			}
 			
 			// 6. WMS 배치 정보 수신 플래그 업데이트 (TODO WCS 수신 상태 필요한 지 WMS와 협의 필요)
-			wmsBatch.setStatus("B");
+			wmsBatch.setStatus("W");
 			dsQueryManager.update(wmsBatch);
 		}
 	}

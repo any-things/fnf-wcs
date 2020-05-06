@@ -11,6 +11,9 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import operato.fnf.wcs.config.ModuleProperties;
+import operato.fnf.wcs.query.store.FnFDasQueryStore;
+import operato.fnf.wcs.query.store.FnFDpsQueryStore;
+import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.config.ModuleConfigSet;
 import xyz.elidom.sys.system.service.api.IEntityFieldCache;
 import xyz.elidom.sys.system.service.api.IServiceFinder;
@@ -41,13 +44,18 @@ public class OperatoFnFWcsInitializer {
 	@Autowired
 	private ModuleConfigSet configSet;
 	
+	@Autowired
+	private IQueryManager queryManager;
+	
+	@Autowired
+	private FnFDasQueryStore fnfDasQueryStore;
+	
+	@Autowired
+	private FnFDpsQueryStore fnfDpsQueryStore;
+	
 	@EventListener({ ContextRefreshedEvent.class })
 	public void refresh(ContextRefreshedEvent event) {
 		this.logger.info("FnF WCS module refreshing...");
-		
-		this.configSet.addConfig(this.module.getName(), this.module);
-		this.configSet.setApplicationModule(this.module.getName());
-		this.scanServices();
 		
 		this.logger.info("FnF WCS module refreshed!");
 	}
@@ -55,6 +63,11 @@ public class OperatoFnFWcsInitializer {
 	@EventListener({ ApplicationReadyEvent.class })
 	void ready(ApplicationReadyEvent event) {
 		this.logger.info("FnF WCS module initializing...");
+		
+		this.configSet.addConfig(this.module.getName(), this.module);
+		this.configSet.setApplicationModule(this.module.getName());
+		this.scanServices();
+		this.initQueryStores();
 		
 		this.logger.info("FnF WCS module initialized!");
 	}
@@ -66,4 +79,14 @@ public class OperatoFnFWcsInitializer {
 		this.entityFieldCache.scanEntityFieldsByBasePackage(this.module.getBasePackage());
 		this.restFinder.scanServicesByPackage(this.module.getName(), this.module.getBasePackage());
 	}
+	
+	/**
+	 * 쿼리 스토어 초기화
+	 */
+	private void initQueryStores() {
+		String dbType = this.queryManager.getDbType();
+		this.fnfDasQueryStore.initQueryStore(dbType);
+		this.fnfDpsQueryStore.initQueryStore(dbType);
+	}
+
 }

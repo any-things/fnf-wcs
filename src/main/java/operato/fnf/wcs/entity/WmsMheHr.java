@@ -11,10 +11,12 @@ import xyz.elidom.dbist.annotation.Index;
 import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.Table;
 
-/*
- * 피킹/분배 지시 내역을 송신하고, 확정 수량을 수신 - DAS, DPS
+/**
+ * WMS I/F 엔티티 - 피킹/분배 지시 내역을 송신하고, 확정 수량을 수신 - DAS, DPS
+ * 
+ * @author shortstop
  */
-@Table(name = "mhe_hr", idStrategy = GenerationRule.UUID, dataSourceType=DataSourceType.DATASOURCE, uniqueFields="whCd,workUnit", indexes = {
+@Table(name = "mhe_hr", idStrategy = GenerationRule.UUID, dataSourceType = DataSourceType.DATASOURCE, uniqueFields="whCd,workUnit", indexes = {
 	@Index(name = "mhe_hr_01", columnList = "wh_cd,work_unit", unique = true)
 })
 public class WmsMheHr extends xyz.elidom.orm.entity.basic.AbstractStamp {
@@ -68,6 +70,9 @@ public class WmsMheHr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "cnf_datetime", type = ColumnType.DATETIME)
 	private Date cnfDatetime;
 	
+	/**
+	 * WMS 최종 완료 처리 시간
+	 */
 	@Column (name = "end_datetime", type = ColumnType.DATETIME)
 	private Date endDatetime;
 
@@ -80,9 +85,15 @@ public class WmsMheHr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "descr", length = 200)
 	private String descr;
 
+	/**
+	 * WMS 결과 처리 여부
+	 */
 	@Column (name = "prcs_yn", length = 1)
 	private String prcsYn;
 
+	/**
+	 * WMS 결과 처리 시간
+	 */
 	@Column (name = "prcs_datetime", type = ColumnType.DATETIME)
 	private Date prcsDatetime;
 	

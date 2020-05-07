@@ -53,14 +53,16 @@ public class DasStartBatchService extends AbstractQueryService {
 		
 		// 4. WMS MHE_HR 테이블에 반영
 		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
-		condition = AnyOrmUtil.newConditionForExecution(domainId);
-		condition.addFilter("whCd,workUnit", wcsMheHr.getWhCd(), wcsMheHr.getWorkUnit());
+		condition = new Query();
+		condition.addFilter("whCd", wcsMheHr.getWhCd());
+		condition.addFilter("workUnit", wcsMheHr.getWorkUnit());
 		WmsMheHr wmsWave = wmsQueryMgr.selectByCondition(WmsMheHr.class, condition);
 		
 		if(wmsWave != null) {
 			wmsWave.setStatus("B");
+			wmsWave.setMheNo(wcsMheHr.getMheNo());
 			wmsWave.setCnfDatetime(new Date());
-			wmsQueryMgr.update(wmsWave, "status", "cnfDatetime");
+			wmsQueryMgr.update(wmsWave, "status", "mheNo", "cnfDatetime");
 		}
 	}
 	

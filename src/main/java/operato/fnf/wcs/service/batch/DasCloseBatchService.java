@@ -70,8 +70,9 @@ public class DasCloseBatchService extends AbstractQueryService {
 		
 		// 5. WMS MHE_HR 테이블에 반영
 		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
-		condition = AnyOrmUtil.newConditionForExecution(domainId);
-		condition.addFilter("whCd,workUnit", wcsMheHr.getWhCd(), wcsMheHr.getWorkUnit());
+		condition = new Query();
+		condition.addFilter("whCd", wcsMheHr.getWhCd());
+		condition.addFilter("workUnit", wcsMheHr.getWorkUnit());
 		WmsMheHr wmsWave = wmsQueryMgr.selectByCondition(WmsMheHr.class, condition);
 		
 		if(wmsWave != null) {
@@ -91,7 +92,7 @@ public class DasCloseBatchService extends AbstractQueryService {
 		batch.setResultBoxQty(this.calcBatchResultBoxQty(batch));
 		batch.setResultOrderQty(this.calcBatchResultOrderQty(batch));
 		batch.setResultPcs(this.calcBatchResultPcs(batch));
-		batch.setProgressRate(batch.getBatchOrderQty() == 0 ? 0 : (batch.getResultOrderQty() / batch.getBatchOrderQty()) * 100.0f);
+		batch.setProgressRate(batch.getBatchOrderQty() == 0 ? 0 : ((float)batch.getResultOrderQty() / (float)batch.getBatchOrderQty() * 100.0f));
 		batch.setEquipRuntime(this.calcBatchEquipRuntime(batch));
 		batch.setUph(this.calcBatchUph(batch));
 		this.queryManager.update(batch, "status", "finishedAt", "resultBoxQty", "resultOrderQty", "resultPcs", "progressRate", "equipRuntime", "uph", "updatedAt");
@@ -104,7 +105,7 @@ public class DasCloseBatchService extends AbstractQueryService {
 	 * @return
 	 */
 	private int calcBatchResultBoxQty(JobBatch batch) {
-		String sql = "select COALESCE(distinct(count(box_no)), 0) as result from mhe_box where work_unit = :batchId";
+		String sql = "select COALESCE(count(distinct(box_no)), 0) as result from mhe_box where work_unit = :batchId";
 		Map<String, Object> params = ValueUtil.newMap("batchId", batch.getId());
 		return this.queryManager.selectBySql(sql, params, Integer.class);
 	}
@@ -116,7 +117,7 @@ public class DasCloseBatchService extends AbstractQueryService {
 	 * @return
 	 */
 	private int calcBatchResultOrderQty(JobBatch batch) {
-		String sql = "select COALESCE(distinct(count(shipto_id)), 0) as result from mhe_box where work_unit = :batchId";
+		String sql = "select COALESCE(count(distinct(shipto_id)), 0) as result from mhe_box where work_unit = :batchId";
 		Map<String, Object> params = ValueUtil.newMap("batchId", batch.getId());
 		return this.queryManager.selectBySql(sql, params, Integer.class);
 	}
@@ -141,11 +142,12 @@ public class DasCloseBatchService extends AbstractQueryService {
 	 */
 	private float calcBatchEquipRuntime(JobBatch batch) {
 		// 배치 총 시간 
-		int totalMin = ValueUtil.toInteger((batch.getFinishedAt().getTime() - batch.getInstructedAt().getTime()) / 1000 * 60);
+		long gap = batch.getFinishedAt().getTime() - batch.getInstructedAt().getTime();
+		int totalMin = ValueUtil.toInteger(gap / ValueUtil.toLong(1000 * 60));
 		
 		// Productivity 정보에서 10분당 실적이 0인 구간을 모두 합쳐서 시간 계산
-		String sql = this.fnfDasQueryStore.getDasStopEquipmentTime();
-		int idleMin = this.queryManager.selectBySql(sql, ValueUtil.newMap("batchId", batch.getId()), Integer.class);
+		String sql = this.fnfDasQueryStore.getDasEquipmentIdleTime();
+		int idleMin = this.queryManager.selectBySql(sql, ValueUtil.newMap("domainId,batchId", batch.getDomainId(), batch.getId()), Integer.class);
 		
 		// duration에서 일하지 않은 총 시간을 빼서 실제 가동 시간을 구함
 		return ValueUtil.toFloat(totalMin - idleMin);
@@ -160,7 +162,7 @@ public class DasCloseBatchService extends AbstractQueryService {
 	private float calcBatchUph(JobBatch batch) {
 		long duration = batch.getFinishedAt().getTime() - batch.getInstructedAt().getTime();
 		int pcs = batch.getResultPcs();
-		float uph = (pcs * 1000 * 60 * 60) / duration;
+		float uph = ValueUtil.toFloat(ValueUtil.toFloat(pcs * 1000 * 60 * 60) / ValueUtil.toFloat(duration));
 		return uph;
 	}
 	

@@ -3,6 +3,7 @@ package operato.fnf.wcs.job;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -13,11 +14,12 @@ import operato.fnf.wcs.service.batch.DasCloseBatchService;
 import operato.fnf.wcs.service.batch.DasStartBatchService;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.sys.ConfigConstants;
+import xyz.anythings.sys.event.model.ErrorEvent;
 import xyz.anythings.sys.service.AbstractQueryService;
-import xyz.anythings.sys.util.AnyOrmUtil;
 import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.sys.rest.DomainController;
+import xyz.elidom.sys.system.context.DomainContext;
 import xyz.elidom.sys.util.ValueUtil;
 
 /**
@@ -31,6 +33,11 @@ import xyz.elidom.sys.util.ValueUtil;
 @Component
 public class DasWaveMonitorJob extends AbstractQueryService {
 
+	/**
+	 * Event Publisher
+	 */
+	@Autowired
+	private ApplicationEventPublisher eventPublisher;
 	/**
 	 * 이중화 서버의 양쪽에서 모두 처리되지 않게 한 쪽 서버에서 실행되도록 설정으로 처리하기 위함
 	 * application.properties 설정 - job.scheduler.enable=true/false 설정 필요 (이중화 서버 한 대는 true, 나머지 서버는 false로 설정, 한 대만 운영시 true로 설정)
@@ -54,7 +61,7 @@ public class DasWaveMonitorJob extends AbstractQueryService {
 	private DasCloseBatchService closeBatchSvc;
 		
 	/**
-	 * 매 1분 마다 실행되어 작업 배치 상태 모니터링 후 변경된 Wave에 대해서 JobBatch에 반영
+	 * 매 3분 마다 실행되어 작업 배치 상태 모니터링 후 변경된 Wave에 대해서 JobBatch에 반영
 	 */
 	@Transactional
 	@Scheduled(cron="0 0/1 * * * *")
@@ -68,11 +75,25 @@ public class DasWaveMonitorJob extends AbstractQueryService {
 		List<Domain> domainList = this.domainCtrl.domainList();
 		
 		for(Domain domain : domainList) {
-			// 2-1. 시작된 Wave 리스트를 조회한 후 존재한다면 처리
-			this.processStartedWaveList(domain.getId());
+			// 2.1 현재 도메인 설정
+			DomainContext.setCurrentDomain(domain);
 			
-			// 2-2. 종료된 Wave 리스트를 조회한 후 존재한다면 처리
-			this.processFinishedWaveList(domain.getId());
+			try {
+				// 2.2 시작된 Wave 리스트를 조회한 후 존재한다면 처리
+				this.processStartedWaveList(domain.getId());
+			
+				// 2.3 종료된 Wave 리스트를 조회한 후 존재한다면 처리
+				this.processFinishedWaveList(domain.getId());
+				
+			} catch(Exception e) {
+				// 2.4. 예외 처리
+				ErrorEvent errorEvent = new ErrorEvent(domain.getId(), "JOB_BATCH_MONITOR_ERROR", e, null, true, true);
+				this.eventPublisher.publishEvent(errorEvent);
+				
+			} finally {
+				// 2.5. 스레드 로컬 변수에서 currentDomain 리셋 
+				DomainContext.unsetAll();
+			}
 		}
 	}
 
@@ -122,7 +143,8 @@ public class DasWaveMonitorJob extends AbstractQueryService {
 	 * @return
 	 */
 	private List<WcsMheHr> searchStartedWaveList(Long domainId) {
-		Query condition = AnyOrmUtil.newConditionForExecution(domainId);
+		Query condition = new Query();
+		condition.addFilter("whCd", "ICF");
 		condition.addFilter("status", "B");
 		condition.addFilter("prcsYn", LogisConstants.N_CAP_STRING);
 		return this.queryManager.selectList(WcsMheHr.class, condition);
@@ -135,10 +157,10 @@ public class DasWaveMonitorJob extends AbstractQueryService {
 	 * @return
 	 */
 	private List<WcsMheHr> searchFinishedWaveList(Long domainId) {
-		Query condition = AnyOrmUtil.newConditionForExecution(domainId);
+		Query condition = new Query();
+		condition.addFilter("whCd", "ICF");
 		condition.addFilter("status", "C");
-		condition.addFilter("prcsYn", LogisConstants.Y_CAP_STRING);
-		condition.addFilter("prcsDatetime", LogisConstants.IS_BLANK, LogisConstants.EMPTY_STRING);
+		condition.addFilter("endDatetime", LogisConstants.IS_NULL, LogisConstants.EMPTY_STRING);
 		return this.queryManager.selectList(WcsMheHr.class, condition);
 	}
 	

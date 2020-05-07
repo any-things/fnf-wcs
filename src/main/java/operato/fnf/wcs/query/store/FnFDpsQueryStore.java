@@ -43,7 +43,7 @@ public class FnFDpsQueryStore extends AbstractQueryStore {
 	 * 
 	 * @return
 	 */
-	public String getDasStopEquipmentTime() {
+	public String getDasEquipmentIdleTime() {
 		return this.getQueryByPath("dps/EquipmentIdleTime");
 	}
 	

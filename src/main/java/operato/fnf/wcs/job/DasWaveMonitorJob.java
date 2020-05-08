@@ -3,8 +3,6 @@ package operato.fnf.wcs.job;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,12 +11,9 @@ import operato.fnf.wcs.entity.WcsMheHr;
 import operato.fnf.wcs.service.batch.DasCloseBatchService;
 import operato.fnf.wcs.service.batch.DasStartBatchService;
 import xyz.anythings.base.LogisConstants;
-import xyz.anythings.sys.ConfigConstants;
 import xyz.anythings.sys.event.model.ErrorEvent;
-import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.sys.entity.Domain;
-import xyz.elidom.sys.rest.DomainController;
 import xyz.elidom.sys.system.context.DomainContext;
 import xyz.elidom.sys.util.ValueUtil;
 
@@ -31,24 +26,7 @@ import xyz.elidom.sys.util.ValueUtil;
  * @author shortstop
  */
 @Component
-public class DasWaveMonitorJob extends AbstractQueryService {
-
-	/**
-	 * Event Publisher
-	 */
-	@Autowired
-	private ApplicationEventPublisher eventPublisher;
-	/**
-	 * 이중화 서버의 양쪽에서 모두 처리되지 않게 한 쪽 서버에서 실행되도록 설정으로 처리하기 위함
-	 * application.properties 설정 - job.scheduler.enable=true/false 설정 필요 (이중화 서버 한 대는 true, 나머지 서버는 false로 설정, 한 대만 운영시 true로 설정)
-	 */
-	@Autowired
-	private Environment env;
-	/**
-	 * Domain Controller
-	 */
-	@Autowired
-	private DomainController domainCtrl;
+public class DasWaveMonitorJob extends AbstractFnFJob {
 	/**
 	 * 작업 배치 시작을 위한 서비스
 	 */
@@ -64,7 +42,7 @@ public class DasWaveMonitorJob extends AbstractQueryService {
 	 * 매 3분 마다 실행되어 작업 배치 상태 모니터링 후 변경된 Wave에 대해서 JobBatch에 반영
 	 */
 	@Transactional
-	@Scheduled(cron="0 0/1 * * * *")
+	@Scheduled(cron="0 0/3 * * * *")
 	public void monitorWave() {
 		// 1. 스케줄링 활성화 여부
 		if(!this.isJobEnabeld()) {
@@ -95,15 +73,6 @@ public class DasWaveMonitorJob extends AbstractQueryService {
 				DomainContext.unsetAll();
 			}
 		}
-	}
-
-	/**
-	 * 서버의 Job Scheduler가 활성화 되었는지 여부
-	 * 
-	 * @return
-	 */
-	private boolean isJobEnabeld() {
-		return ValueUtil.toBoolean(this.env.getProperty(ConfigConstants.JOB_SCHEDULER_ENABLED, LogisConstants.FALSE_STRING)); 
 	}
 		
 	/**

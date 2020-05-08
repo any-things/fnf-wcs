@@ -175,6 +175,9 @@ public class JobBatch extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	@Column (name = "input_workers", length = 12)
 	private Integer inputWorkers;
 	
+	@Column (name = "total_workers", length = 12)
+	private Integer totalWorkers;
+	
 	@Column (name = "uph", length = 19)
 	private Float uph;
 	
@@ -421,6 +424,14 @@ public class JobBatch extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 		this.inputWorkers = inputWorkers;
 	}
 
+	public Integer getTotalWorkers() {
+		return totalWorkers;
+	}
+
+	public void setTotalWorkers(Integer totalWorkers) {
+		this.totalWorkers = totalWorkers;
+	}
+
 	public Float getUph() {
 		return uph;
 	}
@@ -559,7 +570,7 @@ public class JobBatch extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 		condition.addFilter("jobDate", jobDate);
 		condition.addOrder("jobSeq", false);
 		List<JobBatch> jobSeqList = queryManager.selectList(JobBatch.class, condition);
-		String maxJobSeq = (ValueUtil.isEmpty(jobSeqList) ? "0" : jobSeqList.get(0).getJobSeq());
+		String maxJobSeq = (ValueUtil.isEmpty(jobSeqList) ? LogisConstants.ZERO_STRING : jobSeqList.get(0).getJobSeq());
 		return ValueUtil.toInteger(maxJobSeq);
 	}
 	

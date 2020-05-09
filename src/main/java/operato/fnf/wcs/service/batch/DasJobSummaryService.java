@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import operato.fnf.wcs.query.store.FnFDasQueryStore;
 import operato.fnf.wcs.service.model.ResultSummary;
+import operato.logis.wcs.entity.DailyProdSummary;
 import operato.logis.wcs.entity.Productivity;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
@@ -101,6 +102,58 @@ public class DasJobSummaryService extends AbstractQueryService {
 	}
 	
 	/**
+	 * 작업 배치별 일별 실적 서머리 최총 처리
+	 * 
+	 * @param batch
+	 * @param date
+	 */
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public void summaryDailyBatchJobs(JobBatch batch, String date) {
+		// 1. 이미 일별 서머리가 있다면 삭제
+		Query condition = AnyOrmUtil.newConditionForExecution(batch.getDomainId());
+		condition.addFilter("batchId", batch.getId());
+		condition.addFilter("jobDate", date);
+		this.queryManager.deleteByCondition(DailyProdSummary.class, condition);
+
+		// 2. 일별 서머리 생성
+		DailyProdSummary dailySum = ValueUtil.populate(batch, new DailyProdSummary());
+		dailySum.setId(null);
+		dailySum.setJobDate(date);
+		dailySum.setBatchId(batch.getId());
+		dailySum.setAttr01(batch.getBrandCd());
+		dailySum.setAttr02(batch.getSeasonCd());
+		
+		String[] dateArr = date.split(LogisConstants.DASH);
+		dailySum.setYear(dateArr[0]);
+		dailySum.setMonth(dateArr[1]);
+		dailySum.setDay(dateArr[2]);
+		int totalResultPcs = 0;
+		
+		for(int i = 0 ; i < 24 ; i++) {
+			int resultQty = this.calc1HourResult(batch, date, i);
+			String hourStr =  (i >= 9) ? LogisConstants.EMPTY_STRING + (i + 1) : LogisConstants.ZERO_STRING + (i + 1);
+			String fieldName = "h" + hourStr + "Result";
+			ClassUtil.setFieldValue(dailySum, fieldName, resultQty);
+			totalResultPcs += resultQty;
+		}
+		dailySum.setResultQty(totalResultPcs);
+		
+		// 배치가 종료되었다면 ...
+		if(ValueUtil.isEqual(batch.getStatus(), JobBatch.STATUS_END)) {
+			dailySum.setPlanQty(batch.getBatchPcs());
+			dailySum.setLeftQty(dailySum.getPlanQty() - dailySum.getResultQty());
+			
+			// 배치 총 시간 
+			long gap = batch.getFinishedAt().getTime() - batch.getInstructedAt().getTime();
+			float totalMin = ValueUtil.toFloat(gap / ValueUtil.toLong(1000 * 60));
+			float equipRtMin = dailySum.getEquipRuntime();
+			dailySum.setEquipRate(totalMin - equipRtMin);
+		}
+		
+		this.queryManager.insert(dailySum);
+	}
+	
+	/**
 	 * 분대별 실적 서머리 업데이트
 	 * 
 	 * @param p
@@ -180,6 +233,7 @@ public class DasJobSummaryService extends AbstractQueryService {
 			p.setBatchId(batch.getId());
 			p.setJobDate(date);
 			p.setAttr01(batch.getBrandCd());
+			p.setAttr02(batch.getSeasonCd());
 			p.setJobHour(hourStr);
 			p.setM10Result(0);
 			p.setM20Result(0);
@@ -187,6 +241,8 @@ public class DasJobSummaryService extends AbstractQueryService {
 			p.setM40Result(0);
 			p.setM50Result(0);
 			p.setM60Result(0);
+			p.setInputWorkers(batch.getInputWorkers());
+			p.setTotalWorkers(batch.getTotalWorkers());
 			this.queryManager.insert(p);
 		}
 		
@@ -204,11 +260,26 @@ public class DasJobSummaryService extends AbstractQueryService {
 	 * @return
 	 */
 	private int calc10MinResult(JobBatch batch, String date, int hour, int minFrom, int minTo) {
-		String timeFrom = date + " " + hour + ":" + minFrom + ":00";
-		String timeTo = date + " " + hour + ":" + minTo + ":00";
+		String timeFrom = date + " " + hour + ":" + minFrom + ":00.000";
+		String timeTo = date + " " + hour + ":" + minTo + ":00.999";
 		String sql = this.fnfDasQueryStore.getDasCalc10MinuteResultSummary();
-		String jobDate = batch.getJobDate().replaceAll(LogisConstants.DASH, LogisConstants.EMPTY_STRING);
-		Map<String, Object> params = ValueUtil.newMap("batchId,date,timeFrom,timeTo", batch.getId(), jobDate, timeFrom, timeTo);
+		Map<String, Object> params = ValueUtil.newMap("batchId,timeFrom,timeTo", batch.getId(), timeFrom, timeTo);
+		return this.queryManager.selectBySql(sql, params, Integer.class);
+	}
+	
+	/**
+	 * 작업 배치의 시간대 10분대 실적 합을 구한다.
+	 *  
+	 * @param batch
+	 * @param date
+	 * @param hour
+	 * @return
+	 */
+	private int calc1HourResult(JobBatch batch, String date, int hour) {
+		String timeFrom = date + " " + hour + ":00:00.000";
+		String timeTo = date + " " + hour + ":59:59.999";
+		String sql = this.fnfDasQueryStore.getDasCalc1HourResultSummary();
+		Map<String, Object> params = ValueUtil.newMap("batchId,timeFrom,timeTo", batch.getId(), timeFrom, timeTo);
 		return this.queryManager.selectBySql(sql, params, Integer.class);
 	}
 

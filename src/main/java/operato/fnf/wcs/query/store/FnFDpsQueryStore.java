@@ -39,6 +39,15 @@ public class FnFDpsQueryStore extends AbstractQueryStore {
 	}
 	
 	/**
+	 * 작업 배치별 1시간별 작업 실적 서머리 조회
+	 * 
+	 * @return
+	 */
+	public String getDasCalc1HourResultSummary() {
+		return this.getQueryByPath("dps/Calc1HourResultSummary");
+	}
+	
+	/**
 	 * 작업 배치별 설비 중단 시간
 	 * 
 	 * @return

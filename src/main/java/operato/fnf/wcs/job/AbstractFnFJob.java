@@ -5,9 +5,12 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.env.Environment;
 
 import xyz.anythings.base.LogisConstants;
+import xyz.anythings.base.model.CurrentDbTime;
+import xyz.anythings.base.util.LogisBaseUtil;
 import xyz.anythings.sys.ConfigConstants;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.elidom.sys.rest.DomainController;
+import xyz.elidom.sys.util.DateUtil;
 import xyz.elidom.sys.util.ValueUtil;
 
 /**
@@ -40,6 +43,35 @@ public class AbstractFnFJob extends AbstractQueryService {
 	 */
 	protected boolean isJobEnabeld() {
 		return ValueUtil.toBoolean(this.env.getProperty(ConfigConstants.JOB_SCHEDULER_ENABLED, LogisConstants.FALSE_STRING)); 
+	}
+
+	/**
+	 * 현재 데이터베이스의 날짜, 시간, 분 정보를 조회하여 리턴 
+	 * 
+	 * @return
+	 */
+	protected Object[] getCurrentHourMinutes() {
+		CurrentDbTime currentTime = LogisBaseUtil.currentDbDateTime();
+		String date = currentTime.getDateStr();
+		int hour = currentTime.getHour();
+		int minute = currentTime.getMinute();
+		
+		// 10분 전으로 설정 
+		if(minute < 10) {
+			minute = 55;
+			// 0시 라면 전날 23시 55분 기준으로 맞춘다.
+			if(hour == 0) {
+				date = DateUtil.addDateToStr(currentTime.getCurrentTime(), -1);
+				hour = 23;
+			// 그렇지 않으면 한 시간 전 5분으로 설정
+			} else {
+				hour -= 1;
+			}
+		} else {
+			minute -= 10;
+		}
+		
+		return new Object[] { date, hour, minute };
 	}
 
 }

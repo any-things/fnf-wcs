@@ -92,10 +92,12 @@ public class DasStartBatchService extends AbstractQueryService {
 			if(eg != null) {
 				batch.setAreaCd(eg.getAreaCd());
 				batch.setStageCd(eg.getStageCd());
+				batch.setInputWorkers(eg.getInputWorkers());
+				batch.setTotalWorkers(eg.getTotalWorkers());
 			}
 		}
 		
-		this.queryManager.update(batch, "areaCd", "stageCd", "equipGroupCd", "status", "inputWorkers", "resultBoxQty", "resultOrderQty", "resultPcs", "progressRate", "equipRuntime", "uph", "instructedAt", "updatedAt");
+		this.queryManager.update(batch, "areaCd", "stageCd", "equipGroupCd", "status", "inputWorkers", "totalWorkers", "resultBoxQty", "resultOrderQty", "resultPcs", "progressRate", "equipRuntime", "uph", "instructedAt", "updatedAt");
 	}
-	
+
 }

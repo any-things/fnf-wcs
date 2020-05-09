@@ -10,21 +10,25 @@ import org.springframework.transaction.annotation.Transactional;
 import operato.fnf.wcs.service.batch.DasJobSummaryService;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
+import xyz.anythings.base.model.CurrentDbTime;
+import xyz.anythings.base.util.LogisBaseUtil;
 import xyz.anythings.sys.event.model.ErrorEvent;
 import xyz.anythings.sys.util.AnyOrmUtil;
 import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.sys.system.context.DomainContext;
+import xyz.elidom.sys.util.DateUtil;
 import xyz.elidom.sys.util.ValueUtil;
 
 /**
- * DAS 용 10분대 실적 서머리 잡
- * 	- 매 10분 마다 MHE_BOX 테이블을 모니터링하면서 추가된 작업이 있으면 10분 실적 데이터 테이블(Productivity)에 반영
+ * 일별 실적 서머리 잡
+ * 	- 매일 오전 5시에 완료된 작업 배치의 작업 실적을 DailyProdSummary 테이블에 반영
  * 
  * @author shortstop
  */
 @Component
-public class DasJobSummaryJob extends AbstractFnFJob {
+public class DasDailySummaryJob extends AbstractFnFJob {
+
 	/**
 	 * 작업 서머리를 위한 서비스
 	 */
@@ -32,10 +36,10 @@ public class DasJobSummaryJob extends AbstractFnFJob {
 	private DasJobSummaryService jobSummarySvc;
 	
 	/**
-	 * 매 시각 2, 12, 22, 32, 42, 52분마다 실행되어 실행 데이터에 대한 서머리 처리 
+	 * 매일 오전 5시에 실행되어 일별 서머리 처리 
 	 */
 	@Transactional
-	@Scheduled(cron="0 2,12,22,32,42,52 * * * *")
+	@Scheduled(cron="0 0 5 * * *")
 	public void summaryJob() {
 		// 1. 스케줄링 활성화 여부
 		if(!this.isJobEnabeld()) {
@@ -43,11 +47,9 @@ public class DasJobSummaryJob extends AbstractFnFJob {
 		}
 		
 		// 2. Database로 부터 현재 시간, 분 정보 추출
-		Object[] timeInfo = getCurrentHourMinutes();
-		String date = ValueUtil.toString(timeInfo[0]);
-		int hour = ValueUtil.toInteger(timeInfo[1]);
-		int minute = ValueUtil.toInteger(timeInfo[2]);
-						
+		CurrentDbTime currentTime = LogisBaseUtil.currentDbDateTime();
+		String prevDate = DateUtil.addDateToStr(currentTime.getCurrentTime(), - 1);
+		
 		// 3. 모든 도메인 조회
 		List<Domain> domainList = this.domainCtrl.domainList();
 		
@@ -56,18 +58,17 @@ public class DasJobSummaryJob extends AbstractFnFJob {
 			DomainContext.setCurrentDomain(domain);
 			
 			try {
-				// 3.2 진행 중인 배치 리스트 조회
-				List<JobBatch> batches = this.searchRunningBatches(domain.getId());
+				// 3.2 전날 완료된 배치 리스트 조회
+				List<JobBatch> batches = this.searchRunningOrClosedBatches(domain.getId(), prevDate);
 				
 				if(ValueUtil.isNotEmpty(batches)) {
 					for(JobBatch batch : batches) {
-						// 3.3 작업 10분당 서머리 계산 처리
-						this.processSummaryJob(batch, date, hour, minute);
+						this.jobSummarySvc.summaryDailyBatchJobs(batch, prevDate);
 					}
 				}
 			} catch (Exception e) {
 				// 3.4 예외 처리
-				ErrorEvent errorEvent = new ErrorEvent(domain.getId(), "JOB_SUMMARY_ERROR", e, null, true, true);
+				ErrorEvent errorEvent = new ErrorEvent(domain.getId(), "JOB_DAILY_SUMMARY_ERROR", e, null, true, true);
 				this.eventPublisher.publishEvent(errorEvent);
 				
 			} finally {
@@ -78,28 +79,18 @@ public class DasJobSummaryJob extends AbstractFnFJob {
 	}
 	
 	/**
-	 * 시작된 Wave 리스트를 조회
+	 * 진행 중인 혹은 완료된 배치 리스트를 조회
 	 * 
 	 * @param domainId
+	 * @param date
 	 * @return
 	 */
-	private List<JobBatch> searchRunningBatches(Long domainId) {
+	private List<JobBatch> searchRunningOrClosedBatches(Long domainId, String date) {
 		Query condition = AnyOrmUtil.newConditionForExecution(domainId);
-		condition.addFilter("status", JobBatch.STATUS_RUNNING);
+		condition.addFilter("jobDate", date);
+		condition.addFilter("status", LogisConstants.IN, ValueUtil.toList(JobBatch.STATUS_RUNNING, JobBatch.STATUS_END));
 		condition.addFilter("jobType", LogisConstants.JOB_TYPE_DAS);
 		return this.queryManager.selectList(JobBatch.class, condition);
-	}
-
-	/**
-	 * 10분대 별 실적 서머리 작업 처리
-	 * 
-	 * @param batch
-	 * @param date
-	 * @param hour
-	 * @param minute
-	 */
-	private void processSummaryJob(JobBatch batch, String date, int hour, int minute) {
-		this.jobSummarySvc.summary10MinuteJobs(batch, date, hour, minute);
 	}
 
 }

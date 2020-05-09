@@ -64,6 +64,12 @@ public class WcsMheBox extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
 	@Column (name = "mhe_datetime", nullable = true, type = ColumnType.DATETIME)
 	private Date mheDatetime;
+	
+	@Column (name = "if_yn", length = 1)
+	private String ifYn;
+	
+	@Column (name = "if_datetime", type = ColumnType.DATETIME)
+	private Date ifDatetime;
 
 	public String getId() {
 		return id;
@@ -176,4 +182,21 @@ public class WcsMheBox extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	public void setMheDatetime(Date mheDatetime) {
 		this.mheDatetime = mheDatetime;
 	}
+
+	public String getIfYn() {
+		return ifYn;
+	}
+
+	public void setIfYn(String ifYn) {
+		this.ifYn = ifYn;
+	}
+
+	public Date getIfDatetime() {
+		return ifDatetime;
+	}
+
+	public void setIfDatetime(Date ifDatetime) {
+		this.ifDatetime = ifDatetime;
+	}
+
 }

@@ -125,7 +125,7 @@ public class DasReceiveBatchService extends AbstractQueryService {
 	 * @param params
 	 * @return
 	 */
-	private BatchReceipt startToReceiveData(BatchReceipt receipt, BatchReceiptItem item, Object ... params) {		
+	private BatchReceipt startToReceiveData(BatchReceipt receipt, BatchReceiptItem item, Object ... params) {
 		boolean exceptionOccurred = false;
 		
 		try {

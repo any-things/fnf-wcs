@@ -1,0 +1,15 @@
+[
+        {
+                "id": "eeaa94bd-1a1d-458d-9715-0e7e5b61541d",
+                "areaCd": "A",
+                "stageCd": "A-B1",
+                "equipGroupCd": "94",
+                "sorterCd": "94-01",
+                "sorterNm": " Ex-PAS",
+                "chuteCnt": 22,
+                "stdUph": 0,
+                "avgUph": 0,
+                "status": "",
+                "activeFlag": true
+        }
+]

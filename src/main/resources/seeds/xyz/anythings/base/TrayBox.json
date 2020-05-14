@@ -1,0 +1,182 @@
+[
+        {
+                "id": "b5434abc-078a-4c56-a0ea-380b879b01f7",
+                "trayCd": "B0000001",
+                "trayNm": "B0000001",
+                "trayType": "B",
+                "trayColor": "B",
+                "binCount": 1,
+                "status": "W"
+        },
+        {
+                "id": "6d507749-e1e0-4fa3-ad84-18d2e808fbd1",
+                "trayCd": "B0000002",
+                "trayNm": "B0000002",
+                "trayType": "B",
+                "trayColor": "B",
+                "binCount": 1,
+                "status": "W"
+        },
+        {
+                "id": "e6c18cde-ef9c-4d81-a88a-1e0325d6c0d2",
+                "trayCd": "B0000003",
+                "trayNm": "B0000003",
+                "trayType": "B",
+                "trayColor": "B",
+                "binCount": 1,
+                "status": "I"
+        },
+        {
+                "id": "cbdbb66c-4bee-48cf-86b4-38b8d9a4369f",
+                "trayCd": "B0000004",
+                "trayNm": "B0000004",
+                "trayType": "B",
+                "trayColor": "B",
+                "binCount": 1,
+                "status": "W"
+        },
+        {
+                "id": "401babe8-3dff-4379-a71a-e79046b0f66e",
+                "trayCd": "B0000005",
+                "trayNm": "B0000005",
+                "trayType": "B",
+                "trayColor": "B",
+                "binCount": 1,
+                "status": "I"
+        },
+        {
+                "id": "95a98316-7a42-4c1b-a071-1f5a84acab78",
+                "trayCd": "G0000001",
+                "trayNm": "G0000001",
+                "trayType": "G",
+                "trayColor": "G",
+                "binCount": 1,
+                "status": "W"
+        },
+        {
+                "id": "f7d09aa0-dcf5-4c91-b2f6-0949854a58bd",
+                "trayCd": "G0000002",
+                "trayNm": "G0000002",
+                "trayType": "G",
+                "trayColor": "G",
+                "binCount": 1,
+                "status": "W"
+        },
+        {
+                "id": "f7236562-08d8-4b7f-bd29-92a1a46e27b0",
+                "trayCd": "G0000003",
+                "trayNm": "G0000003",
+                "trayType": "G",
+                "trayColor": "G",
+                "binCount": 1,
+                "status": "W"
+        },
+        {
+                "id": "84e7b509-fdb9-4079-a2e5-8ea09e24dfe8",
+                "trayCd": "G0000004",
+                "trayNm": "G0000004",
+                "trayType": "G",
+                "trayColor": "G",
+                "binCount": 1,
+                "status": "W"
+        },
+        {
+                "id": "aeb24a6e-0439-4152-9386-354e34fab438",
+                "trayCd": "G0000005",
+                "trayNm": "G0000005",
+                "trayType": "G",
+                "trayColor": "G",
+                "binCount": 1,
+                "status": "W"
+        },
+        {
+                "id": "ead93d5f-7d83-4119-979d-88c93bff5cfe",
+                "trayCd": "H0000001",
+                "trayNm": "H0000001",
+                "trayType": "H",
+                "trayColor": "Y",
+                "binCount": 1,
+                "status": "I"
+        },
+        {
+                "id": "9d43e2c2-ad12-4b6c-b830-c116cc495aa7",
+                "trayCd": "H0000002",
+                "trayNm": "H0000002",
+                "trayType": "H",
+                "trayColor": "Y",
+                "binCount": 1,
+                "status": "W"
+        },
+        {
+                "id": "f6379060-695b-4d37-9a42-7c6287febffa",
+                "trayCd": "H0000003",
+                "trayNm": "H0000003",
+                "trayType": "H",
+                "trayColor": "Y",
+                "binCount": 1,
+                "status": "W"
+        },
+        {
+                "id": "3bbb004f-7f04-40b0-a6c8-2f2439cbced3",
+                "trayCd": "H0000004",
+                "trayNm": "H0000004",
+                "trayType": "H",
+                "trayColor": "Y",
+                "binCount": 1,
+                "status": "W"
+        },
+        {
+                "id": "a35e96ea-8cf0-465d-9fde-bcf0a3271d3c",
+                "trayCd": "H0000005",
+                "trayNm": "H0000005",
+                "trayType": "H",
+                "trayColor": "Y",
+                "binCount": 1,
+                "status": "W"
+        },
+        {
+                "id": "6b6c61c3-46a6-41ad-aa51-18802c46be23",
+                "trayCd": "R0000001",
+                "trayNm": "R0000001",
+                "trayType": "R",
+                "trayColor": "R",
+                "binCount": 1,
+                "status": "W"
+        },
+        {
+                "id": "1d6e91bc-d11d-440d-a334-e16a5286ad36",
+                "trayCd": "R0000002",
+                "trayNm": "R0000002",
+                "trayType": "R",
+                "trayColor": "R",
+                "binCount": 1,
+                "status": "W"
+        },
+        {
+                "id": "00a5d0e5-7adb-4c88-8a9e-7a5783466a2a",
+                "trayCd": "R0000003",
+                "trayNm": "R0000003",
+                "trayType": "R",
+                "trayColor": "R",
+                "binCount": 1,
+                "status": "W"
+        },
+        {
+                "id": "b8018501-e497-4566-a46b-80a97acdc9ab",
+                "trayCd": "R0000004",
+                "trayNm": "R0000004",
+                "trayType": "R",
+                "trayColor": "R",
+                "binCount": 1,
+                "status": "W"
+        },
+        {
+                "id": "c5a892fa-b69f-4cc6-a619-5a57350ea186",
+                "trayCd": "R0000005",
+                "trayNm": "R0000005",
+                "trayType": "R",
+                "trayColor": "R",
+                "binCount": 1,
+                "status": "W"
+        }
+]

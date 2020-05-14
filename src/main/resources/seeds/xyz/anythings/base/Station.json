@@ -1,0 +1,74 @@
+[
+        {
+                "id": "23e00332-0113-47d8-8f1c-975a30832e45",
+                "equipType": "Rack",
+                "equipCd": "A1-01",
+                "stationCd": "A101-01",
+                "stationNm": "1층 DAS 존1",
+                "stationType": "JOB_STATION",
+                "worker": {}
+        },
+        {
+                "id": "2656b334-2b95-48cf-8da2-3524d7e437ba",
+                "equipType": "Rack",
+                "equipCd": "A1-01",
+                "stationCd": "A101-02",
+                "stationNm": "1층 DAS 존2",
+                "stationType": "JOB_STATION",
+                "worker": {}
+        },
+        {
+                "id": "6de50580-93b0-44fc-9d0d-8b34faef6878",
+                "equipType": "Rack",
+                "equipCd": "A2-01",
+                "stationCd": "A201-01",
+                "stationNm": "2층 DPS 존1",
+                "stationType": "JOB_STATION",
+                "worker": {}
+        },
+        {
+                "id": "64c1ab4b-8985-4501-a54d-3deffb6c7ae5",
+                "equipType": "Rack",
+                "equipCd": "A2-01",
+                "stationCd": "A201-02",
+                "stationNm": "2층 DPS 존2",
+                "stationType": "JOB_STATION",
+                "worker": {}
+        },
+        {
+                "id": "367d6a78-b5a9-4770-a027-479056dc3e33",
+                "equipType": "Rack",
+                "equipCd": "A3-01",
+                "stationCd": "A301-01",
+                "stationNm": "3층 DAS 존1",
+                "stationType": "JOB_STATION",
+                "worker": {}
+        },
+        {
+                "id": "0982be93-b7e6-457c-bb60-e321e4873b07",
+                "equipType": "Rack",
+                "equipCd": "A3-01",
+                "stationCd": "A301-02",
+                "stationNm": "3층 DAS 존2",
+                "stationType": "JOB_STATION",
+                "worker": {}
+        },
+        {
+                "id": "cd5b200b-b9d3-42b3-b744-a241f786e388",
+                "equipType": "Rack",
+                "equipCd": "A3-02",
+                "stationCd": "A302-01",
+                "stationNm": "3층 DAS 존3",
+                "stationType": "JOB_STATION",
+                "worker": {}
+        },
+        {
+                "id": "4a765e1a-2618-481a-8428-f5b97df4f59e",
+                "equipType": "Rack",
+                "equipCd": "A3-02",
+                "stationCd": "A302-02",
+                "stationNm": "3층 DAS 존4",
+                "stationType": "JOB_STATION",
+                "worker": {}
+        }
+]

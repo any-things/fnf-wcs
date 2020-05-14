@@ -1,0 +1,93 @@
+[
+        {
+                "id": "10056039-1e7c-4fd0-b15b-aeef74706fb8",
+                "boxTypeCd": "B",
+                "boxTypeNm": "B",
+                "boxColor": "R",
+                "boxWt": 145,
+                "boxWtMin": 73,
+                "boxWtMax": 318,
+                "boxLen": 152,
+                "boxWd": 178,
+                "boxHt": 178,
+                "boxVol": 0
+        },
+        {
+                "id": "8767d3ab-1316-4c54-a365-6f9749eac764",
+                "boxTypeCd": "C",
+                "boxTypeNm": "C",
+                "boxColor": "G",
+                "boxWt": 170,
+                "boxWtMin": 85,
+                "boxWtMax": 355,
+                "boxLen": 152,
+                "boxWd": 254,
+                "boxHt": 178,
+                "boxVol": 0
+        },
+        {
+                "id": "d2154981-393e-475b-8e46-01ce01fc8b9d",
+                "boxTypeCd": "D",
+                "boxTypeNm": "D",
+                "boxColor": "B",
+                "boxWt": 218,
+                "boxWtMin": 109,
+                "boxWtMax": 427,
+                "boxLen": 178,
+                "boxWd": 254,
+                "boxHt": 229,
+                "boxVol": 0
+        },
+        {
+                "id": "c7cf482a-6e82-4172-af4f-70d5dde31ade",
+                "boxTypeCd": "F",
+                "boxTypeNm": "F",
+                "boxColor": "Y",
+                "boxWt": 297,
+                "boxWtMin": 149,
+                "boxWtMax": 546,
+                "boxLen": 229,
+                "boxWd": 305,
+                "boxHt": 229,
+                "boxVol": 0
+        },
+        {
+                "id": "a3d0450d-2847-4809-b0ee-a46808e4e6f6",
+                "boxTypeCd": "G",
+                "boxTypeNm": "G",
+                "boxColor": "G",
+                "boxWt": 282,
+                "boxWtMin": 141,
+                "boxWtMax": 523,
+                "boxLen": 203,
+                "boxWd": 330,
+                "boxHt": 279,
+                "boxVol": 0
+        },
+        {
+                "id": "598b9823-b558-4df2-8b19-c8e6cb72e1ea",
+                "boxTypeCd": "H",
+                "boxTypeNm": "H",
+                "boxColor": "B",
+                "boxWt": 436,
+                "boxWtMin": 218,
+                "boxWtMax": 754,
+                "boxLen": 330,
+                "boxWd": 406,
+                "boxHt": 254,
+                "boxVol": 0
+        },
+        {
+                "id": "8df2173b-718b-48ff-8de0-cbe5fffbe513",
+                "boxTypeCd": "I",
+                "boxTypeNm": "I",
+                "boxColor": "Y",
+                "boxWt": 630,
+                "boxWtMin": 315,
+                "boxWtMax": 1045,
+                "boxLen": 330,
+                "boxWd": 406,
+                "boxHt": 356,
+                "boxVol": 0
+        }
+]

@@ -1,0 +1,22 @@
+[
+        {
+                "id": "b4e4d9b4-8ae0-46e3-89cf-67b61533fb7b",
+                "areaCd": "A",
+                "areaNm": "A동"
+        },
+        {
+                "id": "bc3ad8df-99f8-4a88-b825-ee0f1eed2bed",
+                "areaCd": "B",
+                "areaNm": "B동"
+        },
+        {
+                "id": "4c4c3272-3198-45cc-92c1-6e42c78b876d",
+                "areaCd": "C",
+                "areaNm": "C동"
+        },
+        {
+                "id": "e0d5d8e2-e809-4c87-8b7e-9b42a60c6fa2",
+                "areaCd": "Z",
+                "areaNm": "임대창고"
+        }
+]

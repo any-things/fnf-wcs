@@ -1,0 +1,122 @@
+[
+        {
+                "id": "0d825166-e186-4f15-a070-b6dadbdbef76",
+                "equipGroupCd": "01",
+                "equipGroupNm": "지하2층 DAS",
+                "equipType": "DAS",
+                "areaCd": "A",
+                "stageCd": "A-B2",
+                "category": "지하 2층",
+                "inputWorkers": 3,
+                "totalWorkers": 3,
+                "remarks": "출고 분배"
+        },
+        {
+                "id": "52a506ec-1b41-4ecd-bfa5-477f9c42a763",
+                "equipGroupCd": "11",
+                "equipGroupNm": "1층 DAS",
+                "equipType": "DAS",
+                "areaCd": "A",
+                "stageCd": "A-01",
+                "category": "1층",
+                "inputWorkers": 3,
+                "totalWorkers": 3,
+                "remarks": "반품 분류"
+        },
+        {
+                "id": "c3d375c6-2d8d-49d2-a8e4-7a95e10d2053",
+                "equipGroupCd": "31",
+                "equipGroupNm": "3층 DAS",
+                "equipType": "DAS",
+                "areaCd": "A",
+                "stageCd": "A-03",
+                "category": "3층",
+                "inputWorkers": 3,
+                "totalWorkers": 3,
+                "remarks": "출고 분배"
+        },
+        {
+                "id": "3c912979-bee2-4dec-8089-53ff1a494909",
+                "equipGroupCd": "51",
+                "equipGroupNm": "5층 DAS",
+                "equipType": "DAS",
+                "areaCd": "A",
+                "stageCd": "A-05",
+                "category": "5층",
+                "inputWorkers": 3,
+                "totalWorkers": 3,
+                "remarks": "출고 분배"
+        },
+        {
+                "id": "ec76cfa6-c5fa-4237-9751-a9875478ef2a",
+                "equipGroupCd": "61",
+                "equipGroupNm": "6층 DAS",
+                "equipType": "DAS",
+                "areaCd": "A",
+                "stageCd": "A-06",
+                "category": "6층",
+                "inputWorkers": 3,
+                "totalWorkers": 3,
+                "remarks": "출고 분배"
+        },
+        {
+                "id": "cae46f61-57b5-4ae3-a853-b41b23dd0fe3",
+                "equipGroupCd": "71",
+                "equipGroupNm": "7층 DAS",
+                "equipType": "DAS",
+                "areaCd": "A",
+                "stageCd": "A-07",
+                "category": "7층",
+                "inputWorkers": 3,
+                "totalWorkers": 3,
+                "remarks": "출고 분배"
+        },
+        {
+                "id": "164c517c-b6d0-4050-ad66-758878fe5b84",
+                "equipGroupCd": "81",
+                "equipGroupNm": "8층 DAS",
+                "equipType": "DAS",
+                "areaCd": "A",
+                "stageCd": "A-08",
+                "category": "8층",
+                "inputWorkers": 3,
+                "totalWorkers": 3,
+                "remarks": "출고 분배"
+        },
+        {
+                "id": "a34b5134-c1a9-4134-8149-69d5702aa1f9",
+                "equipGroupCd": "12",
+                "equipGroupNm": "1층 DAS (Sorter)",
+                "equipType": "Sorter",
+                "areaCd": "A",
+                "stageCd": "A-01",
+                "category": "1층",
+                "inputWorkers": 3,
+                "totalWorkers": 9,
+                "remarks": "반품 분류"
+        },
+        {
+                "id": "7783a061-0588-4121-a911-4569e87eecd7",
+                "equipGroupCd": "94",
+                "equipGroupNm": "지하1층 EX-PAS",
+                "equipType": "Ex-PAS",
+                "areaCd": "A",
+                "stageCd": "A-B1",
+                "category": "지하 1층",
+                "inputWorkers": 3,
+                "totalWorkers": 9,
+                "remarks": "반품 분류"
+        },
+        {
+                "id": "d6d1c6d7-d5b4-4aa8-89e7-fe130b3a2435",
+                "equipGroupCd": "M1",
+                "equipGroupNm": "2층 DPS",
+                "equipType": "DPS",
+                "areaCd": "A",
+                "stageCd": "A-02",
+                "category": "2층",
+                "inputWorkers": 5,
+                "totalWorkers": 5,
+                "remarks": "온라인 출고"
+        }
+]

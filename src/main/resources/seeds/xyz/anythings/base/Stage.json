@@ -1,0 +1,72 @@
+[
+        {
+                "id": "aedb53b8-56a5-4dc9-82ca-0af046e45781",
+                "areaCd": "A",
+                "stageCd": "A-B1",
+                "stageNm": "B1층 Ex-PAS",
+                "stageType": "EX-PAS"
+        },
+        {
+                "id": "e08e1c6f-f140-4597-acd8-500853a9876d",
+                "areaCd": "A",
+                "stageCd": "A-08",
+                "stageNm": "8층 DAS",
+                "stageType": "DAS"
+        },
+        {
+                "id": "330973d5-8d4a-458a-ba39-19ac1c38ea7d",
+                "areaCd": "A",
+                "stageCd": "A-07",
+                "stageNm": "7층 재고공간",
+                "stageType": "DAS"
+        },
+        {
+                "id": "8daf2530-2533-4bff-a388-97b462d9a508",
+                "areaCd": "A",
+                "stageCd": "A-06",
+                "stageNm": "6층 DAS (랙)",
+                "stageType": "DAS"
+        },
+        {
+                "id": "5917696d-ff18-4d07-8f3e-0136f2a46dca",
+                "areaCd": "A",
+                "stageCd": "A-05",
+                "stageNm": "5층 DAS (랙)",
+                "stageType": "DAS"
+        },
+        {
+                "id": "b3ed77f4-bf75-47ab-a938-37f2ea07cdf1",
+                "areaCd": "A",
+                "stageCd": "A-04",
+                "stageNm": "4층 DAS",
+                "stageType": "DAS"
+        },
+        {
+                "id": "944d5159-8018-4368-9110-5087ab8c67fe",
+                "areaCd": "A",
+                "stageCd": "A-03",
+                "stageNm": "3층 DAS",
+                "stageType": "DAS"
+        },
+        {
+                "id": "c051e7b4-81e8-44d1-ab34-3a45ce594af2",
+                "areaCd": "A",
+                "stageCd": "A-01",
+                "stageNm": "1층 DAS (수출)",
+                "stageType": "DAS"
+        },
+        {
+                "id": "741dc259-5028-4823-aa09-4941cefc78cb",
+                "areaCd": "A",
+                "stageCd": "A-B2",
+                "stageNm": "B2층 DAS",
+                "stageType": "DAS"
+        },
+        {
+                "id": "1b7e0bc7-076b-475f-a6db-436daa7be279",
+                "areaCd": "A",
+                "stageCd": "A-02",
+                "stageNm": "2층 DPS (온라인)",
+                "stageType": "DPS"
+        }
+]

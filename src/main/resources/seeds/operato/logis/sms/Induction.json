@@ -1,0 +1,42 @@
+[
+        {
+                "id": "19e06098-e002-455a-8771-efc967fc308e",
+                "sorterCd": "94-01",
+                "inductionCd": "1",
+                "jobType": "",
+                "batchId": "",
+                "activeFlag": false,
+                "stdUph": 0,
+                "avgUph": 0
+        },
+        {
+                "id": "159e1f12-3f93-42e7-97e2-6a5c1dc4fcb8",
+                "sorterCd": "94-01",
+                "inductionCd": "4",
+                "jobType": "",
+                "batchId": "",
+                "activeFlag": false,
+                "stdUph": 0,
+                "avgUph": 0
+        },
+        {
+                "id": "ce101962-feee-4d06-bea5-12d3c0acd596",
+                "sorterCd": "94-01",
+                "inductionCd": "3",
+                "jobType": "",
+                "batchId": "",
+                "activeFlag": false,
+                "stdUph": 0,
+                "avgUph": 0
+        },
+        {
+                "id": "26341158-c39e-450b-bfc6-aa5db19f8aff",
+                "sorterCd": "94-01",
+                "inductionCd": "2",
+                "jobType": "",
+                "batchId": "",
+                "activeFlag": false,
+                "stdUph": 0,
+                "avgUph": 0
+        }
+]

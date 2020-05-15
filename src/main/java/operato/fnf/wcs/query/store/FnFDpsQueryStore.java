@@ -56,4 +56,13 @@ public class FnFDpsQueryStore extends AbstractQueryStore {
 		return this.getQueryByPath("dps/EquipmentIdleTime");
 	}
 	
+	/**
+	 * 작업 할당을 위한 재고 조회 
+	 * 
+	 * @return
+	 */
+	public String getStocksForJobAssign() {
+		return this.getQueryByPath("dps/StocksForJobAssign");
+	}
+	
 }

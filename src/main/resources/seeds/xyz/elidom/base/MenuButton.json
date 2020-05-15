@@ -3340,89 +3340,6 @@
                 "auth": "create"
         },
         {
-                "id": "b5574fd2-86a8-4ae4-a731-e7eb2b8849bd",
-                "menuId": "a93d2c98-1435-4b81-acda-50415bb69014",
-                "menu": {
-                        "id": "a93d2c98-1435-4b81-acda-50415bb69014",
-                        "name": "B2BBatch"
-                },
-                "rank": 80,
-                "text": "cancel_order",
-                "auth": "delete"
-        },
-        {
-                "id": "1c93ff25-b91d-4d31-85d5-ef1eed95bc48",
-                "menuId": "a93d2c98-1435-4b81-acda-50415bb69014",
-                "menu": {
-                        "id": "a93d2c98-1435-4b81-acda-50415bb69014",
-                        "name": "B2BBatch"
-                },
-                "rank": 70,
-                "icon": "icons:eject",
-                "text": "job_complete",
-                "auth": "update"
-        },
-        {
-                "id": "3722c28f-c0e8-4f9f-b28a-2bf3ae821c08",
-                "menuId": "a93d2c98-1435-4b81-acda-50415bb69014",
-                "menu": {
-                        "id": "a93d2c98-1435-4b81-acda-50415bb69014",
-                        "name": "B2BBatch"
-                },
-                "rank": 60,
-                "icon": "icons:cancel",
-                "text": "cancel_job_instruct",
-                "auth": "delete"
-        },
-        {
-                "id": "204b2540-84c3-40c8-b155-71b7b3df14ca",
-                "menuId": "a93d2c98-1435-4b81-acda-50415bb69014",
-                "menu": {
-                        "id": "a93d2c98-1435-4b81-acda-50415bb69014",
-                        "name": "B2BBatch"
-                },
-                "rank": 50,
-                "icon": "icons:shop",
-                "text": "job_instruct",
-                "auth": "create"
-        },
-        {
-                "id": "9434eec0-8fcb-4f83-88bb-63822a6c0b0c",
-                "menuId": "a93d2c98-1435-4b81-acda-50415bb69014",
-                "menu": {
-                        "id": "a93d2c98-1435-4b81-acda-50415bb69014",
-                        "name": "B2BBatch"
-                },
-                "rank": 40,
-                "icon": "icons:view-agenda",
-                "text": "merge_batch",
-                "auth": "update"
-        },
-        {
-                "id": "5d5c74d0-8cd7-46ed-8dd0-f9e12dd02537",
-                "menuId": "a93d2c98-1435-4b81-acda-50415bb69014",
-                "menu": {
-                        "id": "a93d2c98-1435-4b81-acda-50415bb69014",
-                        "name": "B2BBatch"
-                },
-                "rank": 30,
-                "icon": "icons:content-copy",
-                "text": "copy_region",
-                "auth": "create"
-        },
-        {
-                "id": "418a7ca2-0820-495e-856b-e7aedde0fd50",
-                "menuId": "a93d2c98-1435-4b81-acda-50415bb69014",
-                "menu": {
-                        "id": "a93d2c98-1435-4b81-acda-50415bb69014",
-                        "name": "B2BBatch"
-                },
-                "rank": 20,
-                "icon": "icons:build",
-                "text": "order_preprocess",
-                "auth": "update"
-        },
-        {
                 "id": "fa6a32a1-2004-40a1-a68f-f1e2601d4e9b",
                 "menuId": "bd2f6bc1-3298-4d73-b51f-7d9cad032cad",
                 "menu": {
@@ -4543,5 +4460,159 @@
                 "rank": 10,
                 "text": "export",
                 "auth": "show"
+        },
+        {
+                "id": "7ad68646-d87d-4232-9a2c-14646bbcc40a",
+                "menuId": "fcaaee11-5f6a-4d47-9d89-2f3ca252ab2b",
+                "menu": {
+                        "id": "fcaaee11-5f6a-4d47-9d89-2f3ca252ab2b",
+                        "name": "EquipGroup"
+                },
+                "rank": 10,
+                "text": "export",
+                "auth": "show"
+        },
+        {
+                "id": "7984a82c-68be-47e6-8a77-518efd9425f1",
+                "menuId": "fcaaee11-5f6a-4d47-9d89-2f3ca252ab2b",
+                "menu": {
+                        "id": "fcaaee11-5f6a-4d47-9d89-2f3ca252ab2b",
+                        "name": "EquipGroup"
+                },
+                "rank": 20,
+                "text": "add",
+                "auth": "create"
+        },
+        {
+                "id": "8cab6d63-d97b-413b-a1ef-f655b3b8dda4",
+                "menuId": "fcaaee11-5f6a-4d47-9d89-2f3ca252ab2b",
+                "menu": {
+                        "id": "fcaaee11-5f6a-4d47-9d89-2f3ca252ab2b",
+                        "name": "EquipGroup"
+                },
+                "rank": 30,
+                "text": "delete",
+                "auth": "delete"
+        },
+        {
+                "id": "b218c2af-f3cc-4234-8c5b-0356fda5eaed",
+                "menuId": "fcaaee11-5f6a-4d47-9d89-2f3ca252ab2b",
+                "menu": {
+                        "id": "fcaaee11-5f6a-4d47-9d89-2f3ca252ab2b",
+                        "name": "EquipGroup"
+                },
+                "rank": 40,
+                "text": "save",
+                "auth": "update"
+        },
+        {
+                "id": "7a163b59-447d-40aa-a76b-bc7a6db55819",
+                "menuId": "432a835b-9140-4ba2-afc8-f416bbe91dd3",
+                "menu": {
+                        "id": "432a835b-9140-4ba2-afc8-f416bbe91dd3",
+                        "name": "DasMheDr"
+                },
+                "rank": 10,
+                "text": "export",
+                "auth": "show"
+        },
+        {
+                "id": "5bc9e1e5-8a56-40ba-9c4e-6982b833dbc3",
+                "menuId": "39361c7f-d49b-43d3-ada2-f20ab5fd9682",
+                "menu": {
+                        "id": "39361c7f-d49b-43d3-ada2-f20ab5fd9682",
+                        "name": "DasMheBox"
+                },
+                "rank": 10,
+                "text": "export",
+                "auth": "show"
+        },
+        {
+                "id": "f949b21c-a1ec-4b36-8592-25d0f9bb537e",
+                "menuId": "ddd1c43c-b226-448c-ade7-8741671a6f98",
+                "menu": {
+                        "id": "ddd1c43c-b226-448c-ade7-8741671a6f98",
+                        "name": "DpsMheDr"
+                },
+                "rank": 10,
+                "text": "export",
+                "auth": "show"
+        },
+        {
+                "id": "9f9856a7-1635-4128-bb85-4d7ac24d4a38",
+                "menuId": "0de69651-e56e-4073-af27-39c75ce056d4",
+                "menu": {
+                        "id": "0de69651-e56e-4073-af27-39c75ce056d4",
+                        "name": "RtnDasSortDr"
+                },
+                "rank": 10,
+                "text": "export",
+                "auth": "show"
+        },
+        {
+                "id": "fe272fcc-7f39-472a-ada7-4a52fb2f750e",
+                "menuId": "0e123bb5-d3bb-4e5e-87c3-1b006769a33f",
+                "menu": {
+                        "id": "0e123bb5-d3bb-4e5e-87c3-1b006769a33f",
+                        "name": "RtnDasSortHr"
+                },
+                "rank": 10,
+                "text": "export",
+                "auth": "show"
+        },
+        {
+                "id": "67338807-78b5-415c-bb3a-b360afdd3ed0",
+                "menuId": "39361c7f-d49b-43d3-ada2-f20ab5fd9682",
+                "menu": {
+                        "id": "39361c7f-d49b-43d3-ada2-f20ab5fd9682",
+                        "name": "DasMheBox"
+                },
+                "rank": 30,
+                "text": "delete",
+                "auth": "delete"
+        },
+        {
+                "id": "d055abc0-48b2-4404-978b-bd3a249ee4d2",
+                "menuId": "39361c7f-d49b-43d3-ada2-f20ab5fd9682",
+                "menu": {
+                        "id": "39361c7f-d49b-43d3-ada2-f20ab5fd9682",
+                        "name": "DasMheBox"
+                },
+                "rank": 40,
+                "text": "save",
+                "auth": "update"
+        },
+        {
+                "id": "489077d8-971f-4a85-920a-855adb015bf9",
+                "menuId": "39361c7f-d49b-43d3-ada2-f20ab5fd9682",
+                "menu": {
+                        "id": "39361c7f-d49b-43d3-ada2-f20ab5fd9682",
+                        "name": "DasMheBox"
+                },
+                "rank": 20,
+                "text": "add",
+                "auth": "create"
+        },
+        {
+                "id": "d698c284-f903-4b3e-9ace-e7c945d5af8f",
+                "menuId": "f390162c-7195-4656-961f-86988c0cc051",
+                "menu": {
+                        "id": "f390162c-7195-4656-961f-86988c0cc051",
+                        "name": "Stock"
+                },
+                "rank": 20,
+                "text": "add",
+                "auth": "create"
+        },
+        {
+                "id": "4eb1030c-6779-4005-99a9-2c02e024d04f",
+                "menuId": "f390162c-7195-4656-961f-86988c0cc051",
+                "menu": {
+                        "id": "f390162c-7195-4656-961f-86988c0cc051",
+                        "name": "Stock"
+                },
+                "rank": 30,
+                "text": "save",
+                "auth": "update"
         }
 ]

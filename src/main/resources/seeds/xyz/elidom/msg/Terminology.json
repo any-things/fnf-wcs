@@ -3969,13 +3969,6 @@
                 "display": "Job Date"
         },
         {
-                "id": "7f2a24bc-d867-41d2-a695-84f36e6e3411",
-                "name": "job_id",
-                "locale": "ko-KR",
-                "category": "label",
-                "display": "Wave No"
-        },
-        {
                 "id": "d0fc77d5-5873-45d0-850c-5630ba0e2bb0",
                 "name": "Das2JobProcess",
                 "locale": "en-US",
@@ -7259,6 +7252,13 @@
                 "display": "입력한 정보가 올바르지 않습니다."
         },
         {
+                "id": "90c5eff2-89d1-42d7-8ab8-bebb278f9220",
+                "name": "locale",
+                "locale": "en-US",
+                "category": "label",
+                "display": "Locale"
+        },
+        {
                 "id": "e34f64b9-4e47-4f62-90b6-9e0ad9869915",
                 "name": "pw_changed",
                 "locale": "en-US",
@@ -8022,13 +8022,6 @@
                 "display": "Short Display"
         },
         {
-                "id": "90c5eff2-89d1-42d7-8ab8-bebb278f9220",
-                "name": "locale",
-                "locale": "en-US",
-                "category": "label",
-                "display": "Locale"
-        },
-        {
                 "id": "da52f175-eecd-4db9-a042-2d2b7f754e2c",
                 "name": "retired_at",
                 "locale": "en-US",
@@ -8300,13 +8293,6 @@
                 "locale": "en-US",
                 "category": "title",
                 "display": "Entity Column"
-        },
-        {
-                "id": "e7609f8f-9a10-4d17-bcc1-2dba8d4402b6",
-                "name": "job_id",
-                "locale": "en-US",
-                "category": "label",
-                "display": "Wave No"
         },
         {
                 "id": "0cf99b7a-e78d-4f28-8b7c-5a3dd24f8bb8",
@@ -11648,6 +11634,13 @@
                 "display": "Send 'OFF' response though off state"
         },
         {
+                "id": "858a7a58-d60b-40ea-96b5-a5c51a2e2123",
+                "name": "swap",
+                "locale": "en-US",
+                "category": "button",
+                "display": "바꾸기"
+        },
+        {
                 "id": "a67929ac-d139-41d7-b8be-7c1b91ab6804",
                 "name": "send_off_ack_already_off_desc",
                 "locale": "ko-KR",
@@ -12031,13 +12024,6 @@
                 "locale": "zh-CN",
                 "category": "menu",
                 "display": "Custom Procedure"
-        },
-        {
-                "id": "858a7a58-d60b-40ea-96b5-a5c51a2e2123",
-                "name": "swap",
-                "locale": "en-US",
-                "category": "button",
-                "display": "바꾸기"
         },
         {
                 "id": "ccc3af24-e1ee-4ef9-808e-e2ba9f8c391d",
@@ -16499,6 +16485,13 @@
                 "display": "Box Volume"
         },
         {
+                "id": "17e86de1-96c3-443e-8c06-b45dbfa66a04",
+                "name": "success",
+                "locale": "ko-KR",
+                "category": "title",
+                "display": "성공"
+        },
+        {
                 "id": "36c297a2-1267-4a75-946d-7a8e346b0c12",
                 "name": "request_qty",
                 "locale": "ko-KR",
@@ -16917,13 +16910,6 @@
                 "locale": "zh-CN",
                 "category": "button",
                 "display": "查询明细"
-        },
-        {
-                "id": "17e86de1-96c3-443e-8c06-b45dbfa66a04",
-                "name": "success",
-                "locale": "ko-KR",
-                "category": "title",
-                "display": "성공"
         },
         {
                 "id": "82160976-0a2f-4b03-92a6-8785d80e09d8",
@@ -18550,6 +18536,13 @@
                 "display": "Can not add the local setting '{view}' to the setting view."
         },
         {
+                "id": "4f6ad91e-66fa-4651-8ccb-7ec0bc8385b2",
+                "name": "report_nm",
+                "locale": "zh-CN",
+                "category": "label",
+                "display": "报表名称"
+        },
+        {
                 "id": "90eaab81-978f-4930-bf65-0131d1835adf",
                 "name": "CUSTOM-TOPBAR-FAILURE",
                 "locale": "en-US",
@@ -18919,6 +18912,13 @@
                 "locale": "ko-KR",
                 "category": "label",
                 "display": "미완료"
+        },
+        {
+                "id": "c5d5cfc7-a0fb-4136-8ff9-871707b3406a",
+                "name": "pane",
+                "locale": "zh-CN",
+                "category": "tooltip",
+                "display": "移动窗格"
         },
         {
                 "id": "704f9d91-3123-4401-9fa9-e03ab396d8f6",
@@ -19689,6 +19689,13 @@
                 "locale": "zh-CN",
                 "category": "label",
                 "display": "确认时间"
+        },
+        {
+                "id": "0ccca641-d78f-4b7a-8fe0-1c3e2ff703e3",
+                "name": "moved_at",
+                "locale": "zh-CN",
+                "category": "label",
+                "display": "移动时间"
         },
         {
                 "id": "ded72fca-924b-45e0-9ea3-ce5cf8f27eaa",
@@ -21756,13 +21763,6 @@
                 "display": "报表"
         },
         {
-                "id": "4f6ad91e-66fa-4651-8ccb-7ec0bc8385b2",
-                "name": "report_nm",
-                "locale": "zh-CN",
-                "category": "label",
-                "display": "报表名称"
-        },
-        {
                 "id": "090cc4d4-ea5e-400e-bd62-ee77e1750b7a",
                 "name": "error_detail",
                 "locale": "zh-CN",
@@ -22160,6 +22160,13 @@
                 "locale": "ko-KR",
                 "category": "menu",
                 "display": "모니터링 보드"
+        },
+        {
+                "id": "e22f4eb0-ff12-4c38-8084-4db1361853c3",
+                "name": "seq",
+                "locale": "ko-KR",
+                "category": "label",
+                "display": "순서"
         },
         {
                 "id": "b59fe920-cfef-49c6-aecb-70717fff023c",
@@ -23366,20 +23373,6 @@
                 "display": "移动"
         },
         {
-                "id": "c5d5cfc7-a0fb-4136-8ff9-871707b3406a",
-                "name": "pane",
-                "locale": "zh-CN",
-                "category": "tooltip",
-                "display": "移动窗格"
-        },
-        {
-                "id": "0ccca641-d78f-4b7a-8fe0-1c3e2ff703e3",
-                "name": "moved_at",
-                "locale": "zh-CN",
-                "category": "label",
-                "display": "移动时间"
-        },
-        {
                 "id": "27fad88a-7c98-47eb-944d-6ccaa959c798",
                 "name": "phone_mobile",
                 "locale": "zh-CN",
@@ -23798,13 +23791,6 @@
                 "locale": "ko-KR",
                 "category": "label",
                 "display": "서브메뉴"
-        },
-        {
-                "id": "e22f4eb0-ff12-4c38-8084-4db1361853c3",
-                "name": "seq",
-                "locale": "ko-KR",
-                "category": "label",
-                "display": "순서"
         },
         {
                 "id": "70a5bf89-62bf-4c8b-881f-caa89d32e5b6",
@@ -28112,13 +28098,6 @@
                 "display": "作业类型"
         },
         {
-                "id": "9049fd92-150c-4748-bcef-efdcb992000d",
-                "name": "job_id",
-                "locale": "zh-CN",
-                "category": "label",
-                "display": "作业ID"
-        },
-        {
                 "id": "94a8a633-060b-42f7-a4a6-96c040dcf84b",
                 "name": "mobile_slogan",
                 "locale": "zh-CN",
@@ -28313,6 +28292,13 @@
                 "locale": "ko-KR",
                 "category": "text",
                 "display": "새로고침 하시겠습니까?"
+        },
+        {
+                "id": "869a0c8d-c405-45c4-8f10-e87a44ac7ec7",
+                "name": "box",
+                "locale": "zh-CN",
+                "category": "label",
+                "display": "箱"
         },
         {
                 "id": "d4783666-c616-4747-8f95-eb64929c9d31",
@@ -28719,13 +28705,6 @@
                 "locale": "zh-CN",
                 "category": "button",
                 "display": "三天后"
-        },
-        {
-                "id": "869a0c8d-c405-45c4-8f10-e87a44ac7ec7",
-                "name": "box",
-                "locale": "zh-CN",
-                "category": "label",
-                "display": "箱"
         },
         {
                 "id": "ef799dff-4239-4a4d-832c-33af9f3ccc18",
@@ -30373,6 +30352,13 @@
                 "display": "추가"
         },
         {
+                "id": "2c4a4623-a0bc-41db-98df-a44087d27263",
+                "name": "role-list",
+                "locale": "zh-CN",
+                "category": "button",
+                "display": "角色"
+        },
+        {
                 "id": "bf3d8aff-00b6-48ff-893e-01d96a394321",
                 "name": "max_wait",
                 "locale": "en-US",
@@ -30784,13 +30770,6 @@
                 "locale": "zh-CN",
                 "category": "label",
                 "display": "脚本类型"
-        },
-        {
-                "id": "2c4a4623-a0bc-41db-98df-a44087d27263",
-                "name": "role-list",
-                "locale": "zh-CN",
-                "category": "button",
-                "display": "角色"
         },
         {
                 "id": "7f39f7ad-ef60-47c7-9d00-7a6474b6f43e",
@@ -32417,6 +32396,13 @@
                 "display": "标签"
         },
         {
+                "id": "8a10c13b-d977-4540-a6e2-57cb15412589",
+                "name": "QpsOrderInfo",
+                "locale": "zh-CN",
+                "category": "menu",
+                "display": "QPS作业"
+        },
+        {
                 "id": "a3a64a75-565f-45f8-9678-27bf2f987634",
                 "name": "DbManager",
                 "locale": "ko-KR",
@@ -33626,13 +33612,6 @@
                 "locale": "ko-KR",
                 "category": "menu",
                 "display": "QPS 작업"
-        },
-        {
-                "id": "8a10c13b-d977-4540-a6e2-57cb15412589",
-                "name": "QpsOrderInfo",
-                "locale": "zh-CN",
-                "category": "menu",
-                "display": "QPS作业"
         },
         {
                 "id": "135751f9-5509-4cbc-a80d-85f74d8e7545",
@@ -35294,6 +35273,13 @@
                 "display": "网关名称"
         },
         {
+                "id": "bac736f6-a33f-4372-9077-4cdaccbf25f0",
+                "name": "remark",
+                "locale": "zh-CN",
+                "category": "label",
+                "display": "备注"
+        },
+        {
                 "id": "f3d6240b-bca7-47c7-b502-2ba19ee59d71",
                 "name": "gw_zone_cd",
                 "locale": "zh-CN",
@@ -35709,13 +35695,6 @@
         {
                 "id": "7bb4f104-c73d-4aec-8756-24e8058e87a7",
                 "name": "comment",
-                "locale": "zh-CN",
-                "category": "label",
-                "display": "备注"
-        },
-        {
-                "id": "bac736f6-a33f-4372-9077-4cdaccbf25f0",
-                "name": "remark",
                 "locale": "zh-CN",
                 "category": "label",
                 "display": "备注"
@@ -36610,13 +36589,6 @@
                 "display": "Parent System Order Qty."
         },
         {
-                "id": "5ed4dec4-db8f-4108-891d-4a231b6ecb14",
-                "name": "parent_order_qty",
-                "locale": "ko-KR",
-                "category": "label",
-                "display": "상위 시스템 주문 수"
-        },
-        {
                 "id": "dbaae3f4-6b23-4f41-979a-4bc7681cea60",
                 "name": "parent_order_qty",
                 "locale": "en-US",
@@ -36902,13 +36874,6 @@
                 "locale": "en-US",
                 "category": "label",
                 "display": "Parent System PCS"
-        },
-        {
-                "id": "213a153a-ea3a-410c-86a3-136edd98b4c0",
-                "name": "parent_pcs",
-                "locale": "ko-KR",
-                "category": "label",
-                "display": "상위 시스템 총 PCS"
         },
         {
                 "id": "c7fe450d-53b5-48d4-80ba-0f7e54436751",
@@ -38904,5 +38869,208 @@
                 "locale": "zh-CN",
                 "category": "label",
                 "display": "지시기 순서"
+        },
+        {
+                "id": "b4a3c583-2a84-4350-90b5-67b6532cc59e",
+                "name": "EquipGroup",
+                "locale": "zh-CN",
+                "category": "menu",
+                "display": "장비식별번호"
+        },
+        {
+                "id": "a4aceca4-5d98-463c-b9dd-e8694de37639",
+                "name": "EquipGroup",
+                "locale": "ko-KR",
+                "category": "menu",
+                "display": "장비식별번호"
+        },
+        {
+                "id": "f59828c3-74f0-48fa-9038-0bc101155088",
+                "name": "EquipGroup",
+                "locale": "en-US",
+                "category": "menu",
+                "display": "Equip. Group"
+        },
+        {
+                "id": "31d4619e-52d9-4882-8055-fe1aa0512dc5",
+                "name": "result_box_qty",
+                "locale": "ko-KR",
+                "category": "label",
+                "display": "박스 처리 수량"
+        },
+        {
+                "id": "93eacc20-18f0-4d02-8276-20d33ca81d54",
+                "name": "result_box_qty",
+                "locale": "zh-CN",
+                "category": "label",
+                "display": "박스 처리 수량"
+        },
+        {
+                "id": "3c073a88-6b34-4530-84b5-f310d862f80e",
+                "name": "result_box_qty",
+                "locale": "en-US",
+                "category": "label",
+                "display": "Box Result Qty."
+        },
+        {
+                "id": "9049fd92-150c-4748-bcef-efdcb992000d",
+                "name": "wave_no",
+                "locale": "zh-CN",
+                "category": "label",
+                "display": "作业ID"
+        },
+        {
+                "id": "e7609f8f-9a10-4d17-bcc1-2dba8d4402b6",
+                "name": "wave_no",
+                "locale": "en-US",
+                "category": "label",
+                "display": "Wave No"
+        },
+        {
+                "id": "7f2a24bc-d867-41d2-a695-84f36e6e3411",
+                "name": "wave_no",
+                "locale": "ko-KR",
+                "category": "label",
+                "display": "Wave No"
+        },
+        {
+                "id": "947d1534-89d5-465c-8757-e72fb5c19202",
+                "name": "DasMheBox",
+                "locale": "en-US",
+                "category": "menu",
+                "display": "DAS 패킹정보"
+        },
+        {
+                "id": "aa6ecb98-c04a-4bc1-b3f1-db4b16b1b69c",
+                "name": "DasMheBox",
+                "locale": "ko-KR",
+                "category": "menu",
+                "display": "DAS 패킹정보"
+        },
+        {
+                "id": "990cbf48-f993-434d-9c1b-1e466fdb734e",
+                "name": "DasMheBox",
+                "locale": "zh-CN",
+                "category": "menu",
+                "display": "DAS 패킹정보"
+        },
+        {
+                "id": "0a760832-99df-4a95-9dae-2afcff18fc60",
+                "name": "DasMheDr",
+                "locale": "zh-CN",
+                "category": "menu",
+                "display": "DAS 예정정보"
+        },
+        {
+                "id": "1498df56-89e3-4775-ad17-20e5c5bcf64a",
+                "name": "DasMheDr",
+                "locale": "ko-KR",
+                "category": "menu",
+                "display": "DAS 예정정보"
+        },
+        {
+                "id": "25c591b0-c158-4ced-8ca4-c9e33df440f7",
+                "name": "DasMheDr",
+                "locale": "en-US",
+                "category": "menu",
+                "display": "DAS 예정정보"
+        },
+        {
+                "id": "ba5fa785-8783-4941-aa8a-b46d84761c37",
+                "name": "DpsMheDr",
+                "locale": "zh-CN",
+                "category": "menu",
+                "display": "DPS 예정정보"
+        },
+        {
+                "id": "1551f44b-abfd-4155-bf9e-d239ea689bb6",
+                "name": "DpsMheDr",
+                "locale": "ko-KR",
+                "category": "menu",
+                "display": "DPS 예정정보"
+        },
+        {
+                "id": "6935122f-6a79-46c9-a1c9-12f420cf7b79",
+                "name": "DpsMheDr",
+                "locale": "en-US",
+                "category": "menu",
+                "display": "DPS 예정정보"
+        },
+        {
+                "id": "352ebd07-f9d9-47fd-b410-320dbb3e62f9",
+                "name": "RtnDasSortDr",
+                "locale": "en-US",
+                "category": "menu",
+                "display": "반품 분류 상세"
+        },
+        {
+                "id": "1d6d8996-ef80-44a4-b1e0-eb702889170a",
+                "name": "RtnDasSortDr",
+                "locale": "ko-KR",
+                "category": "menu",
+                "display": "반품 분류 상세"
+        },
+        {
+                "id": "96c2eeba-7f78-4313-b480-212c7004663e",
+                "name": "RtnDasSortDr",
+                "locale": "zh-CN",
+                "category": "menu",
+                "display": "반품 분류 상세"
+        },
+        {
+                "id": "2689ec4f-2491-4b8e-9f12-d5743e43900c",
+                "name": "RtnDasSortHr",
+                "locale": "en-US",
+                "category": "menu",
+                "display": "반품 분류 헤더"
+        },
+        {
+                "id": "deed9859-3fc6-48f6-ae50-c2e0e2f6ca8e",
+                "name": "RtnDasSortHr",
+                "locale": "ko-KR",
+                "category": "menu",
+                "display": "반품 분류 헤더"
+        },
+        {
+                "id": "6e72f90e-3c8c-4692-86f1-2b6d8d0f2911",
+                "name": "RtnDasSortHr",
+                "locale": "zh-CN",
+                "category": "menu",
+                "display": "반품 분류 헤더"
+        },
+        {
+                "id": "213a153a-ea3a-410c-86a3-136edd98b4c0",
+                "name": "parent_pcs",
+                "locale": "ko-KR",
+                "category": "label",
+                "display": "WMS 총 PCS"
+        },
+        {
+                "id": "5ed4dec4-db8f-4108-891d-4a231b6ecb14",
+                "name": "parent_order_qty",
+                "locale": "ko-KR",
+                "category": "label",
+                "display": "WMS 주문 수"
+        },
+        {
+                "id": "8fbe9457-8f35-499d-9406-9f0c60597465",
+                "name": "total_workers",
+                "locale": "en-US",
+                "category": "label",
+                "display": "Total Workers"
+        },
+        {
+                "id": "b21c8b24-1d5c-46eb-b4ba-2a92df645226",
+                "name": "total_workers",
+                "locale": "ko-KR",
+                "category": "label",
+                "display": "총 작업 인력"
+        },
+        {
+                "id": "aa819afe-ba5a-4e8e-94aa-42f8f08f9709",
+                "name": "total_workers",
+                "locale": "zh-CN",
+                "category": "label",
+                "display": "총 작업 인력"
         }
 ]

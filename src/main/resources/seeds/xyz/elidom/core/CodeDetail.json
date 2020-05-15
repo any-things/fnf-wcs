@@ -77,17 +77,6 @@
                 "rank": 20
         },
         {
-                "id": "b9b0baac-b351-4975-9d9b-1d69ed48e9dc",
-                "parentId": "2a384f6b-289c-4954-9b78-78dfa2c31d6f",
-                "parent": {
-                        "id": "2a384f6b-289c-4954-9b78-78dfa2c31d6f",
-                        "name": "ORDER_TYPE"
-                },
-                "name": "OT",
-                "description": "단수/단포(One Touch)",
-                "rank": 10
-        },
-        {
                 "id": "d316b098-355d-4dba-898a-254e6a20c107",
                 "parentId": "5442edff-02ce-46a3-b537-3f9a556ff468",
                 "parent": {
@@ -141,39 +130,6 @@
                 "name": "2",
                 "description": "사전포장(입고시)",
                 "rank": 3
-        },
-        {
-                "id": "f3abfb73-f465-4f9f-a099-97d19acd1df2",
-                "parentId": "5cad7345-918a-41b1-91cd-a526dcb7376f",
-                "parent": {
-                        "id": "5cad7345-918a-41b1-91cd-a526dcb7376f",
-                        "name": "STAGE_TYPE"
-                },
-                "name": "B2B",
-                "description": "B2B",
-                "rank": 20
-        },
-        {
-                "id": "af7fc28e-788f-480f-a77b-08f219802a91",
-                "parentId": "5cad7345-918a-41b1-91cd-a526dcb7376f",
-                "parent": {
-                        "id": "5cad7345-918a-41b1-91cd-a526dcb7376f",
-                        "name": "STAGE_TYPE"
-                },
-                "name": "B2C",
-                "description": "B2C",
-                "rank": 10
-        },
-        {
-                "id": "0a80c17c-c40f-4727-b5ae-d8e97781a833",
-                "parentId": "5cad7345-918a-41b1-91cd-a526dcb7376f",
-                "parent": {
-                        "id": "5cad7345-918a-41b1-91cd-a526dcb7376f",
-                        "name": "STAGE_TYPE"
-                },
-                "name": "SORTER",
-                "description": "Sorter",
-                "rank": 30
         },
         {
                 "id": "4b919e93-8e58-4092-a0a3-945e6a198c2a",
@@ -616,6 +572,17 @@
                 "rank": 20
         },
         {
+                "id": "b9b0baac-b351-4975-9d9b-1d69ed48e9dc",
+                "parentId": "2a384f6b-289c-4954-9b78-78dfa2c31d6f",
+                "parent": {
+                        "id": "2a384f6b-289c-4954-9b78-78dfa2c31d6f",
+                        "name": "ORDER_TYPE"
+                },
+                "name": "OT",
+                "description": "단포(One Touch)",
+                "rank": 10
+        },
+        {
                 "id": "0CE1E3C4-0B01-43C6-B2E1-90A1DDAC11E0",
                 "parentId": "7AAB0D8A-26C5-1DC7-E053-8B010A803CD3",
                 "parent": {
@@ -713,17 +680,6 @@
                 "name": "READY",
                 "description": "작업지시대기",
                 "rank": 30
-        },
-        {
-                "id": "4f251a42-cfc0-430d-a8a4-b1f628a926ce",
-                "parentId": "7AAB0D8A-26CE-1DC7-E053-8B010A803CD3",
-                "parent": {
-                        "id": "7AAB0D8A-26CE-1DC7-E053-8B010A803CD3",
-                        "name": "BATCH_STATUS"
-                },
-                "name": "RECEIVING",
-                "description": "주문 수신 중",
-                "rank": 10
         },
         {
                 "id": "fa0be526-09f1-4e8c-8dc5-fae712c506c1",
@@ -1648,17 +1604,6 @@
                 "name": "Url",
                 "description": "URL",
                 "rank": 40
-        },
-        {
-                "id": "BB6D5B76-89CC-42D0-AFDA-4A045CE46DFA",
-                "parentId": "7AAB0D8A-2733-1DC7-E053-8B010A803CD3",
-                "parent": {
-                        "id": "7AAB0D8A-2733-1DC7-E053-8B010A803CD3",
-                        "name": "EQUIP_STATUS"
-                },
-                "name": "1",
-                "description": "정상 작동",
-                "rank": 10
         },
         {
                 "id": "43F41241-D7E5-4430-AF3C-24AA4172E9EB",
@@ -3542,17 +3487,6 @@
                 "rank": 20
         },
         {
-                "id": "DE75640B-C2C7-426C-8DB4-BFEBF3B9E5D1",
-                "parentId": "7AAB0D8A-2800-1DC7-E053-8B010A803CD3",
-                "parent": {
-                        "id": "7AAB0D8A-2800-1DC7-E053-8B010A803CD3",
-                        "name": "RACK_TYPE"
-                },
-                "name": "O",
-                "description": "단수,단포",
-                "rank": 40
-        },
-        {
                 "id": "86A31C4C-88BB-43D5-AFDA-D6CE922ACE1A",
                 "parentId": "7AAB0D8A-2800-1DC7-E053-8B010A803CD3",
                 "parent": {
@@ -4860,5 +4794,115 @@
                 "name": "tablet",
                 "description": "Tablet",
                 "rank": 20
+        },
+        {
+                "id": "af7fc28e-788f-480f-a77b-08f219802a91",
+                "parentId": "5cad7345-918a-41b1-91cd-a526dcb7376f",
+                "parent": {
+                        "id": "5cad7345-918a-41b1-91cd-a526dcb7376f",
+                        "name": "STAGE_TYPE"
+                },
+                "name": "DAS",
+                "description": "DAS",
+                "rank": 10
+        },
+        {
+                "id": "f3abfb73-f465-4f9f-a099-97d19acd1df2",
+                "parentId": "5cad7345-918a-41b1-91cd-a526dcb7376f",
+                "parent": {
+                        "id": "5cad7345-918a-41b1-91cd-a526dcb7376f",
+                        "name": "STAGE_TYPE"
+                },
+                "name": "DPS",
+                "description": "DPS",
+                "rank": 20
+        },
+        {
+                "id": "0a80c17c-c40f-4727-b5ae-d8e97781a833",
+                "parentId": "5cad7345-918a-41b1-91cd-a526dcb7376f",
+                "parent": {
+                        "id": "5cad7345-918a-41b1-91cd-a526dcb7376f",
+                        "name": "STAGE_TYPE"
+                },
+                "name": "PAS",
+                "description": "PAS",
+                "rank": 30
+        },
+        {
+                "id": "8bf66c0e-3754-42b1-b370-2f92e848dea8",
+                "parentId": "5cad7345-918a-41b1-91cd-a526dcb7376f",
+                "parent": {
+                        "id": "5cad7345-918a-41b1-91cd-a526dcb7376f",
+                        "name": "STAGE_TYPE"
+                },
+                "name": "EX-PAS",
+                "description": "EX-PAS",
+                "rank": 40
+        },
+        {
+                "id": "bb832fca-d693-4af2-9724-1f247c4f30c5",
+                "parentId": "5cad7345-918a-41b1-91cd-a526dcb7376f",
+                "parent": {
+                        "id": "5cad7345-918a-41b1-91cd-a526dcb7376f",
+                        "name": "STAGE_TYPE"
+                },
+                "name": "W",
+                "description": "Weigher",
+                "rank": 60
+        },
+        {
+                "id": "04ed6e83-7980-48ff-86c2-130944d4b5ed",
+                "parentId": "5cad7345-918a-41b1-91cd-a526dcb7376f",
+                "parent": {
+                        "id": "5cad7345-918a-41b1-91cd-a526dcb7376f",
+                        "name": "STAGE_TYPE"
+                },
+                "name": "ALW",
+                "description": "AL/W",
+                "rank": 50
+        },
+        {
+                "id": "8ee4dbd8-a8eb-4a39-8e3a-e98ac74d4078",
+                "parentId": "7AAB0D8A-277F-1DC7-E053-8B010A803CD3",
+                "parent": {
+                        "id": "7AAB0D8A-277F-1DC7-E053-8B010A803CD3",
+                        "name": "JOB_TYPE"
+                },
+                "name": "Reject",
+                "description": "Reject",
+                "rank": 60
+        },
+        {
+                "id": "4f251a42-cfc0-430d-a8a4-b1f628a926ce",
+                "parentId": "7AAB0D8A-26CE-1DC7-E053-8B010A803CD3",
+                "parent": {
+                        "id": "7AAB0D8A-26CE-1DC7-E053-8B010A803CD3",
+                        "name": "BATCH_STATUS"
+                },
+                "name": "RECEIVING",
+                "description": "주문 수신중",
+                "rank": 10
+        },
+        {
+                "id": "BB6D5B76-89CC-42D0-AFDA-4A045CE46DFA",
+                "parentId": "7AAB0D8A-2733-1DC7-E053-8B010A803CD3",
+                "parent": {
+                        "id": "7AAB0D8A-2733-1DC7-E053-8B010A803CD3",
+                        "name": "EQUIP_STATUS"
+                },
+                "name": "1",
+                "description": "정상",
+                "rank": 10
+        },
+        {
+                "id": "DE75640B-C2C7-426C-8DB4-BFEBF3B9E5D1",
+                "parentId": "7AAB0D8A-2800-1DC7-E053-8B010A803CD3",
+                "parent": {
+                        "id": "7AAB0D8A-2800-1DC7-E053-8B010A803CD3",
+                        "name": "RACK_TYPE"
+                },
+                "name": "O",
+                "description": "단수,단포",
+                "rank": 40
         }
 ]

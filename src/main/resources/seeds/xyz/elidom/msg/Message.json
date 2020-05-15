@@ -1752,6 +1752,12 @@
                 "display": "키 개수와 값 개수가 일치하지 않습니다."
         },
         {
+                "id": "DBCB7DA5-5F70-46A9-8894-CFFACD9677E2",
+                "name": "FAIL_TO_SEND_MAIL",
+                "locale": "en-US",
+                "display": "Failed to send mail!"
+        },
+        {
                 "id": "8DD00EB8-B083-4BB8-AC1A-B7D86152324A",
                 "name": "NOT_FOUND_KEY",
                 "locale": "ko-KR",
@@ -2554,12 +2560,6 @@
                 "name": "DOMAIN_NOT_EXIST",
                 "locale": "en-US",
                 "display": "Cannot find Domain information by request server ({0})"
-        },
-        {
-                "id": "DBCB7DA5-5F70-46A9-8894-CFFACD9677E2",
-                "name": "FAIL_TO_SEND_MAIL",
-                "locale": "en-US",
-                "display": "Failed to send mail!"
         },
         {
                 "id": "2884A41F-C32D-438D-A552-883CDD9E2CAE",

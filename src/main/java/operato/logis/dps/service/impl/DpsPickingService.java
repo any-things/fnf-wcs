@@ -1,18 +1,19 @@
 package operato.logis.dps.service.impl;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import operato.fnf.wcs.entity.WcsMheDr;
 import operato.logis.dps.DpsCodeConstants;
 import operato.logis.dps.DpsConstants;
 import operato.logis.dps.service.api.IDpsPickingService;
 import operato.logis.dps.service.util.DpsBatchJobConfigUtil;
 import xyz.anythings.base.LogisConstants;
-import xyz.anythings.base.entity.BoxPack;
 import xyz.anythings.base.entity.Cell;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.entity.JobInstance;
@@ -118,34 +119,28 @@ public class DpsPickingService extends AbstractPickingService implements IDpsPic
 		// 2. 박스 투입 전 체크 - 주문 번호 조회 
 		String orderNo = this.beforeInputEmptyBucket(batch, isBox, bucket);
 
-		// 3. 표시기 색상 결정
-		String indColor = ValueUtil.isEmpty(bucket.getBucketColor()) ? BatchIndConfigUtil.getDpsJobColor(batch.getId()) : bucket.getBucketColor();
-		
-		// 4. 주문 번호로 매핑된 작업을 모두 조회
-		if(this.dpsJobStatusService == null) this.getJobStatusService(batch);
-		List<JobInstance> jobList = this.dpsJobStatusService.searchPickingJobList(batch, null, orderNo);
+		// 3. 주문 번호로 매핑된 작업을 모두 조회
+		Map<String, Object> condition = ValueUtil.newMap("workUnit,refNo", batch.getId(), orderNo);
+		List<WcsMheDr> jobList = this.queryManager.selectList(WcsMheDr.class, condition);
 
+		// 4. 매핑된 주문이 없다면 에러 
 		if(ValueUtil.isEmpty(jobList)) {
 			// 투입 가능한 주문이 없습니다.
 			throw new ElidomRuntimeException(MessageUtil.getMessage("MPS_NO_ORDER_TO_INPUT"));
 		}
 		
-		// 5. 작업 데이터에 박스 ID 설정
-		for(JobInstance job : jobList) {
-			job.setBoxId(bucketCd);
-		}
-				
-		// 6. 박스 마스터 & 내품 내역 생성
-		if(this.dpsBoxingService == null) this.getBoxingService();
-		BoxPack box = this.dpsBoxingService.fullBoxing(batch, null, jobList);
+		// 5. 최대 박스 투입 순서를 조회
+		int boxInputSeq = this.getMaxBoxInputSeq(batch.getId(), orderNo);
 		
-		// 7. 투입
-		this.doInputEmptyBucket(batch, orderNo, bucket, indColor, box.getId());
+		// 6. 작업 데이터에 박스 ID 설정 처리
+		String sql = "update mhe_dr set box_no = :boxId, status = 'I', box_input_seq = :boxInputSeq, box_input_at = now(), box_input_if_yn = 'N' where work_unit = :batchId and ref_no = :orderNo";
+		condition = ValueUtil.newMap("batchId,boxId,boxInputSeq,orderNo", batch.getId(), bucketCd, boxInputSeq, orderNo);
+		this.queryManager.executeBySql(sql, condition);
 		
-		// 8. 박스 투입 후 액션 
+		// 7. 박스 투입 후 액션 
 		this.afterInputEmptyBucket(batch, bucket, orderNo);
 		
-		// 9. 투입 정보 리턴
+		// 8. 투입 정보 리턴
 		return jobList;
 	}
 	
@@ -286,4 +281,18 @@ public class DpsPickingService extends AbstractPickingService implements IDpsPic
 		return 0;
 	}
 
+	/**
+	 * Max 투입 순서 조회
+	 * 
+	 * @param batchId
+	 * @param orderNo
+	 * @return
+	 */
+	private int getMaxBoxInputSeq(String batchId, String orderNo) {
+		// 5. 최대 박스 투입 순서를 조회
+		String sql = "select max(box_input_seq) as box_input_seq from mhe_dr where work_unit = :batchId";
+		Map<String, Object> condition = ValueUtil.newMap("batchId,orderNo", batchId, orderNo);
+		Integer boxInputSeq = this.queryManager.selectBySql(sql, condition, Integer.class);
+		return (boxInputSeq == null || boxInputSeq == 0) ? 1 : boxInputSeq + 1;
+	}
 }

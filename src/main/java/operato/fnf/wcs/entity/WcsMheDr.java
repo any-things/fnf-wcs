@@ -203,7 +203,9 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
 	@Column (name = "box_input_if_at", nullable = true)
 	private Date boxInputIfAt;
-
+	
+	@Column (name = "status", nullable = true, length = 1)
+	private String status;
 	
 	public String getId() {
 		return id;
@@ -675,6 +677,14 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setBoxInputIfAt(Date boxInputIfAt) {
 		this.boxInputIfAt = boxInputIfAt;
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
 	}
 
 }

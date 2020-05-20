@@ -42,7 +42,7 @@ public class DpsAssignJob extends AbstractFnFJob {
 	@Scheduled(cron="0 0/1 * * * *")
 	public void monitorWave() {
 		// 1. 스케줄링 활성화 여부
-		if(!this.isJobEnabeld() && this.assignJobRunning) {
+		if(!this.isJobEnabeld() || this.assignJobRunning) {
 			return;
 		}
 		

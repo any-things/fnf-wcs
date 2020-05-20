@@ -183,6 +183,28 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "rfid_item_yn", nullable = true, length = 1)
 	private String rfidItemYn;
 
+	@Column (name = "dps_assign_yn", nullable = true, length = 1)
+	private String dpsAssignYn;
+	
+	@Column (name = "dps_assign_at", nullable = true)
+	private Date dpsAssignAt;
+	
+	@Column (name = "box_input_seq", nullable = true)
+	private Integer boxInputSeq;
+	
+	@Column (name = "box_no", nullable = true, length = 30)
+	private String boxNo;
+	
+	@Column (name = "box_input_at", nullable = true)
+	private Date boxInputAt;
+	
+	@Column (name = "box_input_if_yn", nullable = true, length = 1)
+	private String boxInputIfYn;
+	
+	@Column (name = "box_input_if_at", nullable = true)
+	private Date boxInputIfAt;
+
+	
 	public String getId() {
 		return id;
 	}
@@ -597,6 +619,62 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setRfidItemYn(String rfidItemYn) {
 		this.rfidItemYn = rfidItemYn;
+	}
+
+	public String getDpsAssignYn() {
+		return dpsAssignYn;
+	}
+
+	public void setDpsAssignYn(String dpsAssignYn) {
+		this.dpsAssignYn = dpsAssignYn;
+	}
+
+	public Date getDpsAssignAt() {
+		return dpsAssignAt;
+	}
+
+	public void setDpsAssignAt(Date dpsAssignAt) {
+		this.dpsAssignAt = dpsAssignAt;
+	}
+
+	public Integer getBoxInputSeq() {
+		return boxInputSeq;
+	}
+
+	public void setBoxInputSeq(Integer boxInputSeq) {
+		this.boxInputSeq = boxInputSeq;
+	}
+
+	public String getBoxNo() {
+		return boxNo;
+	}
+
+	public void setBoxNo(String boxNo) {
+		this.boxNo = boxNo;
+	}
+
+	public Date getBoxInputAt() {
+		return boxInputAt;
+	}
+
+	public void setBoxInputAt(Date boxInputAt) {
+		this.boxInputAt = boxInputAt;
+	}
+
+	public String getBoxInputIfYn() {
+		return boxInputIfYn;
+	}
+
+	public void setBoxInputIfYn(String boxInputIfYn) {
+		this.boxInputIfYn = boxInputIfYn;
+	}
+
+	public Date getBoxInputIfAt() {
+		return boxInputIfAt;
+	}
+
+	public void setBoxInputIfAt(Date boxInputIfAt) {
+		this.boxInputIfAt = boxInputIfAt;
 	}
 
 }

@@ -65,4 +65,21 @@ public class FnFDpsQueryStore extends AbstractQueryStore {
 		return this.getQueryByPath("dps/StocksForJobAssign");
 	}
 	
+	/**
+	 * 해당 재고가 필요한 주문 조회
+	 * 
+	 * @return
+	 */
+	public String getSearchOrderForStock() {
+		return this.getQueryByPath("dps/SearchOrdersForStock");
+	}
+	
+	/**
+	 * 작업 할당에 필요한 주문 및 재고 조합 정보 조회
+	 * 
+	 * @return
+	 */
+	public String getSearchAssignCandidates() {
+		return this.getQueryByPath("dps/SearchAssignCandidates");
+	}
 }

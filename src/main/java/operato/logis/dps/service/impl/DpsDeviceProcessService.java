@@ -141,6 +141,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		EquipBatchSet equipBatchSet = DpsServiceUtil.findBatchByEquip(event.getDomainId(), equipType, equipCd);
 		JobBatch batch = equipBatchSet.getBatch();
 		
+		// 3. 투입 상세 리스트 조회
 		List<JobInstance> jobList = this.dpsJobStatusService.searchInputJobList(batch, ValueUtil.newMap("orderNo", orderNo));
 
 		// 4. 이벤트 처리 결과 셋팅 

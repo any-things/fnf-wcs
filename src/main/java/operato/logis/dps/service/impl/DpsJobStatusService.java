@@ -105,7 +105,7 @@ public class DpsJobStatusService extends AbstractJobStatusService implements IDp
 	public List<JobInstance> searchInputJobList(JobBatch batch, Map<String, Object> condition) {
 		
 		this.addBatchConditions(batch, condition);
-		String sql = "select work_unit as batch_id, work_date as job_date, ref_no as order_no, item_cd as sku_cd, item_nm as sku_nm, location_cd as sub_equip_cd, pick_qty, cmpt_qty as picked_qty from mhe_dr where work_unit = :batchId and ref_no = :orderNo";
+		String sql = "select work_unit as batch_id, work_date as job_date, ref_no as order_no, item_cd as sku_cd, item_nm as sku_nm, cell_cd as sub_equip_cd, pick_qty, cmpt_qty as picked_qty from mhe_dr where work_unit = :batchId and ref_no = :orderNo";
 		return this.queryManager.selectListBySql(sql, condition, JobInstance.class, 0, 0);
 	}
 

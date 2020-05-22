@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import operato.fnf.wcs.service.assign.DpsJobAssignService;
+import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.sys.event.model.ErrorEvent;
 import xyz.anythings.sys.util.AnyOrmUtil;
@@ -85,6 +86,7 @@ public class DpsAssignJob extends AbstractFnFJob {
 		// 1. 현재 진행 중인 배치 조회
 		Query condition = AnyOrmUtil.newConditionForExecution(domain.getId());
 		condition.addFilter("status", JobBatch.STATUS_RUNNING);
+		condition.addFilter("jobType", LogisConstants.JOB_TYPE_DPS);
 		condition.addOrder("jobDate", false);
 		List<JobBatch> batchList = this.queryManager.selectList(JobBatch.class, condition);
 		

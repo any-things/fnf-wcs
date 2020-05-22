@@ -213,7 +213,7 @@ public class DpsJobAssignService extends AbstractQueryService {
 		int assignQty = (orderQty > candidate.getLoadQty()) ? candidate.getLoadQty() : orderQty;
 		
 		// 2. MHE_DR 데이터에 작업 할당 처리
-		String sql = "UPDATE MHE_DR SET STATUS = 'A', DPS_ASSIGN_YN = 'Y', DPS_ASSIGN_AT = now(), LOCATION_CD = :cellCd WHERE WORK_UNIT = :batchId AND REF_NO = :orderNo AND ITEM_CD = :skuCd AND (DPS_ASSIGN_YN IS NULL OR DPS_ASSIGN_YN = 'N') AND (STATUS IS NULL OR STATUS = '')";
+		String sql = "UPDATE MHE_DR SET STATUS = 'A', DPS_ASSIGN_YN = 'Y', DPS_ASSIGN_AT = now(), CELL_CD = :cellCd WHERE WORK_UNIT = :batchId AND REF_NO = :orderNo AND ITEM_CD = :skuCd AND (DPS_ASSIGN_YN IS NULL OR DPS_ASSIGN_YN = 'N') AND (STATUS IS NULL OR STATUS = '')";
 		Map<String, Object> params = ValueUtil.newMap("batchId,orderNo,skuCd,cellCd", candidate.getBatchId(), candidate.getOrderNo(), candidate.getSkuCd(), candidate.getCellCd());
 		int exeCnt = this.queryManager.executeBySql(sql, params);
 		

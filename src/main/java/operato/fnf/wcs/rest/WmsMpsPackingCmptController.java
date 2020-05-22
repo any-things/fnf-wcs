@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import operato.fnf.wcs.entity.WmsMheRtnInvn;
+import operato.fnf.wcs.entity.WmsMpsPackingCmpt;
 import xyz.elidom.dbist.dml.Page;
 import xyz.elidom.orm.system.annotation.service.ApiDesc;
 import xyz.elidom.orm.system.annotation.service.ServiceDesc;
@@ -22,15 +22,14 @@ import xyz.elidom.sys.system.service.DynamicDataSourceService;
 @RestController
 @Transactional
 @ResponseStatus(HttpStatus.OK)
-@RequestMapping("/rest/wms_mhe_rtn_invn")
-@ServiceDesc(description = "WMS Mhe Rtn Invn Service API")
-public class WmsMheMheRtnInvnController extends DynamicDataSourceService {
+@RequestMapping("/rest/wms_mps_packing_cmpt")
+@ServiceDesc(description = "WMS MPS Packing Cmpt Service API")
+public class WmsMpsPackingCmptController extends DynamicDataSourceService {
 
 	@Override
 	protected Class<?> entityClass() {
-		return WmsMheRtnInvn.class;
+		return WmsMpsPackingCmpt.class;
 	}
-
 
 	@RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiDesc(description = "Search (Pagination) By Search Conditions")
@@ -44,7 +43,7 @@ public class WmsMheMheRtnInvnController extends DynamicDataSourceService {
 
 	@RequestMapping(value = "/{id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiDesc(description = "Find one by ID")
-	public WmsMheRtnInvn findOne(@PathVariable("id") String id) {
+	public WmsMpsPackingCmpt findOne(@PathVariable("id") String id) {
 		return this.getOne(this.entityClass(), id);
 	}
 
@@ -57,13 +56,13 @@ public class WmsMheMheRtnInvnController extends DynamicDataSourceService {
 	@RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseStatus(HttpStatus.CREATED)
 	@ApiDesc(description = "Create")
-	public WmsMheRtnInvn create(@RequestBody WmsMheRtnInvn input) {
+	public WmsMpsPackingCmpt create(@RequestBody WmsMpsPackingCmpt input) {
 		return this.createOne(input);
 	}
 
 	@RequestMapping(value = "/{id}", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiDesc(description = "Update")
-	public WmsMheRtnInvn update(@PathVariable("id") String id, @RequestBody WmsMheRtnInvn input) {
+	public WmsMpsPackingCmpt update(@PathVariable("id") String id, @RequestBody WmsMpsPackingCmpt input) {
 		return this.updateOne(input);
 	}
 
@@ -75,7 +74,7 @@ public class WmsMheMheRtnInvnController extends DynamicDataSourceService {
 
 	@RequestMapping(value = "/update_multiple", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiDesc(description = "Create, Update or Delete multiple at one time")
-	public Boolean multipleUpdate(@RequestBody List<WmsMheRtnInvn> list) {
+	public Boolean multipleUpdate(@RequestBody List<WmsMpsPackingCmpt> list) {
 		return this.cudMultipleData(this.entityClass(), list);
 	}
 

@@ -180,6 +180,9 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "outb_tcd", nullable = true, length = 20)
 	private String outbTcd;
 	
+	@Column (name = "cell_cd", nullable = true, length = 20)
+	private String cellCd;
+	
 	@Column (name = "rfid_item_yn", nullable = true, length = 1)
 	private String rfidItemYn;
 
@@ -613,6 +616,14 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setOutbTcd(String outbTcd) {
 		this.outbTcd = outbTcd;
+	}
+
+	public String getCellCd() {
+		return cellCd;
+	}
+
+	public void setCellCd(String cellCd) {
+		this.cellCd = cellCd;
 	}
 
 	public String getRfidItemYn() {

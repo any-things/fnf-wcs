@@ -5,9 +5,11 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import operato.fnf.wcs.service.assign.DpsJobAssignService;
+import operato.fnf.wcs.service.send.DpsBoxSendService;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.sys.event.model.ErrorEvent;
@@ -27,6 +29,11 @@ import xyz.elidom.util.ValueUtil;
 public class DpsAssignJob extends AbstractFnFJob {
 
 	/**
+	 * 박스 실적 전송 서비스
+	 */
+	@Autowired
+	private DpsBoxSendService dpsBoxSendService;
+	/**
 	 * 작업 할당 서비스
 	 */
 	@Autowired
@@ -42,60 +49,83 @@ public class DpsAssignJob extends AbstractFnFJob {
 	@Transactional
 	@Scheduled(cron="0 0/1 * * * *")
 	public void monitorWave() {
-		// 1. 스케줄링 활성화 여부
+		// 스케줄링 활성화 여부 && 이전 작업이 진행 중인 여부 체크
 		if(!this.isJobEnabeld() || this.assignJobRunning) {
 			return;
 		}
+		
+		// 1. 작업 중 플래그 Up
+		this.assignJobRunning = true;
 		
 		// 2. 모든 도메인 조회
 		List<Domain> domainList = this.domainCtrl.domainList();
 		
 		// 3. 모든 도메인에 대해서 ...
 		for(Domain domain : domainList) {
-			// 3.1 현재 도메인 설정
+			// 현재 도메인 설정
 			DomainContext.setCurrentDomain(domain);
 			
 			try {
-				// 3.2 작업 중 플래그 리셋
-				this.assignJobRunning = true;
+				// 3.1 진행 중인 배치 리스트 조회
+				List<JobBatch> batchList = this.searchRunningBatchList(domain);
 				
-				// 3.3 작업 할당 처리 
-				this.assignDomainJobs(domain);
-			
+				if(ValueUtil.isNotEmpty(batchList)) {
+					for(JobBatch batch : batchList) {
+						// 3.2 현재 진행 중인 작업 배치 별 DPS 완료 박스 실적 전송
+						this.sendDpsBoxResults(domain, batch);
+						
+						// 3.3 현재 진행 중인 작업 배치 별 작업 할당 처리
+						this.assignDomainJobs(domain, batch);
+					}
+				}
 			} catch(Exception e) {
-				// 3.4. 예외 처리
+				// 예외 처리
 				ErrorEvent errorEvent = new ErrorEvent(domain.getId(), "JOB_DPS_ASSIGN_ERROR", e, null, true, true);
 				this.eventPublisher.publishEvent(errorEvent);
 				
 			} finally {
-				// 3.4. 스레드 로컬 변수에서 currentDomain 리셋 
+				// 스레드 로컬 변수에서 currentDomain 리셋 
 				DomainContext.unsetAll();
-				
-				// 3.5 작업 중 플래그 리셋
-				this.assignJobRunning = false;
 			}
 		}
+		
+		// 4. 작업 중 플래그 리셋
+		this.assignJobRunning = false;
+	}
+	
+	/**
+	 * 현재 진행 중인 DPS 배치 리스트 조회
+	 * 
+	 * @param domain
+	 * @return
+	 */
+	private List<JobBatch> searchRunningBatchList(Domain domain) {
+		Query condition = AnyOrmUtil.newConditionForExecution(domain.getId());
+		condition.addFilter("status", JobBatch.STATUS_RUNNING);
+		condition.addFilter("jobType", LogisConstants.JOB_TYPE_DPS);
+		condition.addOrder("jobDate", false);
+		return this.queryManager.selectList(JobBatch.class, condition);
+	}
+	
+	/**
+	 * 도메인 별 모든 진행 중인 작업 배치에 대한 박스 실적 전송
+	 * 
+	 * @param domain
+	 * @param batch
+	 */
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public void sendDpsBoxResults(Domain domain, JobBatch batch) {
+		this.dpsBoxSendService.sendBoxResults(domain, batch);
 	}
 	
 	/**
 	 * 도메인 별 모든 진행 중인 작업 배치에 대한 작업 할당 처리
 	 * 
 	 * @param domain
+	 * @param batch
 	 */
-	private void assignDomainJobs(Domain domain) {
-		// 1. 현재 진행 중인 배치 조회
-		Query condition = AnyOrmUtil.newConditionForExecution(domain.getId());
-		condition.addFilter("status", JobBatch.STATUS_RUNNING);
-		condition.addFilter("jobType", LogisConstants.JOB_TYPE_DPS);
-		condition.addOrder("jobDate", false);
-		List<JobBatch> batchList = this.queryManager.selectList(JobBatch.class, condition);
-		
-		if(ValueUtil.isNotEmpty(batchList)) {
-			// 2. 현재 진행 중인 작업 배치 별 작업 할당 처리
-			for(JobBatch batch : batchList) {
-				this.dpsJobAssignService.assignBatchJobs(domain, batch);
-			}
-		}
+	private void assignDomainJobs(Domain domain, JobBatch batch) {
+		this.dpsJobAssignService.assignBatchJobs(domain, batch);
 	}
 
 }

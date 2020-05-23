@@ -47,7 +47,7 @@ public class DpsJobAssignService extends AbstractQueryService {
 	 * @param domain
 	 * @param batch
 	 */
-	@Transactional
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void assignBatchJobs(Domain domain, JobBatch batch) {
 		// 1. 작업 배치 내 모든 재고 중에 가장 많은 재고 순으로 상품별 재고 수량 조회
 		List<Stock> stockList = this.searchStocksForAssign(batch);

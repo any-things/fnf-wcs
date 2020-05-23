@@ -41,8 +41,11 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "work_unit", nullable = false, length = 20)
 	private String workUnit;
 	
+	@Column (name = "biz_type", length = 10)
+	private String bizType;
+	
 	@Column (name = "wave_no", nullable = true, length = 20)
-	private String wave_no;
+	private String waveNo;
 
 	@Column (name = "workseq_no", nullable = true, length = 5)
 	private String workseqNo;
@@ -258,12 +261,20 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 		this.workUnit = workUnit;
 	}
 
-	public String getWave_no() {
-		return wave_no;
+	public String getBizType() {
+		return bizType;
 	}
 
-	public void setWave_no(String wave_no) {
-		this.wave_no = wave_no;
+	public void setBizType(String bizType) {
+		this.bizType = bizType;
+	}
+
+	public String getWaveNo() {
+		return waveNo;
+	}
+
+	public void setWave_no(String waveNo) {
+		this.waveNo = waveNo;
 	}
 
 	public String getWorkseqNo() {

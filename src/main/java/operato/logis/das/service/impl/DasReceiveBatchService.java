@@ -198,6 +198,7 @@ public class DasReceiveBatchService extends AbstractQueryService {
 			for(WmsMheDr orderSrc : wmsOrderDetails) {
 				WcsMheDr orderDest = ValueUtil.populate(orderSrc, new WcsMheDr());
 				orderDest.setId(UUID.randomUUID().toString());
+				orderDest.setBizType(wmsBatch.getBizType());
 				orderDestList.add(orderDest);
 			}
 			

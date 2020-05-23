@@ -148,7 +148,7 @@ public class DpsReceiveBatchService extends AbstractQueryService {
 			// 3. JobBatch 생성 
 			JobBatch batch = JobBatch.createJobBatch(item.getBatchId(), ValueUtil.toString(item.getJobSeq()), receipt, item);
 			
-			// 4. WMS의 주문 데이터를 WCS의 주문 I/F 테이블에 복사  
+			// 4. WMS의 주문 데이터를 WCS의 주문 I/F 테이블에 복사
 			this.cloneData(receipt, item);
 			
 			// 5. JobBatch 상태 변경  
@@ -205,6 +205,7 @@ public class DpsReceiveBatchService extends AbstractQueryService {
 			for(WmsMheDr orderSrc : wmsOrderDetails) {
 				WcsMheDr orderDest = ValueUtil.populate(orderSrc, new WcsMheDr());
 				orderDest.setId(UUID.randomUUID().toString());
+				orderDest.setBizType(wmsBatch.getBizType());
 				orderDestList.add(orderDest);
 			}
 			

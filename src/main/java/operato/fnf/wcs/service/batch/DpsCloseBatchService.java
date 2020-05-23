@@ -5,33 +5,27 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import operato.fnf.wcs.entity.WcsMheHr;
-import operato.fnf.wcs.entity.WmsMheHr;
-import operato.fnf.wcs.query.store.FnFDasQueryStore;
+import operato.fnf.wcs.query.store.FnFDpsQueryStore;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.sys.service.AbstractQueryService;
-import xyz.anythings.sys.util.AnyOrmUtil;
 import xyz.elidom.dbist.dml.Query;
-import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.util.ValueUtil;
 
 /**
- * DAS 작업 배치 종료 서비스
+ * DPS 작업 배치 종료 서비스
  * 
  * @author shortstop
  */
 @Component
-public class DasCloseBatchService extends AbstractQueryService {
-
+public class DpsCloseBatchService extends AbstractQueryService {
 	/**
-	 * FNF 용 DAS 쿼리 스토어
+	 * FNF 용 DPS 쿼리 스토어
 	 */
 	@Autowired
-	private FnFDasQueryStore fnfDasQueryStore;
+	private FnFDpsQueryStore fnfDpsQueryStore;
 	/**
 	 * DAS 작업 서머리 서비스
 	 */
@@ -41,45 +35,26 @@ public class DasCloseBatchService extends AbstractQueryService {
 	/**
 	 * MheHr 정보로 부터 JobBatch에 배치 완료 정보를 반영한다.
 	 * 
-	 * @param domainId
-	 * @param wcsMheHr
+	 * @param batch
 	 */
-	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public void closeBatch(Long domainId, WcsMheHr wcsMheHr) {
-		// 1. WCS MHE_HR 정보로 부터 작업 배치를 조회 
-		Query condition = AnyOrmUtil.newConditionForExecution(domainId);
-		condition.addFilter("id", wcsMheHr.getWorkUnit());
-		JobBatch batch = this.queryManager.selectByCondition(JobBatch.class, condition);
+	public void closeBatch(JobBatch batch) {
+		// 1. WCS MHE_HR 테이블에 반영
+		Query condition = new Query();
+		condition.addFilter("whCd", "ICF");
+		condition.addFilter("workUnit", batch.getId());
+		WcsMheHr wcsMheHr = this.queryManager.selectByCondition(WcsMheHr.class, condition);
 		
-		if(batch == null) {
-			return;
-		}
-		
-		// 2. 10분 생산성 최종 마감
-		this.closeProductivity(batch);
-		
-		// 3. 배치에 반영 
-		this.setBatchInfoOnClosing(batch);
-				
-		// 4. WcsMheHr 엔티티에 반영
 		wcsMheHr.setStatus("F");
 		wcsMheHr.setEndDatetime(new Date());
 		wcsMheHr.setPrcsYn(LogisConstants.Y_CAP_STRING);
 		wcsMheHr.setPrcsDatetime(new Date());
 		this.queryManager.update(wcsMheHr, "status", "endDatetime", "prcsYn", "prcsDatetime");
 		
-		// 5. WMS MHE_HR 테이블에 반영
-		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
-		condition = new Query();
-		condition.addFilter("whCd", wcsMheHr.getWhCd());
-		condition.addFilter("workUnit", wcsMheHr.getWorkUnit());
-		WmsMheHr wmsWave = wmsQueryMgr.selectByCondition(WmsMheHr.class, condition);
+		// 2. 10분 생산성 최종 마감
+		this.closeProductivity(batch);
 		
-		if(wmsWave != null) {
-			wmsWave.setStatus("F");
-			wmsWave.setEndDatetime(new Date());
-			wmsQueryMgr.update(wmsWave, "status", "endDatetime");
-		}
+		// 3. 배치에 반영 
+		this.setBatchInfoOnClosing(batch);
 	}
 	
 	/**
@@ -146,7 +121,7 @@ public class DasCloseBatchService extends AbstractQueryService {
 		int totalMin = ValueUtil.toInteger(gap / ValueUtil.toLong(1000 * 60));
 		
 		// Productivity 정보에서 10분당 실적이 0인 구간을 모두 합쳐서 시간 계산
-		String sql = this.fnfDasQueryStore.getDasEquipmentIdleTime();
+		String sql = this.fnfDpsQueryStore.getDasEquipmentIdleTime();
 		int idleMin = this.queryManager.selectBySql(sql, ValueUtil.newMap("domainId,batchId", batch.getDomainId(), batch.getId()), Integer.class);
 		
 		// duration에서 일하지 않은 총 시간을 빼서 실제 가동 시간을 구함

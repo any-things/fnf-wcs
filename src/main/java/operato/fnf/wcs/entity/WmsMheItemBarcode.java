@@ -66,7 +66,7 @@ public class WmsMheItemBarcode extends xyz.elidom.orm.entity.basic.AbstractStamp
 	private String floorCd;
 	
 	@Column (name = "upd_datetime", nullable = true, type = ColumnType.DATETIME)
-	private Date updDateTime;
+	private Date updDatetime;
 
 	public String getId() {
 		return id;
@@ -164,13 +164,12 @@ public class WmsMheItemBarcode extends xyz.elidom.orm.entity.basic.AbstractStamp
 		this.floorCd = floorCd;
 	}
 
-	public Date getUpdDateTime() {
-		return updDateTime;
+	public Date getUpdDatetime() {
+		return updDatetime;
 	}
 
-	public void setUpdDateTime(Date updDateTime) {
-		this.updDateTime = updDateTime;
+	public void setUpdDatetime(Date updDatetime) {
+		this.updDatetime = updDatetime;
 	}
-	
 
 }

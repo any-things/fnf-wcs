@@ -47,9 +47,8 @@ public class DasStartBatchService extends AbstractQueryService {
 		
 		// 3. WcsMheHr 엔티티에 반영
 		wcsMheHr.setStatus("B");
-		//wcsMheHr.setCnfDatetime(new Date());
 		wcsMheHr.setPrcsYn(LogisConstants.Y_CAP_STRING);
-		this.queryManager.update(wcsMheHr, "status", "cnfDatetime", "prcsYn");
+		this.queryManager.update(wcsMheHr, "status", "prcsYn");
 		
 		// 4. WMS MHE_HR 테이블에 반영
 		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);

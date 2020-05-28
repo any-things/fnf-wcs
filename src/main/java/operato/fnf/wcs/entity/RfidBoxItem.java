@@ -10,7 +10,7 @@ import xyz.elidom.dbist.annotation.Table;
  * 박스별 패킹 내역 - RFID
  */
 @Table(name = "IF_PASDELIVERY_RECV", idStrategy = GenerationRule.NONE, dataSourceType=DataSourceType.DATASOURCE, uniqueFields="cdWarehouse,cdBrand,tpMachine,dtDelivery,dsBatchNo,noBox,ifCdItem", indexes = {
-	@Index(name = "mhe_box_01", columnList = "cd_warehouse,cd_brand,tp_machine,dt_delivery,ds_batch_no,no_box,if_cd_item", unique = true)
+	@Index(name = "if_pasdlv_rcv_01", columnList = "cd_warehouse,cd_brand,tp_machine,dt_delivery,ds_batch_no,no_box,if_cd_item", unique = true)
 })
 public class RfidBoxItem extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
@@ -22,7 +22,7 @@ public class RfidBoxItem extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	/**
 	 * WMS물류센터코드(WH_CD)
 	 */
-	@Column (name = "wh_cd", nullable = false, length = 10)
+	@Column (name = "wh_warehouse", nullable = false, length = 10)
 	private String cdWarehouse;
 	
 	/**

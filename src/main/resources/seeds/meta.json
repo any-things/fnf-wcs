@@ -39,7 +39,5 @@
 	{"bundle" : "logis", "entity": "xyz.anythings.base.entity.Cell"},
 	{"bundle" : "sms", "entity": "operato.logis.sms.entity.Sorter"},
 	{"bundle" : "sms", "entity": "operato.logis.sms.entity.Induction"},
-	{"bundle" : "sms", "entity": "operato.logis.sms.entity.Chute"},
-	{"bundle" : "wcs", "entity": "operato.logis.wcs.entity.Productivity"},
-	{"bundle" : "wcs", "entity": "operato.logis.wcs.entity.DailyProdSummary"}
+	{"bundle" : "sms", "entity": "operato.logis.sms.entity.Chute"}
 ]

@@ -140,18 +140,22 @@ public class DasJobSummaryJob extends AbstractFnFJob {
 			RfidBoxItem rfidBoxItem = new RfidBoxItem();
 			rfidBoxItem.setCdWarehouse(box.getWhCd());
 			rfidBoxItem.setCdBrand(box.getStrrId());
-			rfidBoxItem.setTpMachine("1");
+			rfidBoxItem.setTpMachine("2");
 			rfidBoxItem.setDtDelivery(box.getWorkDate());
 			rfidBoxItem.setDsBatchNo(box.getWorkUnit());
 			rfidBoxItem.setNoBox(box.getBoxNo());
 			rfidBoxItem.setIfCdItem(box.getItemCd());
 			rfidBoxItem.setYnAssort(LogisConstants.N_CAP_STRING);
 			rfidBoxItem.setCdShop(box.getShiptoId());
-			rfidBoxItem.setTpDelivery("1");
+			// TODO 1 : 출고, 2 : 분류 - 2가 맞는지 체크
+			rfidBoxItem.setTpDelivery("2");
+			// TODO WcsMheBox에 OutbTcd 매핑 데이터 없음 - 체크 
 			rfidBoxItem.setOutbTcd(null);
+			// TODO WcsMheBox에 운송장 번호 없음 - 체크 
 			rfidBoxItem.setNoWaybill(null);
 			rfidBoxItem.setDsShuteno(null);
 			rfidBoxItem.setOutbNo(box.getOutbNo());
+			// TODO TODO WcsMheBox에 주문 번호 없음 - 체크 
 			rfidBoxItem.setRefNo(null);
 			rfidBoxItem.setNoWeight(null);
 			rfidBoxItem.setQtDelivery(box.getCmptQty());

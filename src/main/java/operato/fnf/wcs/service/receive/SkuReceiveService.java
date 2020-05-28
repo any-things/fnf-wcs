@@ -82,7 +82,7 @@ public class SkuReceiveService extends AbstractLogisService {
 		String sql = "select count(*) from mhe_item_barcode where upd_datetime > to_date(:latestReceivedAt, 'YYYY-MM-DD HH24:MI:SS')";
 		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheItemBarcode.class);
 		int planCount = wmsQueryMgr.selectBySql(sql, ValueUtil.newMap("latestReceivedAt", latestReceivedAt), Integer.class);
-		return (planCount > 100) ? 100 : planCount;
+		return (planCount > 1000) ? 1000 : planCount;
 	}
 	
 	/**

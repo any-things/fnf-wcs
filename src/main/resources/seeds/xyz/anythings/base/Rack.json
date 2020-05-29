@@ -1,21 +1,5 @@
 [
         {
-                "id": "403e4c0c-20eb-4205-b0b0-a27cc73a1dc5",
-                "areaCd": "A",
-                "stageCd": "A-03",
-                "rackCd": "A3-02",
-                "rackNm": "선반 2호기",
-                "rackType": "S",
-                "sorterCd": "",
-                "chuteNo": "",
-                "jobType": "DAS",
-                "batchId": "",
-                "stdWorkers": 2,
-                "stdUph": 500,
-                "avgUph": 500,
-                "activeFlag": true
-        },
-        {
                 "id": "3a32ef39-56fd-4609-ba6e-a09b2b7f7ab6",
                 "areaCd": "A",
                 "stageCd": "A-01",
@@ -60,10 +44,11 @@
                 "sorterCd": "",
                 "chuteNo": "",
                 "jobType": "DPS",
-                "batchId": "",
+                "batchId": "1000028794",
                 "stdWorkers": 4,
                 "stdUph": 100,
                 "avgUph": 100,
+                "status": "RUN",
                 "activeFlag": true
         },
         {
@@ -81,6 +66,22 @@
                 "stdWorkers": 4,
                 "stdUph": 100,
                 "avgUph": 100,
+                "activeFlag": true
+        },
+        {
+                "id": "403e4c0c-20eb-4205-b0b0-a27cc73a1dc5",
+                "areaCd": "A",
+                "stageCd": "A-03",
+                "rackCd": "A3-02",
+                "rackNm": "선반 2호기",
+                "rackType": "S",
+                "sorterCd": "",
+                "chuteNo": "",
+                "jobType": "DAS",
+                "batchId": "",
+                "stdWorkers": 2,
+                "stdUph": 500,
+                "avgUph": 500,
                 "activeFlag": true
         },
         {

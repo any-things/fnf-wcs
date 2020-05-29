@@ -1,0 +1,14 @@
+[
+        {
+                "id": "9e7170b0-2a35-4e24-a90b-808c1ca92af8",
+                "stageCd": "A-02",
+                "deviceType": "pda",
+                "comCd": "FnF",
+                "jobType": "DPS",
+                "equipType": "Rack",
+                "equipCd": "A2-01",
+                "profileCd": "DPS-DEFAULT",
+                "profileNm": "DPS 기본 장비 설정",
+                "defaultFlag": true
+        }
+]

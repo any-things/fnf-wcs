@@ -592,5 +592,17 @@
                 "name": "ZONE",
                 "description": "존",
                 "bundle": "logis"
+        },
+        {
+                "id": "f3874f32-da9a-4a6f-b11e-b0ed84259649",
+                "name": "YES_NO",
+                "description": "Yes / No",
+                "bundle": "sys"
+        },
+        {
+                "id": "d3922fb6-64b0-41c1-a6f9-b79b819ec35f",
+                "name": "DPS_JOB_STATUS",
+                "description": "DPS 작업 상태",
+                "bundle": "fnf"
         }
 ]

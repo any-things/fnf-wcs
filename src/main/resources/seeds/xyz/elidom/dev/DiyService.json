@@ -411,5 +411,27 @@
                 "activeFlag": false,
                 "atomicFlag": false,
                 "serviceLogic": "select \n\tsku_barcd, sku_nm\nfrom\n\ttb_sku\nwhere\n\t#if($com_cd)\n\tcom_cd = :com_cd and\n\t#end\n\tsku_cd = :sku_cd"
+        },
+        {
+                "id": "a91483ed-7cff-49aa-8728-5304a4309024",
+                "name": "fnf-stock-needs",
+                "description": "FNF용 DPS 재고 필요 수량 리스트",
+                "category": "SCREEN",
+                "langType": "groovy",
+                "scriptType": "SQL",
+                "activeFlag": false,
+                "atomicFlag": false,
+                "serviceLogic": "select\n\tstock.*\nfrom (\n\tselect\n\t\ts.equip_type,\n\t\ts.equip_cd,\n\t\ts.sku_cd,\n\t\ts.sku_nm,\n\t\ts.order_qty,\n\t\ts.alloc_qty,\n\t\ts.picked_qty,\n\t\ts.stock_qty,\n\t\tcase \n\t\t\twhen (s.order_qty - s.alloc_qty - s.stock_qty) < 0 then 0\n\t\t\telse s.order_qty - s.alloc_qty - s.stock_qty\n\t\tend as need_stock_qty\n\tfrom (\n\t\tselect\n\t\t\ta.equip_type,\n\t\t\ta.equip_cd,\n\t\t\ta.sku_cd,\n\t\t\ta.sku_nm,\n\t\t\tCOALESCE(a.order_qty, 0) as order_qty,\n\t\t\tCOALESCE(a.picked_qty, 0) as picked_qty,\n\t\t\tCOALESCE(a.alloc_qty, 0) as alloc_qty,\n\t\t\tCOALESCE(b.stock_qty, 0) as stock_qty\n\t\tfrom\n\t\t\t(with fnf_orders as (\n\t\t\t\tselect\n\t\t\t\t\th.equip_type,\n\t\t\t\t\th.equip_cd,\n\t\t\t\t\td.item_cd as sku_cd,\n\t\t\t\t\td.item_nm as sku_nm,\n\t\t\t\t\td.pick_qty,\n\t\t\t\t\td.cmpt_qty,\n\t\t\t\t\tcase when d.dps_assign_yn = 'Y' then d.pick_qty \n\t\t\t\t\t\t else 0 end as alloc_qty\n\t\t\t\tfrom\n\t\t\t\t\tjob_batches h inner join mhe_dr d on h.id = d.work_unit\n\t\t\t\twhere\n\t\t\t\t\th.domain_id = 1\n\t\t\t\t\tand h.job_type = 'DPS'\n\t\t\t\t\tand h.status = 'RUN'\n\t\t\t\t\t#if($equip_type)\n\t\t\t\t\tand equip_type = :equip_type\n\t\t\t\t\t#end\n\t\t\t\t\t#if($equip_cd)\n\t\t\t\t\tand equip_cd = :equip_cd\n\t\t\t\t\t#end\n\t\t\t\t\t#if($sku_cd)\n\t\t\t\t\tand d.item_cd like '%' || :sku_cd || '%'\n\t\t\t\t\t#end\n\t\t\t\t) select\n\t\t\t\t\tequip_type, equip_cd, sku_cd, sku_nm, \n\t\t\t\t\tCOALESCE(sum(pick_qty), 0) as order_qty, COALESCE(sum(cmpt_qty), 0) as picked_qty, COALESCE(sum(alloc_qty), 0) as alloc_qty\n\t\t\t\tfrom\n\t\t\t\t\tfnf_orders\n\t\t\t\tgroup by\n\t\t\t\t\tequip_type, equip_cd, sku_cd, sku_nm\t\t\t\t\n\t\t\t) a\n\n\t\t\tleft outer join\n\t\t\t\n\t\t\t(select \n\t\t\t\ti.equip_type, i.equip_cd, i.sku_cd, i.stock_qty \n\t\t\tfrom (\n\t\t\t\tselect\n\t\t\t\t\tequip_type, equip_cd, sku_cd,\n\t\t\t\t\tCOALESCE(sum(load_qty), 0) as stock_qty\n\t\t\t\tfrom\n\t\t\t\t\tstocks\n\t\t\t\twhere \n\t\t\t\t\tdomain_id = :domain_id\n\t\t\t\t\t#if($equip_type)\n\t\t\t\t\tand equip_type = :equip_type\n\t\t\t\t\t#end\n\t\t\t\t\t#if($equip_cd)\n\t\t\t\t\tand equip_cd = :equip_cd\n\t\t\t\t\t#end\n\t\t\t\t\t#if($sku_cd)\n\t\t\t\t\tand sku_cd like '%'||:sku_cd||'%'\n\t\t\t\t\t#end\n\t\t\t\tgroup by\n\t\t\t\t\tequip_type, equip_cd, sku_cd\n\t\t\t) i \n\t\t\twhere\n\t\t\t\ti.stock_qty > 0) b\n\n\t\t\ton a.equip_type = b.equip_type and a.equip_cd = b.equip_cd and a.sku_cd = b.sku_cd\n\t) s\n) stock\norder by\n\tstock.equip_type,\n\tstock.equip_cd,\n\tstock.need_stock_qty desc,\n\tstock.order_qty desc,\n\tstock.sku_cd"
+        },
+        {
+                "id": "678e3f72-0d0f-4bda-8028-c92c287315d9",
+                "name": "fnf-box-inputs",
+                "description": "FNF DPS 박스 투입",
+                "category": "SCREEN",
+                "langType": "groovy",
+                "scriptType": "SQL",
+                "activeFlag": false,
+                "atomicFlag": false,
+                "serviceLogic": "\tselect\n\t\th.id as batch_id,\n\t\th.job_date as job_date,\n        h.equip_type, \n        h.equip_cd,\n        d.box_input_seq as input_seq,\n        d.ref_no as order_no,\n        d.box_no as box_id,\n\t\td.status,\n\t\tmax(d.box_input_at) as created_at\n    from\n    \tjob_batches h inner join mhe_dr d on h.id = d.work_unit\n    where\n    \th.domain_id = :domain_id\n        and h.job_type = 'DPS'\n        and h.status in ('RUN', 'END')\n        and (d.box_input_seq is not null and d.box_input_seq > 0)\n    \t#if($batch_id)\n    \tand h.id = :batch_id\n    \t#end\n    \t#if($job_date)\n    \tand h.job_date = :job_date\n    \t#end\n    \t#if($order_no)\n    \tand d.ref_no = :order_no\n    \t#end\n    \t#if($box_id)\n    \tand d.box_no = :box_id\n    \t#end\n    \t#if($status)\n    \tand d.status = :status\n    \t#end\n    group by\n        h.id, h.job_date, h.equip_type, h.equip_cd, d.box_input_seq, d.ref_no, d.box_no, d.status\n    order by\n    \th.job_date desc, h.id, d.box_input_seq desc"
         }
 ]

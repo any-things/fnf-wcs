@@ -17,10 +17,22 @@
                 "equipGroupNm": "1층 DAS",
                 "equipType": "DAS",
                 "areaCd": "A",
-                "stageCd": "A-01",
+                "stageCd": "A-11",
                 "category": "1층",
                 "inputWorkers": 3,
                 "totalWorkers": 3,
+                "remarks": "반품 분류"
+        },
+        {
+                "id": "a34b5134-c1a9-4134-8149-69d5702aa1f9",
+                "equipGroupCd": "12",
+                "equipGroupNm": "1층 DAS (Sorter)",
+                "equipType": "Sorter",
+                "areaCd": "A",
+                "stageCd": "A-12",
+                "category": "1층",
+                "inputWorkers": 3,
+                "totalWorkers": 9,
                 "remarks": "반품 분류"
         },
         {
@@ -31,6 +43,18 @@
                 "areaCd": "A",
                 "stageCd": "A-03",
                 "category": "3층",
+                "inputWorkers": 3,
+                "totalWorkers": 3,
+                "remarks": "출고 분배"
+        },
+        {
+                "id": "e8a0dca1-fa62-4aa5-8f76-b988c7537bef",
+                "equipGroupCd": "41",
+                "equipGroupNm": "4층 DAS",
+                "equipType": "DAS",
+                "areaCd": "A",
+                "stageCd": "A-04",
+                "category": "4층",
                 "inputWorkers": 3,
                 "totalWorkers": 3,
                 "remarks": "출고 분배"
@@ -60,18 +84,6 @@
                 "remarks": "출고 분배"
         },
         {
-                "id": "cae46f61-57b5-4ae3-a853-b41b23dd0fe3",
-                "equipGroupCd": "71",
-                "equipGroupNm": "7층 DAS",
-                "equipType": "DAS",
-                "areaCd": "A",
-                "stageCd": "A-07",
-                "category": "7층",
-                "inputWorkers": 3,
-                "totalWorkers": 3,
-                "remarks": "출고 분배"
-        },
-        {
                 "id": "164c517c-b6d0-4050-ad66-758878fe5b84",
                 "equipGroupCd": "81",
                 "equipGroupNm": "8층 DAS",
@@ -82,18 +94,6 @@
                 "inputWorkers": 3,
                 "totalWorkers": 3,
                 "remarks": "출고 분배"
-        },
-        {
-                "id": "a34b5134-c1a9-4134-8149-69d5702aa1f9",
-                "equipGroupCd": "12",
-                "equipGroupNm": "1층 DAS (Sorter)",
-                "equipType": "Sorter",
-                "areaCd": "A",
-                "stageCd": "A-01",
-                "category": "1층",
-                "inputWorkers": 3,
-                "totalWorkers": 9,
-                "remarks": "반품 분류"
         },
         {
                 "id": "7783a061-0588-4121-a911-4569e87eecd7",

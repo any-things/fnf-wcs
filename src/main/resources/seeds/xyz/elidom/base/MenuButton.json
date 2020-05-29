@@ -4614,5 +4614,16 @@
                 "rank": 30,
                 "text": "save",
                 "auth": "update"
+        },
+        {
+                "id": "75882cca-b3d1-4765-aad9-e6c93eb85601",
+                "menuId": "7AAB0D8A-36AB-1DC7-E053-8B010A803CD3",
+                "menu": {
+                        "id": "7AAB0D8A-36AB-1DC7-E053-8B010A803CD3",
+                        "name": "SKU"
+                },
+                "rank": 10,
+                "text": "receive",
+                "auth": "create"
         }
 ]

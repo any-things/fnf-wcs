@@ -2882,17 +2882,6 @@
                 "rank": 10
         },
         {
-                "id": "8BDCA1EE-1024-4F4C-9E8A-5C41425E598A",
-                "parentId": "7AAB0D8A-27BA-1DC7-E053-8B010A803CD3",
-                "parent": {
-                        "id": "7AAB0D8A-27BA-1DC7-E053-8B010A803CD3",
-                        "name": "COLOR"
-                },
-                "name": "B",
-                "description": "Blue",
-                "rank": 30
-        },
-        {
                 "id": "3492875B-CCC6-4670-8676-D5F7F1EE53EC",
                 "parentId": "7AAB0D8A-27BA-1DC7-E053-8B010A803CD3",
                 "parent": {
@@ -2902,28 +2891,6 @@
                 "name": "G",
                 "description": "Green",
                 "rank": 20
-        },
-        {
-                "id": "F82B5C72-ADB5-44AE-B65F-48C9B566CBF2",
-                "parentId": "7AAB0D8A-27BA-1DC7-E053-8B010A803CD3",
-                "parent": {
-                        "id": "7AAB0D8A-27BA-1DC7-E053-8B010A803CD3",
-                        "name": "COLOR"
-                },
-                "name": "R",
-                "description": "Red",
-                "rank": 10
-        },
-        {
-                "id": "94314422-5586-4CA9-A32E-2ADDA6506418",
-                "parentId": "7AAB0D8A-27BA-1DC7-E053-8B010A803CD3",
-                "parent": {
-                        "id": "7AAB0D8A-27BA-1DC7-E053-8B010A803CD3",
-                        "name": "COLOR"
-                },
-                "name": "Y",
-                "description": "Yellow",
-                "rank": 40
         },
         {
                 "id": "0D9B26A1-A99E-46B3-8F9C-E032D0D58837",
@@ -3718,6 +3685,17 @@
                 "rank": 30
         },
         {
+                "id": "CB829CD2-006C-473D-B560-949EEAEE7B0B",
+                "parentId": "7AAB0D8A-2862-1DC7-E053-8B010A803CD3",
+                "parent": {
+                        "id": "7AAB0D8A-2862-1DC7-E053-8B010A803CD3",
+                        "name": "YEAR"
+                },
+                "name": "2007",
+                "description": "2007",
+                "rank": 100
+        },
+        {
                 "id": "61302E8C-05FE-4351-945E-3A4664C7267A",
                 "parentId": "7AAB0D8A-281D-1DC7-E053-8B010A803CD3",
                 "parent": {
@@ -4002,17 +3980,6 @@
                 "name": "common",
                 "description": "Common",
                 "rank": 10
-        },
-        {
-                "id": "4df41b09-ef59-4988-b9f4-4491c976723b",
-                "parentId": "7AAB0D8A-283B-1DC7-E053-8B010A803CD3",
-                "parent": {
-                        "id": "7AAB0D8A-283B-1DC7-E053-8B010A803CD3",
-                        "name": "SYSTEM"
-                },
-                "name": "device",
-                "description": "Device",
-                "rank": 40
         },
         {
                 "id": "878A2729-AEA7-4372-8893-9C06CB893536",
@@ -4343,17 +4310,6 @@
                 "name": "SYSTEM",
                 "description": "SYSTEM",
                 "rank": 30
-        },
-        {
-                "id": "CB829CD2-006C-473D-B560-949EEAEE7B0B",
-                "parentId": "7AAB0D8A-2862-1DC7-E053-8B010A803CD3",
-                "parent": {
-                        "id": "7AAB0D8A-2862-1DC7-E053-8B010A803CD3",
-                        "name": "YEAR"
-                },
-                "name": "2007",
-                "description": "2007",
-                "rank": 100
         },
         {
                 "id": "1052C336-DC7C-4CBB-BFAE-C82D8CE0EB76",
@@ -4903,6 +4859,116 @@
                 },
                 "name": "O",
                 "description": "단수,단포",
+                "rank": 40
+        },
+        {
+                "id": "fd306815-f7ce-478f-b286-6ecb67e606fe",
+                "parentId": "f3874f32-da9a-4a6f-b11e-b0ed84259649",
+                "parent": {
+                        "id": "f3874f32-da9a-4a6f-b11e-b0ed84259649",
+                        "name": "YES_NO"
+                },
+                "name": "Y",
+                "description": "Yes",
+                "rank": 10
+        },
+        {
+                "id": "65a8f843-bc9b-447f-a152-b64b92d03636",
+                "parentId": "f3874f32-da9a-4a6f-b11e-b0ed84259649",
+                "parent": {
+                        "id": "f3874f32-da9a-4a6f-b11e-b0ed84259649",
+                        "name": "YES_NO"
+                },
+                "name": "N",
+                "description": "No",
+                "rank": 20
+        },
+        {
+                "id": "597e9aef-b4cd-4f8f-998c-dffc0d030d22",
+                "parentId": "d3922fb6-64b0-41c1-a6f9-b79b819ec35f",
+                "parent": {
+                        "id": "d3922fb6-64b0-41c1-a6f9-b79b819ec35f",
+                        "name": "DPS_JOB_STATUS"
+                },
+                "name": "A",
+                "description": "작업 할당",
+                "rank": 10
+        },
+        {
+                "id": "9d7c4dc8-47e8-4b7d-a144-bdf874b9d395",
+                "parentId": "d3922fb6-64b0-41c1-a6f9-b79b819ec35f",
+                "parent": {
+                        "id": "d3922fb6-64b0-41c1-a6f9-b79b819ec35f",
+                        "name": "DPS_JOB_STATUS"
+                },
+                "name": "I",
+                "description": "박스 투입",
+                "rank": 20
+        },
+        {
+                "id": "ded1994d-0cb2-4991-8553-e76c85618969",
+                "parentId": "d3922fb6-64b0-41c1-a6f9-b79b819ec35f",
+                "parent": {
+                        "id": "d3922fb6-64b0-41c1-a6f9-b79b819ec35f",
+                        "name": "DPS_JOB_STATUS"
+                },
+                "name": "R",
+                "description": "분류 진행",
+                "rank": 30
+        },
+        {
+                "id": "3cd2ab59-5cc6-4141-a985-ac61feec2597",
+                "parentId": "d3922fb6-64b0-41c1-a6f9-b79b819ec35f",
+                "parent": {
+                        "id": "d3922fb6-64b0-41c1-a6f9-b79b819ec35f",
+                        "name": "DPS_JOB_STATUS"
+                },
+                "name": "B",
+                "description": "박싱 완료",
+                "rank": 40
+        },
+        {
+                "id": "670ebd46-3e1f-4170-ac57-42dd20cad330",
+                "parentId": "d3922fb6-64b0-41c1-a6f9-b79b819ec35f",
+                "parent": {
+                        "id": "d3922fb6-64b0-41c1-a6f9-b79b819ec35f",
+                        "name": "DPS_JOB_STATUS"
+                },
+                "name": "S",
+                "description": "실적 전송",
+                "rank": 50
+        },
+        {
+                "id": "15e9d57b-7b49-4027-b8e2-6e1d74a473e7",
+                "parentId": "7AAB0D8A-283B-1DC7-E053-8B010A803CD3",
+                "parent": {
+                        "id": "7AAB0D8A-283B-1DC7-E053-8B010A803CD3",
+                        "name": "SYSTEM"
+                },
+                "name": "fnf",
+                "description": "FnF",
+                "rank": 50
+        },
+        {
+                "id": "8BDCA1EE-1024-4F4C-9E8A-5C41425E598A",
+                "parentId": "7AAB0D8A-27BA-1DC7-E053-8B010A803CD3",
+                "parent": {
+                        "id": "7AAB0D8A-27BA-1DC7-E053-8B010A803CD3",
+                        "name": "COLOR"
+                },
+                "name": "B",
+                "description": "BLACK",
+                "rank": 30
+        },
+        {
+                "id": "4df41b09-ef59-4988-b9f4-4491c976723b",
+                "parentId": "7AAB0D8A-283B-1DC7-E053-8B010A803CD3",
+                "parent": {
+                        "id": "7AAB0D8A-283B-1DC7-E053-8B010A803CD3",
+                        "name": "SYSTEM"
+                },
+                "name": "device",
+                "description": "Device",
                 "rank": 40
         }
 ]

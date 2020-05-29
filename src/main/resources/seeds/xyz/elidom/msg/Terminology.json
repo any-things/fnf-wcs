@@ -3374,13 +3374,6 @@
                 "display": "SKU Class"
         },
         {
-                "id": "99caafd0-cd73-475b-8df5-a10a05b957cf",
-                "name": "rack_type",
-                "locale": "ko-KR",
-                "category": "label",
-                "display": "랙 유형"
-        },
-        {
                 "id": "0f0338fc-78d4-4644-bd7d-7e9227c0aa89",
                 "name": "rack_type",
                 "locale": "en-US",
@@ -3393,13 +3386,6 @@
                 "locale": "en-US",
                 "category": "label",
                 "display": "Start ~ End"
-        },
-        {
-                "id": "208cf273-9935-41d3-b943-b7556e4ffabb",
-                "name": "rack_nm",
-                "locale": "ko-KR",
-                "category": "label",
-                "display": "랙 이름"
         },
         {
                 "id": "5fb762eb-5a6c-46ff-931f-dc7a8ff43978",
@@ -3631,6 +3617,13 @@
                 "locale": "ko-KR",
                 "category": "button",
                 "display": "완료"
+        },
+        {
+                "id": "99caafd0-cd73-475b-8df5-a10a05b957cf",
+                "name": "rack_type",
+                "locale": "ko-KR",
+                "category": "label",
+                "display": "호기 유형"
         },
         {
                 "id": "4032014a-b097-423c-ae40-5966f9976c53",
@@ -4324,13 +4317,6 @@
                 "locale": "en-US",
                 "category": "label",
                 "display": "Rack"
-        },
-        {
-                "id": "839c75a3-def6-47d2-a8f0-a170e564ff51",
-                "name": "rack",
-                "locale": "ko-KR",
-                "category": "label",
-                "display": "랙"
         },
         {
                 "id": "b9c3a59d-36f3-4e8e-abfb-22b61634ff0c",
@@ -8442,6 +8428,13 @@
                 "display": "验收结束后作业(P:打印快递箱单, I : 快递箱单接口处理, R : 报告实绩, N : 无)"
         },
         {
+                "id": "4ed71d7a-968b-431d-9ee3-bbfac4f775e9",
+                "name": "brand_name",
+                "locale": "en-US",
+                "category": "label",
+                "display": "Brand Name"
+        },
+        {
                 "id": "92ed21f3-62f7-4413-a017-d5f7b6c4f7d7",
                 "name": "insp_ended_at",
                 "locale": "zh-CN",
@@ -8846,13 +8839,6 @@
                 "locale": "ko-KR",
                 "category": "label",
                 "display": "서브 도메인"
-        },
-        {
-                "id": "4ed71d7a-968b-431d-9ee3-bbfac4f775e9",
-                "name": "brand_name",
-                "locale": "en-US",
-                "category": "label",
-                "display": "Brand Name"
         },
         {
                 "id": "70494224-2885-4f56-bcd0-0ac3a0d9c6ac",
@@ -9630,6 +9616,13 @@
                 "locale": "en-US",
                 "category": "error",
                 "display": "{a} is not Completed"
+        },
+        {
+                "id": "e4bab23c-db2b-44c5-b20d-4adbd743659e",
+                "name": "yield_rate",
+                "locale": "en-US",
+                "category": "label",
+                "display": "Yield Rate"
         },
         {
                 "id": "01b2f85d-2634-45cb-a3c3-979ece0ba543",
@@ -11641,6 +11634,13 @@
                 "display": "바꾸기"
         },
         {
+                "id": "ccc3af24-e1ee-4ef9-808e-e2ba9f8c391d",
+                "name": "from_mpi_code",
+                "locale": "zh-CN",
+                "category": "label",
+                "display": "MPI编码（从）"
+        },
+        {
                 "id": "a67929ac-d139-41d7-b8be-7c1b91ab6804",
                 "name": "send_off_ack_already_off_desc",
                 "locale": "ko-KR",
@@ -12024,20 +12024,6 @@
                 "locale": "zh-CN",
                 "category": "menu",
                 "display": "Custom Procedure"
-        },
-        {
-                "id": "ccc3af24-e1ee-4ef9-808e-e2ba9f8c391d",
-                "name": "from_mpi_code",
-                "locale": "zh-CN",
-                "category": "label",
-                "display": "MPI编码（从）"
-        },
-        {
-                "id": "e4bab23c-db2b-44c5-b20d-4adbd743659e",
-                "name": "yield_rate",
-                "locale": "en-US",
-                "category": "label",
-                "display": "Yield Rate"
         },
         {
                 "id": "900841a9-e7bd-44b5-8ee9-1ce6e404859e",
@@ -12731,13 +12717,6 @@
                 "locale": "zh-CN",
                 "category": "label",
                 "display": "订单类型"
-        },
-        {
-                "id": "eb8a9bac-8962-495d-8c38-21d2a9c02316",
-                "name": "prev_stock_qty",
-                "locale": "ko-KR",
-                "category": "label",
-                "display": "실사 전 수량"
         },
         {
                 "id": "3f00e7e2-ca1d-4a4a-ad88-88f99537b682",
@@ -14175,25 +14154,11 @@
                 "display": "Tablet"
         },
         {
-                "id": "c660ff85-1411-43dc-adb2-a21cee03028c",
-                "name": "Cell",
-                "locale": "ko-KR",
-                "category": "menu",
-                "display": "셀"
-        },
-        {
                 "id": "ee4da5a1-f297-4d76-929b-8a2693facf5d",
                 "name": "Cell",
                 "locale": "en-US",
                 "category": "menu",
                 "display": "Cell"
-        },
-        {
-                "id": "dce68035-70ec-486d-ac1a-bb1e6ec8dc75",
-                "name": "Rack",
-                "locale": "ko-KR",
-                "category": "menu",
-                "display": "랙"
         },
         {
                 "id": "022a8933-bc5f-470c-a73d-4facbbfb9344",
@@ -14474,6 +14439,13 @@
                 "locale": "en-US",
                 "category": "title",
                 "display": "Inspection Enabled"
+        },
+        {
+                "id": "c660ff85-1411-43dc-adb2-a21cee03028c",
+                "name": "Cell",
+                "locale": "ko-KR",
+                "category": "menu",
+                "display": "로케이션"
         },
         {
                 "id": "042a96d2-d093-4f00-a664-18f87c45f2fc",
@@ -18557,6 +18529,13 @@
                 "display": "Can not add the custom tool '{view}' to the Title bar."
         },
         {
+                "id": "ff973ded-7c46-4a92-815b-f6ef9c4d098c",
+                "name": "write",
+                "locale": "zh-CN",
+                "category": "button",
+                "display": "写入"
+        },
+        {
                 "id": "3dae2f08-0838-432d-b28d-18296e2c89df",
                 "name": "CUSTOM-STATUSBAR-FAILURE",
                 "locale": "en-US",
@@ -19710,13 +19689,6 @@
                 "locale": "zh-CN",
                 "category": "label",
                 "display": "内存使用量"
-        },
-        {
-                "id": "ff973ded-7c46-4a92-815b-f6ef9c4d098c",
-                "name": "write",
-                "locale": "zh-CN",
-                "category": "button",
-                "display": "写入"
         },
         {
                 "id": "158059bb-8b68-46fd-bf61-49559fec55a8",
@@ -32060,13 +32032,6 @@
                 "display": "Bucket Seq."
         },
         {
-                "id": "e46cd0b3-99ba-4d6a-a7a1-7f09af12009a",
-                "name": "rack_cd",
-                "locale": "ko-KR",
-                "category": "label",
-                "display": "랙"
-        },
-        {
                 "id": "8da1b579-7289-4f7b-a807-45fd3a72ee12",
                 "name": "rack_cd",
                 "locale": "en-US",
@@ -32121,13 +32086,6 @@
                 "locale": "en-US",
                 "category": "label",
                 "display": "Partner Code"
-        },
-        {
-                "id": "eea9f2fc-bfaf-4703-a2d2-562d9afe71b9",
-                "name": "cell_cd",
-                "locale": "ko-KR",
-                "category": "label",
-                "display": "셀 번호"
         },
         {
                 "id": "b8be0656-3b17-4cda-be64-890ddf0b75c7",
@@ -32422,6 +32380,13 @@
                 "locale": "ko-KR",
                 "category": "button",
                 "display": "Upload Seed"
+        },
+        {
+                "id": "e46cd0b3-99ba-4d6a-a7a1-7f09af12009a",
+                "name": "rack_cd",
+                "locale": "ko-KR",
+                "category": "label",
+                "display": "호기"
         },
         {
                 "id": "5dacddd0-0cbb-4423-87b2-27239ad87454",
@@ -33241,6 +33206,13 @@
                 "locale": "zh-CN",
                 "category": "menu",
                 "display": "1Sku 1Order"
+        },
+        {
+                "id": "97a56877-4e24-45d7-b48d-3eb1747d671b",
+                "name": "shop_addr",
+                "locale": "zh-CN",
+                "category": "label",
+                "display": "客户地址"
         },
         {
                 "id": "48aa4480-839f-4510-96ac-73e53a60c486",
@@ -34466,13 +34438,6 @@
                 "locale": "zh-CN",
                 "category": "label",
                 "display": "客户名称"
-        },
-        {
-                "id": "97a56877-4e24-45d7-b48d-3eb1747d671b",
-                "name": "shop_addr",
-                "locale": "zh-CN",
-                "category": "label",
-                "display": "客户地址"
         },
         {
                 "id": "1d0ca114-30dd-4f02-99da-5c27182912c1",
@@ -39072,5 +39037,61 @@
                 "locale": "zh-CN",
                 "category": "label",
                 "display": "총 작업 인력"
+        },
+        {
+                "id": "bbc30a35-dfd5-4d5c-95d9-34c48f9f1a6c",
+                "name": "MpsPackingCmpt",
+                "locale": "zh-CN",
+                "category": "menu",
+                "display": "DPS 박스 처리 결과"
+        },
+        {
+                "id": "23d98921-9463-48e2-b1e0-74bac3c29b47",
+                "name": "MpsPackingCmpt",
+                "locale": "ko-KR",
+                "category": "menu",
+                "display": "DPS 박스 처리 결과"
+        },
+        {
+                "id": "98584036-a971-4b0c-8b76-bdab78fa30c1",
+                "name": "MpsPackingCmpt",
+                "locale": "en-US",
+                "category": "menu",
+                "display": "DPS Box Result"
+        },
+        {
+                "id": "eb8a9bac-8962-495d-8c38-21d2a9c02316",
+                "name": "prev_stock_qty",
+                "locale": "ko-KR",
+                "category": "label",
+                "display": "이전 수량"
+        },
+        {
+                "id": "dce68035-70ec-486d-ac1a-bb1e6ec8dc75",
+                "name": "Rack",
+                "locale": "ko-KR",
+                "category": "menu",
+                "display": "호기"
+        },
+        {
+                "id": "eea9f2fc-bfaf-4703-a2d2-562d9afe71b9",
+                "name": "cell_cd",
+                "locale": "ko-KR",
+                "category": "label",
+                "display": "로케이션 No"
+        },
+        {
+                "id": "839c75a3-def6-47d2-a8f0-a170e564ff51",
+                "name": "rack",
+                "locale": "ko-KR",
+                "category": "label",
+                "display": "호기"
+        },
+        {
+                "id": "208cf273-9935-41d3-b943-b7556e4ffabb",
+                "name": "rack_nm",
+                "locale": "ko-KR",
+                "category": "label",
+                "display": "호기명"
         }
 ]

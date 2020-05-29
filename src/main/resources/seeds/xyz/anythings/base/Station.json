@@ -4,17 +4,18 @@
                 "equipType": "Rack",
                 "equipCd": "A1-01",
                 "stationCd": "A101-01",
-                "stationNm": "1층 DAS 존1",
+                "stationNm": "1층 DAS",
                 "stationType": "JOB_STATION",
                 "worker": {}
         },
         {
-                "id": "2656b334-2b95-48cf-8da2-3524d7e437ba",
+                "id": "73340f36-a2c2-44ff-a67c-b17053ce2565",
                 "equipType": "Rack",
                 "equipCd": "A1-01",
                 "stationCd": "A101-02",
-                "stationNm": "1층 DAS 존2",
+                "stationNm": "1층 DAS (sorter)",
                 "stationType": "JOB_STATION",
+                "printerCd": "",
                 "worker": {}
         },
         {
@@ -40,35 +41,68 @@
                 "equipType": "Rack",
                 "equipCd": "A3-01",
                 "stationCd": "A301-01",
-                "stationNm": "3층 DAS 존1",
+                "stationNm": "3층 DAS",
                 "stationType": "JOB_STATION",
                 "worker": {}
         },
         {
-                "id": "0982be93-b7e6-457c-bb60-e321e4873b07",
+                "id": "8610d532-7e2a-46ee-8cea-88d81ab535f6",
                 "equipType": "Rack",
-                "equipCd": "A3-01",
-                "stationCd": "A301-02",
-                "stationNm": "3층 DAS 존2",
+                "equipCd": "A4-01",
+                "stationCd": "A401-01",
+                "stationNm": "4층 DAS",
                 "stationType": "JOB_STATION",
+                "printerCd": "",
                 "worker": {}
         },
         {
-                "id": "cd5b200b-b9d3-42b3-b744-a241f786e388",
+                "id": "30e2cad2-2126-4c09-bac2-d4cce9887052",
                 "equipType": "Rack",
-                "equipCd": "A3-02",
-                "stationCd": "A302-01",
-                "stationNm": "3층 DAS 존3",
+                "equipCd": "A5-01",
+                "stationCd": "A501-01",
+                "stationNm": "5층 DAS",
                 "stationType": "JOB_STATION",
+                "printerCd": "",
                 "worker": {}
         },
         {
-                "id": "4a765e1a-2618-481a-8428-f5b97df4f59e",
+                "id": "f14163dd-7c9f-42b3-bfd5-1164c24fca42",
                 "equipType": "Rack",
-                "equipCd": "A3-02",
-                "stationCd": "A302-02",
-                "stationNm": "3층 DAS 존4",
+                "equipCd": "A6-01",
+                "stationCd": "A601-01",
+                "stationNm": "6층 DAS",
                 "stationType": "JOB_STATION",
+                "printerCd": "",
+                "worker": {}
+        },
+        {
+                "id": "18b194be-b139-4a5f-bd7e-745bb4ff5435",
+                "equipType": "Rack",
+                "equipCd": "A8-01",
+                "stationCd": "A801-01",
+                "stationNm": "8층 DAS",
+                "stationType": "JOB_STATION",
+                "printerCd": "",
+                "worker": {}
+        },
+        {
+                "id": "46d7e19c-5185-47db-96ac-3c49bc19ef11",
+                "equipType": "Rack",
+                "equipCd": "AB-01",
+                "stationCd": "AB01-01",
+                "stationNm": "지하 1층 DAS",
+                "stationType": "JOB_STATION",
+                "printerCd": "",
+                "worker": {}
+        },
+        {
+                "id": "ec568610-36c8-482a-9f7c-337f01d99a62",
+                "equipType": "Rack",
+                "equipCd": "AB-02",
+                "stationCd": "AB02-01",
+                "stationNm": "지하 2층 DAS",
+                "stationType": "JOB_STATION",
+                "printerCd": "",
                 "worker": {}
         }
 ]

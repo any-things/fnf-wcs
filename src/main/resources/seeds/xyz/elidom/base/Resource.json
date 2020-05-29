@@ -1,15 +1,16 @@
 [
         {
-                "id": "7AAB0D8A-2B48-1DC7-E053-8B010A803CD3",
-                "name": "TraceDeliver",
-                "description": "RabbitMq Deliver Message 로그",
-                "bundle": "rabbitmq",
-                "tableName": "mq_trace_deliver_log",
-                "searchUrl": "rabbitmq/trace_deliver",
+                "id": "1ef2f0d5-6261-4254-9f3a-94e6fb9d7e69",
+                "name": "SkuSyncHist",
+                "description": "상품 동기화 이력",
+                "bundle": "fnf",
+                "tableName": "sku_sync_hists",
+                "searchUrl": "sku_sync_hists",
+                "multiSaveUrl": "sku_sync_hists/update_multiple",
                 "idType": "uuid",
                 "idField": "id",
-                "fixedColumns": 0,
-                "active": false,
+                "fixedColumns": 1,
+                "active": true,
                 "extEntity": false
         },
         {
@@ -1727,6 +1728,19 @@
                 "delStrategy": "",
                 "fixedColumns": 3,
                 "active": true,
+                "extEntity": false
+        },
+        {
+                "id": "7AAB0D8A-2B48-1DC7-E053-8B010A803CD3",
+                "name": "TraceDeliver",
+                "description": "RabbitMq Deliver Message 로그",
+                "bundle": "rabbitmq",
+                "tableName": "mq_trace_deliver_log",
+                "searchUrl": "rabbitmq/trace_deliver",
+                "idType": "uuid",
+                "idField": "id",
+                "fixedColumns": 0,
+                "active": false,
                 "extEntity": false
         },
         {

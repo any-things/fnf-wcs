@@ -23,6 +23,9 @@ import xyz.elidom.util.ThreadUtil;
 @Component
 public class SyncSkuJob extends AbstractFnFJob {
 
+	/**
+	 * 이벤트 퍼블리셔
+	 */
 	@Autowired
 	protected EventPublisher eventPublisher;
 	/**
@@ -31,7 +34,7 @@ public class SyncSkuJob extends AbstractFnFJob {
 	private boolean syncJobRunning = false;
 	
 	@Transactional
-	@Scheduled(cron="0 0/8 * * * *")
+	//@Scheduled(cron="0 0/8 * * * *")
 	public void syncJob() {
 		// 스케줄링 활성화 여부 && 이전 작업이 진행 중인 여부 체크
 		if(!this.isJobEnabeld() || this.syncJobRunning) {
@@ -71,6 +74,5 @@ public class SyncSkuJob extends AbstractFnFJob {
 		// 4. 작업 중 플래그 리셋
 		this.syncJobRunning = false;
 	}
-	
 
 }

@@ -1,10 +1,16 @@
 package operato.fnf.wcs.rest;
 
+import java.util.Date;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronizationAdapter;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,13 +18,17 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
 import operato.fnf.wcs.entity.TowerLamp;
+import xyz.anythings.sys.AnyConstants;
 import xyz.elidom.dbist.dml.Page;
+import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.orm.OrmConstants;
 import xyz.elidom.orm.system.annotation.service.ApiDesc;
 import xyz.elidom.orm.system.annotation.service.ServiceDesc;
 import xyz.elidom.sys.system.service.AbstractRestService;
+import xyz.elidom.util.BeanUtil;
 import xyz.elidom.util.ValueUtil;
 
 @RestController
@@ -28,6 +38,12 @@ import xyz.elidom.util.ValueUtil;
 @ServiceDesc(description="TowerLamp Service API")
 public class TowerLampController extends AbstractRestService {
 	
+	/**
+	 * LAMP Agent 주소  
+	 */
+	@Value("${lamp.agent.rest.url:NULL}")
+	private String lampAgentUrl;
+
 	
 	@Override
 	protected Class<?> entityClass() {
@@ -82,17 +98,75 @@ public class TowerLampController extends AbstractRestService {
 		
 		boolean result =this.cudMultipleData(this.entityClass(), list);
 		
+		if(ValueUtil.isEqualIgnoreCase(this.lampAgentUrl, AnyConstants.NULL_CAP_STRING) == false) {
+			TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter(){
+				public void afterCommit(){
+					BeanUtil.get(TowerLampController.class).requestAsyncAgent(lampAgentUrl, list);
+				}
+			});		
+			
+//			this.requestAsyncAgent(list);
+		}
+		
+		return result;
+	}
+	
+	@Async
+	private void requestAsyncAgent(String restUrl, List<TowerLamp> list) {
+
+		RestTemplate rest = this.getRestTemplate();
+		String url = restUrl;
+		
 		// 1.플래그에 따른 처리 
 		for(TowerLamp towerLamp : list) {
 			if(ValueUtil.isEqualIgnoreCase(towerLamp.getCudFlag_(), OrmConstants.CUD_FLAG_CREATE)) {
 				// 1.1 create : 연결 시도 
+				url = restUrl + "/connect";
 			}else if(ValueUtil.isEqualIgnoreCase(towerLamp.getCudFlag_(), OrmConstants.CUD_FLAG_UPDATE)) {
 				// 1.2 update : 데이터 전송 
+				url = restUrl + "/send/true";
 			}else if(ValueUtil.isEqualIgnoreCase(towerLamp.getCudFlag_(), OrmConstants.CUD_FLAG_DELETE)) {
 				// 1.3 delete : 연결 종료 
+				url = restUrl + "/disconnect";
+			}
+			try {
+				rest.put(url, towerLamp);
+			}catch(Exception e) {
+				e.printStackTrace();
 			}
 		}
+	}
+	
+	private RestTemplate getRestTemplate() {
+		HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
+		factory.setConnectTimeout(3000);
+		factory.setReadTimeout(3000);
 		
-		return result;
+		return new RestTemplate(factory);
+	}
+
+	
+	/********************************/
+	/* AGENT 에서 호출 되는 API
+	/********************************/
+	
+	@RequestMapping(value="/agent/list", method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
+	@ApiDesc(description="Call Request From Agent : All Tower Lamp List")
+	public List<TowerLamp> getAllList(){
+		return this.queryManager.selectList(TowerLamp.class, new Query());
+	}
+	
+	@RequestMapping(value="/agent/update/status", method=RequestMethod.PUT, consumes=MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
+	@ApiDesc(description="Call Request From Agent : Tower Lamp Status Update ")
+	public void updateStatusFromAgent(@RequestBody TowerLamp input) {
+		input.setUpdatedAt(new Date());
+		this.queryManager.update(input, "status", "updatedAt" );
+	}
+	
+	@RequestMapping(value="/agent/update/lamp", method=RequestMethod.PUT, consumes=MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
+	@ApiDesc(description="Call Request From Agent : Tower Lamp lamp Update ")
+	public void updateLampFromAgent(@RequestBody TowerLamp input) {
+		input.setUpdatedAt(new Date());
+		this.queryManager.update(input, "lampR", "lampG", "lampA", "updatedAt" );
 	}
 }

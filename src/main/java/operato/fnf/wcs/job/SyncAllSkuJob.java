@@ -62,7 +62,7 @@ public class SyncAllSkuJob extends AbstractFnFJob {
 	private SettingController settingCtrl;
 	
 	@Transactional
-	@Scheduled(cron="0 0/1 * * * *")
+	//@Scheduled(cron="0 0/1 * * * *")
 	public void syncJob() {
 		// 스케줄링 활성화 여부 && 이전 작업이 진행 중인 여부 체크
 		if(!this.isJobEnabeld() || this.syncJobRunning) {

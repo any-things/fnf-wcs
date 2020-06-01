@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import operato.fnf.wcs.query.store.FnFDasQueryStore;
+import operato.fnf.wcs.query.store.FnFDpsQueryStore;
 import operato.fnf.wcs.service.model.ResultSummary;
 import operato.logis.wcs.entity.DailyProdSummary;
 import operato.logis.wcs.entity.Productivity;
@@ -22,18 +23,23 @@ import xyz.elidom.util.ClassUtil;
 import xyz.elidom.util.ValueUtil;
 
 /**
- * 작업 서머리 관리 서비스
+ * DAS 작업 서머리 관리 서비스
  * 
  * @author shortstop
  */
 @Component
-public class DasJobSummaryService extends AbstractQueryService {
+public class JobSummaryService extends AbstractQueryService {
 
 	/**
 	 * FnF DAS용 쿼리 스토어
 	 */
 	@Autowired
 	private FnFDasQueryStore fnfDasQueryStore;
+	/**
+	 * FnF DPS용 쿼리 스토어
+	 */
+	@Autowired
+	private FnFDpsQueryStore fnfDpsQueryStore;
 	
 	/**
 	 * 작업 배치별 10분대별 실적 서머리 처리
@@ -60,6 +66,26 @@ public class DasJobSummaryService extends AbstractQueryService {
 	}
 	
 	/**
+	 * 배치의 총 실적 서머리 조회 쿼리 
+	 * 
+	 * @param batch
+	 * @return
+	 */
+	private String getBatchTotalResultSummaryQuery(JobBatch batch) {
+		String jobType = batch.getJobType();
+		
+		if(LogisConstants.isDasJobType(jobType)) {
+			return this.fnfDasQueryStore.getDasBatchTotalResultSummary();
+			
+		} else if(LogisConstants.isDpsJobType(jobType)) {
+			return this.fnfDpsQueryStore.getDpsBatchTotalResultSummary();
+			
+		} else {
+			return null;
+		}
+	}
+	
+	/**
 	 * 작업 배치별 10분대별 실적 서머리 최총 처리
 	 * 
 	 * @param batch
@@ -67,7 +93,11 @@ public class DasJobSummaryService extends AbstractQueryService {
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void summaryTotalBatchJobs(JobBatch batch) {
 		// 1. 시간, 분대에 대한 실적 조회
-		String sql = this.fnfDasQueryStore.getDasBatchTotalResultSummary();
+		String sql = this.getBatchTotalResultSummaryQuery(batch);
+		if(ValueUtil.isEmpty(sql)) {
+			return;
+		}
+		
 		Map<String, Object> params = ValueUtil.newMap("batchId", batch.getId());
 		List<ResultSummary> summaries = this.queryManager.selectListBySql(sql, params, ResultSummary.class, 0, 0);
 		
@@ -260,9 +290,13 @@ public class DasJobSummaryService extends AbstractQueryService {
 	 * @return
 	 */
 	private int calc10MinResult(JobBatch batch, String date, int hour, int minFrom, int minTo) {
+		String sql = this.getCalc10MinuteResultSummaryQuery(batch);
+		if(ValueUtil.isEmpty(sql)) {
+			return 0;
+		}
+		
 		String timeFrom = date + " " + hour + ":" + minFrom + ":00.000";
 		String timeTo = date + " " + hour + ":" + minTo + ":00.999";
-		String sql = this.fnfDasQueryStore.getDasCalc10MinuteResultSummary();
 		Map<String, Object> params = ValueUtil.newMap("batchId,timeFrom,timeTo", batch.getId(), timeFrom, timeTo);
 		return this.queryManager.selectBySql(sql, params, Integer.class);
 	}
@@ -276,11 +310,55 @@ public class DasJobSummaryService extends AbstractQueryService {
 	 * @return
 	 */
 	private int calc1HourResult(JobBatch batch, String date, int hour) {
+		String sql = this.getDasCalc1HourResultSummaryQuery(batch);
+		if(ValueUtil.isEmpty(sql)) {
+			return 0;
+		}
+		
 		String timeFrom = date + " " + hour + ":00:00.000";
 		String timeTo = date + " " + hour + ":59:59.999";
-		String sql = this.fnfDasQueryStore.getDasCalc1HourResultSummary();
 		Map<String, Object> params = ValueUtil.newMap("batchId,timeFrom,timeTo", batch.getId(), timeFrom, timeTo);
 		return this.queryManager.selectBySql(sql, params, Integer.class);
+	}
+
+	/**
+	 * 10분간 실적 서머리 조회 쿼리 
+	 * 
+	 * @param batch
+	 * @return
+	 */
+	private String getCalc10MinuteResultSummaryQuery(JobBatch batch) {
+		String jobType = batch.getJobType();
+		
+		if(LogisConstants.isDasJobType(jobType)) {
+			return this.fnfDasQueryStore.getDasCalc10MinuteResultSummary();
+			
+		} else if(LogisConstants.isDpsJobType(jobType)) {
+			return this.fnfDpsQueryStore.getDpsCalc10MinuteResultSummary();
+			
+		} else {
+			return null;
+		}
+	}
+	
+	/**
+	 * 10분간 실적 서머리 조회 쿼리 
+	 * 
+	 * @param batch
+	 * @return
+	 */
+	private String getDasCalc1HourResultSummaryQuery(JobBatch batch) {
+		String jobType = batch.getJobType();
+		
+		if(LogisConstants.isDasJobType(jobType)) {
+			return this.fnfDasQueryStore.getDasCalc1HourResultSummary();
+			
+		} else if(LogisConstants.isDpsJobType(jobType)) {
+			return this.fnfDpsQueryStore.getDpsCalc1HourResultSummary();
+			
+		} else {
+			return null;
+		}
 	}
 
 }

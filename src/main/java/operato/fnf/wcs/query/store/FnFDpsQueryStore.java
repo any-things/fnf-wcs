@@ -17,7 +17,7 @@ public class FnFDpsQueryStore extends AbstractQueryStore {
 	public void initQueryStore(String databaseType) {
 		this.databaseType = databaseType;
 		this.basePath = "operato/fnf/wcs/query/" + this.databaseType + SysConstants.SLASH;
-		this.defaultBasePath = "operato/fnf/wcs/query/ansi/";		
+		this.defaultBasePath = "operato/fnf/wcs/query/ansi/";
 	}
 
 	/**
@@ -25,7 +25,7 @@ public class FnFDpsQueryStore extends AbstractQueryStore {
 	 * 
 	 * @return
 	 */
-	public String getDasBatchTotalResultSummary() {
+	public String getDpsBatchTotalResultSummary() {
 		return this.getQueryByPath("dps/BatchTotalMinuteResultSummary");
 	}
 	
@@ -34,7 +34,7 @@ public class FnFDpsQueryStore extends AbstractQueryStore {
 	 * 
 	 * @return
 	 */
-	public String getDasCalc10MinuteResultSummary() {
+	public String getDpsCalc10MinuteResultSummary() {
 		return this.getQueryByPath("dps/Calc10MinuteResultSummary");
 	}
 	
@@ -43,7 +43,7 @@ public class FnFDpsQueryStore extends AbstractQueryStore {
 	 * 
 	 * @return
 	 */
-	public String getDasCalc1HourResultSummary() {
+	public String getDpsCalc1HourResultSummary() {
 		return this.getQueryByPath("dps/Calc1HourResultSummary");
 	}
 	
@@ -52,7 +52,7 @@ public class FnFDpsQueryStore extends AbstractQueryStore {
 	 * 
 	 * @return
 	 */
-	public String getDasEquipmentIdleTime() {
+	public String getDpsEquipmentIdleTime() {
 		return this.getQueryByPath("dps/EquipmentIdleTime");
 	}
 	
@@ -82,4 +82,5 @@ public class FnFDpsQueryStore extends AbstractQueryStore {
 	public String getSearchAssignCandidates() {
 		return this.getQueryByPath("dps/SearchAssignCandidates");
 	}
+
 }

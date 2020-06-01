@@ -18,15 +18,16 @@ import xyz.elidom.sys.system.context.DomainContext;
 import xyz.elidom.sys.util.ValueUtil;
 
 /**
- * DAS 용 모니터링 잡
- * 	- 매 1분 마다 MHE_HR 테이블을 모니터링 하다가 Wave의 상태가 변경되는 경우 JobBatch에 반영
+ * Wave 상태를 모니터링해서 WCS 작업 배치 테이블에 상태 정보를 반영하는 잡
+ * 	- 매 3분 마다 MHE_HR 테이블을 모니터링 하다가 Wave의 상태가 변경되는 경우 JobBatch에 반영
  *  - MHE_HR 테이블의 status가 'B'이고 prcsYn가 'N'인 경우 JobBatch 상태를 RUN으로 변경하고 WMS 동일 I/F 테이블에 전송
  *  - MHE_HR 테이블의 status가 'C'이고 prcsYn가 'N'인 경우 JobBatch 상태를 END로 변경하고 WMS 동일 I/F 테이블에 전송
  * 
  * @author shortstop
  */
 @Component
-public class DasWaveMonitorJob extends AbstractFnFJob {
+public class WaveMonitorJob extends AbstractFnFJob {
+	
 	/**
 	 * 작업 배치 시작을 위한 서비스
 	 */
@@ -37,12 +38,12 @@ public class DasWaveMonitorJob extends AbstractFnFJob {
 	 */	
 	@Autowired
 	private DasCloseBatchService closeBatchSvc;
-		
+	
 	/**
 	 * 매 3분 마다 실행되어 작업 배치 상태 모니터링 후 변경된 Wave에 대해서 JobBatch에 반영
 	 */
 	@Transactional
-	@Scheduled(cron="0 0/3 * * * *")
+	@Scheduled(cron="50 0/3 * * * *")
 	public void monitorWave() {
 		// 1. 스케줄링 활성화 여부
 		if(!this.isJobEnabeld()) {
@@ -58,10 +59,10 @@ public class DasWaveMonitorJob extends AbstractFnFJob {
 			
 			try {
 				// 2.2 시작된 Wave 리스트를 조회한 후 존재한다면 처리
-				this.processStartedWaveList(domain.getId());
+				this.processStartedWaveList(domain);
 			
 				// 2.3 종료된 Wave 리스트를 조회한 후 존재한다면 처리
-				this.processFinishedWaveList(domain.getId());
+				this.processFinishedWaveList(domain);
 				
 			} catch(Exception e) {
 				// 2.4. 예외 처리
@@ -74,18 +75,18 @@ public class DasWaveMonitorJob extends AbstractFnFJob {
 			}
 		}
 	}
-		
+	
 	/**
 	 * 시작된 Wave 리스트를 조회한 후 JobBatch에 반영
 	 * 
-	 * @param domainId
+	 * @param domain
 	 */
-	public void processStartedWaveList(Long domainId) {
-		List<WcsMheHr> waveList = this.searchStartedWaveList(domainId);
+	public void processStartedWaveList(Domain domain) {
+		List<WcsMheHr> waveList = this.searchStartedWaveList(domain);
 		
 		if(ValueUtil.isNotEmpty(waveList)) {
 			for(WcsMheHr wave : waveList) {
-				this.startBatchSvc.startBatch(domainId, wave);
+				this.startBatchSvc.startBatch(domain.getId(), wave);
 			}
 		}
 	}
@@ -93,14 +94,14 @@ public class DasWaveMonitorJob extends AbstractFnFJob {
 	/**
 	 * 종료된 Wave 리스트를 조회한 후 JobBatch에 반영
 	 * 
-	 * @param domainId
+	 * @param domain
 	 */
-	public void processFinishedWaveList(Long domainId) {
-		List<WcsMheHr> waveList = this.searchFinishedWaveList(domainId);
+	public void processFinishedWaveList(Domain domain) {
+		List<WcsMheHr> waveList = this.searchFinishedWaveList(domain);
 		
 		if(ValueUtil.isNotEmpty(waveList)) {
 			for(WcsMheHr wave : waveList) {
-				this.closeBatchSvc.closeBatch(domainId, wave);
+				this.closeBatchSvc.closeBatch(domain.getId(), wave);
 			}
 		}
 	}
@@ -108,12 +109,12 @@ public class DasWaveMonitorJob extends AbstractFnFJob {
 	/**
 	 * 시작된 Wave 리스트를 조회
 	 * 
-	 * @param domainId
+	 * @param domain
 	 * @return
 	 */
-	private List<WcsMheHr> searchStartedWaveList(Long domainId) {
+	private List<WcsMheHr> searchStartedWaveList(Domain domain) {
 		Query condition = new Query();
-		condition.addFilter("whCd", "ICF");
+		condition.addFilter("whCd", "ICF");// TODO domain.getName()으로 변경
 		condition.addFilter("status", "B");
 		condition.addFilter("prcsYn", LogisConstants.N_CAP_STRING);
 		return this.queryManager.selectList(WcsMheHr.class, condition);
@@ -122,15 +123,15 @@ public class DasWaveMonitorJob extends AbstractFnFJob {
 	/**
 	 * 완료된 Wave 리스트를 조회
 	 * 
-	 * @param domainId
+	 * @param domain
 	 * @return
 	 */
-	private List<WcsMheHr> searchFinishedWaveList(Long domainId) {
+	private List<WcsMheHr> searchFinishedWaveList(Domain domain) {
 		Query condition = new Query();
-		condition.addFilter("whCd", "ICF");
+		condition.addFilter("whCd", "ICF");// TODO domain.getName()으로 변경
 		condition.addFilter("status", "C");
 		condition.addFilter("endDatetime", LogisConstants.IS_NULL, LogisConstants.EMPTY_STRING);
 		return this.queryManager.selectList(WcsMheHr.class, condition);
 	}
-	
+
 }

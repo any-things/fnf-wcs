@@ -30,7 +30,7 @@ public class DpsCloseBatchService extends AbstractQueryService {
 	 * DAS 작업 서머리 서비스
 	 */
 	@Autowired
-	private DasJobSummaryService dasJobSummarySvc;
+	private JobSummaryService dasJobSummarySvc;
 	
 	/**
 	 * MheHr 정보로 부터 JobBatch에 배치 완료 정보를 반영한다.
@@ -121,7 +121,7 @@ public class DpsCloseBatchService extends AbstractQueryService {
 		int totalMin = ValueUtil.toInteger(gap / ValueUtil.toLong(1000 * 60));
 		
 		// Productivity 정보에서 10분당 실적이 0인 구간을 모두 합쳐서 시간 계산
-		String sql = this.fnfDpsQueryStore.getDasEquipmentIdleTime();
+		String sql = this.fnfDpsQueryStore.getDpsEquipmentIdleTime();
 		int idleMin = this.queryManager.selectBySql(sql, ValueUtil.newMap("domainId,batchId", batch.getDomainId(), batch.getId()), Integer.class);
 		
 		// duration에서 일하지 않은 총 시간을 빼서 실제 가동 시간을 구함

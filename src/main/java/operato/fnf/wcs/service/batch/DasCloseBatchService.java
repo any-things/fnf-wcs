@@ -36,7 +36,7 @@ public class DasCloseBatchService extends AbstractQueryService {
 	 * DAS 작업 서머리 서비스
 	 */
 	@Autowired
-	private DasJobSummaryService dasJobSummarySvc;
+	private JobSummaryService dasJobSummarySvc;
 	
 	/**
 	 * MheHr 정보로 부터 JobBatch에 배치 완료 정보를 반영한다.

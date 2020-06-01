@@ -200,7 +200,10 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
 	@Column (name = "box_no", nullable = true, length = 30)
 	private String boxNo;
-	
+
+	@Column (name = "waybill_no", nullable = true, length = 30)
+	private String waybillNo;
+
 	@Column (name = "box_input_at", nullable = true)
 	private Date boxInputAt;
 	
@@ -273,7 +276,7 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 		return waveNo;
 	}
 
-	public void setWave_no(String waveNo) {
+	public void setWaveNo(String waveNo) {
 		this.waveNo = waveNo;
 	}
 
@@ -675,6 +678,14 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setBoxNo(String boxNo) {
 		this.boxNo = boxNo;
+	}
+
+	public String getWaybillNo() {
+		return waybillNo;
+	}
+
+	public void setWaybillNo(String waybillNo) {
+		this.waybillNo = waybillNo;
 	}
 
 	public Date getBoxInputAt() {

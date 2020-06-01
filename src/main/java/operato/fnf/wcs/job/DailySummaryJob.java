@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import operato.fnf.wcs.service.batch.DasJobSummaryService;
+import operato.fnf.wcs.service.batch.JobSummaryService;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.model.CurrentDbTime;
@@ -27,13 +27,13 @@ import xyz.elidom.sys.util.ValueUtil;
  * @author shortstop
  */
 @Component
-public class DasDailySummaryJob extends AbstractFnFJob {
+public class DailySummaryJob extends AbstractFnFJob {
 
 	/**
 	 * 작업 서머리를 위한 서비스
 	 */
 	@Autowired
-	private DasJobSummaryService jobSummarySvc;
+	private JobSummaryService jobSummarySvc;
 	
 	/**
 	 * 매일 오전 5시에 실행되어 일별 서머리 처리 
@@ -89,7 +89,6 @@ public class DasDailySummaryJob extends AbstractFnFJob {
 		Query condition = AnyOrmUtil.newConditionForExecution(domainId);
 		condition.addFilter("jobDate", date);
 		condition.addFilter("status", LogisConstants.IN, ValueUtil.toList(JobBatch.STATUS_RUNNING, JobBatch.STATUS_END));
-		condition.addFilter("jobType", LogisConstants.JOB_TYPE_DAS);
 		return this.queryManager.selectList(JobBatch.class, condition);
 	}
 

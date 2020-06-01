@@ -72,7 +72,7 @@ public class DasBoxSendService extends AbstractQueryService {
 		condition.addSelect("work_unit", "outb_no");
 		condition.addFilter("whCd", "ICF");
 		condition.addFilter("workUnit", batch.getId());
-		condition.addFilter("status", "B");
+		condition.addFilter("ifYn", LogisConstants.NOT_EQUAL, LogisConstants.Y_CAP_STRING);
 		condition.addOrder("outbNo", true);
 		condition.addOrder("mheDatetime", true);
 		return this.queryManager.selectList(WcsMheBox.class, condition);
@@ -89,7 +89,7 @@ public class DasBoxSendService extends AbstractQueryService {
 		Query condition = new Query();
 		condition.addFilter("whCd", "ICF");
 		condition.addFilter("workUnit", batchId);
-		condition.addFilter("status", "B");
+		condition.addFilter("ifYn", LogisConstants.NOT_EQUAL, LogisConstants.Y_CAP_STRING);
 		condition.addFilter("outbNo", orderId);
 		condition.addOrder("mheDatetime", true);
 		return this.queryManager.selectList(WcsMheBox.class, condition);

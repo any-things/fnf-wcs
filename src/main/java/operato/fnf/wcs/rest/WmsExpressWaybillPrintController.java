@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import operato.fnf.wcs.entity.WmsAssortItem;
+import operato.fnf.wcs.entity.WmsExpressWaybillPrint;
 import xyz.elidom.dbist.dml.Page;
 import xyz.elidom.orm.system.annotation.service.ApiDesc;
 import xyz.elidom.orm.system.annotation.service.ServiceDesc;
@@ -22,13 +22,13 @@ import xyz.elidom.sys.system.service.DynamicDataSourceService;
 @RestController
 @Transactional
 @ResponseStatus(HttpStatus.OK)
-@RequestMapping("/rest/wms_assort_item")
+@RequestMapping("/rest/wms_express_waybill_print")
 @ServiceDesc(description = "WMS Assort Item Service API")
-public class WmsAssortItemController extends DynamicDataSourceService {
+public class WmsExpressWaybillPrintController extends DynamicDataSourceService {
 
 	@Override
 	protected Class<?> entityClass() {
-		return WmsAssortItem.class;
+		return WmsExpressWaybillPrint.class;
 	}
 
 	@RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -43,7 +43,7 @@ public class WmsAssortItemController extends DynamicDataSourceService {
 
 	@RequestMapping(value = "/{id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiDesc(description = "Find one by ID")
-	public WmsAssortItem findOne(@PathVariable("id") String id) {
+	public WmsExpressWaybillPrint findOne(@PathVariable("id") String id) {
 		return this.getOne(this.entityClass(), id);
 	}
 
@@ -56,13 +56,13 @@ public class WmsAssortItemController extends DynamicDataSourceService {
 	@RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseStatus(HttpStatus.CREATED)
 	@ApiDesc(description = "Create")
-	public WmsAssortItem create(@RequestBody WmsAssortItem input) {
+	public WmsExpressWaybillPrint create(@RequestBody WmsExpressWaybillPrint input) {
 		return this.createOne(input);
 	}
 
 	@RequestMapping(value = "/{id}", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiDesc(description = "Update")
-	public WmsAssortItem update(@PathVariable("id") String id, @RequestBody WmsAssortItem input) {
+	public WmsExpressWaybillPrint update(@PathVariable("id") String id, @RequestBody WmsExpressWaybillPrint input) {
 		return this.updateOne(input);
 	}
 
@@ -74,7 +74,7 @@ public class WmsAssortItemController extends DynamicDataSourceService {
 
 	@RequestMapping(value = "/update_multiple", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiDesc(description = "Create, Update or Delete multiple at one time")
-	public Boolean multipleUpdate(@RequestBody List<WmsAssortItem> list) {
+	public Boolean multipleUpdate(@RequestBody List<WmsExpressWaybillPrint> list) {
 		return this.cudMultipleData(this.entityClass(), list);
 	}
 

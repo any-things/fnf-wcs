@@ -1,6 +1,5 @@
 package operato.fnf.wcs.job;
 
-import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,16 +7,14 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import operato.fnf.wcs.entity.WcsMheBox;
-import operato.fnf.wcs.entity.WmsMheBox;
 import operato.fnf.wcs.service.batch.JobSummaryService;
+import operato.fnf.wcs.service.send.DasBoxSendService;
 import operato.fnf.wcs.service.send.DpsBoxSendService;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.sys.event.model.ErrorEvent;
 import xyz.anythings.sys.util.AnyOrmUtil;
 import xyz.elidom.dbist.dml.Query;
-import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.sys.system.context.DomainContext;
 import xyz.elidom.sys.util.ValueUtil;
@@ -35,6 +32,11 @@ public class JobSummaryJob extends AbstractFnFJob {
 	 */
 	@Autowired
 	private JobSummaryService jobSummarySvc;
+	/**
+	 * DAS 박스 전송 서비스
+	 */
+	@Autowired
+	private DasBoxSendService dasBoxSendSvc;
 	/**
 	 * DPS 박스 전송 서비스
 	 */
@@ -127,55 +129,11 @@ public class JobSummaryJob extends AbstractFnFJob {
 		String jobType = batch.getJobType();
 		
 		if(LogisConstants.isDasJobType(jobType)) {
-			this.sendDasBoxResultToWms(domain, batch, date);
+			this.dasBoxSendSvc.sendBoxResults(domain, batch);
 			
 		} else if(LogisConstants.isDpsJobType(jobType)) {
-			this.sendDpsBoxResultToWms(domain, batch, date);
+			this.dpsBoxSendSvc.sendBoxResults(domain, batch);
 		}
-	}
-	
-	/**
-	 * DAS 박스 실적을 WMS로 전송
-	 * 
-	 * @param domain
-	 * @param batch
-	 * @param date
-	 */
-	private void sendDasBoxResultToWms(Domain domain, JobBatch batch, String date) {
-		// 1. 전송되지 않은 박스 실적 조회
-		Query condition = new Query();
-		condition.addFilter("whCd", "ICF"); // TODO domain.getName()으로 변경 필요
-		condition.addFilter("workUnit", batch.getId());
-		condition.addFilter("ifYn", LogisConstants.NOT_EQUAL, LogisConstants.Y_CAP_STRING);
-		List<WcsMheBox> boxList = this.queryManager.selectList(WcsMheBox.class, condition);
-		
-		// 2. WMS에 전송
-		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheBox.class);
-		Date currentTime = new Date();
-		
-		for(WcsMheBox box : boxList) {
-			// 3. WMS 전송 데이터 생성 
-			WmsMheBox wmsBox = ValueUtil.populate(box, new WmsMheBox());
-			wmsQueryMgr.insert(wmsBox);
-			
-			// 4. WCS에 전송 플래그 ...
-			box.setIfYn(LogisConstants.Y_CAP_STRING);
-			box.setIfDatetime(currentTime);
-		}
-		
-		// 5. WMS 전송 플래그 남기기
-		AnyOrmUtil.updateBatch(boxList, 100, "ifYn", "ifDatetime");
-	}
-	
-	/**
-	 * DPS 박스 실적을 WMS로 전송
-	 * 
-	 * @param domain
-	 * @param batch
-	 * @param date
-	 */
-	private void sendDpsBoxResultToWms(Domain domain, JobBatch batch, String date) {
-		this.dpsBoxSendSvc.sendBoxResults(domain, batch);
 	}
 
 }

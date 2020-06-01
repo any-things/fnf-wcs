@@ -78,11 +78,12 @@ public class DpsBoxSendService extends AbstractQueryService {
 	 */
 	private List<WcsMheDr> searchBoxedOrderList(JobBatch batch) {
 		Query condition = new Query();
+		condition.addFilter("whCd", "ICF");
 		condition.addSelect("work_unit", "ref_no");
 		condition.addFilter("workUnit", batch.getId());
 		condition.addFilter("status", "B");
-		condition.addOrder("refNo", false);
-		condition.addOrder("mheDatetime", false);
+		condition.addOrder("refNo", true);
+		condition.addOrder("mheDatetime", true);
 		return this.queryManager.selectList(WcsMheDr.class, condition);
 	}
 	
@@ -95,10 +96,11 @@ public class DpsBoxSendService extends AbstractQueryService {
 	 */
 	private List<WcsMheDr> searchBoxResult(String batchId, String orderId) {
 		Query condition = new Query();
+		condition.addFilter("whCd", "ICF");
 		condition.addFilter("workUnit", batchId);
 		condition.addFilter("status", "B");
 		condition.addFilter("refNo", orderId);
-		condition.addOrder("mheDatetime", false);
+		condition.addOrder("mheDatetime", true);
 		return this.queryManager.selectList(WcsMheDr.class, condition);
 	}
 	

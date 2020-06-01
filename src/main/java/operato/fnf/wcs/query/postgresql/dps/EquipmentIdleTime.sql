@@ -10,7 +10,7 @@ from (
 		and batch_id = :batchId
 		and m10_result = 0
 		
-	union all	
+	union all
 		
 	select
 		count(1) as norun_count
@@ -21,7 +21,7 @@ from (
 		and batch_id = :batchId
 		and m20_result = 0
 		
-	union all	
+	union all
 		
 	select
 		count(1) as norun_count
@@ -32,7 +32,7 @@ from (
 		and batch_id = :batchId
 		and m30_result = 0
 		
-	union all	
+	union all
 		
 	select
 		count(1) as norun_count
@@ -43,7 +43,7 @@ from (
 		and batch_id = :batchId
 		and m40_result = 0
 		
-	union all	
+	union all
 		
 	select
 		count(1) as norun_count
@@ -54,7 +54,7 @@ from (
 		and batch_id = :batchId
 		and m50_result = 0
 		
-	union all	
+	union all
 		
 	select
 		count(1) as norun_count

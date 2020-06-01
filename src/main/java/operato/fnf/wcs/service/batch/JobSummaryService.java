@@ -57,6 +57,7 @@ public class JobSummaryService extends AbstractQueryService {
 		// 2. 시간대, 10분대 계산 
 		int minuteTo = (ValueUtil.toInteger(Math.floor(minute / 10)) + 1) * 10;
 		int minuteFrom = minuteTo - 10;
+		minuteTo = minuteTo - 1;
 		
 		// 3. 시간, 분대에 대한 실적 조회
 		int resultQty = this.calc10MinResult(batch, date, hour, minuteFrom, minuteTo);
@@ -296,7 +297,7 @@ public class JobSummaryService extends AbstractQueryService {
 		}
 		
 		String timeFrom = date + " " + hour + ":" + minFrom + ":00.000";
-		String timeTo = date + " " + hour + ":" + minTo + ":00.999";
+		String timeTo = date + " " + hour + ":" + minTo + ":59.999";
 		Map<String, Object> params = ValueUtil.newMap("batchId,timeFrom,timeTo", batch.getId(), timeFrom, timeTo);
 		return this.queryManager.selectBySql(sql, params, Integer.class);
 	}

@@ -6,8 +6,13 @@ import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.GenerationRule;
 import xyz.elidom.dbist.annotation.Table;
 
-@Table(name = "tower_lamp", idStrategy = GenerationRule.UUID, uniqueFields="ipAddress", indexes = {
-	@Index(name = "ix_tower_lamp_0", columnList = "ip_address", unique = true)
+/**
+ * 경광등 마스터
+ * 
+ * @author shortstop
+ */
+@Table(name = "tower_lamp", idStrategy = GenerationRule.UUID, uniqueFields="domainId,ipAddress", indexes = {
+	@Index(name = "ix_tower_lamp_0", columnList = "domain_id,ip_address", unique = true)
 })
 public class TowerLamp extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	/**
@@ -19,6 +24,9 @@ public class TowerLamp extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	@Column (name = "id", nullable = false, length = 40)
 	private String id;
 
+	@Column (name = "tower_lamp_cd", nullable = false, length = 20)
+	private String towerLampCd;
+	
 	@Column (name = "ip_address", nullable = false, length = 20)
 	private String ipAddress;
 
@@ -46,6 +54,14 @@ public class TowerLamp extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 
 	public void setId(String id) {
 		this.id = id;
+	}
+
+	public String getTowerLampCd() {
+		return towerLampCd;
+	}
+
+	public void setTowerLampCd(String towerLampCd) {
+		this.towerLampCd = towerLampCd;
 	}
 
 	public String getIpAddress() {
@@ -102,5 +118,6 @@ public class TowerLamp extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 
 	public void setSoundCh(String soundCh) {
 		this.soundCh = soundCh;
-	}	
+	}
+
 }

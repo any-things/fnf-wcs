@@ -3,6 +3,8 @@ package operato.fnf.wcs.rest;
 import java.util.Date;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -24,6 +26,7 @@ import operato.fnf.wcs.entity.TowerLamp;
 import xyz.anythings.sys.AnyConstants;
 import xyz.elidom.dbist.dml.Page;
 import xyz.elidom.dbist.dml.Query;
+import xyz.elidom.exception.server.ElidomRuntimeException;
 import xyz.elidom.orm.OrmConstants;
 import xyz.elidom.orm.system.annotation.service.ApiDesc;
 import xyz.elidom.orm.system.annotation.service.ServiceDesc;
@@ -37,9 +40,13 @@ import xyz.elidom.util.ValueUtil;
 @RequestMapping("/rest/tower_lamp")
 @ServiceDesc(description="TowerLamp Service API")
 public class TowerLampController extends AbstractRestService {
-	
 	/**
-	 * LAMP Agent 주소  
+	 * Logger
+	 */
+	protected Logger logger = LoggerFactory.getLogger(this.getClass());
+
+	/**
+	 * LAMP Agent 주소
 	 */
 	@Value("${lamp.agent.rest.url:NULL}")
 	private String lampAgentUrl;
@@ -51,13 +58,13 @@ public class TowerLampController extends AbstractRestService {
 	}
   
 	@RequestMapping(method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
-	@ApiDesc(description="Search (Pagination) By Search Conditions")  
+	@ApiDesc(description="Search (Pagination) By Search Conditions")
 	public Page<?> index(
-		@RequestParam(name="page", required=false) Integer page, 
-		@RequestParam(name="limit", required=false) Integer limit, 
-		@RequestParam(name="select", required=false) String select, 
+		@RequestParam(name="page", required=false) Integer page,
+		@RequestParam(name="limit", required=false) Integer limit,
+		@RequestParam(name="select", required=false) String select,
 		@RequestParam(name="sort", required=false) String sort,
-		@RequestParam(name="query", required=false) String query) {   
+		@RequestParam(name="query", required=false) String query) {
 		return this.search(this.entityClass(), page, limit, select, sort, query);
 	}
 
@@ -96,16 +103,14 @@ public class TowerLampController extends AbstractRestService {
 	@ApiDesc(description="Create, Update or Delete multiple at one time")
 	public Boolean multipleUpdate(@RequestBody List<TowerLamp> list) {
 		
-		boolean result =this.cudMultipleData(this.entityClass(), list);
+		boolean result = this.cudMultipleData(this.entityClass(), list);
 		
 		if(ValueUtil.isEqualIgnoreCase(this.lampAgentUrl, AnyConstants.NULL_CAP_STRING) == false) {
 			TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter(){
 				public void afterCommit(){
 					BeanUtil.get(TowerLampController.class).requestAsyncAgent(lampAgentUrl, list);
 				}
-			});		
-			
-//			this.requestAsyncAgent(list);
+			});
 		}
 		
 		return result;
@@ -122,17 +127,18 @@ public class TowerLampController extends AbstractRestService {
 			if(ValueUtil.isEqualIgnoreCase(towerLamp.getCudFlag_(), OrmConstants.CUD_FLAG_CREATE)) {
 				// 1.1 create : 연결 시도 
 				url = restUrl + "/connect";
-			}else if(ValueUtil.isEqualIgnoreCase(towerLamp.getCudFlag_(), OrmConstants.CUD_FLAG_UPDATE)) {
+			} else if(ValueUtil.isEqualIgnoreCase(towerLamp.getCudFlag_(), OrmConstants.CUD_FLAG_UPDATE)) {
 				// 1.2 update : 데이터 전송 
 				url = restUrl + "/send/true";
-			}else if(ValueUtil.isEqualIgnoreCase(towerLamp.getCudFlag_(), OrmConstants.CUD_FLAG_DELETE)) {
+			} else if(ValueUtil.isEqualIgnoreCase(towerLamp.getCudFlag_(), OrmConstants.CUD_FLAG_DELETE)) {
 				// 1.3 delete : 연결 종료 
 				url = restUrl + "/disconnect";
 			}
+			
 			try {
 				rest.put(url, towerLamp);
-			}catch(Exception e) {
-				e.printStackTrace();
+			} catch(Exception e) {
+				throw new ElidomRuntimeException("TowerLamp Request Error", e);
 			}
 		}
 	}
@@ -141,10 +147,8 @@ public class TowerLampController extends AbstractRestService {
 		HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
 		factory.setConnectTimeout(3000);
 		factory.setReadTimeout(3000);
-		
 		return new RestTemplate(factory);
 	}
-
 	
 	/********************************/
 	/* AGENT 에서 호출 되는 API
@@ -152,21 +156,22 @@ public class TowerLampController extends AbstractRestService {
 	
 	@RequestMapping(value="/agent/list", method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
 	@ApiDesc(description="Call Request From Agent : All Tower Lamp List")
-	public List<TowerLamp> getAllList(){
+	public List<TowerLamp> getAllList() {
 		return this.queryManager.selectList(TowerLamp.class, new Query());
 	}
 	
 	@RequestMapping(value="/agent/update/status", method=RequestMethod.PUT, consumes=MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
-	@ApiDesc(description="Call Request From Agent : Tower Lamp Status Update ")
+	@ApiDesc(description="Call Request From Agent : Tower Lamp Status Update")
 	public void updateStatusFromAgent(@RequestBody TowerLamp input) {
 		input.setUpdatedAt(new Date());
-		this.queryManager.update(input, "status", "updatedAt" );
+		this.queryManager.update(input, "status", "updatedAt");
 	}
 	
 	@RequestMapping(value="/agent/update/lamp", method=RequestMethod.PUT, consumes=MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
-	@ApiDesc(description="Call Request From Agent : Tower Lamp lamp Update ")
+	@ApiDesc(description="Call Request From Agent : Tower Lamp lamp Update")
 	public void updateLampFromAgent(@RequestBody TowerLamp input) {
 		input.setUpdatedAt(new Date());
-		this.queryManager.update(input, "lampR", "lampG", "lampA", "updatedAt" );
+		this.queryManager.update(input, "lampR", "lampG", "lampA", "updatedAt");
 	}
+
 }

@@ -198,9 +198,21 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "box_input_seq", nullable = true)
 	private Integer boxInputSeq;
 	
-	@Column (name = "box_no", nullable = true, length = 30)
+	/**
+	 * DPS 트레이 박스 번호
+	 */
+	@Column (name = "box_no", nullable = true, length = 20)
 	private String boxNo;
 
+	/**
+	 * DPS 유니크 박스 ID
+	 */
+	@Column (name = "box_id", nullable = true, length = 30)
+	private String boxId;
+	
+	/**
+	 * 송장 번호
+	 */
 	@Column (name = "waybill_no", nullable = true, length = 30)
 	private String waybillNo;
 
@@ -212,6 +224,9 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
 	@Column (name = "box_input_if_at", nullable = true)
 	private Date boxInputIfAt;
+	
+	@Column (name = "box_result_if_at", nullable = true)
+	private Date boxResultIfAt;
 	
 	@Column (name = "status", nullable = true, length = 1)
 	private String status;
@@ -680,6 +695,14 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 		this.boxNo = boxNo;
 	}
 
+	public String getBoxId() {
+		return boxId;
+	}
+
+	public void setBoxId(String boxId) {
+		this.boxId = boxId;
+	}
+
 	public String getWaybillNo() {
 		return waybillNo;
 	}
@@ -710,6 +733,14 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setBoxInputIfAt(Date boxInputIfAt) {
 		this.boxInputIfAt = boxInputIfAt;
+	}
+
+	public Date getBoxResultIfAt() {
+		return boxResultIfAt;
+	}
+
+	public void setBoxResultIfAt(Date boxResultIfAt) {
+		this.boxResultIfAt = boxResultIfAt;
 	}
 
 	public String getStatus() {

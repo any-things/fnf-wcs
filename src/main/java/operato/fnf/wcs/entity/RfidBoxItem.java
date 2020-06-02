@@ -22,7 +22,7 @@ public class RfidBoxItem extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	/**
 	 * WMS물류센터코드(WH_CD)
 	 */
-	@Column (name = "wh_warehouse", nullable = false, length = 10)
+	@Column (name = "cd_warehouse", nullable = false, length = 10)
 	private String cdWarehouse;
 	
 	/**

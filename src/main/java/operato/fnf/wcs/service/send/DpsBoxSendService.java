@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.http.MediaType;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -53,20 +54,22 @@ public class DpsBoxSendService extends AbstractQueryService {
 	public void sendBoxResults(Domain domain, JobBatch batch) {
 		// 1. 박스 완료 실적 조회
 		List<WcsMheDr> orderList = this.searchBoxedOrderList(batch);
-		// TODO 트랜잭션을 위해 로컬 쿼리 매니저로 변경 후 테스트 ...
-		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
-		String todayStr = DateUtil.todayStr("yyyyMMdd");
-		String currentTimeStr = DateUtil.dateTimeStr(new Date(), "yyyyMMddHHmmss");
-		DpsBoxSendService boxSendSvc = BeanUtil.get(DpsBoxSendService.class);
 		
-		// 2. WMS에 전송
-		for(WcsMheDr order : orderList) {
-			// 2.1 WCS 주문별 실적 정보 
-			List<WcsMheDr> boxedOrders = this.searchBoxResult(order.getWorkUnit(), order.getRefNo());
-			// 2.2 WCS 주문별 실적 정보를 WMS 패킹 정보로 복사
-			boxSendSvc.sendPackingsToWms(batch.getDomainId(), wmsQueryMgr, boxedOrders, batch.getEquipGroupCd(), todayStr, currentTimeStr);
-			// 2.3 WCS 주문별 실적 정보를 RFID 패킹 정보로 복사
-			boxSendSvc.sendPackingsToRfid(batch.getDomainId(), wmsQueryMgr, boxedOrders, batch.getEquipGroupCd(), todayStr, currentTimeStr);
+		if(ValueUtil.isNotEmpty(orderList)) {
+			// TODO 트랜잭션을 위해 로컬 쿼리 매니저로 변경 후 테스트 ...
+			IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
+			String todayStr = DateUtil.todayStr("yyyyMMdd");
+			DpsBoxSendService boxSendSvc = BeanUtil.get(DpsBoxSendService.class);
+			
+			// 2. WMS에 전송
+			for(WcsMheDr order : orderList) {
+				// 2.1 WCS 주문별 실적 정보 
+				List<WcsMheDr> boxedOrders = this.searchBoxResult(order.getWorkUnit(), order.getRefNo());
+				// 2.2 WCS 주문별 실적 정보를 WMS 패킹 정보로 복사
+				boxSendSvc.sendPackingsToWms(batch.getDomainId(), wmsQueryMgr, boxedOrders, batch.getEquipGroupCd(), todayStr);
+				// 2.3 WCS 주문별 실적 정보를 RFID 패킹 정보로 복사
+				boxSendSvc.sendPackingsToRfid(batch.getDomainId(), wmsQueryMgr, boxedOrders, batch.getEquipGroupCd(), todayStr);
+			}
 		}
 	}
 	
@@ -112,47 +115,59 @@ public class DpsBoxSendService extends AbstractQueryService {
 	 * @param boxedOrders
 	 * @param mheNo
 	 * @param todayStr
-	 * @param currentTime
 	 * @return
 	 */
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public void sendPackingsToWms(Long domainId, IQueryManager wmsQueryMgr, List<WcsMheDr> boxedOrders, String mheNo, String todayStr, String currentTime) {
+	public void sendPackingsToWms(Long domainId, IQueryManager wmsQueryMgr, List<WcsMheDr> boxedOrders, String mheNo, String todayStr) {
 		
 		if(ValueUtil.isNotEmpty(boxedOrders)) {
+			Date currentTime = new Date();
+			String currentTimeStr = DateUtil.dateTimeStr(currentTime, "yyyyMMddHHmmss");
+			String boxId = null;
+			
 			for(WcsMheDr boxedOrder : boxedOrders) {
 				// 1. 주문 별 박스 번호 생성
-				String boxId = ValueUtil.isEmpty(boxedOrder.getBoxNo()) ? this.newBoxId(domainId, mheNo, todayStr) : boxedOrder.getBoxNo();
-				boxedOrder.setBoxNo(boxId);
+				if(ValueUtil.isEmpty(boxId)) {
+					boxId = ValueUtil.isEmpty(boxedOrder.getBoxId()) ? this.newBoxId(domainId, mheNo, todayStr) : boxedOrder.getBoxId();
+				}
 				
-				// 2. WMS 박스 실적 전송 
-				Map<String, Object> params = ValueUtil.newMap("today,whCd,boxId,orderNo,brandCd,skuCd,pickedQty,jobDate,currentTime", todayStr, boxedOrder.getWhCd(), boxId, boxedOrder.getRefNo(), boxedOrder.getStrrId(), boxedOrder.getItemCd(), boxedOrder.getCmptQty(), boxedOrder.getOutbEctDate(), currentTime);
+				// 2. 박스 번호, 박스 전송 시간 설정
+				boxedOrder.setBoxId(boxId);
+				boxedOrder.setBoxResultIfAt(currentTime);
+				
+				// 3. WMS 박스 실적 전송 
+				Map<String, Object> params = ValueUtil.newMap("today,whCd,boxId,orderNo,brandCd,skuCd,pickedQty,jobDate,currentTime", todayStr, boxedOrder.getWhCd(), boxId, boxedOrder.getRefNo(), boxedOrder.getStrrId(), boxedOrder.getItemCd(), boxedOrder.getCmptQty(), boxedOrder.getOutbEctDate(), currentTimeStr);
 				wmsQueryMgr.executeBySql(WMS_PACK_INSERT_SQL, params);
 			}
-			
-			// 3. WCS_MHE_DR 정보에 박스 번호 업데이트
-			this.queryManager.updateBatch(boxedOrders, "boxNo");
 		}
 	}
 	
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public void sendPackingsToRfid(Long domainId, IQueryManager wmsQueryMgr, List<WcsMheDr> boxedOrders, String mheNo, String todayStr, String currentTime) {
+	public void sendPackingsToRfid(Long domainId, IQueryManager wmsQueryMgr, List<WcsMheDr> boxedOrders, String mheNo, String todayStr) {
 		
 		if(ValueUtil.isNotEmpty(boxedOrders)) {
 			List<RfidBoxItem> boxItems = new ArrayList<RfidBoxItem>(boxedOrders.size());
+			String waybillNo = null;
 			
 			for(WcsMheDr boxedOrder : boxedOrders) {
 				// 1. 주문 별 박스
-				String waybillNo = ValueUtil.isEmpty(boxedOrder.getWaybillNo()) ? this.newWaybillNo(boxedOrder) : boxedOrder.getWaybillNo();
+				if(ValueUtil.isEmpty(waybillNo)) {
+					waybillNo = ValueUtil.isEmpty(boxedOrder.getWaybillNo()) ? this.newWaybillNo(boxedOrder) : boxedOrder.getWaybillNo();
+				}
+				
+				// 2. 송장 번호, 상태 설정
 				boxedOrder.setWaybillNo(waybillNo);
 				boxedOrder.setStatus("S");
 				
-				// 2. RFID 실적 전송 
+				// 3. RFID 실적 생성
 				RfidBoxItem boxItem = this.newRfidBoxItem(boxedOrder);
 				boxItems.add(boxItem);
 			}
 			
+			// 4. RFID 실적 전송
 			wmsQueryMgr.insertBatch(boxItems);
-			this.queryManager.updateBatch(boxedOrders, "status", "waybillNo");
+			// 5. 주문 상세 정보 업데이트
+			this.queryManager.updateBatch(boxedOrders, "status", "boxId", "waybillNo", "boxResultIfAt");
 		}
 	}
 	
@@ -164,15 +179,18 @@ public class DpsBoxSendService extends AbstractQueryService {
 	 */
 	private String newWaybillNo(WcsMheDr boxedOrder) {
 		String waybillReqUrl = SettingUtil.getValue("fnf.waybill_no.request.url", "http://dev.wms.fnf.co.kr/onlineInvoiceMultiPackService/issue_express_waybill");
-		waybillReqUrl += "?WH_CD=ICF&BOX_ID=" + boxedOrder.getBoxNo();
+		waybillReqUrl += "?WH_CD=ICF&BOX_ID=" + boxedOrder.getBoxId();
 		RestTemplate rest = new RestTemplate();
-		rest.getMessageConverters().add(0, new StringHttpMessageConverter(Charset.forName(SysConstants.CHAR_SET_UTF8)));
+		StringHttpMessageConverter shmc = new StringHttpMessageConverter(Charset.forName(SysConstants.CHAR_SET_UTF8));
+		shmc.setSupportedMediaTypes(ValueUtil.toList(MediaType.APPLICATION_JSON_UTF8));
+		rest.getMessageConverters().add(0, shmc);
 		WaybillResponse res = rest.getForObject(waybillReqUrl, WaybillResponse.class);
 		
 		if(res == null || ValueUtil.isNotEqual("OK", res.getErrorMsg())) {
-			return res.getWaybillNo();
+			//throw new ElidomRuntimeException("Error When Request Waybill Service To WMS", res.getErrorMsg());
+			return boxedOrder.getBoxId();
 		} else {
-			throw new ElidomRuntimeException("Error When Request Waybill Service To WMS", res.getErrorMsg());
+			return res.getWaybillNo();
 		}
 	}
 	
@@ -201,7 +219,8 @@ public class DpsBoxSendService extends AbstractQueryService {
 		rfidBoxItem.setRefNo(orderItem.getRefNo());
 		rfidBoxItem.setNoWeight(null);
 		rfidBoxItem.setQtDelivery(orderItem.getCmptQty());
-		rfidBoxItem.setDmBfRecv(DateUtil.dateStr(new Date(), "YYYYMMDDHHMMSS"));
+		String currentTime = DateUtil.dateStr(orderItem.getBoxResultIfAt(), "yyyyMMddHHmmss");
+		rfidBoxItem.setDmBfRecv(currentTime);
 		rfidBoxItem.setYnCancel(LogisConstants.N_CAP_STRING);
 		rfidBoxItem.setTpWeight("0");
 		rfidBoxItem.setTpSend("0");

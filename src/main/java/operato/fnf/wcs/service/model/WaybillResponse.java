@@ -1,5 +1,7 @@
 package operato.fnf.wcs.service.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * 운송장 번호 요청에 대한 응답 모델
  * 
@@ -10,18 +12,22 @@ public class WaybillResponse {
 	/**
 	 * 성공 메시지
 	 */
+	@JsonProperty("SucessMsg")
 	private String sucessMsg;
 	/**
 	 * 운송장 번호 
 	 */
+	@JsonProperty("WAYBILL_NO")
 	private String waybillNo;
 	/**
 	 * 에러 메시지 
 	 */
+	@JsonProperty("ErrorMsg")
 	private String errorMsg;
 	/**
 	 * 에러 코드 
 	 */
+	@JsonProperty("ErrorCode")
 	private String errorCode;
 	/**
 	 * PrintId

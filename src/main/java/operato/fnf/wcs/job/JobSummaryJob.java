@@ -47,7 +47,8 @@ public class JobSummaryJob extends AbstractFnFJob {
 	 * 매 시각 2, 12, 22, 32, 42, 52분마다 실행되어 실행 데이터에 대한 서머리 처리 
 	 */
 	@Transactional
-	@Scheduled(cron="0 2,12,22,32,42,52 * * * *")
+	//@Scheduled(cron="0 2,12,22,32,42,52 * * * *")
+	@Scheduled(cron="0 0/1 * * * *")
 	public void summaryJob() {
 		// 1. 스케줄링 활성화 여부
 		if(!this.isJobEnabeld()) {

@@ -19,11 +19,11 @@ import operato.fnf.wcs.entity.WcsMheDr;
 import operato.fnf.wcs.entity.WmsMheHr;
 import operato.fnf.wcs.service.model.WaybillResponse;
 import xyz.anythings.base.LogisConstants;
+import xyz.anythings.base.entity.BoxPack;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.dev.entity.RangedSeq;
-import xyz.elidom.exception.server.ElidomRuntimeException;
 import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.SysConstants;
 import xyz.elidom.sys.entity.Domain;
@@ -84,7 +84,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 		condition.addFilter("whCd", "ICF");
 		condition.addSelect("work_unit", "ref_no");
 		condition.addFilter("workUnit", batch.getId());
-		condition.addFilter("status", "B");
+		condition.addFilter("status", BoxPack.BOX_STATUS_BOXED);
 		condition.addOrder("refNo", true);
 		condition.addOrder("mheDatetime", true);
 		return this.queryManager.selectList(WcsMheDr.class, condition);
@@ -101,7 +101,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 		Query condition = new Query();
 		condition.addFilter("whCd", "ICF");
 		condition.addFilter("workUnit", batchId);
-		condition.addFilter("status", "B");
+		condition.addFilter("status", BoxPack.BOX_STATUS_BOXED);
 		condition.addFilter("refNo", orderId);
 		condition.addOrder("mheDatetime", true);
 		return this.queryManager.selectList(WcsMheDr.class, condition);
@@ -187,6 +187,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 		WaybillResponse res = rest.getForObject(waybillReqUrl, WaybillResponse.class);
 		
 		if(res == null || ValueUtil.isNotEqual("OK", res.getErrorMsg())) {
+			// TODO 내부 개발 서버에서는 더미 API를 개발하여 배포 ...
 			//throw new ElidomRuntimeException("Error When Request Waybill Service To WMS", res.getErrorMsg());
 			return boxedOrder.getBoxId();
 		} else {
@@ -204,7 +205,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 		RfidBoxItem rfidBoxItem = new RfidBoxItem();
 		rfidBoxItem.setCdWarehouse(orderItem.getWhCd());
 		rfidBoxItem.setCdBrand(orderItem.getStrrId());
-		rfidBoxItem.setTpMachine("2");
+		rfidBoxItem.setTpMachine(LogisConstants.TWO_STRING);
 		rfidBoxItem.setDtDelivery(orderItem.getWorkDate());
 		rfidBoxItem.setDsBatchNo(orderItem.getWorkUnit());
 		rfidBoxItem.setNoBox(orderItem.getBoxNo());
@@ -212,7 +213,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 		rfidBoxItem.setIfCdItem(orderItem.getItemCd());
 		rfidBoxItem.setYnAssort(LogisConstants.N_CAP_STRING);
 		rfidBoxItem.setCdShop(orderItem.getShiptoId());
-		rfidBoxItem.setTpDelivery("2");
+		rfidBoxItem.setTpDelivery(LogisConstants.TWO_STRING);
 		rfidBoxItem.setOutbTcd(orderItem.getOutbTcd());
 		rfidBoxItem.setDsShuteno(null);
 		rfidBoxItem.setOutbNo(orderItem.getOutbNo());
@@ -222,8 +223,8 @@ public class DpsBoxSendService extends AbstractQueryService {
 		String currentTime = DateUtil.dateStr(orderItem.getBoxResultIfAt(), "yyyyMMddHHmmss");
 		rfidBoxItem.setDmBfRecv(currentTime);
 		rfidBoxItem.setYnCancel(LogisConstants.N_CAP_STRING);
-		rfidBoxItem.setTpWeight("0");
-		rfidBoxItem.setTpSend("0");
+		rfidBoxItem.setTpWeight(LogisConstants.ZERO_STRING);
+		rfidBoxItem.setTpSend(LogisConstants.ZERO_STRING);
 		return rfidBoxItem;
 	}
 	

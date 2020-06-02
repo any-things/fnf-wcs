@@ -57,7 +57,6 @@ public class JobSummaryService extends AbstractQueryService {
 		// 2. 시간대, 10분대 계산 
 		int minuteTo = (ValueUtil.toInteger(Math.floor(minute / 10)) + 1) * 10;
 		int minuteFrom = minuteTo - 10;
-		minuteTo = minuteTo - 1;
 		
 		// 3. 시간, 분대에 대한 실적 조회
 		int resultQty = this.calc10MinResult(batch, date, hour, minuteFrom, minuteTo);
@@ -296,8 +295,8 @@ public class JobSummaryService extends AbstractQueryService {
 			return 0;
 		}
 		
-		String timeFrom = date + " " + hour + ":" + minFrom + ":00.000";
-		String timeTo = date + " " + hour + ":" + minTo + ":59.999";
+		String timeFrom = this.getFrom10Minute(date, hour, minFrom);
+		String timeTo = this.getTo10Minute(date, hour, minTo);
 		Map<String, Object> params = ValueUtil.newMap("batchId,timeFrom,timeTo", batch.getId(), timeFrom, timeTo);
 		return this.queryManager.selectBySql(sql, params, Integer.class);
 	}
@@ -316,8 +315,8 @@ public class JobSummaryService extends AbstractQueryService {
 			return 0;
 		}
 		
-		String timeFrom = date + " " + hour + ":00:00.000";
-		String timeTo = date + " " + hour + ":59:59.999";
+		String timeFrom = this.getFromHour(date, hour);
+		String timeTo = this.getToHour(date, hour);
 		Map<String, Object> params = ValueUtil.newMap("batchId,timeFrom,timeTo", batch.getId(), timeFrom, timeTo);
 		return this.queryManager.selectBySql(sql, params, Integer.class);
 	}
@@ -360,6 +359,59 @@ public class JobSummaryService extends AbstractQueryService {
 		} else {
 			return null;
 		}
+	}
+	
+	/**
+	 * 시간대 10분대 From Time
+	 * 
+	 * @param date
+	 * @param hour
+	 * @param minFrom
+	 * @return
+	 */
+	private String getFrom10Minute(String date, int hour, int minFrom) {
+		String hourStr = StringUtils.leftPad("" + hour, 2, LogisConstants.ZERO_STRING);
+		String minFromStr = StringUtils.leftPad("" + minFrom, 2, LogisConstants.ZERO_STRING);
+		return date + " " + hourStr + ":" + minFromStr + ":00.000";
+	}
+	
+	/**
+	 * 시간대 10분대 To Time
+	 * 
+	 * @param date
+	 * @param hour
+	 * @param minTo
+	 * @return
+	 */
+	private String getTo10Minute(String date, int hour, int minTo) {
+		String hourStr = StringUtils.leftPad("" + hour, 2, LogisConstants.ZERO_STRING);
+		minTo = minTo - 1;
+		String minToStr = StringUtils.leftPad("" + minTo, 2, LogisConstants.ZERO_STRING);
+		return date + " " + hourStr + ":" + minToStr + ":59.999";
+	}
+	
+	/**
+	 * 시간대 From Hour
+	 * 
+	 * @param date
+	 * @param hour
+	 * @return
+	 */
+	private String getFromHour(String date, int hour) {
+		String hourStr = StringUtils.leftPad("" + hour, 2, LogisConstants.ZERO_STRING);
+		return date + " " + hourStr + ":00:00.000";
+	}
+	
+	/**
+	 * 시간대 To Hour
+	 * 
+	 * @param date
+	 * @param hour
+	 * @return
+	 */
+	private String getToHour(String date, int hour) {
+		String hourStr = StringUtils.leftPad("" + hour, 2, LogisConstants.ZERO_STRING);
+		return date + " " + hourStr + ":59:59.999";
 	}
 
 }

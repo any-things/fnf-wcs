@@ -187,7 +187,11 @@ public class SkuReceiveService extends AbstractLogisService {
 		
 		if(receivedCount == 0) {
 			Query condition = AnyOrmUtil.newConditionForExecution(domainId);
-			history = this.queryManager.selectByCondition(SkuSyncHist.class, condition);
+			condition.addOrder("sync_time", false);
+			condition.setPageIndex(1);
+			condition.setPageSize(1);
+			List<SkuSyncHist> histList = this.queryManager.selectList(SkuSyncHist.class, condition);
+			history = histList.get(0);
 		}
 		
 		if(history == null) {

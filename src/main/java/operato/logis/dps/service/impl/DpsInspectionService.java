@@ -6,6 +6,8 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import operato.fnf.wcs.entity.WmsExpressWaybillPackinfo;
+import operato.fnf.wcs.entity.WmsExpressWaybillPrint;
 import operato.logis.dps.model.DpsInspItem;
 import operato.logis.dps.model.DpsInspection;
 import operato.logis.dps.query.store.DpsInspectionQueryStore;
@@ -17,6 +19,7 @@ import xyz.anythings.base.entity.TrayBox;
 import xyz.anythings.base.rest.PrinterController;
 import xyz.anythings.base.service.impl.AbstractInstructionService;
 import xyz.anythings.sys.event.model.PrintEvent;
+import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.util.SettingUtil;
 import xyz.elidom.sys.util.ThrowUtil;
 import xyz.elidom.sys.util.ValueUtil;
@@ -203,19 +206,15 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 
 	@Override
 	public int printInvoiceLabel(JobBatch batch, BoxPack box, String printerId) {
-		String labelTemplate = SettingUtil.getValue(batch.getDomainId(), "fnf.dps.invoice.template");
-		PrintEvent printEvent = new PrintEvent(box.getDomainId(), printerId, labelTemplate, ValueUtil.newMap("box", box));
+		PrintEvent printEvent = this.createPrintEvent(batch.getDomainId(), box.getInvoiceId(), printerId);
 		this.printLabel(printEvent);
-		//this.eventPublisher.publishEvent(printEvent);
 		return 1;
 	}
 	
 	@Override
 	public int printInvoiceLabel(JobBatch batch, DpsInspection inspection, String printerId) {
-		String labelTemplate = SettingUtil.getValue(batch.getDomainId(), "fnf.dps.invoice.template");
-		PrintEvent printEvent = new PrintEvent(batch.getDomainId(), printerId, labelTemplate, ValueUtil.newMap("box", inspection));
+		PrintEvent printEvent = this.createPrintEvent(batch.getDomainId(), inspection.getInvoiceId(), printerId);
 		this.printLabel(printEvent);
-		//this.eventPublisher.publishEvent(printEvent);
 		return 1;
 	}
 
@@ -236,6 +235,19 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		// TODO Auto-generated method stub
 		
 	}
+	
+	private PrintEvent createPrintEvent(Long domainId, String invoiceId, String printerId) {
+		// TODO 테스트 시 하드코딩 제거
+		//invoiceId = "20200500080817";
+		
+		String labelTemplate = SettingUtil.getValue(domainId, "fnf.dps.invoice.template");
+		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsExpressWaybillPrint.class);
+		Map<String, Object> params = ValueUtil.newMap("whCd,boxId", "ICF", invoiceId);
+		WmsExpressWaybillPrint waybillPrint = wmsQueryMgr.selectByCondition(WmsExpressWaybillPrint.class, params);
+		List<WmsExpressWaybillPackinfo> packItems = wmsQueryMgr.selectList(WmsExpressWaybillPackinfo.class, params);
+		Map<String, Object> printParams = ValueUtil.newMap("box,items", waybillPrint, packItems);
+		return new PrintEvent(domainId, printerId, labelTemplate, printParams);
+	}
 
 	/**
 	 * 송장 라벨 인쇄 API
@@ -245,8 +257,6 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	 * @param parameters
 	 */
 	private void printLabel(PrintEvent printEvent) {
-		//this.eventPublisher.publishEvent(printEvent);
-		
 		// 인쇄 옵션 정보 추출
 		Printer printer = this.queryManager.select(Printer.class, printEvent.getPrinterId());
 		String agentUrl = printer.getPrinterAgentUrl();
@@ -254,6 +264,8 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		
 		// 인쇄 요청
 		this.printerCtrl.printLabelByLabelTemplate(agentUrl, printerName, printEvent.getPrintTemplate(), printEvent.getTemplateParams());
+		
+		//this.eventPublisher.publishEvent(printEvent);
 	}
 
 }

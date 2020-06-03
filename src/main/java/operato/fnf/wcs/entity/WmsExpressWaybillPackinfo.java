@@ -9,7 +9,7 @@ import xyz.elidom.dbist.annotation.Table;
 /**
  * 출력 송장 박스 내품 조회를 위한 WMS I/F 테이블
  */
-@Table(name = "mps_express_waybill_pack_info", idStrategy = GenerationRule.UUID, dataSourceType=DataSourceType.DATASOURCE)
+@Table(name = "mps_express_waybill_packinfo", idStrategy = GenerationRule.UUID, dataSourceType=DataSourceType.DATASOURCE)
 public class WmsExpressWaybillPackinfo extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	/**

@@ -39,6 +39,10 @@ public class DpsInspection {
 	 */
 	private String boxType;
 	/**
+	 * 트레이 박스 번호
+	 */
+	private String trayCd;
+	/**
 	 * 박스 ID 
 	 */
 	private String boxId;
@@ -132,6 +136,14 @@ public class DpsInspection {
 
 	public void setBoxType(String boxType) {
 		this.boxType = boxType;
+	}
+
+	public String getTrayCd() {
+		return trayCd;
+	}
+
+	public void setTrayCd(String trayCd) {
+		this.trayCd = trayCd;
 	}
 
 	public String getBoxId() {

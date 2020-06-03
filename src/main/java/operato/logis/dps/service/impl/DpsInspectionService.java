@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import operato.logis.dps.model.DpsInspItem;
 import operato.logis.dps.model.DpsInspection;
@@ -11,20 +12,21 @@ import operato.logis.dps.query.store.DpsInspectionQueryStore;
 import operato.logis.dps.service.api.IDpsInspectionService;
 import xyz.anythings.base.entity.BoxPack;
 import xyz.anythings.base.entity.JobBatch;
+import xyz.anythings.base.entity.Printer;
+import xyz.anythings.base.entity.TrayBox;
+import xyz.anythings.base.rest.PrinterController;
 import xyz.anythings.base.service.impl.AbstractInstructionService;
-import xyz.anythings.base.service.util.BatchJobConfigUtil;
-import xyz.anythings.sys.event.EventPublisher;
 import xyz.anythings.sys.event.model.PrintEvent;
-import xyz.anythings.sys.util.AnyEntityUtil;
+import xyz.elidom.sys.util.SettingUtil;
 import xyz.elidom.sys.util.ThrowUtil;
 import xyz.elidom.sys.util.ValueUtil;
-import xyz.elidom.util.BeanUtil;
 
 /**
  * DPS 출고 검수 서비스
  * 
  * @author shortstop
  */
+@Component
 public class DpsInspectionService extends AbstractInstructionService implements IDpsInspectionService {
 
 	/**
@@ -32,24 +34,30 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	 */	
 	@Autowired
 	private DpsInspectionQueryStore dpsInspectionQueryStore;
+	/**
+	 * 프린터 컨트롤러
+	 */
+	@Autowired
+	private PrinterController printerCtrl;
 	
 	/**
-	 * 박스 조회
+	 * 검수 정보 조회
 	 * 
-	 * @param domainId
-	 * @param batchId
-	 * @param invoiceId
+	 * @param sql
+	 * @param params
 	 * @param exceptionWhenEmpty
 	 * @return
 	 */
-	private BoxPack findBoxByInvoiceId(Long domainId, String batchId, String invoiceId, boolean exceptionWhenEmpty) {
-		BoxPack box = AnyEntityUtil.findEntityBy(domainId, false, BoxPack.class, null, "batchId,invoiceId", batchId, invoiceId);
+	private DpsInspection findInspection(String sql, Map<String, Object> params, boolean exceptionWhenEmpty) {
 		
-		if(exceptionWhenEmpty) {
-			throw ThrowUtil.newNotFoundRecord("terms.menu.BoxPack", invoiceId);
+		DpsInspection inspection = this.queryManager.selectBySql(sql, params, DpsInspection.class);
+		
+		if(inspection == null && exceptionWhenEmpty) {
+			Object data = (params == null) ? null : (params.containsKey("boxId") ? params.get("boxId") : (params.containsKey("orderNo") ? params.get("orderNo") : (params.containsKey("invoiceId") ? params.get("invoiceId") : null)));
+			throw ThrowUtil.newNotFoundRecord("terms.label.box", ValueUtil.toString(data));
+		} else {
+			return inspection;
 		}
-		
-		return box;
 	}
 	
 	/**
@@ -60,6 +68,11 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	 * @return
 	 */
 	private DpsInspection searchInpsectionItems(DpsInspection inspection, Map<String, Object> params) {
+		
+		if(inspection == null) {
+			return null;
+		}
+		
 		if(!params.containsKey("invoiceId")) {
 			params.put("invoiceId", inspection.getInvoiceId());
 		}
@@ -71,7 +84,8 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	}
 	
 	@Override
-	public DpsInspection findInspectionByInput(JobBatch batch, String inputType, String inputId) {
+	public DpsInspection findInspectionByInput(JobBatch batch, String inputType, String inputId, boolean exceptionWhenEmpty) {
+		
 		String sql = this.dpsInspectionQueryStore.getFindInspectionQuery();
 		Map<String, Object> params = ValueUtil.newMap("domainId,batchId", batch.getDomainId(), batch.getId());
 		
@@ -85,86 +99,100 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 			params.put("invoiceId", inputId);
 		}
 
-		DpsInspection inspection = this.queryManager.selectBySql(sql, params, DpsInspection.class);
-		if(inspection == null) {
-			return null;
-		}
-
-		if(ValueUtil.isEqualIgnoreCase(inputType, "box") || ValueUtil.isEqualIgnoreCase(inputType, "tray")) {
+		DpsInspection inspection = this.findInspection(sql, params, exceptionWhenEmpty);
+		if(inspection != null && (ValueUtil.isEqualIgnoreCase(inputType, "box") || ValueUtil.isEqualIgnoreCase(inputType, "tray"))) {
 			inspection.setBoxType(inputType);
 		}
-
+		
 		return this.searchInpsectionItems(inspection, params);
 	}
 
 	@Override
-	public DpsInspection findInspectionByTray(JobBatch batch, String trayCd) {
+	public DpsInspection findInspectionByTray(JobBatch batch, String trayCd, boolean exceptionWhenEmpty) {
+		
 		String sql = this.dpsInspectionQueryStore.getFindInspectionQuery();
 		Map<String, Object> params = ValueUtil.newMap("domainId,batchId,boxId", batch.getDomainId(), batch.getId(), trayCd);
-		
-		DpsInspection inspection = this.queryManager.selectBySql(sql, params, DpsInspection.class);
-		if(inspection == null) {
-			return null;
-		}
+		DpsInspection inspection = this.findInspection(sql, params, exceptionWhenEmpty);
 
-		inspection.setBoxType("tray");
+		if(inspection != null) {
+			inspection.setBoxType("tray");
+		}
+		
 		return this.searchInpsectionItems(inspection, params);
 	}
 
 	@Override
-	public DpsInspection findInspectionByBox(JobBatch batch, String boxId) {
+	public DpsInspection findInspectionByBox(JobBatch batch, String boxId, boolean exceptionWhenEmpty) {
+		
 		String sql = this.dpsInspectionQueryStore.getFindInspectionQuery();
 		Map<String, Object> params = ValueUtil.newMap("domainId,batchId,boxId", batch.getDomainId(), batch.getId(), boxId);
-		
-		DpsInspection inspection = this.queryManager.selectBySql(sql, params, DpsInspection.class);
-		if(inspection == null) {
-			return null;
-		}
+		DpsInspection inspection = this.findInspection(sql, params, exceptionWhenEmpty);
 
-		inspection.setBoxType("box");
+		if(inspection != null) {
+			inspection.setBoxType("box");
+		}
+		
 		return this.searchInpsectionItems(inspection, params);
 	}
 
 	@Override
-	public DpsInspection findInspectionByInvoice(JobBatch batch, String invoiceId) {
+	public DpsInspection findInspectionByInvoice(JobBatch batch, String invoiceId, boolean exceptionWhenEmpty) {
+		
 		String sql = this.dpsInspectionQueryStore.getFindInspectionQuery();
 		Map<String, Object> params = ValueUtil.newMap("domainId,batchId,invoiceId", batch.getDomainId(), batch.getId(), invoiceId);
+		DpsInspection inspection = this.findInspection(sql, params, exceptionWhenEmpty);
+		return this.searchInpsectionItems(inspection, params);
+	}
+	
+	@Override
+	public DpsInspection findInspectionByOrder(JobBatch batch, String orderNo, boolean exceptionWhenEmpty) {
 		
-		DpsInspection inspection = this.queryManager.selectBySql(sql, params, DpsInspection.class);
-		if(inspection == null) {
-			return null;
-		}
-
+		String sql = this.dpsInspectionQueryStore.getFindInspectionQuery();
+		Map<String, Object> params = ValueUtil.newMap("domainId,batchId,orderNo", batch.getDomainId(), batch.getId(), orderNo);
+		DpsInspection inspection = this.findInspection(sql, params, exceptionWhenEmpty);
 		return this.searchInpsectionItems(inspection, params);
 	}
 
 	@Override
 	public DpsInspection findInspectionByBoxPack(BoxPack box) {
+		
 		String sql = this.dpsInspectionQueryStore.getFindInspectionQuery();
 		Map<String, Object> params = ValueUtil.newMap("domainId,batchId,invoiceId", box.getDomainId(), box.getBatchId(), box.getInvoiceId());
-		
-		DpsInspection inspection = this.queryManager.selectBySql(sql, params, DpsInspection.class);
-		if(inspection == null) {
-			return null;
-		}
-
+		DpsInspection inspection = this.findInspection(sql, params, true);
 		return this.searchInpsectionItems(inspection, params);
 	}
 
 	@Override
 	public void finishInspection(JobBatch batch, String invoiceId, Float boxWeight, String printerId) {
-		// 박스 조회
-		BoxPack box = this.findBoxByInvoiceId(batch.getDomainId(), batch.getId(), invoiceId, true);
-		// 검수 완료 처리 
-		this.finishInspection(box, boxWeight, printerId);
+		
+		// 1. 박스 조회
+		DpsInspection inspection = this.findInspectionByInvoice(batch, invoiceId, true);
+		BoxPack box = ValueUtil.populate(inspection, new BoxPack());
+		box.setDomainId(batch.getDomainId());
+		box.setBoxTypeCd(inspection.getTrayCd());
+
+		// 2. 검수 완료 처리 
+		this.finishInspection(batch, box, boxWeight, printerId);
 	}
 
 	@Override
-	public void finishInspection(BoxPack box, Float boxWeight, String printerId) {
+	public void finishInspection(JobBatch batch, BoxPack box, Float boxWeight, String printerId) {
+		
 		// 1. 박스 내품 검수 항목 완료 처리, TODO mhe_dr에 검수 시간 필요 ...
 		Map<String, Object> params = ValueUtil.newMap("domainId,batchId,invoiceId,status", box.getDomainId(), box.getBatchId(), box.getInvoiceId(), BoxPack.BOX_STATUS_EXAMED);
 		String sql = "update mhe_dr set status = :status where wh_cd = 'ICF' and work_unit = :batchId and waybill_no = :invoiceId";
 		this.queryManager.executeBySql(sql, params);
+		
+		// 2. Tray 박스 상태 리셋
+		String trayCd = box.getBoxTypeCd();
+		TrayBox condition = new TrayBox();
+		condition.setTrayCd(trayCd);
+		TrayBox tray = this.queryManager.selectByCondition(TrayBox.class, condition);
+		tray.setStatus(BoxPack.BOX_STATUS_WAIT);
+		this.queryManager.update(tray, "status", "updaterId", "updatedAt");
+		
+		// 3. 송장 발행
+		this.printInvoiceLabel(batch, box, printerId);
 	}
 
 	@Override
@@ -175,9 +203,19 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 
 	@Override
 	public int printInvoiceLabel(JobBatch batch, BoxPack box, String printerId) {
-		String labelTemplate = BatchJobConfigUtil.getInvoiceLabelTemplate(batch);
-		PrintEvent printEvent = new PrintEvent(batch.getDomainId(), printerId, labelTemplate, ValueUtil.newMap("box", box));
-		BeanUtil.get(EventPublisher.class).publishEvent(printEvent);
+		String labelTemplate = SettingUtil.getValue(batch.getDomainId(), "fnf.dps.invoice.template");
+		PrintEvent printEvent = new PrintEvent(box.getDomainId(), printerId, labelTemplate, ValueUtil.newMap("box", box));
+		this.printLabel(printEvent);
+		//this.eventPublisher.publishEvent(printEvent);
+		return 1;
+	}
+	
+	@Override
+	public int printInvoiceLabel(JobBatch batch, DpsInspection inspection, String printerId) {
+		String labelTemplate = SettingUtil.getValue(batch.getDomainId(), "fnf.dps.invoice.template");
+		PrintEvent printEvent = new PrintEvent(batch.getDomainId(), printerId, labelTemplate, ValueUtil.newMap("box", inspection));
+		this.printLabel(printEvent);
+		//this.eventPublisher.publishEvent(printEvent);
 		return 1;
 	}
 
@@ -197,6 +235,25 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	public void inspectionAction(BoxPack box) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	/**
+	 * 송장 라벨 인쇄 API
+	 * 
+	 * @param templateName
+	 * @param printerId
+	 * @param parameters
+	 */
+	private void printLabel(PrintEvent printEvent) {
+		//this.eventPublisher.publishEvent(printEvent);
+		
+		// 인쇄 옵션 정보 추출
+		Printer printer = this.queryManager.select(Printer.class, printEvent.getPrinterId());
+		String agentUrl = printer.getPrinterAgentUrl();
+		String printerName = printer.getPrinterDriver();
+		
+		// 인쇄 요청
+		this.printerCtrl.printLabelByLabelTemplate(agentUrl, printerName, printEvent.getPrintTemplate(), printEvent.getTemplateParams());
 	}
 
 }

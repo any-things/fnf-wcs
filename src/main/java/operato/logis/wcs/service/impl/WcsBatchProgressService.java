@@ -38,8 +38,9 @@ public class WcsBatchProgressService extends AbstractQueryService {
 		batch.setResultOrderQty(this.calcBatchResultOrderQty(batch));
 		batch.setResultPcs(this.calcBatchResultPcs(batch));
 		batch.setProgressRate(batch.getBatchOrderQty() == 0 ? 0 : ((float)batch.getResultOrderQty() / (float)batch.getBatchOrderQty() * 100.0f));
-		batch.setEquipRuntime(this.calcBatchEquipRuntime(batch, toTime));
 		batch.setUph(this.calcBatchUph(batch, toTime));
+		float equipRt = this.calcBatchEquipRuntime(batch, toTime);
+		batch.setEquipRuntime(equipRt > 0.0f ? equipRt : 0.0f);		
 	}
 	
 	/**
@@ -56,7 +57,7 @@ public class WcsBatchProgressService extends AbstractQueryService {
 			sql = "select COALESCE(count(distinct(box_no)), 0) as result from mhe_box where wh_cd = :whCd and work_unit = :batchId";
 			
 		} else if(LogisConstants.isDpsJobType(jobType)) {
-			sql = "select COALESCE(count(distinct(box_no)), 0) as result from mhe_dr where wh_cd = :whCd and work_unit = :batchId";
+			sql = "select COALESCE(count(distinct(waybill_no)), 0) as result from mhe_dr where wh_cd = :whCd and work_unit = :batchId and trim(waybill_no) is not null";
 			
 		} else {
 			// TODO Ex-PAS
@@ -81,7 +82,7 @@ public class WcsBatchProgressService extends AbstractQueryService {
 			sql = "select COALESCE(count(distinct(shipto_id)), 0) as result from mhe_box where wh_cd = :whCd and work_unit = :batchId";
 			
 		} else if(LogisConstants.isDpsJobType(jobType)) {
-			sql = "select COALESCE(count(distinct(waybill_no)), 0) as result from mhe_dr where wh_cd = :whCd and work_unit = :batchId and trim(waybill_no) is not null";
+			sql = "select COALESCE(count(distinct(ref_no)), 0) as result from mhe_dr where wh_cd = :whCd and work_unit = :batchId and trim(waybill_no) is not null";
 			
 		} else {
 			// TODO Ex-PAS

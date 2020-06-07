@@ -221,14 +221,14 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		String equipType = params.get("equipType").toString();
 		String equipCd = params.get("equipCd").toString();
 		String boxId = params.get("bucketCd").toString();
-		String inputType = params.get("inputType").toString();
+		//String inputType = params.get("inputType").toString();
 		int limit = ValueUtil.toInteger(params.get("limit"));
 		int page = ValueUtil.toInteger(params.get("page"));
 		
 		// 2. 설비 코드로 현재 진행 중인 작업 배치 및 설비 정보 조회
 		EquipBatchSet equipBatchSet = DpsServiceUtil.findBatchByEquip(event.getDomainId(), equipType, equipCd);
 		JobBatch batch = equipBatchSet.getBatch();
-		boolean isBox = ValueUtil.isEqualIgnoreCase(inputType, DpsCodeConstants.CLASSIFICATION_INPUT_TYPE_BOX) ? true : false;
+		boolean isBox = false; //ValueUtil.isEqualIgnoreCase(inputType, DpsCodeConstants.CLASSIFICATION_INPUT_TYPE_BOX) ? true : false;
 		
 		// 3. 박스 투입 (박스 or 트레이)
 		this.dpsPickingService.inputEmptyBucket(batch, isBox, boxId);

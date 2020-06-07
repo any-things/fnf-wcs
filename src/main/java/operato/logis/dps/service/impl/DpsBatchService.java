@@ -113,7 +113,7 @@ public class DpsBatchService extends AbstractLogisService implements IBatchServi
 	 * @param batch
 	 */
 	protected void resetRacksAndWorkCells(JobBatch batch) {
-		Map<String, Object> params = ValueUtil.newMap("domainId,equipType,equipCd,batchId", batch.getDomainId(), batch.getEquipCd(), batch.getId());
+		Map<String, Object> params = ValueUtil.newMap("domainId,equipType,equipCd,batchId", batch.getDomainId(), batch.getEquipType(), batch.getEquipCd(), batch.getId());
 		this.queryManager.executeBySql("UPDATE RACKS SET STATUS = null, BATCH_ID = null WHERE DOMAIN_ID = :domainId AND RACK_CD = :equipCd", params);
 		this.queryManager.executeBySql("DELETE FROM WORK_CELLS WHERE DOMAIN_ID = :domainId AND BATCH_ID = :batchId", params);
 		this.queryManager.executeBySql("UPDATE STOCKS SET STOCK_QTY = 0, LOAD_QTY = 0, ALLOC_QTY = 0, PICKED_QTY = 0 WHERE DOMAIN_ID = :domainId AND EQUIP_TYPE = :equipType AND EQUIP_CD = :equipCd AND (FIXED_FLAG IS NULL OR FIXED_FLAG = false)", params);

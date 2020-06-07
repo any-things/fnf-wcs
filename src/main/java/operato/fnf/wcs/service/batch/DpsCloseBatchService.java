@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import operato.fnf.wcs.entity.WmsMheHr;
-import operato.logis.wcs.service.impl.WcsBatchProductivityService;
+import operato.logis.wcs.service.impl.WcsBatchProgressService;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.elidom.util.ValueUtil;
@@ -28,7 +28,7 @@ public class DpsCloseBatchService extends AbstractQueryService {
 	 * WCS 배치 생산성 정보 업데이트 서비스 
 	 */
 	@Autowired
-	private WcsBatchProductivityService batchProductivitySvc;
+	private WcsBatchProgressService progressSvc;
 	
 	/**
 	 * MheHr 정보로 부터 JobBatch에 배치 완료 정보를 반영한다.
@@ -58,7 +58,7 @@ public class DpsCloseBatchService extends AbstractQueryService {
 	 * @param batch
 	 */
 	private void setBatchInfoOnClosing(JobBatch batch) {
-		this.batchProductivitySvc.updateBatchProductionResult(batch, batch.getFinishedAt());
+		this.progressSvc.updateBatchProductionResult(batch, batch.getFinishedAt());
 		batch.setStatus(JobBatch.STATUS_END);		
 		this.queryManager.update(batch, "status", "finishedAt", "resultBoxQty", "resultOrderQty", "resultPcs", "progressRate", "equipRuntime", "uph", "updatedAt");
 	}

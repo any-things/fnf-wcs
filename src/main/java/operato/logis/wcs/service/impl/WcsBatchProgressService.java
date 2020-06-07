@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import operato.logis.wcs.query.WcsQueryStore;
+import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.elidom.util.ValueUtil;
@@ -17,7 +18,7 @@ import xyz.elidom.util.ValueUtil;
  * @author shortstop
  */
 @Component
-public class WcsBatchProductivityService extends AbstractQueryService {
+public class WcsBatchProgressService extends AbstractQueryService {
 	
 	/**
 	 * WCS Query Store
@@ -48,8 +49,21 @@ public class WcsBatchProductivityService extends AbstractQueryService {
 	 * @return
 	 */
 	private int calcBatchResultBoxQty(JobBatch batch) {
-		String sql = "select COALESCE(count(distinct(box_no)), 0) as result from mhe_box where work_unit = :batchId";
-		Map<String, Object> params = ValueUtil.newMap("domainId,batchId", batch.getDomainId(), batch.getId());
+		String jobType = batch.getJobType();
+		String sql = null;
+		
+		if(LogisConstants.isDasJobType(jobType)) {
+			sql = "select COALESCE(count(distinct(box_no)), 0) as result from mhe_box where wh_cd = :whCd and work_unit = :batchId";
+			
+		} else if(LogisConstants.isDpsJobType(jobType)) {
+			sql = "select COALESCE(count(distinct(box_no)), 0) as result from mhe_dr where wh_cd = :whCd and work_unit = :batchId";
+			
+		} else {
+			// TODO Ex-PAS
+			return 0;
+		}
+		
+		Map<String, Object> params = ValueUtil.newMap("whCd,batchId", "ICF", batch.getId());
 		return this.queryManager.selectBySql(sql, params, Integer.class);
 	}
 	
@@ -60,8 +74,21 @@ public class WcsBatchProductivityService extends AbstractQueryService {
 	 * @return
 	 */
 	private int calcBatchResultOrderQty(JobBatch batch) {
-		String sql = "select COALESCE(count(distinct(shipto_id)), 0) as result from mhe_box where work_unit = :batchId";
-		Map<String, Object> params = ValueUtil.newMap("domainId,batchId", batch.getDomainId(), batch.getId());
+		String jobType = batch.getJobType();
+		String sql = null;
+		
+		if(LogisConstants.isDasJobType(jobType)) {
+			sql = "select COALESCE(count(distinct(shipto_id)), 0) as result from mhe_box where wh_cd = :whCd and work_unit = :batchId";
+			
+		} else if(LogisConstants.isDpsJobType(jobType)) {
+			sql = "select COALESCE(count(distinct(waybill_no)), 0) as result from mhe_dr where wh_cd = :whCd and work_unit = :batchId and trim(waybill_no) is not null";
+			
+		} else {
+			// TODO Ex-PAS
+			return 0;
+		}
+		
+		Map<String, Object> params = ValueUtil.newMap("whCd,batchId", "ICF", batch.getId());
 		return this.queryManager.selectBySql(sql, params, Integer.class);
 	}
 	
@@ -72,8 +99,21 @@ public class WcsBatchProductivityService extends AbstractQueryService {
 	 * @return
 	 */
 	private int calcBatchResultPcs(JobBatch batch) {
-		String sql = "select COALESCE(sum(cmpt_qty), 0) as result from mhe_box where work_unit = :batchId";
-		Map<String, Object> params = ValueUtil.newMap("domainId,batchId", batch.getDomainId(), batch.getId());
+		String jobType = batch.getJobType();
+		String sql = null;
+		
+		if(LogisConstants.isDasJobType(jobType)) {
+			sql = "select COALESCE(sum(cmpt_qty), 0) as result from mhe_box where wh_cd = :whCd and work_unit = :batchId";
+			
+		} else if(LogisConstants.isDpsJobType(jobType)) {
+			sql = "select COALESCE(sum(cmpt_qty), 0) as result from mhe_dr where wh_cd = :whCd and work_unit = :batchId";
+			
+		} else {
+			// TODO Ex-PAS
+			return 0;
+		}
+		
+		Map<String, Object> params = ValueUtil.newMap("whCd,batchId", "ICF", batch.getId());
 		return this.queryManager.selectBySql(sql, params, Integer.class);
 	}
 	

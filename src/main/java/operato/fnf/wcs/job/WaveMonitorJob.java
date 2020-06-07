@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import operato.fnf.wcs.entity.WcsMheHr;
 import operato.fnf.wcs.service.batch.DasCloseBatchService;
 import operato.fnf.wcs.service.batch.DasStartBatchService;
-import operato.logis.wcs.service.impl.WcsBatchProductivityService;
+import operato.logis.wcs.service.impl.WcsBatchProgressService;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.sys.event.model.ErrorEvent;
@@ -46,7 +46,7 @@ public class WaveMonitorJob extends AbstractFnFJob {
 	 * 작업 배치 생산성 계산 서비스
 	 */
 	@Autowired
-	private WcsBatchProductivityService productivitySvc;
+	private WcsBatchProgressService progressSvc;
 	
 	/**
 	 * 매 3분 마다 실행되어 작업 배치 상태 모니터링 후 변경된 Wave에 대해서 JobBatch에 반영
@@ -141,7 +141,7 @@ public class WaveMonitorJob extends AbstractFnFJob {
 			for(JobBatch batch : batchList) {
 				try {
 					// 1. 작업 진행율, 설비 가동 시간, UPH 계산 
-					this.productivitySvc.updateBatchProductionResult(batch, new Date());
+					this.progressSvc.updateBatchProductionResult(batch, new Date());
 					// 2. 배치 정보 업데이트
 					this.queryManager.update(batch, "resultPcs", "resultOrderQty", "resultBoxQty", "progressRate", "uph", "equipRuntime");
 				} catch (Exception e) {

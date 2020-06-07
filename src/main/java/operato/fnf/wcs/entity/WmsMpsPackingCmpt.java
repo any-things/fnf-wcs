@@ -11,8 +11,11 @@ import xyz.elidom.dbist.annotation.Table;
  * 
  * @author shortstop
  */
-@Table(name = "mps_packing_cmpt", idStrategy = GenerationRule.COMPLEX_KEY, dataSourceType=DataSourceType.DATASOURCE, uniqueFields="interfaceCrtDt,interfaceNo", indexes = {
-})
+@Table(name = "mps_packing_cmpt"
+	, ignoreDdl = true
+	, idStrategy = GenerationRule.COMPLEX_KEY
+	, dataSourceType=DataSourceType.DATASOURCE
+	, uniqueFields="interfaceCrtDt,interfaceNo")
 public class WmsMpsPackingCmpt extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	/**

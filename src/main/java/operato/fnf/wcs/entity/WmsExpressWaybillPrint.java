@@ -9,7 +9,7 @@ import xyz.elidom.dbist.annotation.Table;
 /**
  * 출력 송장 인쇄 정보 조회를 위한 WMS I/F 테이블
  */
-@Table(name = "mps_express_waybill_print", idStrategy = GenerationRule.UUID, dataSourceType=DataSourceType.DATASOURCE)
+@Table(name = "mps_express_waybill_print", ignoreDdl = true, idStrategy = GenerationRule.UUID, dataSourceType=DataSourceType.DATASOURCE)
 public class WmsExpressWaybillPrint extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	/**

@@ -8,7 +8,11 @@ import xyz.elidom.dbist.annotation.Table;
 /**
  * DPS용 박스별 검수 완료 내역 - RFID
  */
-@Table(name = "if_rfidhistory_recv", idStrategy = GenerationRule.NONE, dataSourceType=DataSourceType.DATASOURCE, uniqueFields="cdWarehouse,cdBrand,tpMachine,dtDelivery,dsBatchNo,noBox,ifCdItem")
+@Table(name = "if_rfidhistory_recv"
+	, ignoreDdl = true
+	, idStrategy = GenerationRule.NONE
+	, dataSourceType=DataSourceType.DATASOURCE
+	, uniqueFields="cdWarehouse,cdBrand,tpMachine,dtDelivery,dsBatchNo,noBox,ifCdItem")
 public class RfidDpsInspResult extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	/**

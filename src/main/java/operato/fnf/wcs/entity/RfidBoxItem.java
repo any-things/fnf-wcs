@@ -3,15 +3,16 @@ package operato.fnf.wcs.entity;
 import xyz.elidom.dbist.annotation.Column;
 import xyz.elidom.dbist.annotation.DataSourceType;
 import xyz.elidom.dbist.annotation.GenerationRule;
-import xyz.elidom.dbist.annotation.Index;
 import xyz.elidom.dbist.annotation.Table;
 
 /**
  * DAS용 박스별 패킹 내역 - RFID
  */
-@Table(name = "if_pasdelivery_recv", idStrategy = GenerationRule.NONE, dataSourceType=DataSourceType.DATASOURCE, uniqueFields="cdWarehouse,cdBrand,tpMachine,dtDelivery,dsBatchNo,noBox,ifCdItem", indexes = {
-	@Index(name = "if_pasdlv_rcv_01", columnList = "cd_warehouse,cd_brand,tp_machine,dt_delivery,ds_batch_no,no_box,if_cd_item", unique = true)
-})
+@Table(name = "if_pasdelivery_recv"
+	, ignoreDdl = true
+	, idStrategy = GenerationRule.NONE
+	, dataSourceType=DataSourceType.DATASOURCE
+	, uniqueFields="cdWarehouse,cdBrand,tpMachine,dtDelivery,dsBatchNo,noBox,ifCdItem")
 public class RfidBoxItem extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	/**

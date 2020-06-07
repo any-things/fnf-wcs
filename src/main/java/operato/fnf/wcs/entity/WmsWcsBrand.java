@@ -7,14 +7,17 @@ import xyz.elidom.dbist.annotation.Ignore;
 import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.Table;
 
-/*
+/**
  * 브랜드 목록
  * 공통
+ * 
+ * @author yang
  */
-@Table(name = "wcs_brand", idStrategy = GenerationRule.UUID
-     , dataSourceType=DataSourceType.DATASOURCE 
-     , uniqueFields="strrId", indexes = {
-})
+@Table(name = "wcs_brand"
+	, ignoreDdl = true
+	, idStrategy = GenerationRule.UUID
+	, dataSourceType=DataSourceType.DATASOURCE 
+	, uniqueFields="strrId")
 public class WmsWcsBrand extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	/**

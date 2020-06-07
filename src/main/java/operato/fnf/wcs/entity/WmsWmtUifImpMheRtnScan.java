@@ -7,19 +7,20 @@ import xyz.elidom.dbist.annotation.ColumnType;
 import xyz.elidom.dbist.annotation.DataSourceType;
 import xyz.elidom.dbist.annotation.GenerationRule;
 import xyz.elidom.dbist.annotation.Ignore;
-import xyz.elidom.dbist.annotation.Index;
 import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.Table;
 
-/*
+/**
  * 매장 반품예정 검수 스캔 결과
  * 반품검수 EX-PAS
+ * 
+ * @author yang
  */
-@Table(name = "wmt_uif_imp_mhe_rtn_scan", idStrategy = GenerationRule.UUID
-     , dataSourceType=DataSourceType.DATASOURCE 
-     , uniqueFields="interfaceCrtDt,interfaceNo", indexes = {
-    @Index(name = "wmt_uif_imp_mhe_rtn_scan_id01", columnList = "inb_no,inb_detl_no", unique = false)
-})
+@Table(name = "wmt_uif_imp_mhe_rtn_scan"
+	, ignoreDdl = true
+	, idStrategy = GenerationRule.UUID
+    , dataSourceType=DataSourceType.DATASOURCE 
+    , uniqueFields="interfaceCrtDt,interfaceNo")
 public class WmsWmtUifImpMheRtnScan extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
 	/**

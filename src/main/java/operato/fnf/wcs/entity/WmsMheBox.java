@@ -7,16 +7,17 @@ import xyz.elidom.dbist.annotation.ColumnType;
 import xyz.elidom.dbist.annotation.DataSourceType;
 import xyz.elidom.dbist.annotation.GenerationRule;
 import xyz.elidom.dbist.annotation.Ignore;
-import xyz.elidom.dbist.annotation.Index;
 import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.Table;
 
 /*
  * 박스별 패킹 내역 수신 - DAS, 소터 (DPS 해당 없음)
  */
-@Table(name = "mhe_box", idStrategy = GenerationRule.UUID, dataSourceType=DataSourceType.DATASOURCE, uniqueFields="whCd,workUnit,shiptoId,itemCd,boxNo", indexes = {
-	@Index(name = "mhe_box_01", columnList = "wh_cd,work_unit,shipto_id,item_cd,box_no", unique = true)
-})
+@Table(name = "mhe_box"
+    , ignoreDdl = true
+    , idStrategy = GenerationRule.UUID
+    , dataSourceType=DataSourceType.DATASOURCE
+    , uniqueFields="whCd,workUnit,shiptoId,itemCd,boxNo")
 public class WmsMheBox extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
 	/**

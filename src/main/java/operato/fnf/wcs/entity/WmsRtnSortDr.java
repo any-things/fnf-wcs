@@ -13,13 +13,14 @@ import xyz.elidom.dbist.annotation.Table;
 /**
  * 반품 분류 박스별 분류 내역
  *  WCS => WMS
+ *  
  * @author yang
- *
  */
-@Table(name = "rtn_sort_dr", idStrategy = GenerationRule.UUID
-     , dataSourceType=DataSourceType.DATASOURCE 
-     , uniqueFields="whCd,mheNo,sortDate,sortSeq,itemCd,boxNo", indexes = {
-})
+@Table(name = "rtn_sort_dr"
+	, ignoreDdl = true
+	, idStrategy = GenerationRule.UUID
+	, dataSourceType=DataSourceType.DATASOURCE 
+	, uniqueFields="whCd,mheNo,sortDate,sortSeq,itemCd,boxNo")
 public class WmsRtnSortDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
 	/**

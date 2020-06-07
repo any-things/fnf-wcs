@@ -7,7 +7,6 @@ import xyz.elidom.dbist.annotation.ColumnType;
 import xyz.elidom.dbist.annotation.DataSourceType;
 import xyz.elidom.dbist.annotation.GenerationRule;
 import xyz.elidom.dbist.annotation.Ignore;
-import xyz.elidom.dbist.annotation.Index;
 import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.Table;
 
@@ -16,9 +15,11 @@ import xyz.elidom.dbist.annotation.Table;
  * 
  * @author shortstop
  */
-@Table(name = "mhe_hr", idStrategy = GenerationRule.UUID, dataSourceType = DataSourceType.DATASOURCE, uniqueFields="whCd,workUnit", indexes = {
-	@Index(name = "mhe_hr_01", columnList = "wh_cd,work_unit", unique = true)
-})
+@Table(name = "mhe_hr"
+	, ignoreDdl = true
+	, idStrategy = GenerationRule.UUID
+	, dataSourceType = DataSourceType.DATASOURCE
+	, uniqueFields="whCd,workUnit")
 public class WmsMheHr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
 	/**

@@ -7,16 +7,17 @@ import xyz.elidom.dbist.annotation.ColumnType;
 import xyz.elidom.dbist.annotation.DataSourceType;
 import xyz.elidom.dbist.annotation.GenerationRule;
 import xyz.elidom.dbist.annotation.Ignore;
-import xyz.elidom.dbist.annotation.Index;
 import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.Table;
 
 /*
  * 상세 분배 지시내역 - DAS, DPS
  */
-@Table(name = "mhe_dr", idStrategy = GenerationRule.UUID, dataSourceType=DataSourceType.DATASOURCE, uniqueFields="whCd,workUnit,shiptoId,outbNo,locationCd,itemCd", indexes = {
-	@Index(name = "mhe_dr_01", columnList = "wh_cd,work_unit,shipto_id,outb_no,location_cd,item_cd", unique = true)
-})
+@Table(name = "mhe_dr"
+	, ignoreDdl = true
+	, idStrategy = GenerationRule.UUID
+	, dataSourceType=DataSourceType.DATASOURCE
+	, uniqueFields="whCd,workUnit,shiptoId,outbNo,locationCd,itemCd")
 public class WmsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
 	/**

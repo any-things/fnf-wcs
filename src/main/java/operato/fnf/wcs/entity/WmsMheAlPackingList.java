@@ -4,19 +4,17 @@ import xyz.elidom.dbist.annotation.Column;
 import xyz.elidom.dbist.annotation.DataSourceType;
 import xyz.elidom.dbist.annotation.GenerationRule;
 import xyz.elidom.dbist.annotation.Ignore;
-import xyz.elidom.dbist.annotation.Index;
 import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.Table;
 /*
  * 오토라벨러 송장 발행
  * 오토라벨러 송장 발행 내역 조회
  */
-@Table(name = "mhe_al_packing_list", idStrategy = GenerationRule.UUID
+@Table(name = "mhe_al_packing_list"
+	 , ignoreDdl = true
+	 , idStrategy = GenerationRule.UUID
      , dataSourceType=DataSourceType.DATASOURCE 
-     , uniqueFields="waybillNo,boxId,itemCd", indexes = {
-    @Index(name = "mhe_al_packing_list_ix1", columnList = "waybill_no", unique = false),
-    @Index(name = "mhe_al_packing_list_ix2", columnList = "box_id", unique = false)
-})
+     , uniqueFields="waybillNo,boxId,itemCd")
 public class WmsMheAlPackingList extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	/**

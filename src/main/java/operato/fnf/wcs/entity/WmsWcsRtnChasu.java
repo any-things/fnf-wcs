@@ -7,14 +7,17 @@ import xyz.elidom.dbist.annotation.Ignore;
 import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.Table;
 
-/*
+/**
  * 반품지시 차수 정보
  * 반품검수 EX-PAS
+ * 
+ * @author yang
  */
-@Table(name = "wcs_rtn_chasu", idStrategy = GenerationRule.UUID
-     , dataSourceType=DataSourceType.DATASOURCE 
-     , uniqueFields="strrId,season,type,seq", indexes = {
-})
+@Table(name = "wcs_rtn_chasu"
+	, ignoreDdl = true
+	, idStrategy = GenerationRule.UUID
+    , dataSourceType=DataSourceType.DATASOURCE 
+    , uniqueFields="strrId,season,type,seq")
 public class WmsWcsRtnChasu extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	/**

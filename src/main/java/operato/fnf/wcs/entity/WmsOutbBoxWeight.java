@@ -10,14 +10,17 @@ import xyz.elidom.dbist.annotation.Ignore;
 import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.Table;
 
-/*
+/**
  * 중량검수내역수신
  * DAS, 소터, DPC
+ * 
+ * @author yang
  */
-@Table(name = "outb_box_weight", idStrategy = GenerationRule.UUID
-     , dataSourceType=DataSourceType.DATASOURCE 
-     , uniqueFields="boxId", indexes = {
-})
+@Table(name = "outb_box_weight"
+	, ignoreDdl = true
+	, idStrategy = GenerationRule.UUID
+	, dataSourceType=DataSourceType.DATASOURCE
+	, uniqueFields="boxId")
 public class WmsOutbBoxWeight extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	/**

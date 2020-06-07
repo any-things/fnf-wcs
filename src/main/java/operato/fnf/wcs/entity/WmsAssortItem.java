@@ -11,10 +11,11 @@ import xyz.elidom.dbist.annotation.Table;
  * 아소트 상품 하위 내품 상품 수량 정보
  * 패션 부문 DAS, 소터
  */
-@Table(name = "assort_item", idStrategy = GenerationRule.UUID
+@Table(name = "assort_item"
+	 , ignoreDdl = true
+	 , idStrategy = GenerationRule.UUID
      , dataSourceType=DataSourceType.DATASOURCE 
-     , uniqueFields="strrId,itemCd", indexes = {
-})
+     , uniqueFields="strrId,itemCd")
 public class WmsAssortItem extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
 	/**

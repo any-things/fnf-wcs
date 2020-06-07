@@ -7,7 +7,6 @@ import xyz.elidom.dbist.annotation.ColumnType;
 import xyz.elidom.dbist.annotation.DataSourceType;
 import xyz.elidom.dbist.annotation.GenerationRule;
 import xyz.elidom.dbist.annotation.Ignore;
-import xyz.elidom.dbist.annotation.Index;
 import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.Table;
 
@@ -15,12 +14,11 @@ import xyz.elidom.dbist.annotation.Table;
  * 상품 마스터 바코드 정보 (View)
  * 상품 마스터 정보 총괄 (입고 컨베이어, 반품EX-PAS)
  */
-@Table(name = "mhe_item_barcode", idStrategy = GenerationRule.UUID
-     , dataSourceType=DataSourceType.DATASOURCE 
-     , uniqueFields="itemCd", indexes = {
-	@Index(name = "mhe_item_barcode_idx1", columnList = "barcode", unique = false),
-	@Index(name = "mhe_item_barcode_idx_2", columnList = "barcode2", unique = false)
-})
+@Table(name = "mhe_item_barcode"
+	, ignoreDdl = true
+	, idStrategy = GenerationRule.UUID
+	, dataSourceType=DataSourceType.DATASOURCE
+	, uniqueFields="itemCd")
 public class WmsMheItemBarcode extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
 	/**

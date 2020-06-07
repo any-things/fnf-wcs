@@ -14,10 +14,11 @@ import xyz.elidom.dbist.annotation.Table;
  * @author yang
  *
  */
-@Table(name = "mhe_rtn_invn", idStrategy = GenerationRule.UUID
-     , dataSourceType=DataSourceType.DATASOURCE 
-     , uniqueFields="whCd,strrId,itemCd", indexes = {
-})
+@Table(name = "mhe_rtn_invn"
+	, ignoreDdl = true
+	, idStrategy = GenerationRule.UUID
+	, dataSourceType=DataSourceType.DATASOURCE
+	, uniqueFields="whCd,strrId,itemCd")
 public class WmsMheRtnInvn extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
 	/**

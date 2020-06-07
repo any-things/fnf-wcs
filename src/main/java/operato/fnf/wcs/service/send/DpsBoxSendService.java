@@ -75,6 +75,8 @@ public class DpsBoxSendService extends AbstractQueryService {
 				List<WcsMheDr> boxedOrders = this.searchBoxResultByOrder(order.getWorkUnit(), order.getRefNo());
 				// 2.2 WCS 주문별 실적 정보를 WMS 패킹 정보로 복사
 				boxSendSvc.sendPackingsToWms(batch.getDomainId(), wmsQueryMgr, boxedOrders, batch.getEquipGroupCd(), todayStr);
+				// 2.3 WMS 송장 발행 요청
+				boxSendSvc.requestInvoiceToWms(batch.getDomainId(), wmsQueryMgr, boxedOrders);
 			}
 		}
 	}
@@ -194,21 +196,18 @@ public class DpsBoxSendService extends AbstractQueryService {
 			Date currentTime = new Date();
 			String currentTimeStr = DateUtil.dateTimeStr(currentTime, "yyyyMMddHHmmss");
 			String boxId = null;
-			String waybillNo = null;
 			
 			for(WcsMheDr boxedOrder : boxedOrders) {
 				// 1. 주문 별 박스 번호 생성
 				if(ValueUtil.isEmpty(boxId)) {
 					// 1.1 박스 Unique ID 생성
 					boxId = ValueUtil.isEmpty(boxedOrder.getBoxId()) ? this.newBoxId(domainId, mheNo, todayStr) : boxedOrder.getBoxId();
-					// 1.2 송장 번호 생성
-					waybillNo = ValueUtil.isEmpty(boxedOrder.getWaybillNo()) ? this.newWaybillNo(boxedOrder) : boxedOrder.getWaybillNo();
+					boxedOrder.setBoxId(boxId);
 				}
 				
 				// 2. 박스 번호, 박스 전송 시간 설정
 				boxedOrder.setBoxId(boxId);
 				boxedOrder.setBoxResultIfAt(currentTime);
-				boxedOrder.setWaybillNo(waybillNo);
 				boxedOrder.setStatus("S");
 				
 				// 3. WMS 박스 실적 전송 
@@ -217,7 +216,38 @@ public class DpsBoxSendService extends AbstractQueryService {
 			}
 			
 			// 4. 주문 상세 정보 업데이트
-			this.queryManager.updateBatch(boxedOrders, "status", "boxId", "waybillNo", "boxResultIfAt");
+			this.queryManager.updateBatch(boxedOrders, "status", "boxId", "boxResultIfAt");
+		}
+	}
+	
+	/**
+	 * WCS 박스 실적으로 부터 WMS 박스 실적 복사 
+	 * 
+	 * @param domainId
+	 * @param wmsQueryMgr
+	 * @param boxedOrders
+	 * @return
+	 */
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public void requestInvoiceToWms(Long domainId, IQueryManager wmsQueryMgr, List<WcsMheDr> boxedOrders) {
+		
+		if(ValueUtil.isNotEmpty(boxedOrders)) {
+			String waybillNo = null;
+			
+			for(WcsMheDr boxedOrder : boxedOrders) {
+				// 1. 주문 별 박스 번호 생성
+				if(ValueUtil.isEmpty(waybillNo)) {
+					// 송장 번호 생성
+					waybillNo = ValueUtil.isEmpty(boxedOrder.getWaybillNo()) ? this.newWaybillNo(boxedOrder) : boxedOrder.getWaybillNo();
+				}
+				
+				// 2. 박스 번호, 박스 전송 시간 설정
+				boxedOrder.setWaybillNo(waybillNo);
+				
+			}
+			
+			// 3. 주문 상세 정보 업데이트
+			this.queryManager.updateBatch(boxedOrders, "waybillNo");
 		}
 	}
 	

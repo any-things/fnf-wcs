@@ -113,7 +113,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 	 */
 	private DpsBatchSummary getBatchSummary(JobBatch batch, String equipType, String equipCd, int limit, int page) {
 		
-		// 1. 작업 진행율 조회  
+		// 1. 작업 진행율 조회
 		BatchProgressRate rate = this.dpsJobStatusService.getBatchProgressSummary(batch);
 		
 		// 2. 투입 정보 리스트 조회 

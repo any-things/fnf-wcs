@@ -1,6 +1,5 @@
 package operato.logis.dps.service.impl;
 
-import java.util.Date;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,7 +86,7 @@ public class DpsBatchService extends AbstractLogisService implements IBatchServi
 		this.deletePreprocess(batch);
 
 		// 6. JobBatch 상태 변경
-		this.updateJobBatchFinished(batch, new Date());
+		this.updateJobBatchFinished(batch);
 	}
 
 	@Override
@@ -134,9 +133,8 @@ public class DpsBatchService extends AbstractLogisService implements IBatchServi
 	 * 작업 배치를 마감 처리
 	 * 
 	 * @param batch
-	 * @param finishedAt
 	 */
-	protected void updateJobBatchFinished(JobBatch batch, Date finishedAt) {
+	protected void updateJobBatchFinished(JobBatch batch) {
 		this.dpsCloseBatchSvc.closeBatch(batch);
 	}
 

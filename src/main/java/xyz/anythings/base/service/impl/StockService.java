@@ -50,6 +50,7 @@ public class StockService extends AbstractLogisService implements IStockService 
 	@Override
 	public Stock findOrCreateStock(Long domainId, String cellCd) {
 		Stock stock = this.findStock(domainId, cellCd, false);
+		
 		if(stock == null) {
 			stock = this.createStock(domainId, cellCd, null, null, null);
 		}
@@ -59,33 +60,61 @@ public class StockService extends AbstractLogisService implements IStockService 
 	
 	@Override
 	public Stock findOrCreateStock(Long domainId, String cellCd, String comCd, String skuCd) {
+		SKU sku = null;
+		
+		if(ValueUtil.isNotEmpty(skuCd)) {
+			sku = AnyEntityUtil.findEntityBy(domainId, true, SKU.class, "id,com_cd,sku_cd,sku_barcd,sku_nm", "comCd,skuCd", comCd, skuCd);
+		}
+		
+		if(sku != null) {
+			return this.findOrCreateStock(domainId, cellCd, sku);
+			
+		} else {
+			Stock stock = this.findStock(domainId, cellCd, false);
+			
+			if(stock == null) {
+				stock = this.createStock(domainId, cellCd, comCd, skuCd, null);
+			}
+			
+			if(ValueUtil.isNotEmpty(skuCd)) {
+				stock.setComCd(comCd);
+				stock.setSkuCd(skuCd);
+			}
+			
+			return stock;			
+		}
+	}
+	
+	@Override
+	public Stock findOrCreateStock(Long domainId, String cellCd, SKU sku) {
 		Stock stock = this.findStock(domainId, cellCd, false);
+		
 		if(stock == null) {
-			stock = this.createStock(domainId, cellCd, null, null, null);
+			stock = this.createStock(domainId, cellCd, sku.getComCd(), sku.getSkuCd(), sku.getSkuNm());
+			
+		} else {
+			if(ValueUtil.isEmpty(stock.getSkuCd())) {
+				stock.setComCd(sku.getComCd());
+				stock.setSkuCd(sku.getSkuCd());
+				stock.setSkuBarcd(sku.getSkuBarcd());
+				stock.setSkuNm(sku.getSkuNm());
+			}
 		}
 		
 		return stock;
 	}
-
+	
 	@Override
-	public Stock createStock(Long domainId, String cellCd, String comCd, String skuCd, String skuNm) {
+	public Stock createStock(Long domainId, String cellCd, SKU sku) {
 		Cell cell = AnyEntityUtil.findEntityBy(domainId, true, Cell.class, null, "domainId,cellCd", domainId, cellCd);
 		Stock stock = new Stock();
-		
-		if(ValueUtil.isEmpty(skuNm) && ValueUtil.isNotEmpty(skuCd)) {
-			SKU sku = AnyEntityUtil.findEntityBy(domainId, true, SKU.class, "sku_cd,sku_barcd,sku_nm", "comCd,skuCd", comCd, skuCd);
-			stock.setSkuCd(skuCd);
-			stock.setSkuNm(sku.getSkuNm());
-			stock.setSkuBarcd(sku.getSkuBarcd());
-		} else {
-			stock.setSkuCd(skuCd);
-			stock.setSkuNm(skuNm);
-		}
-		
+		stock.setComCd(sku.getComCd());
+		stock.setSkuCd(sku.getSkuCd());
+		stock.setSkuNm(sku.getSkuNm());
+		stock.setSkuBarcd(sku.getSkuBarcd());
 		stock.setCellCd(cellCd);
 		stock.setEquipType(cell.getEquipType());
 		stock.setEquipCd(cell.getEquipCd());
-		stock.setComCd(comCd);
 		stock.setActiveFlag(cell.getActiveFlag());
 		stock.setLoadQty(0);
 		stock.setAllocQty(0);
@@ -100,12 +129,28 @@ public class StockService extends AbstractLogisService implements IStockService 
 	}
 
 	@Override
+	public Stock createStock(Long domainId, String cellCd, String comCd, String skuCd, String skuNm) {
+		SKU sku = null;
+		
+		if(ValueUtil.isEmpty(skuNm)) {
+			sku = AnyEntityUtil.findEntityBy(domainId, true, SKU.class, "id,com_cd,sku_cd,sku_barcd,sku_nm", "comCd,skuCd", comCd, skuCd);
+			
+		} else {
+			sku = new SKU();
+			sku.setComCd(comCd);
+			sku.setSkuCd(skuCd);
+		}
+		
+		return this.createStock(domainId, cellCd, sku);
+	}
+
+	@Override
 	public Stock addStock(Stock stock, String tranCd, int addQty) {
 		tranCd = ValueUtil.isEmpty(tranCd) ? Stock.TRX_IN : tranCd;
 		stock.setLastTranCd(tranCd);
 		stock.setLoadQty(ValueUtil.toInteger(stock.getLoadQty()) + addQty);
 		stock.setStockQty(stock.getLoadQty() + stock.getAllocQty());
-		this.queryManager.upsert(stock, "lastTranCd", "loadQty", "stockQty", "updaterId", "updatedAt");
+		this.queryManager.upsert(stock, "comCd", "skuCd", "skuBarcd", "skuNm", "lastTranCd", "loadQty", "stockQty", "updaterId", "updatedAt");
 		return stock;
 	}
 
@@ -130,7 +175,7 @@ public class StockService extends AbstractLogisService implements IStockService 
 		stock.setLastTranCd(tranCd);
 		stock.setLoadQty(ValueUtil.toInteger(stock.getLoadQty()) + adjustQty);
 		stock.setStockQty(stock.getLoadQty() + stock.getAllocQty());
-		this.queryManager.update(stock, "lastTranCd", "loadQty", "stockQty", "updaterId", "updatedAt");
+		this.queryManager.update(stock, "comCd", "skuCd", "skuBarcd", "skuNm", "lastTranCd", "loadQty", "stockQty", "updaterId", "updatedAt");
 		return stock;
 	}
 	
@@ -145,7 +190,7 @@ public class StockService extends AbstractLogisService implements IStockService 
 		}
 		
 		stock.setLoadQty(ValueUtil.toInteger(stock.getLoadQty()) + loadQty);
-		this.queryManager.update(stock, "loadQty", "updaterId", "updatedAt");
+		this.queryManager.update(stock, "comCd", "skuCd", "skuBarcd", "skuNm", "loadQty", "updaterId", "updatedAt");
 		return stock;
 	}
 	

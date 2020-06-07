@@ -107,27 +107,29 @@ public class JobSummaryService extends AbstractQueryService {
 		String startHour = xyz.elidom.util.DateUtil.dateTimeStr(batch.getInstructedAt(), "HH");
 		String endHour = xyz.elidom.util.DateUtil.dateTimeStr(batch.getFinishedAt(), "HH");
 		
-        // 시작, 완료 일자가 하루 이상이 나는 경우와 그렇지 않은 경우 처리
-        if(ValueUtil.isNotEqual(startDate, endDate)) {
-    		// startDate, endDate의 차이를 날짜 단위로 계산 
-    		long diffTime = batch.getFinishedAt().getTime() - batch.getInstructedAt().getTime();
-    		float diffDay = (diffTime / ValueUtil.toFloat((24 * 60 * 60 * 1000)));
-            int diffDays = ValueUtil.toInteger(Math.round(diffDay));
-            
-            for(int i = 0 ; i <= diffDays ; i++) {
-            	String date = xyz.elidom.util.DateUtil.addDateToStr(batch.getInstructedAt(), i);
-            	String sHour = (i == 0) ? startHour : "09";				// TODO 업무 시작 시간을 설정으로 
-            	String eHour = (i == diffDays) ? endHour : "18";		// TODO 업무 완료 시간을 설정으로 
-            	this.createBasicJobSummaries(batch, date, sHour, eHour);
-            }
-        } else {
-        	this.createBasicJobSummaries(batch, startDate, startHour, endHour);
-        }
+		// 시작, 완료 일자가 하루 이상이 나는 경우와 그렇지 않은 경우 처리
+		if(ValueUtil.isNotEqual(startDate, endDate)) {
+			// startDate, endDate의 차이를 날짜 단위로 계산 
+			long diffTime = batch.getFinishedAt().getTime() - batch.getInstructedAt().getTime();
+			float diffDay = (diffTime / ValueUtil.toFloat((24 * 60 * 60 * 1000)));
+			int diffDays = ValueUtil.toInteger(Math.round(diffDay));
+
+			for(int i = 0 ; i <= diffDays ; i++) {
+				String date = xyz.elidom.util.DateUtil.addDateToStr(batch.getInstructedAt(), i);
+				String sHour = (i == 0) ? startHour : "09";				// TODO 업무 시작 시간을 설정으로 
+				String eHour = (i == diffDays) ? endHour : "18";		// TODO 업무 완료 시간을 설정으로 
+				this.createBasicJobSummaries(batch, date, sHour, eHour);
+			}
+		} else {
+			this.createBasicJobSummaries(batch, startDate, startHour, endHour);
+		}
 		
 		// 3. 시간대별로 다시 업데이트
 		for(ResultSummary summary : summaries) {
-			Productivity p = this.findProductivity(batch, summary.getWorkDate(), summary.getHour());
-			this.updateResultSummary(p, summary.getMinute(), summary.getPickedQty());
+			if(ValueUtil.isNotEmpty(summary.getWorkDate())) {
+				Productivity p = this.findProductivity(batch, summary.getWorkDate(), summary.getHour());
+				this.updateResultSummary(p, summary.getMinute(), summary.getPickedQty());
+			}
 		}
 	}
 	
@@ -205,10 +207,14 @@ public class JobSummaryService extends AbstractQueryService {
 	 */
 	private void updateResultSummary(Productivity p, String minute, int resultQty) {
 		if(resultQty > 0) {
-			String minStr = StringUtils.leftPad(minute, 2, LogisConstants.ZERO_STRING);
-			String fieldName = "m" + minStr + "Result";
-			ClassUtil.setFieldValue(p, fieldName, resultQty);
-			this.queryManager.update(p, fieldName);
+			try {
+				String minStr = StringUtils.leftPad(minute, 2, LogisConstants.ZERO_STRING);
+				String fieldName = "m" + minStr + "Result";
+				ClassUtil.setFieldValue(p, fieldName, resultQty);
+				this.queryManager.update(p, fieldName);
+			} catch (Throwable e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	

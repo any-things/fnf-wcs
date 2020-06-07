@@ -227,7 +227,7 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
 	@Column (name = "box_result_if_at", nullable = true)
 	private Date boxResultIfAt;
-	
+		
 	@Column (name = "status", nullable = true, length = 1)
 	private String status;
 	

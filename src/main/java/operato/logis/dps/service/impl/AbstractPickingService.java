@@ -20,7 +20,6 @@ import operato.logis.dps.service.util.DpsServiceUtil;
 import xyz.anythings.base.LogisCodeConstants;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.BoxPack;
-import xyz.anythings.base.entity.BoxType;
 import xyz.anythings.base.entity.Cell;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.entity.JobInput;
@@ -530,15 +529,9 @@ public abstract class AbstractPickingService extends AbstractClassificationServi
 		
 		boolean usedBox = false;
 		
-		// 1. 사용 가능한 박스 인지 체크
-		if(isBox) {
-			// 1.1 박스는 쿼리를 해서 확인 
-			usedBox = !this.checkUniqueBoxId(batch, bucket.getBucketCd());
-		} else {
-			// 1.2 트레이는 상태가 WAIT 인 트레이만 사용 가능 
-			if(ValueUtil.isNotEqual(bucket.getStatus(), DpsConstants.COMMON_STATUS_WAIT)) {
-				usedBox = true;
-			}
+		// 1. 트레이는 상태가 WAIT 인 트레이만 사용 가능 
+		if(ValueUtil.isNotEqual(bucket.getStatus(), DpsConstants.COMMON_STATUS_WAIT)) {
+			usedBox = true;
 		}
 		
 		// 2. 중복되는 버킷이 있으면 사용중 이면 불가 
@@ -558,51 +551,7 @@ public abstract class AbstractPickingService extends AbstractClassificationServi
 	 */
 	protected IBucket vaildInputBucketByBucketCd(JobBatch batch, String bucketCd, boolean isBox, boolean withLock) {
 		
-		// 1. 박스 타입이면 박스에서 조회 
-		if(isBox) {
-			String boxTypeCd = this.getBoxTypeByBoxId(batch, bucketCd);
-			BoxType boxType = DpsServiceUtil.findBoxType(batch.getDomainId(), boxTypeCd, withLock, true);
-			boxType.setBoxId(bucketCd);
-			return boxType;
-			
-		// 2. 트레이 타입이면 트레이에서 조회 
-		} else {
-			return DpsServiceUtil.findTrayBox(batch.getDomainId(), bucketCd, withLock, true);
-		}
-	}
-
-	/**
-	 * 배치 설정에 박스 아이디 유니크 범위로 중복 여부 확인 
-	 * 
-	 * @param batch
-	 * @param boxId
-	 * @return
-	 */
-	private boolean checkUniqueBoxId(JobBatch batch, String boxId) {
-		
-		return this.serviceDispatcher.getBoxingService(batch).isUsedBoxId(batch, boxId, false);
-	}
-	
-	/**
-	 * boxId 에서 박스 타입 구하기
-	 * 
-	 * @param batch
-	 * @param boxId
-	 * @return
-	 */
-	private String getBoxTypeByBoxId(JobBatch batch, String boxId) {
-		
-		// 1. 박스 ID 에 박스 타입 split 기준 
-		String boxTypeSplit = DpsBatchJobConfigUtil.getBoxTypeSplitByBoxId(batch); 
-		
-		// 2. 설정 값이 없으면 기본 0,1
-		if(ValueUtil.isEmpty(boxTypeSplit) || boxTypeSplit.length() < 3) {
-			boxTypeSplit = "0,1";
-		}
-		
-		// 3. 기준에 따라 박스 타입 분할 
-		String[] splitIndex = boxTypeSplit.split(DpsConstants.COMMA);
-		return boxId.substring(ValueUtil.toInteger(splitIndex[0]), ValueUtil.toInteger(splitIndex[1]));
+		return DpsServiceUtil.findTrayBox(batch.getDomainId(), bucketCd, withLock, true);
 	}
 	
 	/**

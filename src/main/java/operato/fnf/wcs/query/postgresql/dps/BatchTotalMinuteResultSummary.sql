@@ -1,5 +1,5 @@
-select 
-	b.work_unit, b.date, b.hour, b.minute, sum(b.picked_qty) as picked_qty
+select
+	b.work_unit as batch_id, b.date as work_date, b.hour, b.minute, sum(b.picked_qty) as picked_qty
 from (
 	select 
 		a.work_unit, a.date, a.hour, COALESCE(a.cmpt_qty, 0) as picked_qty,

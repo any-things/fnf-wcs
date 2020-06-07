@@ -170,7 +170,7 @@ public class DasBoxSendService extends AbstractQueryService {
 		rfidBoxItem.setIfCdItem(fromBox.getItemCd());
 		rfidBoxItem.setYnAssort(LogisConstants.N_CAP_STRING);
 		rfidBoxItem.setCdShop(fromBox.getShiptoId());
-		rfidBoxItem.setTpDelivery("2");
+		rfidBoxItem.setTpDelivery("1");
 		rfidBoxItem.setDsShuteno(null);
 		rfidBoxItem.setOutbNo(fromBox.getOutbNo());
 		rfidBoxItem.setQtDelivery(fromBox.getCmptQty());

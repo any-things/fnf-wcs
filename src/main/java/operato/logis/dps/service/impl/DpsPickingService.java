@@ -111,9 +111,10 @@ public class DpsPickingService extends AbstractPickingService implements IDpsPic
 	 */
 	@Override
 	public Object inputEmptyBucket(JobBatch batch, boolean isBox, String bucketCd, Object... params) {
-				
-		// 1. 투입 가능한 버킷인지 체크 (박스 or 트레이) 
-		//    -> 박스 타입이면 박스 타입에 락킹 (즉 동일 박스 타입의 박스는 동시에 하나씩만 투입 가능) / 트레이 타입이면 버킷에 락킹 (하나의 버킷은 한 번에 하나만 투입 가능)
+		// 0. FnF는 트레이만 취급
+		isBox = false;
+		
+		// 1. 투입 가능한 버킷인지 체크 (트레이에 락킹 (하나의 버킷은 한 번에 하나만 투입 가능)
 		IBucket bucket = this.vaildInputBucketByBucketCd(batch, bucketCd, isBox, true);
 		
 		// 2. 박스 투입 전 체크 - 주문 번호 조회 

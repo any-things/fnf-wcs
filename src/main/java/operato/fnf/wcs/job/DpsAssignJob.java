@@ -5,11 +5,9 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import operato.fnf.wcs.service.assign.DpsJobAssignService;
-import operato.fnf.wcs.service.send.DpsBoxSendService;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.sys.event.model.ErrorEvent;
@@ -28,11 +26,6 @@ import xyz.elidom.util.ValueUtil;
 @Component
 public class DpsAssignJob extends AbstractFnFJob {
 
-	/**
-	 * 박스 실적 전송 서비스
-	 */
-	@Autowired
-	private DpsBoxSendService dpsBoxSendService;
 	/**
 	 * 작업 할당 서비스
 	 */
@@ -71,20 +64,17 @@ public class DpsAssignJob extends AbstractFnFJob {
 				
 				if(ValueUtil.isNotEmpty(batchList)) {
 					for(JobBatch batch : batchList) {
-						// 3.2 현재 진행 중인 작업 배치 별 DPS 완료 박스 실적 전송
-						this.sendDpsBoxResults(domain, batch);
-						
-						// 3.3 현재 진행 중인 작업 배치 별 작업 할당 처리
+						// 3.2 현재 진행 중인 작업 배치 별 작업 할당 처리
 						this.assignDomainJobs(domain, batch);
 					}
 				}
 			} catch(Exception e) {
-				// 예외 처리
+				// 3.3 예외 처리
 				ErrorEvent errorEvent = new ErrorEvent(domain.getId(), "JOB_DPS_ASSIGN_ERROR", e, null, true, true);
 				this.eventPublisher.publishEvent(errorEvent);
 				
 			} finally {
-				// 스레드 로컬 변수에서 currentDomain 리셋 
+				// 3.4 스레드 로컬 변수에서 currentDomain 리셋 
 				DomainContext.unsetAll();
 			}
 		}
@@ -105,17 +95,6 @@ public class DpsAssignJob extends AbstractFnFJob {
 		condition.addFilter("jobType", LogisConstants.JOB_TYPE_DPS);
 		condition.addOrder("jobDate", false);
 		return this.queryManager.selectList(JobBatch.class, condition);
-	}
-	
-	/**
-	 * 도메인 별 모든 진행 중인 작업 배치에 대한 박스 실적 전송
-	 * 
-	 * @param domain
-	 * @param batch
-	 */
-	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public void sendDpsBoxResults(Domain domain, JobBatch batch) {
-		this.dpsBoxSendService.sendBoxResults(domain, batch);
 	}
 	
 	/**

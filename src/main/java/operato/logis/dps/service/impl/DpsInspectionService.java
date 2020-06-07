@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import operato.fnf.wcs.entity.WmsExpressWaybillPackinfo;
 import operato.fnf.wcs.entity.WmsExpressWaybillPrint;
+import operato.fnf.wcs.service.send.DpsBoxSendService;
 import operato.logis.dps.model.DpsInspItem;
 import operato.logis.dps.model.DpsInspection;
 import operato.logis.dps.query.store.DpsInspectionQueryStore;
@@ -37,6 +38,11 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	 */	
 	@Autowired
 	private DpsInspectionQueryStore dpsInspectionQueryStore;
+	/**
+	 * RFID 검수 실적 전송 서비스
+	 */
+	@Autowired
+	private DpsBoxSendService dpsRfidSendSvc;
 	/**
 	 * 프린터 컨트롤러
 	 */
@@ -181,12 +187,15 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	@Override
 	public void finishInspection(JobBatch batch, BoxPack box, Float boxWeight, String printerId) {
 		
-		// 1. 박스 내품 검수 항목 완료 처리, TODO mhe_dr에 검수 시간 필요 ...
+		// 1. RFID 검수 실적 전송
+		this.dpsRfidSendSvc.sendPackingsToRfid(box.getDomainId(), box.getBatchId(), box.getInvoiceId());
+		
+		// 2. 박스 내품 검수 항목 완료 처리
 		Map<String, Object> params = ValueUtil.newMap("domainId,batchId,invoiceId,status", box.getDomainId(), box.getBatchId(), box.getInvoiceId(), BoxPack.BOX_STATUS_EXAMED);
 		String sql = "update mhe_dr set status = :status where wh_cd = 'ICF' and work_unit = :batchId and waybill_no = :invoiceId";
 		this.queryManager.executeBySql(sql, params);
 		
-		// 2. Tray 박스 상태 리셋
+		// 3. Tray 박스 상태 리셋
 		String trayCd = box.getBoxTypeCd();
 		TrayBox condition = new TrayBox();
 		condition.setTrayCd(trayCd);
@@ -194,7 +203,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		tray.setStatus(BoxPack.BOX_STATUS_WAIT);
 		this.queryManager.update(tray, "status", "updaterId", "updatedAt");
 		
-		// 3. 송장 발행
+		// 4. 송장 발행
 		this.printInvoiceLabel(batch, box, printerId);
 	}
 
@@ -206,14 +215,14 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 
 	@Override
 	public int printInvoiceLabel(JobBatch batch, BoxPack box, String printerId) {
-		PrintEvent printEvent = this.createPrintEvent(batch.getDomainId(), box.getInvoiceId(), printerId);
+		PrintEvent printEvent = this.createPrintEvent(batch.getDomainId(), box.getBoxId(), box.getInvoiceId(), printerId);
 		this.printLabel(printEvent);
 		return 1;
 	}
 	
 	@Override
 	public int printInvoiceLabel(JobBatch batch, DpsInspection inspection, String printerId) {
-		PrintEvent printEvent = this.createPrintEvent(batch.getDomainId(), inspection.getInvoiceId(), printerId);
+		PrintEvent printEvent = this.createPrintEvent(batch.getDomainId(), inspection.getBoxId(), inspection.getInvoiceId(), printerId);
 		this.printLabel(printEvent);
 		return 1;
 	}
@@ -236,15 +245,16 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		
 	}
 	
-	private PrintEvent createPrintEvent(Long domainId, String invoiceId, String printerId) {
+	private PrintEvent createPrintEvent(Long domainId, String boxId, String invoiceId, String printerId) {
 		// TODO 테스트 시 하드코딩 제거
 		//invoiceId = "20200500080817";
 		
 		String labelTemplate = SettingUtil.getValue(domainId, "fnf.dps.invoice.template");
 		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsExpressWaybillPrint.class);
-		Map<String, Object> params = ValueUtil.newMap("whCd,boxId", "ICF", invoiceId);
-		WmsExpressWaybillPrint waybillPrint = wmsQueryMgr.selectByCondition(WmsExpressWaybillPrint.class, params);
-		List<WmsExpressWaybillPackinfo> packItems = wmsQueryMgr.selectList(WmsExpressWaybillPackinfo.class, params);
+		Map<String, Object> waybillParams = ValueUtil.newMap("whCd,waybillNo,boxId", "ICF", invoiceId, boxId);
+		WmsExpressWaybillPrint waybillPrint = wmsQueryMgr.selectByCondition(WmsExpressWaybillPrint.class, waybillParams);
+		Map<String, Object> packinfoParams = ValueUtil.newMap("whCd,boxId", "ICF", boxId);
+		List<WmsExpressWaybillPackinfo> packItems = wmsQueryMgr.selectList(WmsExpressWaybillPackinfo.class, packinfoParams);
 		Map<String, Object> printParams = ValueUtil.newMap("box,items", waybillPrint, packItems);
 		return new PrintEvent(domainId, printerId, labelTemplate, printParams);
 	}

@@ -62,7 +62,7 @@ public class SyncSkuJob extends AbstractFnFJob {
 				
 			} catch(Exception e) {
 				// 예외 처리
-				ErrorEvent errorEvent = new ErrorEvent(domain.getId(), "JOB_SKY_SYNC_ERROR", e, null, true, true);
+				ErrorEvent errorEvent = new ErrorEvent(domain.getId(), "JOB_SKU_SYNC_ERROR", e, null, true, true);
 				this.eventPublisher.publishEvent(errorEvent);
 				
 			} finally {

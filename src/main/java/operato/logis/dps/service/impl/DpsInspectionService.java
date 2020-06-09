@@ -173,10 +173,10 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	}
 
 	@Override
-	public void finishInspection(JobBatch batch, String boxId, Float boxWeight, String printerId) {
+	public void finishInspection(JobBatch batch, String orderNo, Float boxWeight, String printerId) {
 		
 		// 1. 박스 조회
-		DpsInspection inspection = this.findInspectionByBox(batch, boxId, true);
+		DpsInspection inspection = this.findInspectionByOrder(batch, orderNo, true);
 		BoxPack box = ValueUtil.populate(inspection, new BoxPack());
 		box.setDomainId(batch.getDomainId());
 		box.setBoxTypeCd(inspection.getTrayCd());
@@ -191,10 +191,11 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		String boxId = this.dpsBoxSendSvc.sendPackingToWms(batch, box.getOrderNo());
 		
 		// 2. 송장 발행 요청
-		String invoiceId = this.dpsBoxSendSvc.requestInvoiceToWms(batch, boxId);
+		this.dpsBoxSendSvc.requestInvoiceToWms(batch, boxId);
+		//String invoiceId = this.dpsBoxSendSvc.requestInvoiceToWms(batch, boxId);
 		
 		// 3. RFID 검수 실적 전송
-		this.dpsBoxSendSvc.sendPackingToRfid(batch, invoiceId);
+		//this.dpsBoxSendSvc.sendPackingToRfid(batch, invoiceId);
 		
 		// 4. 박스 내품 검수 항목 완료 처리
 		Map<String, Object> params = ValueUtil.newMap("domainId,batchId,invoiceId,status", box.getDomainId(), box.getBatchId(), box.getInvoiceId(), BoxPack.BOX_STATUS_EXAMED);

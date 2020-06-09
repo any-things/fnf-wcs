@@ -548,7 +548,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		Map<String, Object> params = event.getRequestParams();
 		String equipCd = params.get("equipCd").toString();
 		String equipType = params.get("equipType").toString();
-		String boxId = params.get("boxId").toString();
+		String orderNo = params.get("orderNo").toString();
 		String printerId = params.get("printerId").toString();
 		
 		// 2. 설비 코드로 현재 진행 중인 작업 배치 및 설비 정보 조회 
@@ -556,7 +556,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		JobBatch batch = equipBatchSet.getBatch();
 		
 		// 3. 검수 완료
-		this.dpsInspectionService.finishInspection(batch, boxId, null, printerId);
+		this.dpsInspectionService.finishInspection(batch, orderNo, null, printerId);
 
 		// 4. 이벤트 처리 결과 셋팅
 		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, null));

@@ -109,7 +109,6 @@ public class TowerLampJob extends AbstractFnFJob {
 		Query condition = AnyOrmUtil.newConditionForExecution(domainId);
 		condition.addFilter("status", JobBatch.STATUS_RUNNING);
 		condition.addFilter("jobType", LogisConstants.JOB_TYPE_DPS);
-		condition.addOrder("jobType", false);
 		condition.addOrder("instructedAt", true);
 		return this.queryManager.selectList(JobBatch.class, condition);
 	}
@@ -122,7 +121,7 @@ public class TowerLampJob extends AbstractFnFJob {
 	 */
 	private List<TowerLamp> searchTowerLampAndStatus(JobBatch batch) {
 		String sql = this.fnfDpsQueryStore.getTowerLampStatus();
-		Map<String, Object> params = ValueUtil.newMap("equipType,equipCd", batch.getEquipType(), batch.getEquipCd());
+		Map<String, Object> params = ValueUtil.newMap("domainId,equipType,equipCd", batch.getDomainId(), batch.getEquipType(), batch.getEquipCd());
 		List<LampCellStatus> lampStatusList = this.queryManager.selectListBySql(sql, params, LampCellStatus.class, 0, 0);
 		
 		Query condition = AnyOrmUtil.newConditionForExecution(batch.getDomainId());

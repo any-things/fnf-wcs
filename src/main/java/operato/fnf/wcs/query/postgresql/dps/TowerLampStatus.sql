@@ -1,5 +1,5 @@
 select 
-	a.tower_lamp_cd, a.empty_yn, count(1) as cnt
+	a.tower_lamp_cd, a.empty_yn, count(1) as cell_cnt
 from (
 	select
 		c.tower_lamp_cd,

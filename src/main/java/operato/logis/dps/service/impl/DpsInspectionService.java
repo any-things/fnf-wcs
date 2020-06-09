@@ -5,6 +5,8 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import operato.fnf.wcs.entity.WmsExpressWaybillPackinfo;
 import operato.fnf.wcs.entity.WmsExpressWaybillPrint;
@@ -210,7 +212,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		tray.setStatus(BoxPack.BOX_STATUS_WAIT);
 		this.queryManager.update(tray, "status", "updaterId", "updatedAt");
 		
-		// 6. 송장 발행 TODO 별도 트랜잭션 처리
+		// 6. 송장 발행 - 별도 트랜잭션
 		BeanUtil.get(DpsInspectionService.class).printInvoiceLabel(batch, box, printerId);
 	}
 
@@ -221,6 +223,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	}
 
 	@Override
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public int printInvoiceLabel(JobBatch batch, BoxPack box, String printerId) {
 		PrintEvent printEvent = this.createPrintEvent(batch.getDomainId(), box.getBoxId(), box.getInvoiceId(), printerId);
 		this.printLabel(printEvent);

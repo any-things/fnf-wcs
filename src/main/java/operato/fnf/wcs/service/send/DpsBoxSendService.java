@@ -9,6 +9,8 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import operato.fnf.wcs.entity.RfidDpsInspResult;
@@ -54,6 +56,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 	 * @param batch
 	 * @param orderNo
 	 */
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public String sendPackingToWms(JobBatch batch, String orderNo) {
 		
 		List<WcsMheDr> orderItems = this.searchBoxItemsByOrder(batch.getId(), orderNo);
@@ -97,6 +100,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 	 * @param boxId
 	 * @return
 	 */
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public String requestInvoiceToWms(JobBatch batch, String boxId) {
 		List<WcsMheDr> boxedOrders = this.searchBoxItemsByBoxId(batch.getId(), boxId);
 		String waybillNo = null;
@@ -195,7 +199,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 		Query condition = new Query();
 		condition.addFilter("whCd", "ICF");
 		condition.addFilter("workUnit", batchId);
-		condition.addFilter("status", BoxPack.BOX_STATUS_BOXED);
+		condition.addFilter("status", "S");
 		condition.addFilter("boxId", boxId);
 		condition.addOrder("mheDatetime", true);
 		return this.queryManager.selectList(WcsMheDr.class, condition);

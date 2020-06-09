@@ -17,6 +17,7 @@ import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.sys.event.model.ErrorEvent;
 import xyz.anythings.sys.util.AnyOrmUtil;
 import xyz.elidom.dbist.dml.Query;
+import xyz.elidom.orm.OrmConstants;
 import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.sys.system.context.DomainContext;
 import xyz.elidom.util.ValueUtil;
@@ -164,6 +165,8 @@ public class TowerLampJob extends AbstractFnFJob {
 				lamp.setLampR(this.lampOnStatus);
 				lamp.setLampA(this.lampOffStatus);
 			}
+			
+			lamp.setCudFlag_(OrmConstants.CUD_FLAG_UPDATE);
 		}
 				
 		return lampList;

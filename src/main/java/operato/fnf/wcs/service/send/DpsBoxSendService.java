@@ -56,7 +56,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 	 * @param batch
 	 * @param orderNo
 	 */
-	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	//@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public String sendPackingToWms(JobBatch batch, String orderNo) {
 		
 		List<WcsMheDr> orderItems = this.searchBoxItemsByOrder(batch.getId(), orderNo);
@@ -100,7 +100,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 	 * @param boxId
 	 * @return
 	 */
-	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	//@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public String requestInvoiceToWms(JobBatch batch, String boxId) {
 		List<WcsMheDr> boxedOrders = this.searchBoxItemsByBoxId(batch.getId(), boxId);
 		String waybillNo = null;

@@ -133,6 +133,9 @@ public class TowerLampController extends AbstractRestService {
 			} else if(ValueUtil.isEqualIgnoreCase(towerLamp.getCudFlag_(), OrmConstants.CUD_FLAG_DELETE)) {
 				// 1.3 delete : 연결 종료 
 				url = restUrl + "/disconnect";
+				
+			} else {
+				continue;
 			}
 			
 			try {

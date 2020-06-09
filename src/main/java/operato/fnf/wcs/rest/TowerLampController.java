@@ -122,14 +122,16 @@ public class TowerLampController extends AbstractRestService {
 		RestTemplate rest = this.getRestTemplate();
 		String url = restUrl;
 		
-		// 1.플래그에 따른 처리 
+		// 1. 플래그에 따른 처리 
 		for(TowerLamp towerLamp : list) {
 			if(ValueUtil.isEqualIgnoreCase(towerLamp.getCudFlag_(), OrmConstants.CUD_FLAG_CREATE)) {
 				// 1.1 create : 연결 시도 
 				url = restUrl + "/connect";
+				
 			} else if(ValueUtil.isEqualIgnoreCase(towerLamp.getCudFlag_(), OrmConstants.CUD_FLAG_UPDATE)) {
 				// 1.2 update : 데이터 전송 
 				url = restUrl + "/send/true";
+				
 			} else if(ValueUtil.isEqualIgnoreCase(towerLamp.getCudFlag_(), OrmConstants.CUD_FLAG_DELETE)) {
 				// 1.3 delete : 연결 종료 
 				url = restUrl + "/disconnect";

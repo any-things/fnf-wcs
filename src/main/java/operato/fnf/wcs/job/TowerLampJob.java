@@ -47,6 +47,10 @@ public class TowerLampJob extends AbstractFnFJob {
 	 * 경광등 ON 상태
 	 */
 	private String lampOnStatus = "ON";
+	/**
+	 * 경광등 ON 상태
+	 */
+	private String lampOffStatus = "OFF";
 	
 	/**
 	 * 매 2분 마다 실행되어 DPS 재고 기반으로 경광등 표시기 동기화
@@ -147,12 +151,18 @@ public class TowerLampJob extends AbstractFnFJob {
 			
 			if(emptyCellPercent >= 80.0f) {
 				lamp.setLampG(this.lampOnStatus);
+				lamp.setLampR(this.lampOffStatus);
+				lamp.setLampA(this.lampOffStatus);
 				
 			} else if(emptyCellPercent >= 50.0f) {
+				lamp.setLampG(this.lampOffStatus);
+				lamp.setLampR(this.lampOffStatus);
 				lamp.setLampA(this.lampOnStatus);
 				
 			} else {
+				lamp.setLampG(this.lampOffStatus);
 				lamp.setLampR(this.lampOnStatus);
+				lamp.setLampA(this.lampOffStatus);
 			}
 		}
 				

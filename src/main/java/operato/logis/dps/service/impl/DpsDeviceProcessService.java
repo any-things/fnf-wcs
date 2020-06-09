@@ -442,7 +442,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 	}
 	
 	/**
-	 * DPS 출고 검수를 위한 검수 정보 조회 - 송장 번호
+	 * DPS 출고 검수를 위해 송장 번호로 검수 정보 조회
 	 * 
 	 * @param event
 	 */
@@ -469,7 +469,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 	}
 	
 	/**
-	 * DPS 출고 검수를 위한 검수 정보 조회 - 송장 번호
+	 * DPS 출고 검수를 위해 주문 번호로 검수 정보 조회
 	 * 
 	 * @param event
 	 */
@@ -508,7 +508,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		Map<String, Object> params = event.getRequestParams();
 		String equipCd = params.get("equipCd").toString();
 		String equipType = params.get("equipType").toString();
-		String invoiceId = params.get("invoiceId").toString();
+		String orderNo = params.get("orderNo").toString();
 		String printerId = params.get("printerId").toString();
 		String inspItems = params.get("inspItems").toString();
 		
@@ -522,9 +522,9 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		JobBatch batch = equipBatchSet.getBatch();
 		
 		// 4. 박스 정보 조회
-		BoxPack sourceBox = AnyEntityUtil.findEntityBy(event.getDomainId(), false, BoxPack.class, null, "batchId,invoiceId", batch.getId(), invoiceId);
+		BoxPack sourceBox = AnyEntityUtil.findEntityBy(event.getDomainId(), false, BoxPack.class, null, "batchId,orderNo", batch.getId(), orderNo);
 		if(sourceBox == null) {
-			sourceBox = AnyEntityUtil.findEntityBy(event.getDomainId(), false, BoxPack.class, null, "invoiceId", invoiceId);
+			sourceBox = AnyEntityUtil.findEntityBy(event.getDomainId(), false, BoxPack.class, null, "orderNo", orderNo);
 		}
 		
 		// 5. 송장 분할
@@ -548,7 +548,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		Map<String, Object> params = event.getRequestParams();
 		String equipCd = params.get("equipCd").toString();
 		String equipType = params.get("equipType").toString();
-		String invoiceId = params.get("invoiceId").toString();
+		String boxId = params.get("boxId").toString();
 		String printerId = params.get("printerId").toString();
 		
 		// 2. 설비 코드로 현재 진행 중인 작업 배치 및 설비 정보 조회 
@@ -556,7 +556,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		JobBatch batch = equipBatchSet.getBatch();
 		
 		// 3. 검수 완료
-		this.dpsInspectionService.finishInspection(batch, invoiceId, null, printerId);
+		this.dpsInspectionService.finishInspection(batch, boxId, null, printerId);
 
 		// 4. 이벤트 처리 결과 셋팅
 		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, null));

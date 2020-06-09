@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import operato.fnf.wcs.service.send.DasBoxSendService;
-import operato.fnf.wcs.service.send.DpsBoxSendService;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.sys.event.model.ErrorEvent;
@@ -30,11 +29,6 @@ public class ResultSendJob extends AbstractFnFJob {
 	 */
 	@Autowired
 	private DasBoxSendService dasBoxSendSvc;
-	/**
-	 * DPS 박스 전송 서비스
-	 */
-	@Autowired
-	private DpsBoxSendService dpsBoxSendSvc;
 
 	/**
 	 * 매 30초 마다  
@@ -85,7 +79,7 @@ public class ResultSendJob extends AbstractFnFJob {
 	private List<JobBatch> searchRunningBatches(Long domainId) {
 		Query condition = AnyOrmUtil.newConditionForExecution(domainId);
 		condition.addFilter("status", JobBatch.STATUS_RUNNING);
-		condition.addFilter("jobType", LogisConstants.IN, ValueUtil.toList(LogisConstants.JOB_TYPE_DAS, LogisConstants.JOB_TYPE_DPS));
+		condition.addFilter("jobType", LogisConstants.JOB_TYPE_DAS);
 		condition.addOrder("jobType", false);
 		condition.addOrder("instructedAt", true);
 		return this.queryManager.selectList(JobBatch.class, condition);
@@ -103,9 +97,6 @@ public class ResultSendJob extends AbstractFnFJob {
 		
 		if(LogisConstants.isDasJobType(jobType)) {
 			this.dasBoxSendSvc.sendBoxResults(domain, batch);
-			
-		} else if(LogisConstants.isDpsJobType(jobType)) {
-			this.dpsBoxSendSvc.sendBoxResults(domain, batch);
 		}
 	}
 

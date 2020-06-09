@@ -82,5 +82,14 @@ public class FnFDpsQueryStore extends AbstractQueryStore {
 	public String getSearchAssignCandidates() {
 		return this.getQueryByPath("dps/SearchAssignCandidates");
 	}
+	
+	/**
+	 * 경광등 빈 셀 상태 조회 
+	 * 
+	 * @return
+	 */
+	public String getTowerLampStatus() {
+		return this.getQueryByPath("dps/TowerLampStatus");
+	}
 
 }

@@ -24,6 +24,7 @@ import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.util.SettingUtil;
 import xyz.elidom.sys.util.ThrowUtil;
 import xyz.elidom.sys.util.ValueUtil;
+import xyz.elidom.util.BeanUtil;
 
 /**
  * DPS 출고 검수 서비스
@@ -39,10 +40,10 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	@Autowired
 	private DpsInspectionQueryStore dpsInspectionQueryStore;
 	/**
-	 * RFID 검수 실적 전송 서비스
+	 * 박스 실적 전송 서비스
 	 */
 	@Autowired
-	private DpsBoxSendService dpsRfidSendSvc;
+	private DpsBoxSendService dpsBoxSendSvc;
 	/**
 	 * 프린터 컨트롤러
 	 */
@@ -172,10 +173,10 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	}
 
 	@Override
-	public void finishInspection(JobBatch batch, String invoiceId, Float boxWeight, String printerId) {
+	public void finishInspection(JobBatch batch, String boxId, Float boxWeight, String printerId) {
 		
 		// 1. 박스 조회
-		DpsInspection inspection = this.findInspectionByInvoice(batch, invoiceId, true);
+		DpsInspection inspection = this.findInspectionByBox(batch, boxId, true);
 		BoxPack box = ValueUtil.populate(inspection, new BoxPack());
 		box.setDomainId(batch.getDomainId());
 		box.setBoxTypeCd(inspection.getTrayCd());
@@ -186,16 +187,21 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 
 	@Override
 	public void finishInspection(JobBatch batch, BoxPack box, Float boxWeight, String printerId) {
+		// 1. WMS로 박스 실적 전송
+		String boxId = this.dpsBoxSendSvc.sendPackingToWms(batch, box.getOrderNo());
 		
-		// 1. RFID 검수 실적 전송
-		this.dpsRfidSendSvc.sendPackingsToRfid(box.getDomainId(), box.getBatchId(), box.getInvoiceId());
+		// 2. 송장 발행 요청
+		String invoiceId = this.dpsBoxSendSvc.requestInvoiceToWms(batch, boxId);
 		
-		// 2. 박스 내품 검수 항목 완료 처리
+		// 3. RFID 검수 실적 전송
+		this.dpsBoxSendSvc.sendPackingToRfid(batch, invoiceId);
+		
+		// 4. 박스 내품 검수 항목 완료 처리
 		Map<String, Object> params = ValueUtil.newMap("domainId,batchId,invoiceId,status", box.getDomainId(), box.getBatchId(), box.getInvoiceId(), BoxPack.BOX_STATUS_EXAMED);
 		String sql = "update mhe_dr set status = :status where wh_cd = 'ICF' and work_unit = :batchId and waybill_no = :invoiceId";
 		this.queryManager.executeBySql(sql, params);
 		
-		// 3. Tray 박스 상태 리셋
+		// 5. Tray 박스 상태 리셋
 		String trayCd = box.getBoxTypeCd();
 		TrayBox condition = new TrayBox();
 		condition.setTrayCd(trayCd);
@@ -203,8 +209,8 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		tray.setStatus(BoxPack.BOX_STATUS_WAIT);
 		this.queryManager.update(tray, "status", "updaterId", "updatedAt");
 		
-		// 4. 송장 발행
-		this.printInvoiceLabel(batch, box, printerId);
+		// 6. 송장 발행 TODO 별도 트랜잭션 처리
+		BeanUtil.get(DpsInspectionService.class).printInvoiceLabel(batch, box, printerId);
 	}
 
 	@Override

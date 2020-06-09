@@ -49,7 +49,7 @@ public class WcsBatchProgressService extends AbstractQueryService {
 	 * @param batch
 	 * @return
 	 */
-	private int calcBatchResultBoxQty(JobBatch batch) {
+	public int calcBatchResultBoxQty(JobBatch batch) {
 		String jobType = batch.getJobType();
 		String sql = null;
 		
@@ -74,7 +74,7 @@ public class WcsBatchProgressService extends AbstractQueryService {
 	 * @param batch
 	 * @return
 	 */
-	private int calcBatchResultOrderQty(JobBatch batch) {
+	public int calcBatchResultOrderQty(JobBatch batch) {
 		String jobType = batch.getJobType();
 		String sql = null;
 		
@@ -99,7 +99,7 @@ public class WcsBatchProgressService extends AbstractQueryService {
 	 * @param batch
 	 * @return
 	 */
-	private int calcBatchResultPcs(JobBatch batch) {
+	public int calcBatchResultPcs(JobBatch batch) {
 		String jobType = batch.getJobType();
 		String sql = null;
 		
@@ -125,7 +125,7 @@ public class WcsBatchProgressService extends AbstractQueryService {
 	 * @param toTime
 	 * @return
 	 */
-	private float calcBatchEquipRuntime(JobBatch batch, Date toTime) {
+	public float calcBatchEquipRuntime(JobBatch batch, Date toTime) {
 		// 배치 총 시간
 		long gap = toTime.getTime() - batch.getInstructedAt().getTime();
 		int totalMin = ValueUtil.toInteger(gap / ValueUtil.toLong(1000 * 60));
@@ -145,7 +145,7 @@ public class WcsBatchProgressService extends AbstractQueryService {
 	 * @param toTime
 	 * @return
 	 */
-	private float calcBatchUph(JobBatch batch, Date toTime) {
+	public float calcBatchUph(JobBatch batch, Date toTime) {
 		long duration = toTime.getTime() - batch.getInstructedAt().getTime();
 		int pcs = batch.getResultPcs();
 		return ValueUtil.toFloat(ValueUtil.toFloat(pcs * 1000 * 60 * 60) / ValueUtil.toFloat(duration));

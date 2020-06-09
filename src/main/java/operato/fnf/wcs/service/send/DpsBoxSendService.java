@@ -9,8 +9,6 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import operato.fnf.wcs.entity.RfidDpsInspResult;
@@ -28,11 +26,9 @@ import xyz.elidom.dev.entity.RangedSeq;
 import xyz.elidom.exception.server.ElidomRuntimeException;
 import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.SysConstants;
-import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.sys.util.DateUtil;
 import xyz.elidom.sys.util.SettingUtil;
 import xyz.elidom.sys.util.ValueUtil;
-import xyz.elidom.util.BeanUtil;
 
 /**
  * DPS 박스 실적 전송 서비스
@@ -53,44 +49,86 @@ public class DpsBoxSendService extends AbstractQueryService {
 	private static final String RFID_EXAMED_INSERT_SQL = "INSERT INTO if_rfidhistory_recv(DT_IF_DATE, NO_IF_SEQ, TP_GUBUN, CD_COMPANY, CD_DEPART, DT_DATE, CD_SHOP, CD_BILL, CD_SUBBILL, CD_RFIDUID, TP_HISTORY, TP_STATUS, CD_REGISTER, DM_BF_RECV) VALUES (:today, RFID_IF.SEQ_IF_RFIDHISTORY_RECV.NEXTVAL, 'I', 'FnF', :brandCd, :today, :shopCd, :waybillNo, '1', :rfidUid, '42', '0', :creatorId, sysdate)";	
 	
 	/**
-	 * 박스 실적 전송
+	 * 패킹 실적 WMS로 전송
 	 * 
-	 * @param domain
 	 * @param batch
+	 * @param orderNo
 	 */
-	public void sendBoxResults(Domain domain, JobBatch batch) {
-		// 1. 박스 완료 실적 조회
-		List<WcsMheDr> orderList = this.searchBoxedOrderList(batch);
+	public String sendPackingToWms(JobBatch batch, String orderNo) {
 		
-		if(ValueUtil.isNotEmpty(orderList)) {
-			// TODO 트랜잭션을 위해 로컬 쿼리 매니저로 변경 후 테스트 ...
+		List<WcsMheDr> orderItems = this.searchBoxItemsByOrder(batch.getId(), orderNo);
+		String boxId = null;
+		
+		if(ValueUtil.isNotEmpty(orderItems)) {
 			IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
-			
 			String todayStr = DateUtil.todayStr("yyyyMMdd");
-			DpsBoxSendService boxSendSvc = BeanUtil.get(DpsBoxSendService.class);
+			Date currentTime = new Date();
+			String currentTimeStr = DateUtil.dateTimeStr(currentTime, "yyyyMMddHHmmss");
 			
-			// 2. WMS에 전송
-			for(WcsMheDr order : orderList) {
-				// 2.1 WCS 주문별 실적 정보 
-				List<WcsMheDr> boxedOrders = this.searchBoxResultByOrder(order.getWorkUnit(), order.getRefNo());
-				// 2.2 WCS 주문별 실적 정보를 WMS 패킹 정보로 복사
-				boxSendSvc.sendPackingsToWms(batch.getDomainId(), wmsQueryMgr, boxedOrders, batch.getEquipGroupCd(), todayStr);
-				// 2.3 WMS 송장 발행 요청
-				boxSendSvc.requestInvoiceToWms(batch.getDomainId(), wmsQueryMgr, boxedOrders);
+			for(WcsMheDr boxedOrder : orderItems) {
+				// 1. 주문 별 박스 번호 생성
+				if(ValueUtil.isEmpty(boxId)) {
+					// 1.1 박스 Unique ID 생성
+					boxId = ValueUtil.isEmpty(boxedOrder.getBoxId()) ? this.newBoxId(batch.getDomainId(), batch.getEquipGroupCd(), todayStr) : boxedOrder.getBoxId();
+					boxedOrder.setBoxId(boxId);
+				}
+				
+				// 2. 박스 번호, 박스 전송 시간 설정
+				boxedOrder.setBoxId(boxId);
+				boxedOrder.setBoxResultIfAt(currentTime);
+				boxedOrder.setStatus("S");
+				
+				// 3. WMS 박스 실적 전송 
+				Map<String, Object> params = ValueUtil.newMap("today,whCd,boxId,orderNo,brandCd,skuCd,pickedQty,jobDate,currentTime", todayStr, boxedOrder.getWhCd(), boxId, boxedOrder.getRefNo(), boxedOrder.getStrrId(), boxedOrder.getItemCd(), boxedOrder.getCmptQty(), boxedOrder.getOutbEctDate(), currentTimeStr);
+				wmsQueryMgr.executeBySql(WMS_PACK_INSERT_SQL, params);
 			}
+			
+			// 4. 주문 상세 정보 업데이트
+			this.queryManager.updateBatch(orderItems, "status", "boxId", "boxResultIfAt");
 		}
+		
+		return boxId;
+	}
+	
+	/**
+	 * WMS에 송장 발행 요청 
+	 * 
+	 * @param batch
+	 * @param boxId
+	 * @return
+	 */
+	public String requestInvoiceToWms(JobBatch batch, String boxId) {
+		List<WcsMheDr> boxedOrders = this.searchBoxItemsByBoxId(batch.getId(), boxId);
+		String waybillNo = null;
+		
+		if(ValueUtil.isNotEmpty(boxedOrders)) {
+			for(WcsMheDr boxedOrder : boxedOrders) {
+				// 1. 주문 별 박스 번호 생성
+				if(ValueUtil.isEmpty(waybillNo)) {
+					// 송장 번호 생성
+					waybillNo = ValueUtil.isEmpty(boxedOrder.getWaybillNo()) ? this.newWaybillNo(boxedOrder) : boxedOrder.getWaybillNo();
+				}
+				
+				// 2. 박스 번호, 박스 전송 시간 설정
+				boxedOrder.setWaybillNo(waybillNo);
+			}
+			
+			// 3. 주문 상세 정보 업데이트
+			this.queryManager.updateBatch(boxedOrders, "waybillNo");
+		}
+		
+		return waybillNo;
 	}
 
 	/**
-	 * RFID로 검수 완료 정보 전송
+	 * 검수 완료 정보 RFID로 전송
 	 * 
-	 * @param domainId
-	 * @param batchId
+	 * @param batch
 	 * @param invoiceId
 	 */
-	public void sendPackingsToRfid(Long domainId, String batchId, String invoiceId) {
+	public void sendPackingToRfid(JobBatch batch, String invoiceId) {
 		
-		List<RfidResult> rfidResults = this.searchRfidResultByInvoice(domainId, batchId, invoiceId);
+		List<RfidResult> rfidResults = this.searchRfidResultByInvoice(batch.getDomainId(), batch.getId(), invoiceId);
 		
 		if(ValueUtil.isNotEmpty(rfidResults)) {
 			IQueryManager rfidQueryMgr = this.getDataSourceQueryManager(RfidDpsInspResult.class);
@@ -130,35 +168,35 @@ public class DpsBoxSendService extends AbstractQueryService {
 	}
 	
 	/**
-	 * 박싱된 주문 리스트 조회
+	 * 온라인 주문 번호로 박스 실적 주문 조회
 	 * 
-	 * @param batch
+	 * @param batchId
+	 * @param orderNo
 	 * @return
 	 */
-	private List<WcsMheDr> searchBoxedOrderList(JobBatch batch) {
+	private List<WcsMheDr> searchBoxItemsByOrder(String batchId, String orderNo) {
 		Query condition = new Query();
 		condition.addFilter("whCd", "ICF");
-		condition.addSelect("work_unit", "ref_no");
-		condition.addFilter("workUnit", batch.getId());
+		condition.addFilter("workUnit", batchId);
 		condition.addFilter("status", BoxPack.BOX_STATUS_BOXED);
-		condition.addOrder("refNo", true);
+		condition.addFilter("refNo", orderNo);
 		condition.addOrder("mheDatetime", true);
 		return this.queryManager.selectList(WcsMheDr.class, condition);
 	}
 	
 	/**
-	 * 온라인 주문 번호로 박스 실적 주문 조회
+	 * 박스 ID로 박스 실적 주문 조회
 	 * 
 	 * @param batchId
-	 * @param orderId
+	 * @param boxId
 	 * @return
 	 */
-	private List<WcsMheDr> searchBoxResultByOrder(String batchId, String orderId) {
+	private List<WcsMheDr> searchBoxItemsByBoxId(String batchId, String boxId) {
 		Query condition = new Query();
 		condition.addFilter("whCd", "ICF");
 		condition.addFilter("workUnit", batchId);
 		condition.addFilter("status", BoxPack.BOX_STATUS_BOXED);
-		condition.addFilter("refNo", orderId);
+		condition.addFilter("boxId", boxId);
 		condition.addOrder("mheDatetime", true);
 		return this.queryManager.selectList(WcsMheDr.class, condition);
 	}
@@ -177,78 +215,6 @@ public class DpsBoxSendService extends AbstractQueryService {
 		condition.addFilter("invoiceId", invoiceId);
 		condition.addOrder("createdAt", true);
 		return this.queryManager.selectList(RfidResult.class, condition);
-	}
-	
-	/**
-	 * WCS 박스 실적으로 부터 WMS 박스 실적 복사 
-	 * 
-	 * @param domainId
-	 * @param wmsQueryMgr
-	 * @param boxedOrders
-	 * @param mheNo
-	 * @param todayStr
-	 * @return
-	 */
-	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public void sendPackingsToWms(Long domainId, IQueryManager wmsQueryMgr, List<WcsMheDr> boxedOrders, String mheNo, String todayStr) {
-		
-		if(ValueUtil.isNotEmpty(boxedOrders)) {
-			Date currentTime = new Date();
-			String currentTimeStr = DateUtil.dateTimeStr(currentTime, "yyyyMMddHHmmss");
-			String boxId = null;
-			
-			for(WcsMheDr boxedOrder : boxedOrders) {
-				// 1. 주문 별 박스 번호 생성
-				if(ValueUtil.isEmpty(boxId)) {
-					// 1.1 박스 Unique ID 생성
-					boxId = ValueUtil.isEmpty(boxedOrder.getBoxId()) ? this.newBoxId(domainId, mheNo, todayStr) : boxedOrder.getBoxId();
-					boxedOrder.setBoxId(boxId);
-				}
-				
-				// 2. 박스 번호, 박스 전송 시간 설정
-				boxedOrder.setBoxId(boxId);
-				boxedOrder.setBoxResultIfAt(currentTime);
-				boxedOrder.setStatus("S");
-				
-				// 3. WMS 박스 실적 전송 
-				Map<String, Object> params = ValueUtil.newMap("today,whCd,boxId,orderNo,brandCd,skuCd,pickedQty,jobDate,currentTime", todayStr, boxedOrder.getWhCd(), boxId, boxedOrder.getRefNo(), boxedOrder.getStrrId(), boxedOrder.getItemCd(), boxedOrder.getCmptQty(), boxedOrder.getOutbEctDate(), currentTimeStr);
-				wmsQueryMgr.executeBySql(WMS_PACK_INSERT_SQL, params);
-			}
-			
-			// 4. 주문 상세 정보 업데이트
-			this.queryManager.updateBatch(boxedOrders, "status", "boxId", "boxResultIfAt");
-		}
-	}
-	
-	/**
-	 * WCS 박스 실적으로 부터 WMS 박스 실적 복사 
-	 * 
-	 * @param domainId
-	 * @param wmsQueryMgr
-	 * @param boxedOrders
-	 * @return
-	 */
-	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public void requestInvoiceToWms(Long domainId, IQueryManager wmsQueryMgr, List<WcsMheDr> boxedOrders) {
-		
-		if(ValueUtil.isNotEmpty(boxedOrders)) {
-			String waybillNo = null;
-			
-			for(WcsMheDr boxedOrder : boxedOrders) {
-				// 1. 주문 별 박스 번호 생성
-				if(ValueUtil.isEmpty(waybillNo)) {
-					// 송장 번호 생성
-					waybillNo = ValueUtil.isEmpty(boxedOrder.getWaybillNo()) ? this.newWaybillNo(boxedOrder) : boxedOrder.getWaybillNo();
-				}
-				
-				// 2. 박스 번호, 박스 전송 시간 설정
-				boxedOrder.setWaybillNo(waybillNo);
-				
-			}
-			
-			// 3. 주문 상세 정보 업데이트
-			this.queryManager.updateBatch(boxedOrders, "waybillNo");
-		}
 	}
 	
 	/**

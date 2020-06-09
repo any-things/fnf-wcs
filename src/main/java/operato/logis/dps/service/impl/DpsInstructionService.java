@@ -6,7 +6,6 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
-import operato.logis.dps.service.util.DpsBatchJobConfigUtil;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.entity.Rack;
@@ -91,30 +90,53 @@ public class DpsInstructionService extends AbstractInstructionService implements
 
 	@Override
 	public int mergeBatch(JobBatch mainBatch, JobBatch newBatch, Object... params) {
-		// 1. 작업 배치 정보로 설비 리스트 조회
-		List<?> equipList = this.searchEquipListByBatch(mainBatch, null);
+//		// 1. 작업 배치 정보로 설비 리스트 조회
+//		List<?> equipList = this.searchEquipListByBatch(mainBatch, null);
+//		
+//		// 2. 병합의 경우에는 메인 배치의 설정 셋을 가져온다 .
+//		newBatch.setJobConfigSetId(mainBatch.getJobConfigSetId());
+//		newBatch.setIndConfigSetId(mainBatch.getIndConfigSetId());
+//		this.queryManager.update(newBatch , "jobConfigSetId","indConfigSetId");
+//		
+//		// 2. 소분류 코드, 방면 분류 코드 값을 설정에 따라서 주문 정보에 추가한다.
+//		this.doUpdateClassificationCodes(newBatch, params);
+//
+//		// 3. 대상 분류 
+//		this.doClassifyOrders(newBatch, equipList, params);
+//		
+//		// 4. 추천 로케이션 정보 생성
+//		this.doRecommendCells(newBatch, equipList, params);
+//		
+//		// 5. 작업 병합 처리
+//		int retCnt = this.doMergeBatch(mainBatch, newBatch, equipList, params);
+//		
+//		// 6. 작업 병합 후 박스 요청 
+//		this.doRequestBox(mainBatch, equipList, params);
+//		
+//		// 7. 병합 건수 리턴
+//		return retCnt;
 		
-		// 2. 병합의 경우에는 메인 배치의 설정 셋을 가져온다 .
-		newBatch.setJobConfigSetId(mainBatch.getJobConfigSetId());
-		newBatch.setIndConfigSetId(mainBatch.getIndConfigSetId());
-		this.queryManager.update(newBatch , "jobConfigSetId","indConfigSetId");
+		// 1. 예정 주문 정보의 배치 ID 업데이트
+		Map<String, Object> condition = ValueUtil.newMap("mainBatchId,newBatchId,whCd", mainBatch.getId(), newBatch.getId(), "ICF");
+		String sql = "update mhe_dr set work_unit = :mainBatchId where wh_cd = :whCd and work_unit = :newBatchId";
+		int retCnt = this.queryManager.executeBySql(sql, condition);
 		
-		// 2. 소분류 코드, 방면 분류 코드 값을 설정에 따라서 주문 정보에 추가한다.
-		this.doUpdateClassificationCodes(newBatch, params);
-
-		// 3. 대상 분류 
-		this.doClassifyOrders(newBatch, equipList, params);
+		// 2. 메인 작업 배치 주문 수 업데이트
+		sql = "select COALESCE(count(distinct(ref_no)), 0) as result from mhe_dr where wh_cd = :whCd and work_unit = :mainBatchId";
+		int orderCnt = this.queryManager.executeBySql(sql, condition);
+		mainBatch.setParentOrderQty(orderCnt);
+		mainBatch.setBatchOrderQty(orderCnt);
 		
-		// 4. 추천 로케이션 정보 생성
-		this.doRecommendCells(newBatch, equipList, params);
+		// 3. 메인 작업 배치 주문 수량 업데이트
+		sql = "select sum(pick_qty) as result from mhe_dr where wh_cd = :whCd and work_unit = :mainBatchId";
+		int pickQty = this.queryManager.executeBySql(sql, condition);
+		mainBatch.setParentPcs(pickQty);
+		mainBatch.setBatchPcs(pickQty);
 		
-		// 5. 작업 병합 처리
-		int retCnt = this.doMergeBatch(mainBatch, newBatch, equipList, params);
+		// 4. 메인 작업 배치 정보 업데이트
+		this.queryManager.update(mainBatch, "parentOrderQty", "batchOrderQty", "parentPcs", "batchPcs");
 		
-		// 6. 작업 병합 후 박스 요청 
-		this.doRequestBox(mainBatch, equipList, params);
-		
-		// 7. 병합 건수 리턴
+		// 5. 병합 건수 리턴
 		return retCnt;
 	}
 
@@ -157,7 +179,7 @@ public class DpsInstructionService extends AbstractInstructionService implements
 	 * @param batch
 	 * @param params
 	 */
-	private void doUpdateClassificationCodes(JobBatch batch, Object ... params) {
+	/*private void doUpdateClassificationCodes(JobBatch batch, Object ... params) {
 		// 1. 소분류 매핑 필드 - class_cd 매핑 
 		String classTargetField = DpsBatchJobConfigUtil.getBoxMappingTargetField(batch);
 		
@@ -177,7 +199,7 @@ public class DpsInstructionService extends AbstractInstructionService implements
 			Map<String, Object> updateParams = ValueUtil.newMap("domainId,batchId", batch.getDomainId(), batch.getId());
 			this.queryManager.executeBySql(sql, updateParams);
 		}
-	}
+	}*/
 	
 	/**
 	 * 작업 대상 분류
@@ -186,7 +208,7 @@ public class DpsInstructionService extends AbstractInstructionService implements
 	 * @param equipList
 	 * @param params
 	 */
-	private void doClassifyOrders(JobBatch batch, List<?> equipList, Object... params) {
+	/*private void doClassifyOrders(JobBatch batch, List<?> equipList, Object... params) {
 		// 1. 전처리 이벤트   
 		EventResultSet befResult = this.publishClassificationEvent(SysEvent.EVENT_STEP_BEFORE, batch, equipList, params);
 		
@@ -199,7 +221,7 @@ public class DpsInstructionService extends AbstractInstructionService implements
 			// 4. 후처리 이벤트 
 			this.publishClassificationEvent(SysEvent.EVENT_STEP_AFTER, batch, equipList, params);
 		}
-	}
+	}*/
 	
 	/**
 	 * 대상 분류 프로세싱 
@@ -209,7 +231,7 @@ public class DpsInstructionService extends AbstractInstructionService implements
 	 * @param params
 	 * @return
 	 */
-	private int processClassifyOrders(JobBatch batch, List<?> equipList, Object... params) {
+	/*private int processClassifyOrders(JobBatch batch, List<?> equipList, Object... params) {
 		// 1. 단포 작업 활성화 여부 
 		boolean useSinglePack = DpsBatchJobConfigUtil.isSingleSkuNpcsClassEnabled(batch);
 		// 2. 파라미터 생성
@@ -221,7 +243,7 @@ public class DpsInstructionService extends AbstractInstructionService implements
 		resultCnt += ValueUtil.toInteger(result.get("P_OUT_OT_COUNT"));
 		// 5. 처리 건수 리턴 
 		return resultCnt;
-	}
+	}*/
 	
 	/**
 	 * 추천 로케이션 처리
@@ -230,7 +252,7 @@ public class DpsInstructionService extends AbstractInstructionService implements
 	 * @param equipList
 	 * @param params
 	 */
-	private void doRecommendCells(JobBatch batch, List<?> equipList, Object ... params) {
+	/*private void doRecommendCells(JobBatch batch, List<?> equipList, Object ... params) {
 		// 1. 전 처리 이벤트
 		EventResultSet befResult = this.publishRecommendCellsEvent(SysEvent.EVENT_STEP_BEFORE, batch, equipList, params);
 		
@@ -243,7 +265,7 @@ public class DpsInstructionService extends AbstractInstructionService implements
 			// 4. 후 처리 이벤트 
 			this.publishRecommendCellsEvent(SysEvent.EVENT_STEP_AFTER, batch, equipList, params);
 		}		
-	}
+	}*/
 	
 	/**
 	 * 추천 로케이션 실행
@@ -252,7 +274,7 @@ public class DpsInstructionService extends AbstractInstructionService implements
 	 * @param equipList
 	 * @param params
 	 */
-	private void processRecommendCells(JobBatch batch, List<?> equipList, Object ... params) {
+	/*private void processRecommendCells(JobBatch batch, List<?> equipList, Object ... params) {
 		// 재고 적치 추천 셀 사용 유무 
 		boolean useRecommendCell = DpsBatchJobConfigUtil.isRecommendCellEnabled(batch);
 		
@@ -262,7 +284,7 @@ public class DpsInstructionService extends AbstractInstructionService implements
 			// 2. 프로시져 콜 
 			this.queryManager.callReturnProcedure("OP_DPS_BATCH_RECOMM_CELL", inputParams, Map.class);
 		}
-	}
+	}*/
 	
 	/**
 	 * 작업 지시 처리
@@ -306,7 +328,7 @@ public class DpsInstructionService extends AbstractInstructionService implements
 	 * @param params
 	 * @return
 	 */
-	private int doRequestBox(JobBatch batch, List<?> equipList, Object... params) {
+	/*private int doRequestBox(JobBatch batch, List<?> equipList, Object... params) {
 		// 1. 단독 처리 이벤트   
 		EventResultSet eventResult = this.publishRequestBoxEvent(batch, equipList, params);
 		
@@ -316,7 +338,7 @@ public class DpsInstructionService extends AbstractInstructionService implements
 		}
 		
 		return 0;
-	}
+	}*/
 	
 	/**
 	 * 작업 병합 처리
@@ -327,7 +349,7 @@ public class DpsInstructionService extends AbstractInstructionService implements
 	 * @param params
 	 * @return
 	 */
-	private int doMergeBatch(JobBatch mainBatch, JobBatch newBatch, List<?> equipList, Object... params) {
+	/*private int doMergeBatch(JobBatch mainBatch, JobBatch newBatch, List<?> equipList, Object... params) {
 		// 1. 전처리 이벤트   
 		EventResultSet befResult = this.publishMergingEvent(SysEvent.EVENT_STEP_BEFORE, mainBatch, newBatch, equipList, params);
 		
@@ -350,7 +372,7 @@ public class DpsInstructionService extends AbstractInstructionService implements
 		}
 
 		return resultCnt;
-	}
+	}*/
 	
 	/**
 	 * 작업 병합 처리
@@ -360,7 +382,7 @@ public class DpsInstructionService extends AbstractInstructionService implements
 	 * @param params
 	 * @return
 	 */
-	private int processMerging(JobBatch mainBatch, JobBatch newBatch, Object ... params) {
+	/*private int processMerging(JobBatch mainBatch, JobBatch newBatch, Object ... params) {
 		// 1. 단포 작업 활성화 여부 
 		boolean useSinglePack = DpsBatchJobConfigUtil.isSingleSkuNpcsClassEnabled(mainBatch);
 		// 2. 호기별 배치 분리 여부
@@ -373,7 +395,7 @@ public class DpsInstructionService extends AbstractInstructionService implements
 		this.queryManager.callReturnProcedure("OP_DPS_BATCH_MERGE", inputParams, Map.class);
 		
 		return 1;
-	}
+	}*/
 		
 	/******************************************************************
 	 * 							이벤트 전송
@@ -388,9 +410,9 @@ public class DpsInstructionService extends AbstractInstructionService implements
 	 * @param params
 	 * @return
 	 */
-	private EventResultSet publishClassificationEvent(short eventStep, JobBatch batch, List<?> equipList, Object... params) {
+	/*private EventResultSet publishClassificationEvent(short eventStep, JobBatch batch, List<?> equipList, Object... params) {
 		return this.publishInstructEvent(EventConstants.EVENT_INSTRUCT_TYPE_CLASSIFICATION, eventStep, batch, equipList, params);
-	}
+	}*/
 	
 	/**
 	 * 박스 요청 이벤트 전송
@@ -400,9 +422,9 @@ public class DpsInstructionService extends AbstractInstructionService implements
 	 * @param params
 	 * @return
 	 */
-	private EventResultSet publishRequestBoxEvent(JobBatch batch, List<?> equipList, Object... params) {
+	/*private EventResultSet publishRequestBoxEvent(JobBatch batch, List<?> equipList, Object... params) {
 		return this.publishInstructEvent(EventConstants.EVENT_INSTRUCT_TYPE_BOX_REQ, SysEvent.EVENT_STEP_ALONE, batch, equipList, params);
-	}
+	}*/
 	
 	/**
 	 * 추천 로케이션 이벤트 전송
@@ -413,9 +435,9 @@ public class DpsInstructionService extends AbstractInstructionService implements
 	 * @param params
 	 * @return
 	 */
-	private EventResultSet publishRecommendCellsEvent(short eventStep, JobBatch batch, List<?> equipList, Object... params) {
+	/*private EventResultSet publishRecommendCellsEvent(short eventStep, JobBatch batch, List<?> equipList, Object... params) {
 		return this.publishInstructEvent(EventConstants.EVENT_INSTRUCT_TYPE_RECOMMEND_CELLS, eventStep, batch, equipList, params);
-	}
+	}*/
 	
 	/**
 	 * 토털 피킹 이벤트 전송

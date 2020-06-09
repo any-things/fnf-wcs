@@ -38,7 +38,7 @@ public class DasStartBatchService extends AbstractQueryService {
 		condition.addFilter("id", wcsMheHr.getWorkUnit());
 		JobBatch batch = this.queryManager.selectByCondition(JobBatch.class, condition);
 		
-		if(batch == null) {
+		if(batch == null || ValueUtil.isEqualIgnoreCase(batch.getStatus(), JobBatch.STATUS_RUNNING)) {
 			return;
 		}
 		

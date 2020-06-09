@@ -140,8 +140,10 @@ public class TowerLampJob extends AbstractFnFJob {
 				lampStatusList.add(lampStatusN);
 			}
 			
-			int totalCellCnt = lampStatusY.getCellCnt() + lampStatusN.getCellCnt();
-			float emptyCellPercent = ValueUtil.toFloat(lampStatusN.getCellCnt()) / ValueUtil.toFloat(totalCellCnt) * 100.0f;
+			int emptyYCellCnt = ValueUtil.toInteger(lampStatusY.getCellCnt(), 0);
+			int emptyNCellCnt = ValueUtil.toInteger(lampStatusN.getCellCnt(), 0);
+			int totalCellCnt = emptyYCellCnt + emptyNCellCnt;
+			float emptyCellPercent = (totalCellCnt == 0 || emptyYCellCnt == 0) ? 0 : ValueUtil.toFloat(emptyYCellCnt) / ValueUtil.toFloat(totalCellCnt) * 100.0f;
 			
 			if(emptyCellPercent >= 80.0f) {
 				lamp.setLampG(this.lampOnStatus);

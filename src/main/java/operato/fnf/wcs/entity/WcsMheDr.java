@@ -183,6 +183,12 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "outb_tcd", nullable = true, length = 20)
 	private String outbTcd;
 	
+	/**
+	 * 온라인 합/단포 구분 (D: 단포, H: 합포)
+	 */
+	@Column (name = "pack_tcd", nullable = true, length = 10)
+	private String packTcd;
+	
 	@Column (name = "cell_cd", nullable = true, length = 20)
 	private String cellCd;
 	
@@ -645,6 +651,14 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setOutbTcd(String outbTcd) {
 		this.outbTcd = outbTcd;
+	}
+
+	public String getPackTcd() {
+		return packTcd;
+	}
+
+	public void setPackTcd(String packTcd) {
+		this.packTcd = packTcd;
 	}
 
 	public String getCellCd() {

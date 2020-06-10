@@ -193,18 +193,14 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		String boxId = this.dpsBoxSendSvc.sendPackingToWms(batch, box.getOrderNo());
 		
 		// 2. 송장 발행 요청
-		this.dpsBoxSendSvc.requestInvoiceToWms(batch, boxId);
-		//String invoiceId = this.dpsBoxSendSvc.requestInvoiceToWms(batch, boxId);
+		String invoiceId = this.dpsBoxSendSvc.requestInvoiceToWms(batch, boxId);
 		
-		// 3. RFID 검수 실적 전송
-		//this.dpsBoxSendSvc.sendPackingToRfid(batch, invoiceId);
-		
-		// 4. 박스 내품 검수 항목 완료 처리
-		Map<String, Object> params = ValueUtil.newMap("domainId,batchId,invoiceId,status", box.getDomainId(), box.getBatchId(), box.getInvoiceId(), BoxPack.BOX_STATUS_EXAMED);
+		// 3. 박스 내품 검수 항목 완료 처리
+		Map<String, Object> params = ValueUtil.newMap("domainId,batchId,invoiceId,status", box.getDomainId(), box.getBatchId(), invoiceId, BoxPack.BOX_STATUS_EXAMED);
 		String sql = "update mhe_dr set status = :status where wh_cd = 'ICF' and work_unit = :batchId and waybill_no = :invoiceId";
 		this.queryManager.executeBySql(sql, params);
 		
-		// 5. Tray 박스 상태 리셋
+		// 4. Tray 박스 상태 리셋
 		String trayCd = box.getBoxTypeCd();
 		TrayBox condition = new TrayBox();
 		condition.setTrayCd(trayCd);
@@ -212,7 +208,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		tray.setStatus(BoxPack.BOX_STATUS_WAIT);
 		this.queryManager.update(tray, "status", "updaterId", "updatedAt");
 		
-		// 6. 송장 발행 - 별도 트랜잭션
+		// 5. 송장 발행 - 별도 트랜잭션
 		BeanUtil.get(DpsInspectionService.class).printInvoiceLabel(batch, box, printerId);
 	}
 

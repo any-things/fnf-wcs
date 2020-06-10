@@ -1,6 +1,7 @@
 package operato.logis.dps.service.impl;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -13,6 +14,8 @@ import org.springframework.stereotype.Component;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import operato.fnf.wcs.entity.RfidResult;
+import operato.fnf.wcs.service.send.DpsBoxSendService;
 import operato.logis.dps.DpsCodeConstants;
 import operato.logis.dps.DpsConstants;
 import operato.logis.dps.model.DpsBatchInputableBox;
@@ -33,6 +36,7 @@ import xyz.anythings.base.entity.BoxPack;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.entity.JobInput;
 import xyz.anythings.base.entity.JobInstance;
+import xyz.anythings.base.entity.TrayBox;
 import xyz.anythings.base.event.rest.DeviceProcessRestEvent;
 import xyz.anythings.base.model.BatchProgressRate;
 import xyz.anythings.base.model.EquipBatchSet;
@@ -40,6 +44,7 @@ import xyz.anythings.base.service.impl.AbstractLogisService;
 import xyz.anythings.sys.model.BaseResponse;
 import xyz.anythings.sys.util.AnyEntityUtil;
 import xyz.elidom.dbist.dml.Page;
+import xyz.elidom.sys.SysConstants;
 import xyz.elidom.util.ValueUtil;
 
 /**
@@ -69,7 +74,11 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 	 */
 	@Autowired
 	private IDpsInspectionService dpsInspectionService;
-	
+	/**
+	 * 박스 실적 전송 서비스
+	 */
+	@Autowired
+	private DpsBoxSendService dpsBoxSendSvc;
 	/*****************************************************************************************************
 	 * 										작 업 진 행 율 A P I
 	 *****************************************************************************************************
@@ -496,6 +505,56 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 	}
 	
 	/**
+	 * DPS 내품 검수 (RFID 검수)
+	 * 
+	 * @param event
+	 */
+	@EventListener(classes=DeviceProcessRestEvent.class, condition = "#event.checkCondition('/inspection/by_item', 'dps')")
+	@Order(Ordered.LOWEST_PRECEDENCE)
+	public void doInspectBoxItem(DeviceProcessRestEvent event) {
+		
+		// 1. 파라미터 
+		Map<String, Object> params = event.getRequestParams();
+		String equipCd = params.get("equipCd").toString();
+		String equipType = params.get("equipType").toString();
+		String orderNo = params.get("orderNo").toString();
+		String rfidId = params.get("rfidId").toString();
+		
+		// 2. 설비 코드로 현재 진행 중인 작업 배치 및 설비 정보 조회 
+		EquipBatchSet equipBatchSet = DpsServiceUtil.findBatchByEquip(event.getDomainId(), equipType, equipCd);
+		JobBatch batch = equipBatchSet.getBatch();
+		
+		// 3. 검수 실적 
+		this.dpsInspectionService.findInspectionByOrder(batch, orderNo, true);
+		
+		// 4. rfidId로 RFID 시스템으로 호출 RFID코드 88바코드변환 FUNCTION : RFID_IF.FN_RFID_DECODING
+		// String sql = "SELECT RFID_IF.FN_RFID_DECODING(:rfidId) FROM DUAL";
+		// Map<String, Object> funcParams = ValueUtil.newMap("rfidId", rfidId);
+		// String skuBarcd = this.queryManager.selectBySql(sql, funcParams, String.class);
+		
+		// 5. RFID 상태값 체크 프로시져 호출
+		Map<String, Object> procParams = ValueUtil.newMap("IN_CD_RFIDUID", rfidId, null, null);
+		Map<?, ?> result = this.queryManager.callReturnProcedure("RFID_IF.PRO_RFIDUID_STATUS_CHECK", procParams, Map.class);
+		String successYn = ValueUtil.toString(result.get("OUT_CONFIRM"));
+		
+		// 6. RFID가 문제가 없는 경우 
+		if(ValueUtil.isEqualIgnoreCase(successYn, LogisConstants.Y_CAP_STRING)) {
+			RfidResult rfid = new RfidResult();
+			rfid.setRfidId(rfidId);
+			rfid.setBrandCd(ValueUtil.toString(result.get("OUT_DEPART")));
+			rfid.setSkuCd(ValueUtil.toString(result.get("OUT_ITEM_CD")));
+			event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, rfid));
+			
+		// 7. RFID가 문제가 있는 경우 
+		} else {
+			String errorMsg = ValueUtil.isNotEmpty(result.get("OUT_MSG")) ? result.get("OUT_MSG").toString() : SysConstants.EMPTY_STRING;
+			event.setReturnResult(new BaseResponse(false, errorMsg, null));
+		}
+		
+		event.setExecuted(true);
+	}
+	
+	/**
 	 * DPS 송장 (박스) 분할
 	 * 
 	 * @param event
@@ -564,6 +623,36 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 	}
 	
 	/**
+	 * DPS RFID 출고 검수 완료
+	 * 
+	 * @param event
+	 */
+	@EventListener(classes=DeviceProcessRestEvent.class, condition = "#event.checkCondition('/inspection/finish_by_rfid', 'dps')")
+	@Order(Ordered.LOWEST_PRECEDENCE)
+	public void finishInspectionByRFID(DeviceProcessRestEvent event) {
+		// 1. 파라미터 
+		Map<String, Object> params = event.getRequestParams();
+		String equipCd = params.get("equipCd").toString();
+		String equipType = params.get("equipType").toString();
+		String orderNo = params.get("orderNo").toString();
+		String printerId = params.get("printerId").toString();
+		
+		// 2. DPS RFID 출고 검수 완료
+		List<Map<String, Object>> rfidList = event.getRequestPostBody();
+		
+		// 2. 설비 코드로 현재 진행 중인 작업 배치 및 설비 정보 조회 
+		EquipBatchSet equipBatchSet = DpsServiceUtil.findBatchByEquip(event.getDomainId(), equipType, equipCd);
+		JobBatch batch = equipBatchSet.getBatch();
+		
+		// 3. 검수 완료
+		this.finishInspectionByRfid(batch, orderNo, rfidList, printerId);
+
+		// 4. 이벤트 처리 결과 셋팅
+		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, null));
+		event.setExecuted(true);
+	}
+	
+	/**
 	 * DPS 송장 출력 
 	 * 
 	 * @param event
@@ -571,7 +660,6 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 	@EventListener(classes=DeviceProcessRestEvent.class, condition = "#event.checkCondition('/print_invoice', 'dps')")
 	@Order(Ordered.LOWEST_PRECEDENCE)
 	public void printInvoiceLabel(DeviceProcessRestEvent event) {
-		
 		// 1. 파라미터 
 		Map<String, Object> params = event.getRequestParams();
 		String equipCd = params.get("equipCd").toString();
@@ -628,4 +716,60 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		event.setExecuted(true);
 	}
 
+	/**
+	 * RFID 검수 처리 ...
+	 * 
+	 * @param batch
+	 * @param orderNo
+	 * @param rfidIdList
+	 * @param printerId
+	 */
+	private void finishInspectionByRfid(JobBatch batch, String orderNo, List<Map<String, Object>> rfidIdList, String printerId) {
+		// 1. 주문 번호로 박스 조회 
+		DpsInspection inspection = this.dpsInspectionService.findInspectionByOrder(batch, orderNo, true);
+		
+		// 2. WMS로 박스 실적 전송
+		String boxId = this.dpsBoxSendSvc.sendPackingToWms(batch, orderNo);
+		
+		// 3. 송장 발행 요청
+		String invoiceId = this.dpsBoxSendSvc.requestInvoiceToWms(batch, boxId);
+		
+		// 4. RFID 검수 실적 저장
+		List<RfidResult> rfidResultList = new ArrayList<RfidResult>(rfidIdList.size());
+		for(Map<String, Object> rfidInfo : rfidIdList) {
+			RfidResult result = new RfidResult();
+			result.setBatchId(batch.getId());
+			result.setBoxId(boxId);
+			result.setJobDate(batch.getJobDate().replace(LogisConstants.DASH, LogisConstants.EMPTY_STRING));
+			result.setRfidId(ValueUtil.toString(rfidInfo.get("rfid_id")));
+			result.setShopCd(ValueUtil.toString(rfidInfo.get("shop_cd")));
+			result.setBrandCd(ValueUtil.toString(rfidInfo.get("brand_cd")));
+			result.setSkuCd(ValueUtil.toString(rfidInfo.get("sku_cd")));
+			result.setOrderQty(ValueUtil.toInteger(rfidInfo.get("order_qty")));
+			result.setInvoiceId(invoiceId);
+			result.setOrderNo(orderNo);
+			rfidResultList.add(result);
+		}
+		this.queryManager.insertBatch(rfidResultList);
+		
+		// 5. RFID 검수 실적 전송
+		this.dpsBoxSendSvc.sendPackingToRfid(batch, invoiceId);
+		
+		// 6. 박스 내품 검수 항목 완료 처리
+		Map<String, Object> params = ValueUtil.newMap("domainId,batchId,invoiceId,status", batch.getDomainId(), batch.getId(), invoiceId, BoxPack.BOX_STATUS_EXAMED);
+		String sql = "update mhe_dr set status = :status where wh_cd = 'ICF' and work_unit = :batchId and waybill_no = :invoiceId";
+		this.queryManager.executeBySql(sql, params);
+		
+		// 7. Tray 박스 상태 리셋
+		String trayCd = inspection.getTrayCd();
+		TrayBox condition = new TrayBox();
+		condition.setTrayCd(trayCd);
+		TrayBox tray = this.queryManager.selectByCondition(TrayBox.class, condition);
+		tray.setStatus(BoxPack.BOX_STATUS_WAIT);
+		this.queryManager.update(tray, "status", "updaterId", "updatedAt");
+		
+		// 8. 송장 발행 - 별도 트랜잭션
+		this.dpsInspectionService.printInvoiceLabel(batch, inspection, printerId);
+	}
+	
 }

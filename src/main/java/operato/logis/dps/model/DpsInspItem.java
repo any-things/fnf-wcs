@@ -8,6 +8,11 @@ import xyz.anythings.base.entity.SKU;
  * @author shortstop
  */
 public class DpsInspItem {
+	
+	/**
+	 * 매장 코드 
+	 */
+	private String shopCd;
 	/**
 	 * 상품 코드 
 	 */
@@ -48,7 +53,8 @@ public class DpsInspItem {
 	public DpsInspItem() {
 	}
 	
-	public DpsInspItem(String skuCd, String skuNm, String skuBarcd, Integer pickedQty, Float skuWeight) {
+	public DpsInspItem(String shopCd, String skuCd, String skuNm, String skuBarcd, Integer pickedQty, Float skuWeight) {
+		this.shopCd = shopCd;
 		this.skuCd = skuCd;
 		this.skuNm = skuNm;
 		this.skuBarcd = skuBarcd;
@@ -56,7 +62,8 @@ public class DpsInspItem {
 		this.setSkuWeight(skuWeight);
 	}
 	
-	public DpsInspItem(String skuCd, String skuNm, String skuBarcd, Integer pickedQty) {
+	public DpsInspItem(String shopCd, String skuCd, String skuNm, String skuBarcd, Integer pickedQty) {
+		this.shopCd = shopCd;
 		this.skuCd = skuCd;
 		this.skuNm = skuNm;
 		this.skuBarcd = skuBarcd;
@@ -70,6 +77,14 @@ public class DpsInspItem {
 		this.pickedQty = pickedQty;
 	}
 	
+	public String getShopCd() {
+		return shopCd;
+	}
+
+	public void setShopCd(String shopCd) {
+		this.shopCd = shopCd;
+	}
+
 	public String getSkuCd() {
 		return skuCd;
 	}

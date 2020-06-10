@@ -218,12 +218,12 @@ public class DpsInspection {
 		this.items = items;
 	}
 	
-	public void addItem(String skuCd, String skuNm, String skuBarcd, Integer pickedQty) {
+	public void addItem(String shopCd, String skuCd, String skuNm, String skuBarcd, Integer pickedQty) {
 		if(this.items == null) {
 			this.items = new ArrayList<DpsInspItem>();
 		}
 		
-		this.items.add(new DpsInspItem(skuCd, skuNm, skuBarcd, pickedQty));
+		this.items.add(new DpsInspItem(shopCd, skuCd, skuNm, skuBarcd, pickedQty));
 	}
 	
 }

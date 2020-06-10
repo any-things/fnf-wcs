@@ -9,6 +9,8 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import operato.fnf.wcs.entity.RfidDpsInspResult;
@@ -29,6 +31,7 @@ import xyz.elidom.sys.SysConstants;
 import xyz.elidom.sys.util.DateUtil;
 import xyz.elidom.sys.util.SettingUtil;
 import xyz.elidom.sys.util.ValueUtil;
+import xyz.elidom.util.BeanUtil;
 
 /**
  * DPS 박스 실적 전송 서비스
@@ -70,7 +73,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 				// 1. 주문 별 박스 번호 생성
 				if(ValueUtil.isEmpty(boxId)) {
 					// 1.1 박스 Unique ID 생성
-					boxId = ValueUtil.isEmpty(boxedOrder.getBoxId()) ? this.newBoxId(batch.getDomainId(), batch.getEquipGroupCd(), todayStr) : boxedOrder.getBoxId();
+					boxId = ValueUtil.isEmpty(boxedOrder.getBoxId()) ? BeanUtil.get(DpsBoxSendService.class).newBoxId(batch.getDomainId(), batch.getEquipGroupCd(), todayStr) : boxedOrder.getBoxId();
 					boxedOrder.setBoxId(boxId);
 				}
 				
@@ -251,7 +254,8 @@ public class DpsBoxSendService extends AbstractQueryService {
 	 * @param todayStr
 	 * @return
 	 */
-	private String newBoxId(Long domainId, String mheNo, String todayStr) {
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public String newBoxId(Long domainId, String mheNo, String todayStr) {
 		//Prefix '70' + YYMM(4자리) + 장비식별(2자리) + Cycle일련번호(6자리)
 		//ex) 702005M1000001
 		

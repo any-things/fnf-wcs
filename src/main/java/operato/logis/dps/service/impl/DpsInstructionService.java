@@ -122,14 +122,14 @@ public class DpsInstructionService extends AbstractInstructionService implements
 		int retCnt = this.queryManager.executeBySql(sql, condition);
 		
 		// 2. 메인 작업 배치 주문 수 업데이트
-		sql = "select COALESCE(count(distinct(ref_no)), 0) as result from mhe_dr where wh_cd = :whCd and work_unit = :mainBatchId";
-		int orderCnt = this.queryManager.executeBySql(sql, condition);
+		sql = "select count(distinct(ref_no)) as result from mhe_dr where wh_cd = :whCd and work_unit = :mainBatchId";
+		int orderCnt = this.queryManager.selectBySql(sql, condition, Integer.class);
 		mainBatch.setParentOrderQty(orderCnt);
 		mainBatch.setBatchOrderQty(orderCnt);
 		
 		// 3. 메인 작업 배치 주문 수량 업데이트
 		sql = "select sum(pick_qty) as result from mhe_dr where wh_cd = :whCd and work_unit = :mainBatchId";
-		int pickQty = this.queryManager.executeBySql(sql, condition);
+		int pickQty = this.queryManager.selectBySql(sql, condition, Integer.class);
 		mainBatch.setParentPcs(pickQty);
 		mainBatch.setBatchPcs(pickQty);
 		

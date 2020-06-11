@@ -218,6 +218,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		
 		// 2. 송장 발행 요청
 		String invoiceId = this.dpsBoxSendSvc.requestInvoiceToWms(batch, box.getBoxId());
+		box.setInvoiceId(invoiceId);
 		
 		// 3. 박스 내품 검수 항목 완료 처리
 		Map<String, Object> params = ValueUtil.newMap("domainId,batchId,invoiceId,status", box.getDomainId(), box.getBatchId(), invoiceId, BoxPack.BOX_STATUS_EXAMED);

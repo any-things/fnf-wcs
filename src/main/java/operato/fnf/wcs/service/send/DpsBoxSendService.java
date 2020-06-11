@@ -140,19 +140,18 @@ public class DpsBoxSendService extends AbstractQueryService {
 		String waybillNo = null;
 		
 		if(ValueUtil.isNotEmpty(boxedOrders)) {
-			for(WcsMheDr boxedOrder : boxedOrders) {
-				// 1. 주문 별 박스 번호 생성
-				if(ValueUtil.isEmpty(waybillNo)) {
-					// 송장 번호 생성
-					waybillNo = ValueUtil.isEmpty(boxedOrder.getWaybillNo()) ? this.newWaybillNo(boxedOrder) : boxedOrder.getWaybillNo();
+			WcsMheDr item = boxedOrders.get(0);
+			waybillNo = boxedOrders.get(0).getWaybillNo();
+			
+			if(ValueUtil.isEmpty(waybillNo)) {
+				waybillNo = this.newWaybillNo(item);
+				
+				for(WcsMheDr boxedOrder : boxedOrders) {
+					boxedOrder.setWaybillNo(waybillNo);
 				}
 				
-				// 2. 박스 번호, 박스 전송 시간 설정
-				boxedOrder.setWaybillNo(waybillNo);
-			}
-			
-			// 3. 주문 상세 정보 업데이트
-			this.queryManager.updateBatch(boxedOrders, "waybillNo");
+				this.queryManager.updateBatch(boxedOrders, "waybillNo");
+			}			
 		}
 		
 		return waybillNo;

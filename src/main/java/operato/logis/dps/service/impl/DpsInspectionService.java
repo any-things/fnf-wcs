@@ -55,21 +55,45 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	/**
 	 * 검수 정보 조회
 	 * 
+	 * @param domainId
+	 * @param batchId
+	 * @param equipGroupCd
 	 * @param sql
 	 * @param params
 	 * @param exceptionWhenEmpty
 	 * @return
 	 */
-	private DpsInspection findInspection(String sql, Map<String, Object> params, boolean exceptionWhenEmpty) {
+	private DpsInspection findInspection(Long domainId, String batchId, String equipGroupCd, String sql, Map<String, Object> params, boolean exceptionWhenEmpty) {
 		
 		DpsInspection inspection = this.queryManager.selectBySql(sql, params, DpsInspection.class);
 		
 		if(inspection == null && exceptionWhenEmpty) {
 			Object data = (params == null) ? null : (params.containsKey("boxId") ? params.get("boxId") : (params.containsKey("orderNo") ? params.get("orderNo") : (params.containsKey("invoiceId") ? params.get("invoiceId") : null)));
 			throw ThrowUtil.newNotFoundRecord("terms.label.box", ValueUtil.toString(data));
+			
 		} else {
+			if(ValueUtil.isEmpty(inspection.getBoxId())) {
+				String orderNo = inspection.getOrderNo();
+				String boxId = this.dpsBoxSendSvc.generateBoxIdByOrderNo(domainId, batchId, equipGroupCd, orderNo);
+				inspection.setBoxId(boxId);
+			}
+			
 			return inspection;
 		}
+	}
+	
+	/**
+	 * 검수 정보 조회
+	 * 
+	 * @param batch
+	 * @param sql
+	 * @param params
+	 * @param exceptionWhenEmpty
+	 * @return
+	 */
+	private DpsInspection findInspection(JobBatch batch, String sql, Map<String, Object> params, boolean exceptionWhenEmpty) {
+		
+		return this.findInspection(batch.getDomainId(), batch.getId(), batch.getEquipGroupCd(), sql, params, exceptionWhenEmpty);
 	}
 	
 	/**
@@ -111,7 +135,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 			params.put("invoiceId", inputId);
 		}
 
-		DpsInspection inspection = this.findInspection(sql, params, exceptionWhenEmpty);
+		DpsInspection inspection = this.findInspection(batch, sql, params, exceptionWhenEmpty);
 		if(inspection != null && (ValueUtil.isEqualIgnoreCase(inputType, "box") || ValueUtil.isEqualIgnoreCase(inputType, "tray"))) {
 			inspection.setBoxType(inputType);
 		}
@@ -124,7 +148,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		
 		String sql = this.dpsInspectionQueryStore.getFindInspectionQuery();
 		Map<String, Object> params = ValueUtil.newMap("domainId,batchId,boxId", batch.getDomainId(), batch.getId(), trayCd);
-		DpsInspection inspection = this.findInspection(sql, params, exceptionWhenEmpty);
+		DpsInspection inspection = this.findInspection(batch, sql, params, exceptionWhenEmpty);
 
 		if(inspection != null) {
 			inspection.setBoxType("tray");
@@ -138,7 +162,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		
 		String sql = this.dpsInspectionQueryStore.getFindInspectionQuery();
 		Map<String, Object> params = ValueUtil.newMap("domainId,batchId,boxId", batch.getDomainId(), batch.getId(), boxId);
-		DpsInspection inspection = this.findInspection(sql, params, exceptionWhenEmpty);
+		DpsInspection inspection = this.findInspection(batch, sql, params, exceptionWhenEmpty);
 
 		if(inspection != null) {
 			inspection.setBoxType("box");
@@ -152,7 +176,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		
 		String sql = this.dpsInspectionQueryStore.getFindInspectionQuery();
 		Map<String, Object> params = ValueUtil.newMap("domainId,batchId,invoiceId", batch.getDomainId(), batch.getId(), invoiceId);
-		DpsInspection inspection = this.findInspection(sql, params, exceptionWhenEmpty);
+		DpsInspection inspection = this.findInspection(batch, sql, params, exceptionWhenEmpty);
 		return this.searchInpsectionItems(inspection, params);
 	}
 	
@@ -161,7 +185,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		
 		String sql = this.dpsInspectionQueryStore.getFindInspectionQuery();
 		Map<String, Object> params = ValueUtil.newMap("domainId,batchId,orderNo", batch.getDomainId(), batch.getId(), orderNo);
-		DpsInspection inspection = this.findInspection(sql, params, exceptionWhenEmpty);
+		DpsInspection inspection = this.findInspection(batch, sql, params, exceptionWhenEmpty);
 		return this.searchInpsectionItems(inspection, params);
 	}
 
@@ -169,8 +193,8 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	public DpsInspection findInspectionByBoxPack(BoxPack box) {
 		
 		String sql = this.dpsInspectionQueryStore.getFindInspectionQuery();
-		Map<String, Object> params = ValueUtil.newMap("domainId,batchId,invoiceId", box.getDomainId(), box.getBatchId(), box.getInvoiceId());
-		DpsInspection inspection = this.findInspection(sql, params, true);
+		Map<String, Object> params = ValueUtil.newMap("domainId,batchId,orderNo", box.getDomainId(), box.getBatchId(), box.getOrderNo());
+		DpsInspection inspection = this.findInspection(box.getDomainId(), box.getBatchId(), box.getEquipGroupCd(), sql, params, true);		
 		return this.searchInpsectionItems(inspection, params);
 	}
 
@@ -190,10 +214,10 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	@Override
 	public void finishInspection(JobBatch batch, BoxPack box, Float boxWeight, String printerId) {
 		// 1. WMS로 박스 실적 전송
-		String boxId = this.dpsBoxSendSvc.sendPackingToWms(batch, box.getOrderNo());
+		this.dpsBoxSendSvc.sendPackingToWms(batch, box.getOrderNo());
 		
 		// 2. 송장 발행 요청
-		String invoiceId = this.dpsBoxSendSvc.requestInvoiceToWms(batch, boxId);
+		String invoiceId = this.dpsBoxSendSvc.requestInvoiceToWms(batch, box.getBoxId());
 		
 		// 3. 박스 내품 검수 항목 완료 처리
 		Map<String, Object> params = ValueUtil.newMap("domainId,batchId,invoiceId,status", box.getDomainId(), box.getBatchId(), invoiceId, BoxPack.BOX_STATUS_EXAMED);
@@ -280,7 +304,6 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		
 		// 인쇄 요청
 		this.printerCtrl.printLabelByLabelTemplate(agentUrl, printerName, printEvent.getPrintTemplate(), printEvent.getTemplateParams());
-		
 		//this.eventPublisher.publishEvent(printEvent);
 	}
 

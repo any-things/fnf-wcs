@@ -729,17 +729,17 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		DpsInspection inspection = this.dpsInspectionService.findInspectionByOrder(batch, orderNo, true);
 		
 		// 2. WMS로 박스 실적 전송
-		String boxId = this.dpsBoxSendSvc.sendPackingToWms(batch, orderNo);
+		this.dpsBoxSendSvc.sendPackingToWms(batch, orderNo);
 		
 		// 3. 송장 발행 요청
-		String invoiceId = this.dpsBoxSendSvc.requestInvoiceToWms(batch, boxId);
+		String invoiceId = this.dpsBoxSendSvc.requestInvoiceToWms(batch, inspection.getBoxId());
 		
 		// 4. RFID 검수 실적 저장
 		List<RfidResult> rfidResultList = new ArrayList<RfidResult>(rfidIdList.size());
 		for(Map<String, Object> rfidInfo : rfidIdList) {
 			RfidResult result = new RfidResult();
 			result.setBatchId(batch.getId());
-			result.setBoxId(boxId);
+			result.setBoxId(inspection.getBoxId());
 			result.setJobDate(batch.getJobDate().replace(LogisConstants.DASH, LogisConstants.EMPTY_STRING));
 			result.setRfidId(ValueUtil.toString(rfidInfo.get("rfid_id")));
 			result.setShopCd(ValueUtil.toString(rfidInfo.get("shop_cd")));

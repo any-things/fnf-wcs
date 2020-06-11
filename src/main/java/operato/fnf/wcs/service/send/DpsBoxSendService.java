@@ -31,7 +31,6 @@ import xyz.elidom.sys.SysConstants;
 import xyz.elidom.sys.util.DateUtil;
 import xyz.elidom.sys.util.SettingUtil;
 import xyz.elidom.sys.util.ValueUtil;
-import xyz.elidom.util.BeanUtil;
 
 /**
  * DPS 박스 실적 전송 서비스
@@ -52,16 +51,60 @@ public class DpsBoxSendService extends AbstractQueryService {
 	private static final String RFID_EXAMED_INSERT_SQL = "INSERT INTO if_rfidhistory_recv(DT_IF_DATE, NO_IF_SEQ, TP_GUBUN, CD_COMPANY, CD_DEPART, DT_DATE, CD_SHOP, CD_BILL, CD_SUBBILL, CD_RFIDUID, TP_HISTORY, TP_STATUS, CD_REGISTER, DM_BF_RECV) VALUES (:today, RFID_IF.SEQ_IF_RFIDHISTORY_RECV.NEXTVAL, 'I', 'FnF', :brandCd, :today, :shopCd, :waybillNo, '1', :rfidUid, '42', '0', :creatorId, sysdate)";	
 	
 	/**
+	 * 주문 번호로 Unique 박스 ID 생성
+	 * 
+	 * @param batch
+	 * @param orderNo
+	 */
+	public String generateBoxIdByOrderNo(JobBatch batch, String orderNo) {
+		
+		return this.generateBoxIdByOrderNo(batch.getDomainId(), batch.getId(), batch.getEquipGroupCd(), orderNo);
+	}
+	
+	/**
+	 * 주문 번호로 Unique 박스 ID 생성
+	 * 
+	 * @param domainId
+	 * @param batchId
+	 * @param equipGroupCd
+	 * @param orderNo
+	 * @return
+	 */
+	public String generateBoxIdByOrderNo(Long domainId, String batchId, String equipGroupCd, String orderNo) {
+		
+		List<WcsMheDr> orderItems = this.searchBoxItemsByOrder(batchId, orderNo);
+		String boxId = null;
+		
+		if(ValueUtil.isNotEmpty(orderItems)) {
+			boxId = orderItems.get(0).getBoxId();
+			
+			if(ValueUtil.isEmpty(boxId)) {
+				// 새로운 박스 ID 생성
+				boxId = this.newBoxId(domainId, equipGroupCd, DateUtil.todayStr("yyyyMMdd"));
+				
+				for(WcsMheDr boxedOrder : orderItems) {
+					// 박스 번호, 박스 전송 시간 설정
+					boxedOrder.setBoxId(boxId);
+				}
+				
+				// 주문 상세 정보 업데이트
+				this.queryManager.updateBatch(orderItems, "boxId");
+			}
+		}
+		
+		return boxId;
+	}
+	
+	/**
 	 * 패킹 실적 WMS로 전송
 	 * 
 	 * @param batch
 	 * @param orderNo
 	 */
 	//@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public String sendPackingToWms(JobBatch batch, String orderNo) {
+	public void sendPackingToWms(JobBatch batch, String orderNo) {
 		
 		List<WcsMheDr> orderItems = this.searchBoxItemsByOrder(batch.getId(), orderNo);
-		String boxId = null;
 		
 		if(ValueUtil.isNotEmpty(orderItems)) {
 			IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
@@ -70,28 +113,18 @@ public class DpsBoxSendService extends AbstractQueryService {
 			String currentTimeStr = DateUtil.dateTimeStr(currentTime, "yyyyMMddHHmmss");
 			
 			for(WcsMheDr boxedOrder : orderItems) {
-				// 1. 주문 별 박스 번호 생성
-				if(ValueUtil.isEmpty(boxId)) {
-					// 1.1 박스 Unique ID 생성
-					boxId = ValueUtil.isEmpty(boxedOrder.getBoxId()) ? BeanUtil.get(DpsBoxSendService.class).newBoxId(batch.getDomainId(), batch.getEquipGroupCd(), todayStr) : boxedOrder.getBoxId();
-					boxedOrder.setBoxId(boxId);
-				}
-				
-				// 2. 박스 번호, 박스 전송 시간 설정
-				boxedOrder.setBoxId(boxId);
+				// 1. 박스 번호, 박스 전송 시간 설정
 				boxedOrder.setBoxResultIfAt(currentTime);
 				boxedOrder.setStatus("S");
 				
-				// 3. WMS 박스 실적 전송 
-				Map<String, Object> params = ValueUtil.newMap("today,whCd,boxId,orderNo,brandCd,skuCd,pickedQty,jobDate,currentTime", todayStr, boxedOrder.getWhCd(), boxId, boxedOrder.getRefNo(), boxedOrder.getStrrId(), boxedOrder.getItemCd(), boxedOrder.getCmptQty(), boxedOrder.getOutbEctDate(), currentTimeStr);
+				// 2. WMS 박스 실적 전송 
+				Map<String, Object> params = ValueUtil.newMap("today,whCd,boxId,orderNo,brandCd,skuCd,pickedQty,jobDate,currentTime", todayStr, boxedOrder.getWhCd(), boxedOrder.getBoxId(), boxedOrder.getRefNo(), boxedOrder.getStrrId(), boxedOrder.getItemCd(), boxedOrder.getCmptQty(), boxedOrder.getOutbEctDate(), currentTimeStr);
 				wmsQueryMgr.executeBySql(WMS_PACK_INSERT_SQL, params);
 			}
 			
-			// 4. 주문 상세 정보 업데이트
-			this.queryManager.updateBatch(orderItems, "status", "boxId", "boxResultIfAt");
+			// 3. 주문 상세 정보 업데이트
+			this.queryManager.updateBatch(orderItems, "status", "boxResultIfAt");
 		}
-		
-		return boxId;
 	}
 	
 	/**
@@ -258,7 +291,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 	public String newBoxId(Long domainId, String mheNo, String todayStr) {
 		//Prefix '70' + YYMM(4자리) + 장비식별(2자리) + Cycle일련번호(6자리)
 		//ex) 702005M1000001
-		
+		mheNo = ValueUtil.isEmpty(mheNo) ? "M1" : mheNo;
 		String prefix = "70";
 		String yearMonth = todayStr.substring(2, 6);
 		Integer serialNo = RangedSeq.increaseSequence(domainId, "DPS_UNIQUE_BOX_ID", prefix, "YEAR_MONTH", yearMonth, "MHE_NO", mheNo);

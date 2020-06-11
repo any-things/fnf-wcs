@@ -89,33 +89,7 @@ public class DpsInstructionService extends AbstractInstructionService implements
 	}
 
 	@Override
-	public int mergeBatch(JobBatch mainBatch, JobBatch newBatch, Object... params) {
-//		// 1. 작업 배치 정보로 설비 리스트 조회
-//		List<?> equipList = this.searchEquipListByBatch(mainBatch, null);
-//		
-//		// 2. 병합의 경우에는 메인 배치의 설정 셋을 가져온다 .
-//		newBatch.setJobConfigSetId(mainBatch.getJobConfigSetId());
-//		newBatch.setIndConfigSetId(mainBatch.getIndConfigSetId());
-//		this.queryManager.update(newBatch , "jobConfigSetId","indConfigSetId");
-//		
-//		// 2. 소분류 코드, 방면 분류 코드 값을 설정에 따라서 주문 정보에 추가한다.
-//		this.doUpdateClassificationCodes(newBatch, params);
-//
-//		// 3. 대상 분류 
-//		this.doClassifyOrders(newBatch, equipList, params);
-//		
-//		// 4. 추천 로케이션 정보 생성
-//		this.doRecommendCells(newBatch, equipList, params);
-//		
-//		// 5. 작업 병합 처리
-//		int retCnt = this.doMergeBatch(mainBatch, newBatch, equipList, params);
-//		
-//		// 6. 작업 병합 후 박스 요청 
-//		this.doRequestBox(mainBatch, equipList, params);
-//		
-//		// 7. 병합 건수 리턴
-//		return retCnt;
-		
+	public int mergeBatch(JobBatch mainBatch, JobBatch newBatch, Object... params) {		
 		// 1. 예정 주문 정보의 배치 ID 업데이트
 		Map<String, Object> condition = ValueUtil.newMap("mainBatchId,newBatchId,whCd", mainBatch.getId(), newBatch.getId(), "ICF");
 		String sql = "update mhe_dr set work_unit = :mainBatchId where wh_cd = :whCd and work_unit = :newBatchId";
@@ -135,6 +109,12 @@ public class DpsInstructionService extends AbstractInstructionService implements
 		
 		// 4. 메인 작업 배치 정보 업데이트
 		this.queryManager.update(mainBatch, "parentOrderQty", "batchOrderQty", "parentPcs", "batchPcs");
+		
+		// 5. 병합 배치 정보 업데이트 
+		newBatch.setBatchGroupId(mainBatch.getId());
+		newBatch.setInstructedAt(new Date());
+		newBatch.setStatus(JobBatch.STATUS_MERGED);
+		this.queryManager.update(newBatch, "batchGroupId", "status", "instructedAt");
 		
 		// 5. 병합 건수 리턴
 		return retCnt;

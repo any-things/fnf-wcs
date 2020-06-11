@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import operato.fnf.wcs.entity.WmsMheHr;
 import operato.fnf.wcs.query.store.FnFDpsQueryStore;
 import operato.fnf.wcs.service.model.DpsJobAssign;
 import xyz.anythings.base.entity.JobBatch;
@@ -18,6 +19,7 @@ import xyz.anythings.base.entity.Stock;
 import xyz.anythings.sys.event.model.ErrorEvent;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.anythings.sys.util.AnyEntityUtil;
+import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.util.BeanUtil;
 import xyz.elidom.util.ValueUtil;
@@ -59,7 +61,7 @@ public class DpsJobAssignService extends AbstractQueryService {
 		
 		// 3. 트랜잭션 분리를 위해 자신을 레퍼런스, 트랜잭션 분리는 각 주문 단위 ...
 		DpsJobAssignService dpsJobAssignSvc = BeanUtil.get(DpsJobAssignService.class);
-		List<String> skipOrderList = new ArrayList<String>();
+		List<String> skipOrderList = this.searchSkipOrders(batch);
 		
 		// 4. 배치 내 SKU가 적치된 재고 수량을 기준으로 많은 재고 조회
 		for(Stock stock : stockList) {
@@ -86,7 +88,7 @@ public class DpsJobAssignService extends AbstractQueryService {
 					skipOrderList.add(order.getOrderNo());
 					break;
 				}
-				
+								
 				// 4.5.2 해당 주문 별로 주문별 상품별 가용 재고 조회
 				List<DpsJobAssign> candidates = this.searchAssignableCandidates(batch, order.getOrderNo());
 				
@@ -146,6 +148,30 @@ public class DpsJobAssignService extends AbstractQueryService {
 		return this.queryManager.selectListBySql(sql, params, Order.class, 0, 0);
 	}
 	
+	/**
+	 * 브랜드 믹스 주문 조회 
+	 * 
+	 * @param batch
+	 * @return
+	 */
+	private List<String> searchSkipOrders(JobBatch batch) {
+		// 1. 브랜드 합포 주문 번호 조회
+		String sql = "SELECT REF_NO FROM MPS_BRAND_MIX_REF_NO WHERE WH_CD = :whCd";
+		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
+		Map<String, Object> params = ValueUtil.newMap("whCd,batchId", "ICF", batch.getId());
+		List<String> orderNoList = wmsQueryMgr.selectListBySql(sql, params, String.class, 0, 0);
+
+		// 2. 브랜드 합포 주문 중에 MLB, MLB Kids 두 개의 주문이 병합이 되었는지 체크
+		if(ValueUtil.isNotEmpty(orderNoList)) {
+			// 브랜드 합포(MLB, MLB Kids 두 개의 브랜드)이면서 현재 두 브랜드의 배치 정보가 모두 진행 중인지 체크하여 둘 중 하나라도 없으면 스킵
+			sql = "select order_no from (select ref_no as order_no, count(distinct(strr_id)) as cnt from mhe_dr where wh_cd = :whCd and work_unit = :batchId and dps_assign_yn = 'N' and ref_no in (:orderNoList) group by ref_no) a where a.cnt = 1";
+			return this.queryManager.selectListBySql(sql, params, String.class, 0, 0);
+			
+		} else {
+			return new ArrayList<String>();
+		}
+	}
+		
 	/**
 	 * 작업 할당에 필요한 주문 및 재고 조합 정보 조회
 	 *  

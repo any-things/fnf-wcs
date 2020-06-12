@@ -27,6 +27,9 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "id", nullable = false, length = 40)
 	private String id;
 	
+	@Column (name = "mhe_dr_id", nullable = false, length = 40)
+	private String mheDrId;
+	
 	@Column (name = "wh_cd", nullable = false, length = 20)
 	private String whCd;
 	
@@ -244,6 +247,14 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setId(String id) {
 		this.id = id;
+	}
+	
+	public String getMheDrId() {
+		return mheDrId;
+	}
+	
+	public void setMheDrId(String mheDrId) {
+		this.mheDrId = mheDrId;
 	}
 
 	public String getWhCd() {

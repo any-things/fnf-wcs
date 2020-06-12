@@ -3,6 +3,7 @@ package operato.fnf.wcs.service.assign;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -261,12 +262,12 @@ public class DpsJobAssignService extends AbstractQueryService {
 		// 2. DpsJobInstances 데이터 생성 
 		StringJoiner dpsJobQry = new StringJoiner("\n");
 		
-		dpsJobQry.add("insert into dps_job_instances(id, dps_assign_yn, dps_assign_at, cell_cd, status, wh_cd, strr_id, strr_nm, work_date, work_unit, biz_type, wave_no, workseq_no, outb_no, ref_no, chute_no, outb_ect_date, shipto_id, shipto_nm, cust_id, cust_nm, addr_1, addr_2, zip_no, tel_no, region_cd, region_nm, course_cd, course_nm, shipowner_cd, carrier_cd, carrier_nm, zone_cd, location_cd, pick_seq, assort_yn, item_cd, item_nm, item_season, item_style, item_color, item_size, barcode, barcode2, pick_qty, cmpt_qty, multiply_qty, ins_datetime, ins_person_id, mhe_no, mhe_datetime, indirect_item_yn, assort_in_qty, item_bcd, item_gcd, outb_tcd, pack_tcd, rfid_item_yn, box_input_seq, box_no, box_id, waybill_no, box_input_at, box_input_if_yn, box_input_if_at, box_result_if_at)")
-		         .add("select id, 'Y',now(),:cellCd,'A',wh_cd, strr_id, strr_nm, work_date, work_unit, biz_type, wave_no, workseq_no, outb_no, ref_no, chute_no, outb_ect_date, shipto_id, shipto_nm, cust_id, cust_nm, addr_1, addr_2, zip_no, tel_no, region_cd, region_nm, course_cd, course_nm, shipowner_cd, carrier_cd, carrier_nm, zone_cd, location_cd, pick_seq, assort_yn, item_cd, item_nm, item_season, item_style, item_color, item_size, barcode, barcode2, pick_qty, cmpt_qty, multiply_qty, ins_datetime, ins_person_id, mhe_no, mhe_datetime, indirect_item_yn, assort_in_qty, item_bcd, item_gcd, outb_tcd, pack_tcd, rfid_item_yn, box_input_seq, box_no, box_id, waybill_no, box_input_at, box_input_if_yn, box_input_if_at, box_result_if_at")
+		dpsJobQry.add("insert into dps_job_instances(id, mhe_dr_id, dps_assign_yn, dps_assign_at, cell_cd, status, wh_cd, strr_id, strr_nm, work_date, work_unit, biz_type, wave_no, workseq_no, outb_no, ref_no, chute_no, outb_ect_date, shipto_id, shipto_nm, cust_id, cust_nm, addr_1, addr_2, zip_no, tel_no, region_cd, region_nm, course_cd, course_nm, shipowner_cd, carrier_cd, carrier_nm, zone_cd, location_cd, pick_seq, assort_yn, item_cd, item_nm, item_season, item_style, item_color, item_size, barcode, barcode2, pick_qty, cmpt_qty, multiply_qty, ins_datetime, ins_person_id, mhe_no, mhe_datetime, indirect_item_yn, assort_in_qty, item_bcd, item_gcd, outb_tcd, pack_tcd, rfid_item_yn, box_input_seq, box_no, box_id, waybill_no, box_input_at, box_input_if_yn, box_input_if_at, box_result_if_at)")
+		         .add("select :id, id, 'Y',now(),:cellCd,'A',wh_cd, strr_id, strr_nm, work_date, work_unit, biz_type, wave_no, workseq_no, outb_no, ref_no, chute_no, outb_ect_date, shipto_id, shipto_nm, cust_id, cust_nm, addr_1, addr_2, zip_no, tel_no, region_cd, region_nm, course_cd, course_nm, shipowner_cd, carrier_cd, carrier_nm, zone_cd, location_cd, pick_seq, assort_yn, item_cd, item_nm, item_season, item_style, item_color, item_size, barcode, barcode2, pick_qty, cmpt_qty, multiply_qty, ins_datetime, ins_person_id, mhe_no, mhe_datetime, indirect_item_yn, assort_in_qty, item_bcd, item_gcd, outb_tcd, pack_tcd, rfid_item_yn, box_input_seq, box_no, box_id, waybill_no, box_input_at, box_input_if_yn, box_input_if_at, box_result_if_at")
 		         .add(" from mhe_dr ")
 		         .add("WHERE WORK_UNIT = :batchId AND REF_NO = :orderNo AND ITEM_CD = :skuCd");
 		
-		Map<String, Object> params = ValueUtil.newMap("batchId,orderNo,skuCd,cellCd", candidate.getBatchId(), candidate.getOrderNo(), candidate.getSkuCd(), candidate.getCellCd());
+		Map<String, Object> params = ValueUtil.newMap("id,batchId,orderNo,skuCd,cellCd", UUID.randomUUID().toString(), candidate.getBatchId(), candidate.getOrderNo(), candidate.getSkuCd(), candidate.getCellCd());
 		this.queryManager.executeBySql(dpsJobQry.toString(), params);
 		
 		// 3. MHE_DR 데이터에 작업 할당 처리

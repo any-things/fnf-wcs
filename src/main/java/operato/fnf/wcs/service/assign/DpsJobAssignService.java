@@ -19,6 +19,7 @@ import xyz.anythings.base.entity.Stock;
 import xyz.anythings.sys.event.model.ErrorEvent;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.anythings.sys.util.AnyEntityUtil;
+import xyz.elidom.dbist.util.StringJoiner;
 import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.util.BeanUtil;
@@ -42,6 +43,18 @@ public class DpsJobAssignService extends AbstractQueryService {
 	 */
 	@Autowired
 	private FnFDpsQueryStore dpsQueryStore;
+	
+	
+	
+	/**
+	 * 
+	 * TODO 
+	 * CASE 1. ERP 주문 정보가 n 개 인데 출고 번호가 1개인 경우 
+	 *         - OK ( 재고 상품이 포함된 주문 검색시 주문수량 Sum 함 ) 
+	 * CASE 2. 작업존 Cell 에 한 상품이 n 개의 로케이션에 할당되는 경우 
+	 */
+	
+	
 	
 	/**
 	 * 작업 배치 별 작업 할당 처리
@@ -209,6 +222,7 @@ public class DpsJobAssignService extends AbstractQueryService {
 			}
 			
 			// 2.2 주문 라인 내 첫 번째 순위인 경우에 
+			// - 주문 상품별 첫 번째 순위인 경우 ( 주문 수량 )
 			if(candidate.getRanking() == 1) {
 				orderQty = order.getOrderQty();
 				
@@ -219,7 +233,12 @@ public class DpsJobAssignService extends AbstractQueryService {
 			}
 
 			// 2.3 최종 작업 할당 ...
-			this.assignJob(candidate, stockQty, orderQty, skipOrderList);
+			//  - 할당 로케이션이 여러 개의 경우 에는 할당후 남은 orderQty Return 
+			if(orderQty > 0 ) {
+				// 2.3.1 주문 수량이 0 보다 큰 경우에만 할당 데이터 생성 
+				// -- dpsJobInstance
+				orderQty = this.assignJob(candidate, stockQty, orderQty, skipOrderList);
+			}
 		}
 		
 		// 3. 작업 할당 후 남은 재고 수량
@@ -235,27 +254,39 @@ public class DpsJobAssignService extends AbstractQueryService {
 	 * @param skipOrderList
 	 * @return
 	 */
-	public void assignJob(DpsJobAssign candidate, int stockQty, int orderQty, List<String> skipOrderList) {
+	public int assignJob(DpsJobAssign candidate, int stockQty, int orderQty, List<String> skipOrderList) {
 		// 1. 할당 수량 초기화 
 		int assignQty = (orderQty > candidate.getLoadQty()) ? candidate.getLoadQty() : orderQty;
 		
-		// 2. MHE_DR 데이터에 작업 할당 처리
-		String sql = "UPDATE MHE_DR SET STATUS = 'A', DPS_ASSIGN_YN = 'Y', DPS_ASSIGN_AT = now(), CELL_CD = :cellCd WHERE WORK_UNIT = :batchId AND REF_NO = :orderNo AND ITEM_CD = :skuCd AND (DPS_ASSIGN_YN IS NULL OR DPS_ASSIGN_YN = 'N') AND (STATUS IS NULL OR STATUS = '')";
-		Map<String, Object> params = ValueUtil.newMap("batchId,orderNo,skuCd,cellCd", candidate.getBatchId(), candidate.getOrderNo(), candidate.getSkuCd(), candidate.getCellCd());
-		int exeCnt = this.queryManager.executeBySql(sql, params);
+		// 2. DpsJobInstances 데이터 생성 
+		StringJoiner dpsJobQry = new StringJoiner("\n");
 		
-		// 3. 재고 업데이트
-		if(exeCnt > 0) {
-			Stock s = AnyEntityUtil.findEntityByIdWithLock(false, Stock.class, candidate.getStockId(), "id", "equip_type", "equip_cd", "cell_cd", "com_cd", "sku_cd", "alloc_qty", "load_qty");
-			if(s != null) {
-				s.setLastTranCd(Stock.TRX_ASSIGN);
-				s.setAllocQty(ValueUtil.toInteger(s.getAllocQty()) + assignQty);
-				s.setLoadQty(ValueUtil.toInteger(s.getLoadQty()) - assignQty);
-				if(s.getAllocQty() < 0) s.setAllocQty(0);
-				if(s.getLoadQty() < 0) s.setLoadQty(0);
-				this.queryManager.update(s, "lastTranCd", "allocQty", "loadQty", "updatedAt");
-			}
+		dpsJobQry.add("insert into dps_job_instances(id, dps_assign_yn, dps_assign_at, cell_cd, status, wh_cd, strr_id, strr_nm, work_date, work_unit, biz_type, wave_no, workseq_no, outb_no, ref_no, chute_no, outb_ect_date, shipto_id, shipto_nm, cust_id, cust_nm, addr_1, addr_2, zip_no, tel_no, region_cd, region_nm, course_cd, course_nm, shipowner_cd, carrier_cd, carrier_nm, zone_cd, location_cd, pick_seq, assort_yn, item_cd, item_nm, item_season, item_style, item_color, item_size, barcode, barcode2, pick_qty, cmpt_qty, multiply_qty, ins_datetime, ins_person_id, mhe_no, mhe_datetime, indirect_item_yn, assort_in_qty, item_bcd, item_gcd, outb_tcd, pack_tcd, rfid_item_yn, box_input_seq, box_no, box_id, waybill_no, box_input_at, box_input_if_yn, box_input_if_at, box_result_if_at)")
+		         .add("select id, 'Y',now(),:cellCd,'A',wh_cd, strr_id, strr_nm, work_date, work_unit, biz_type, wave_no, workseq_no, outb_no, ref_no, chute_no, outb_ect_date, shipto_id, shipto_nm, cust_id, cust_nm, addr_1, addr_2, zip_no, tel_no, region_cd, region_nm, course_cd, course_nm, shipowner_cd, carrier_cd, carrier_nm, zone_cd, location_cd, pick_seq, assort_yn, item_cd, item_nm, item_season, item_style, item_color, item_size, barcode, barcode2, pick_qty, cmpt_qty, multiply_qty, ins_datetime, ins_person_id, mhe_no, mhe_datetime, indirect_item_yn, assort_in_qty, item_bcd, item_gcd, outb_tcd, pack_tcd, rfid_item_yn, box_input_seq, box_no, box_id, waybill_no, box_input_at, box_input_if_yn, box_input_if_at, box_result_if_at")
+		         .add(" from mhe_dr ")
+		         .add("WHERE WORK_UNIT = :batchId AND REF_NO = :orderNo AND ITEM_CD = :skuCd");
+		
+		Map<String, Object> params = ValueUtil.newMap("batchId,orderNo,skuCd,cellCd", candidate.getBatchId(), candidate.getOrderNo(), candidate.getSkuCd(), candidate.getCellCd());
+		this.queryManager.executeBySql(dpsJobQry.toString(), params);
+		
+		// 3. MHE_DR 데이터에 작업 할당 처리
+		String sql = "UPDATE MHE_DR SET STATUS = 'A', DPS_ASSIGN_YN = 'Y', DPS_ASSIGN_AT = now(), WHERE WORK_UNIT = :batchId AND REF_NO = :orderNo AND ITEM_CD = :skuCd AND (DPS_ASSIGN_YN IS NULL OR DPS_ASSIGN_YN = 'N') AND (STATUS IS NULL OR STATUS = '')";
+		
+		this.queryManager.executeBySql(sql, params);
+		
+		// 4. 재고 업데이트
+		Stock s = AnyEntityUtil.findEntityByIdWithLock(false, Stock.class, candidate.getStockId(), "id", "equip_type", "equip_cd", "cell_cd", "com_cd", "sku_cd", "alloc_qty", "load_qty");
+		if(s != null) {
+			s.setLastTranCd(Stock.TRX_ASSIGN);
+			s.setAllocQty(ValueUtil.toInteger(s.getAllocQty()) + assignQty);
+			s.setLoadQty(ValueUtil.toInteger(s.getLoadQty()) - assignQty);
+			if(s.getAllocQty() < 0) s.setAllocQty(0);
+			if(s.getLoadQty() < 0) s.setLoadQty(0);
+			this.queryManager.update(s, "lastTranCd", "allocQty", "loadQty", "updatedAt");
 		}
+		
+		// 5. 할당 가능 수량을 제외한 주문 수량 리턴 
+		return orderQty - assignQty;
 	}
 
 }

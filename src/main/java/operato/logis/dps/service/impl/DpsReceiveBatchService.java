@@ -205,6 +205,7 @@ public class DpsReceiveBatchService extends AbstractQueryService {
 			for(WmsMheDr orderSrc : wmsOrderDetails) {
 				WcsMheDr orderDest = ValueUtil.populate(orderSrc, new WcsMheDr());
 				orderDest.setId(UUID.randomUUID().toString());
+				orderDest.setMheNo(orderMaster.getMheNo());
 				orderDest.setBizType(wmsBatch.getBizType());
 				orderDest.setDpsAssignYn(LogisConstants.N_CAP_STRING);
 				orderDest.setBoxInputSeq(0);

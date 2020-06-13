@@ -37,10 +37,12 @@ public class WcsBatchProgressService extends AbstractQueryService {
 		batch.setResultBoxQty(this.calcBatchResultBoxQty(batch));
 		batch.setResultOrderQty(this.calcBatchResultOrderQty(batch));
 		batch.setResultPcs(this.calcBatchResultPcs(batch));
-		batch.setProgressRate(batch.getBatchOrderQty() == 0 ? 0 : ((float)batch.getResultOrderQty() / (float)batch.getBatchOrderQty() * 100.0f));
+		float progressRate = (batch.getBatchOrderQty() == 0) ? 0.0f : ((float)batch.getResultOrderQty() / (float)batch.getBatchOrderQty()) * 100.0f;
+		progressRate = (progressRate == 0.0f) ? 0.0f : Math.round(progressRate * 100) / 100.0f;
+		batch.setProgressRate(progressRate);
 		batch.setUph(this.calcBatchUph(batch, toTime));
 		float equipRt = this.calcBatchEquipRuntime(batch, toTime);
-		batch.setEquipRuntime(equipRt > 0.0f ? equipRt : 0.0f);		
+		batch.setEquipRuntime(equipRt > 0.0f ? equipRt : 0.0f);
 	}
 	
 	/**

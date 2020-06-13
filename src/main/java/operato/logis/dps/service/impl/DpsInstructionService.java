@@ -110,11 +110,18 @@ public class DpsInstructionService extends AbstractInstructionService implements
 		// 4. 메인 작업 배치 정보 업데이트
 		this.queryManager.update(mainBatch, "parentOrderQty", "batchOrderQty", "parentPcs", "batchPcs");
 		
-		// 5. 병합 배치 정보 업데이트 
+		// 5. 병합 배치 정보 업데이트
 		newBatch.setBatchGroupId(mainBatch.getId());
-		newBatch.setInstructedAt(new Date());
+		newBatch.setStageCd(mainBatch.getStageCd());
+		newBatch.setAreaCd(mainBatch.getAreaCd());
+		newBatch.setEquipGroupCd(mainBatch.getEquipGroupCd());
+		newBatch.setEquipType(mainBatch.getEquipType());
+		newBatch.setEquipCd(mainBatch.getEquipCd());
+		newBatch.setEquipNm(mainBatch.getEquipNm());
+		newBatch.setInputWorkers(mainBatch.getInputWorkers());
 		newBatch.setStatus(JobBatch.STATUS_MERGED);
-		this.queryManager.update(newBatch, "batchGroupId", "status", "instructedAt");
+		newBatch.setInstructedAt(new Date());
+		this.queryManager.update(newBatch);
 		
 		// 5. 병합 건수 리턴
 		return retCnt;
@@ -154,119 +161,6 @@ public class DpsInstructionService extends AbstractInstructionService implements
 	}
 	
 	/**
-	 * 작업 배치 소속 주문 데이터의 소분류, 방면 분류 코드를 업데이트 ...
-	 * 
-	 * @param batch
-	 * @param params
-	 */
-	/*private void doUpdateClassificationCodes(JobBatch batch, Object ... params) {
-		// 1. 소분류 매핑 필드 - class_cd 매핑 
-		String classTargetField = DpsBatchJobConfigUtil.getBoxMappingTargetField(batch);
-		
-		if(ValueUtil.isNotEmpty(classTargetField)) {
-			String sql = "UPDATE ORDERS SET CLASS_CD = %s WHERE DOMAIN_ID = :domainId AND BATCH_ID = :batchId";
-			sql = String.format(sql, classTargetField);
-			Map<String, Object> updateParams = ValueUtil.newMap("domainId,batchId", batch.getDomainId(), batch.getId());
-			this.queryManager.executeBySql(sql, updateParams);
-		}
-
-		// 2. 방면분류 매핑 필드 - box_class_cd 매핑
-		String boxClassTargetField = DpsBatchJobConfigUtil.getBoxOutClassTargetField(batch , false);
-		
-		if(ValueUtil.isNotEmpty(boxClassTargetField)) {
-			String sql = "UPDATE ORDERS SET BOX_CLASS_CD = %s WHERE DOMAIN_ID = :domainId AND BATCH_ID = :batchId";
-			sql = String.format(sql, boxClassTargetField);
-			Map<String, Object> updateParams = ValueUtil.newMap("domainId,batchId", batch.getDomainId(), batch.getId());
-			this.queryManager.executeBySql(sql, updateParams);
-		}
-	}*/
-	
-	/**
-	 * 작업 대상 분류
-	 * 
-	 * @param batch
-	 * @param equipList
-	 * @param params
-	 */
-	/*private void doClassifyOrders(JobBatch batch, List<?> equipList, Object... params) {
-		// 1. 전처리 이벤트   
-		EventResultSet befResult = this.publishClassificationEvent(SysEvent.EVENT_STEP_BEFORE, batch, equipList, params);
-		
-		// 2. 다음 처리 취소 일 경우 결과 리턴 
-		if(!befResult.isAfterEventCancel()) {
-			
-			// 3. 대상 분류 프로세싱 
-			this.processClassifyOrders(batch, equipList, params);
-			
-			// 4. 후처리 이벤트 
-			this.publishClassificationEvent(SysEvent.EVENT_STEP_AFTER, batch, equipList, params);
-		}
-	}*/
-	
-	/**
-	 * 대상 분류 프로세싱 
-	 * 
-	 * @param batch
-	 * @param equipList
-	 * @param params
-	 * @return
-	 */
-	/*private int processClassifyOrders(JobBatch batch, List<?> equipList, Object... params) {
-		// 1. 단포 작업 활성화 여부 
-		boolean useSinglePack = DpsBatchJobConfigUtil.isSingleSkuNpcsClassEnabled(batch);
-		// 2. 파라미터 생성
-		Map<String, Object> inputParams = ValueUtil.newMap("P_IN_DOMAIN_ID,P_IN_BATCH_ID,P_IN_SINGLE_PACK", batch.getDomainId(), batch.getId(),useSinglePack);
-		// 3. 프로시져 콜 
-		Map<?, ?> result = this.queryManager.callReturnProcedure("OP_DPS_BATCH_SET_ORDER_TYPE", inputParams, Map.class);
-		// 4. 처리 건수 취합
-		int resultCnt = ValueUtil.toInteger(result.get("P_OUT_MT_COUNT"));
-		resultCnt += ValueUtil.toInteger(result.get("P_OUT_OT_COUNT"));
-		// 5. 처리 건수 리턴 
-		return resultCnt;
-	}*/
-	
-	/**
-	 * 추천 로케이션 처리
-	 * 
-	 * @param batch
-	 * @param equipList
-	 * @param params
-	 */
-	/*private void doRecommendCells(JobBatch batch, List<?> equipList, Object ... params) {
-		// 1. 전 처리 이벤트
-		EventResultSet befResult = this.publishRecommendCellsEvent(SysEvent.EVENT_STEP_BEFORE, batch, equipList, params);
-		
-		// 2. 다음 처리 취소 일 경우 결과 리턴 
-		if(!befResult.isAfterEventCancel()) {
-			
-			// 3. 작업 지시 실행
-			this.processRecommendCells(batch, equipList, params);
-			
-			// 4. 후 처리 이벤트 
-			this.publishRecommendCellsEvent(SysEvent.EVENT_STEP_AFTER, batch, equipList, params);
-		}		
-	}*/
-	
-	/**
-	 * 추천 로케이션 실행
-	 * 
-	 * @param batch
-	 * @param equipList
-	 * @param params
-	 */
-	/*private void processRecommendCells(JobBatch batch, List<?> equipList, Object ... params) {
-		// 재고 적치 추천 셀 사용 유무 
-		boolean useRecommendCell = DpsBatchJobConfigUtil.isRecommendCellEnabled(batch);
-		
-		if(useRecommendCell) {
-			// 1. 파라미터 생성
-			Map<String, Object> inputParams = ValueUtil.newMap("P_IN_DOMAIN_ID,P_IN_BATCH_ID", batch.getDomainId(), batch.getId());
-			// 2. 프로시져 콜 
-			this.queryManager.callReturnProcedure("OP_DPS_BATCH_RECOMM_CELL", inputParams, Map.class);
-		}
-	}*/
-	
-	/**
 	 * 작업 지시 처리
 	 * 
 	 * @param batch
@@ -299,83 +193,6 @@ public class DpsInstructionService extends AbstractInstructionService implements
 		// 5. 총 주문 건수 리턴
 		return batch.getBatchOrderQty();
 	}
-
-	/**
-	 * 박스 요청 처리
-	 *  
-	 * @param batch
-	 * @param equipList
-	 * @param params
-	 * @return
-	 */
-	/*private int doRequestBox(JobBatch batch, List<?> equipList, Object... params) {
-		// 1. 단독 처리 이벤트   
-		EventResultSet eventResult = this.publishRequestBoxEvent(batch, equipList, params);
-		
-		// 2. 다음 처리 취소 일 경우 결과 리턴 
-		if(eventResult.isExecuted()) {
-			return ValueUtil.toInteger(eventResult.getResult());
-		}
-		
-		return 0;
-	}*/
-	
-	/**
-	 * 작업 병합 처리
-	 * 
-	 * @param mainBatch
-	 * @param newBatch
-	 * @param equipList
-	 * @param params
-	 * @return
-	 */
-	/*private int doMergeBatch(JobBatch mainBatch, JobBatch newBatch, List<?> equipList, Object... params) {
-		// 1. 전처리 이벤트   
-		EventResultSet befResult = this.publishMergingEvent(SysEvent.EVENT_STEP_BEFORE, mainBatch, newBatch, equipList, params);
-		
-		// 2. 다음 처리 취소 일 경우 결과 리턴 
-		if(befResult.isAfterEventCancel()) {
-			return ValueUtil.toInteger(befResult.getResult());
-		}
-		
-		// 3. 배치 병합 처리 
-		int resultCnt = this.processMerging(mainBatch, newBatch, params);
-		
-		// 4. 후처리 이벤트 
-		EventResultSet aftResult = this.publishMergingEvent(SysEvent.EVENT_STEP_AFTER, mainBatch, newBatch, equipList, params);
-		
-		// 5. 후처리 이벤트가 실행 되고 리턴 결과가 있으면 해당 결과 리턴 
-		if(aftResult.isExecuted()) {
-			if(aftResult.getResult() != null) { 
-				resultCnt += ValueUtil.toInteger(aftResult.getResult());
-			}
-		}
-
-		return resultCnt;
-	}*/
-	
-	/**
-	 * 작업 병합 처리
-	 * 
-	 * @param mainBatch
-	 * @param newBatch
-	 * @param params
-	 * @return
-	 */
-	/*private int processMerging(JobBatch mainBatch, JobBatch newBatch, Object ... params) {
-		// 1. 단포 작업 활성화 여부 
-		boolean useSinglePack = DpsBatchJobConfigUtil.isSingleSkuNpcsClassEnabled(mainBatch);
-		// 2. 호기별 배치 분리 여부
-		boolean useSeparatedBatch = DpsBatchJobConfigUtil.isSeparatedBatchByRack(mainBatch);
-
-		// 3. 인풋 파라미터 설정
-		Map<String, Object> inputParams = ValueUtil.newMap("P_IN_DOMAIN_ID,P_IN_BATCH_ID,P_IN_MAIN_BATCH_ID,P_IN_SINGLE_PACK,P_IN_SEPARATED_BATCH"
-				, mainBatch.getDomainId(), newBatch.getId(), mainBatch.getId(), useSinglePack, useSeparatedBatch);
-		// 4. 프로시져 콜 
-		this.queryManager.callReturnProcedure("OP_DPS_BATCH_MERGE", inputParams, Map.class);
-		
-		return 1;
-	}*/
 		
 	/******************************************************************
 	 * 							이벤트 전송

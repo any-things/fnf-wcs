@@ -44,21 +44,12 @@ public class DpsJobAssignService extends AbstractQueryService {
 	 */
 	@Autowired
 	private FnFDpsQueryStore dpsQueryStore;
-	
-	
-	
-	/**
-	 * 
-	 * TODO 
-	 * CASE 1. ERP 주문 정보가 n 개 인데 출고 번호가 1개인 경우 
-	 *         - OK ( 재고 상품이 포함된 주문 검색시 주문수량 Sum 함 ) 
-	 * CASE 2. 작업존 Cell 에 한 상품이 n 개의 로케이션에 할당되는 경우 
-	 */
-	
-	
-	
+		
 	/**
 	 * 작업 배치 별 작업 할당 처리
+	 * 	CASE 1. ERP 주문 정보가 n 개 인데 출고 번호가 1개인 경우 
+	 *         - OK ( 재고 상품이 포함된 주문 검색시 주문수량 Sum 함 ) 
+	 *  CASE 2. 작업존 Cell 에 한 상품이 n 개의 로케이션에 할당되는 경우 
 	 * 
 	 * @param domain
 	 * @param batch
@@ -263,7 +254,7 @@ public class DpsJobAssignService extends AbstractQueryService {
 		StringJoiner dpsJobQry = new StringJoiner("\n");
 		
 		dpsJobQry.add("insert into dps_job_instances(id, mhe_dr_id, dps_assign_yn, dps_assign_at, cell_cd, status, wh_cd, strr_id, strr_nm, work_date, work_unit, biz_type, wave_no, workseq_no, outb_no, ref_no, chute_no, outb_ect_date, shipto_id, shipto_nm, cust_id, cust_nm, addr_1, addr_2, zip_no, tel_no, region_cd, region_nm, course_cd, course_nm, shipowner_cd, carrier_cd, carrier_nm, zone_cd, location_cd, pick_seq, assort_yn, item_cd, item_nm, item_season, item_style, item_color, item_size, barcode, barcode2, pick_qty, cmpt_qty, multiply_qty, ins_datetime, ins_person_id, mhe_no, mhe_datetime, indirect_item_yn, assort_in_qty, item_bcd, item_gcd, outb_tcd, pack_tcd, rfid_item_yn, box_input_seq, box_no, box_id, waybill_no, box_input_at, box_input_if_yn, box_input_if_at, box_result_if_at)")
-		         .add("select :id, id, 'Y',now(),:cellCd,'A',wh_cd, strr_id, strr_nm, work_date, work_unit, biz_type, wave_no, workseq_no, outb_no, ref_no, chute_no, outb_ect_date, shipto_id, shipto_nm, cust_id, cust_nm, addr_1, addr_2, zip_no, tel_no, region_cd, region_nm, course_cd, course_nm, shipowner_cd, carrier_cd, carrier_nm, zone_cd, location_cd, pick_seq, assort_yn, item_cd, item_nm, item_season, item_style, item_color, item_size, barcode, barcode2, pick_qty, cmpt_qty, multiply_qty, ins_datetime, ins_person_id, mhe_no, mhe_datetime, indirect_item_yn, assort_in_qty, item_bcd, item_gcd, outb_tcd, pack_tcd, rfid_item_yn, box_input_seq, box_no, box_id, waybill_no, box_input_at, box_input_if_yn, box_input_if_at, box_result_if_at")
+		         .add("select :id, id, 'Y', now(), :cellCd, 'A', wh_cd, strr_id, strr_nm, work_date, work_unit, biz_type, wave_no, workseq_no, outb_no, ref_no, chute_no, outb_ect_date, shipto_id, shipto_nm, cust_id, cust_nm, addr_1, addr_2, zip_no, tel_no, region_cd, region_nm, course_cd, course_nm, shipowner_cd, carrier_cd, carrier_nm, zone_cd, location_cd, pick_seq, assort_yn, item_cd, item_nm, item_season, item_style, item_color, item_size, barcode, barcode2, pick_qty, cmpt_qty, multiply_qty, ins_datetime, ins_person_id, mhe_no, mhe_datetime, indirect_item_yn, assort_in_qty, item_bcd, item_gcd, outb_tcd, pack_tcd, rfid_item_yn, box_input_seq, box_no, box_id, waybill_no, box_input_at, box_input_if_yn, box_input_if_at, box_result_if_at")
 		         .add(" from mhe_dr ")
 		         .add("WHERE WORK_UNIT = :batchId AND REF_NO = :orderNo AND ITEM_CD = :skuCd");
 		

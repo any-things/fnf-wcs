@@ -12,8 +12,8 @@ import xyz.elidom.dbist.annotation.Table;
 /*
  * DPS 작업 할당 및 작업 처리
  */
-@Table(name = "dps_job_instances", idStrategy = GenerationRule.UUID, uniqueFields="whCd,workUnit,shiptoId,outbNo,locationCd,itemCd", indexes = {
-	@Index(name = "ix_dps_job_instances_01", columnList = "wh_cd,work_unit,shipto_id,outb_no,location_cd,item_cd", unique = true)
+@Table(name = "dps_job_instances", idStrategy = GenerationRule.UUID, uniqueFields="whCd,workUnit,refNo,cellCd,itemCd", indexes = {
+	@Index(name = "ix_dps_job_instances_01", columnList = "wh_cd,work_unit,ref_no,cell_cd,item_cd", unique = true)
 })
 public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
@@ -54,11 +54,10 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "workseq_no", nullable = true, length = 5)
 	private String workseqNo;
 	
-	@PrimaryKey
-	@Column (name = "outb_no", nullable = false, length = 20)
+	@Column (name = "outb_no", nullable = true, length = 20)
 	private String outbNo;
 	
-	@Column (name = "ref_no", nullable = true, length = 30)
+	@Column (name = "ref_no", nullable = false, length = 30)
 	private String refNo;
 	
 	@Column (name = "chute_no", nullable = true, length = 10)
@@ -67,8 +66,7 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "outb_ect_date", nullable = true, length = 8)
 	private String outbEctDate;
 
-	@PrimaryKey
-	@Column (name = "shipto_id", nullable = false, length = 100)
+	@Column (name = "shipto_id", nullable = true, length = 100)
 	private String shiptoId;
 	
 	@Column (name = "shipto_nm", nullable = true, length = 200)
@@ -116,8 +114,7 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "zone_cd", nullable = true, length = 10)
 	private String zoneCd;
 	
-	@PrimaryKey
-	@Column (name = "location_cd", nullable = false, length = 30)
+	@Column (name = "location_cd", nullable = true, length = 30)
 	private String locationCd;
 	
 	@Column (name = "pick_seq", nullable = true, length = 10)
@@ -126,7 +123,6 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "assort_yn", nullable = true, length = 1)
 	private String assortYn;
 
-	@PrimaryKey
 	@Column (name = "item_cd", nullable = false, length = 30)
 	private String itemCd;
 	
@@ -151,7 +147,7 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "barcode2", nullable = true, length = 100)
 	private String barcode2;
 	
-	@Column (name = "pick_qty", nullable = true, length = 10)
+	@Column (name = "pick_qty", nullable = false, length = 10)
 	private Integer pickQty;
 
 	@Column (name = "cmpt_qty", nullable = true, length = 10)
@@ -193,7 +189,7 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "pack_tcd", nullable = true, length = 10)
 	private String packTcd;
 	
-	@Column (name = "cell_cd", nullable = true, length = 20)
+	@Column (name = "cell_cd", nullable = false, length = 20)
 	private String cellCd;
 	
 	@Column (name = "rfid_item_yn", nullable = true, length = 1)

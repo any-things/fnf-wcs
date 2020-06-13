@@ -217,7 +217,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 	}
 	
 	/**
-	 * DPS 박스 투입 (BOX or Tray)
+	 * DPS 트레이 박스 투입
 	 * 
 	 * @param event
 	 */
@@ -230,17 +230,15 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		String equipType = params.get("equipType").toString();
 		String equipCd = params.get("equipCd").toString();
 		String boxId = params.get("bucketCd").toString();
-		//String inputType = params.get("inputType").toString();
 		int limit = ValueUtil.toInteger(params.get("limit"));
 		int page = ValueUtil.toInteger(params.get("page"));
 		
 		// 2. 설비 코드로 현재 진행 중인 작업 배치 및 설비 정보 조회
 		EquipBatchSet equipBatchSet = DpsServiceUtil.findBatchByEquip(event.getDomainId(), equipType, equipCd);
 		JobBatch batch = equipBatchSet.getBatch();
-		boolean isBox = false; //ValueUtil.isEqualIgnoreCase(inputType, DpsCodeConstants.CLASSIFICATION_INPUT_TYPE_BOX) ? true : false;
 		
-		// 3. 박스 투입 (박스 or 트레이)
-		this.dpsPickingService.inputEmptyBucket(batch, isBox, boxId);
+		// 3. 트레이 박스 투입
+		this.dpsPickingService.inputEmptyBucket(batch, false, boxId);
 		
 		// 4. 배치 서머리 조회 
 		DpsBatchSummary summary = this.getBatchSummary(batch, equipType, equipCd, limit, page);
@@ -676,6 +674,10 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		
 		// 4. 송장 발행
 		Integer printedCount = this.dpsInspectionService.printInvoiceLabel(batch, inspection, printerId);
+		
+		// 사무실에서 송장 발행 테스트 시 아래 
+		//PrintEvent pevent = BeanUtil.get(DpsInspectionService.class).createPrintEvent(event.getDomainId(), null, null, printerId);
+		//Integer printedCount = BeanUtil.get(DpsInspectionService.class).printLabel(pevent);
 		
 		// 5. 이벤트 처리 결과 셋팅  
 		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, printedCount));

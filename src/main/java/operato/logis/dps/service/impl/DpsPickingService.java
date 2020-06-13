@@ -111,37 +111,41 @@ public class DpsPickingService extends AbstractPickingService implements IDpsPic
 	 */
 	@Override
 	public Object inputEmptyBucket(JobBatch batch, boolean isBox, String bucketCd, Object... params) {
-		// 0. FnF는 트레이만 취급
+		// 1. FnF는 트레이만 취급
 		isBox = false;
 		
-		// 1. 투입 가능한 버킷인지 체크 (트레이에 락킹 (하나의 버킷은 한 번에 하나만 투입 가능)
+		// 2. 투입 가능한 버킷인지 체크 (트레이에 락킹 (하나의 버킷은 한 번에 하나만 투입 가능)
 		IBucket bucket = this.vaildInputBucketByBucketCd(batch, bucketCd, isBox, true);
 		
-		// 2. 박스 투입 전 체크 - 주문 번호 조회 
+		// 3. 박스 투입 전 체크 - 주문 번호 조회 
 		String orderNo = this.beforeInputEmptyBucket(batch, isBox, bucket);
 
-		// 3. 주문 번호로 매핑된 작업을 모두 조회
+		// 4. 주문 번호로 매핑된 작업을 모두 조회
 		Map<String, Object> condition = ValueUtil.newMap("workUnit,refNo", batch.getId(), orderNo);
 		List<WcsMheDr> jobList = this.queryManager.selectList(WcsMheDr.class, condition);
 
-		// 4. 매핑된 주문이 없다면 에러 
+		// 5. 매핑된 주문이 없다면 에러 
 		if(ValueUtil.isEmpty(jobList)) {
 			// 투입 가능한 주문이 없습니다.
 			throw new ElidomRuntimeException(MessageUtil.getMessage("MPS_NO_ORDER_TO_INPUT"));
 		}
 		
-		// 5. 최대 박스 투입 순서를 조회
+		// 6. 최대 박스 투입 순서를 조회
 		int boxInputSeq = this.getMaxBoxInputSeq(batch.getId(), orderNo);
 		
-		// 6. 작업 데이터에 박스 ID 설정 처리
+		// 7. 주문 데이터에 박스 ID 설정 처리
 		String sql = "update mhe_dr set box_no = :boxId, status = 'I', box_input_seq = :boxInputSeq, box_input_at = now(), box_input_if_yn = 'N' where work_unit = :batchId and ref_no = :orderNo";
 		condition = ValueUtil.newMap("batchId,boxId,boxInputSeq,orderNo", batch.getId(), bucketCd, boxInputSeq, orderNo);
 		this.queryManager.executeBySql(sql, condition);
 		
-		// 7. 박스 투입 후 액션 
+		// 8. 작업 데이터에 박스 ID 설정 처리
+		sql = "update dps_job_instances set box_no = :boxId, status = 'I', box_input_seq = :boxInputSeq, box_input_at = now(), box_input_if_yn = 'N' where work_unit = :batchId and ref_no = :orderNo";
+		this.queryManager.executeBySql(sql, condition);
+		
+		// 9. 박스 투입 후 액션 
 		this.afterInputEmptyBucket(batch, bucket, orderNo);
 		
-		// 8. 투입 정보 리턴
+		// 10. 투입 정보 리턴
 		return jobList;
 	}
 	

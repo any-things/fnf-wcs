@@ -276,9 +276,10 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		
 	}
 	
-	private PrintEvent createPrintEvent(Long domainId, String boxId, String invoiceId, String printerId) {
+	public PrintEvent createPrintEvent(Long domainId, String boxId, String invoiceId, String printerId) {
 		// TODO 테스트 시 하드코딩 제거
-		//invoiceId = "20200500080817";
+		//boxId = "20200400080413";
+		//invoiceId = "508440851004";
 		
 		String labelTemplate = SettingUtil.getValue(domainId, "fnf.dps.invoice.template");
 		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsExpressWaybillPrint.class);
@@ -297,7 +298,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	 * @param printerId
 	 * @param parameters
 	 */
-	private void printLabel(PrintEvent printEvent) {
+	public void printLabel(PrintEvent printEvent) {
 		// 인쇄 옵션 정보 추출
 		Printer printer = this.queryManager.select(Printer.class, printEvent.getPrinterId());
 		String agentUrl = printer.getPrinterAgentUrl();

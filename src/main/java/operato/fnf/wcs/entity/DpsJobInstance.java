@@ -22,7 +22,6 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	 */
 	private static final long serialVersionUID = 948516983197430600L;
 
-
 	@PrimaryKey
 	@Column (name = "id", nullable = false, length = 40)
 	private String id;
@@ -45,9 +44,6 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "work_unit", nullable = false, length = 20)
 	private String workUnit;
 	
-	@Column (name = "biz_type", length = 10)
-	private String bizType;
-	
 	@Column (name = "wave_no", nullable = true, length = 20)
 	private String waveNo;
 
@@ -60,68 +56,11 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "ref_no", nullable = false, length = 30)
 	private String refNo;
 	
-	@Column (name = "chute_no", nullable = true, length = 10)
-	private String chuteNo;
-	
-	@Column (name = "outb_ect_date", nullable = true, length = 8)
-	private String outbEctDate;
-
 	@Column (name = "shipto_id", nullable = true, length = 100)
 	private String shiptoId;
 	
 	@Column (name = "shipto_nm", nullable = true, length = 200)
 	private String shiptoNm;
-
-	@Column (name = "cust_id", nullable = true, length = 100)
-	private String custId;
-	
-	@Column (name = "cust_nm", nullable = true, length = 200)
-	private String custNm;
-
-	@Column (name = "addr_1", nullable = true, length = 500)
-	private String addr1;
-	
-	@Column (name = "addr_2", nullable = true, length = 500)
-	private String addr2;
-	
-	@Column (name = "zip_no", nullable = true, length = 10)
-	private String zipNo;
-	
-	@Column (name = "tel_no", nullable = true, length = 20)
-	private String telNo;
-	
-	@Column (name = "region_cd", nullable = true, length = 20)
-	private String regionCd;
-	
-	@Column (name = "region_nm", nullable = true, length = 20)
-	private String regionNm;
-	
-	@Column (name = "course_cd", nullable = true, length = 20)
-	private String courseCd;
-	
-	@Column (name = "course_nm", nullable = true, length = 20)
-	private String courseNm;
-	
-	@Column (name = "shipowner_cd", nullable = true, length = 20)
-	private String shipownerCd;
-	
-	@Column (name = "carrier_cd", nullable = true, length = 20)
-	private String carrierCd;
-	
-	@Column (name = "carrier_nm", nullable = true, length = 30)
-	private String carrierNm;
-
-	@Column (name = "zone_cd", nullable = true, length = 10)
-	private String zoneCd;
-	
-	@Column (name = "location_cd", nullable = true, length = 30)
-	private String locationCd;
-	
-	@Column (name = "pick_seq", nullable = true, length = 10)
-	private Integer pickSeq;
-
-	@Column (name = "assort_yn", nullable = true, length = 1)
-	private String assortYn;
 
 	@Column (name = "item_cd", nullable = false, length = 30)
 	private String itemCd;
@@ -144,44 +83,17 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "barcode", nullable = true, length = 100)
 	private String barcode;
 
-	@Column (name = "barcode2", nullable = true, length = 100)
-	private String barcode2;
-	
 	@Column (name = "pick_qty", nullable = false, length = 10)
 	private Integer pickQty;
 
 	@Column (name = "cmpt_qty", nullable = true, length = 10)
 	private Integer cmptQty;
 
-	@Column (name = "multiply_qty", nullable = true, length = 10)
-	private Integer multiplyQty;
-	
-	@Column (name = "ins_datetime", nullable = true, type = ColumnType.DATETIME)
-	private Date insDatetime;
-
-	@Column (name = "ins_person_id", nullable = true, length = 20)
-	private String insPersonId;
-	
 	@Column (name = "mhe_no", nullable = true, length = 20)
 	private String mheNo;
 	
 	@Column (name = "mhe_datetime", nullable = true, type = ColumnType.DATETIME)
 	private Date mheDatetime;
-	
-	@Column (name = "indirect_item_yn", nullable = true, length = 1)
-	private String indirectItemYn;
-
-	@Column (name = "assort_in_qty", nullable = true, length = 10)
-	private Integer assortInQty;
-
-	@Column (name = "item_bcd", nullable = true, length = 20)
-	private String itemBcd;
-
-	@Column (name = "item_gcd", nullable = true, length = 20)
-	private String itemGcd;
-
-	@Column (name = "outb_tcd", nullable = true, length = 20)
-	private String outbTcd;
 	
 	/**
 	 * 온라인 합/단포 구분 (D: 단포, H: 합포)
@@ -293,14 +205,6 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 		this.workUnit = workUnit;
 	}
 
-	public String getBizType() {
-		return bizType;
-	}
-
-	public void setBizType(String bizType) {
-		this.bizType = bizType;
-	}
-
 	public String getWaveNo() {
 		return waveNo;
 	}
@@ -333,22 +237,6 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 		this.refNo = refNo;
 	}
 
-	public String getChuteNo() {
-		return chuteNo;
-	}
-
-	public void setChuteNo(String chuteNo) {
-		this.chuteNo = chuteNo;
-	}
-
-	public String getOutbEctDate() {
-		return outbEctDate;
-	}
-
-	public void setOutbEctDate(String outbEctDate) {
-		this.outbEctDate = outbEctDate;
-	}
-
 	public String getShiptoId() {
 		return shiptoId;
 	}
@@ -363,142 +251,6 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setShiptoNm(String shiptoNm) {
 		this.shiptoNm = shiptoNm;
-	}
-
-	public String getCustId() {
-		return custId;
-	}
-
-	public void setCustId(String custId) {
-		this.custId = custId;
-	}
-
-	public String getCustNm() {
-		return custNm;
-	}
-
-	public void setCustNm(String custNm) {
-		this.custNm = custNm;
-	}
-
-	public String getAddr1() {
-		return addr1;
-	}
-
-	public void setAddr1(String addr1) {
-		this.addr1 = addr1;
-	}
-
-	public String getAddr2() {
-		return addr2;
-	}
-
-	public void setAddr2(String addr2) {
-		this.addr2 = addr2;
-	}
-
-	public String getZipNo() {
-		return zipNo;
-	}
-
-	public void setZipNo(String zipNo) {
-		this.zipNo = zipNo;
-	}
-
-	public String getTelNo() {
-		return telNo;
-	}
-
-	public void setTelNo(String telNo) {
-		this.telNo = telNo;
-	}
-
-	public String getRegionCd() {
-		return regionCd;
-	}
-
-	public void setRegionCd(String regionCd) {
-		this.regionCd = regionCd;
-	}
-
-	public String getRegionNm() {
-		return regionNm;
-	}
-
-	public void setRegionNm(String regionNm) {
-		this.regionNm = regionNm;
-	}
-
-	public String getCourseCd() {
-		return courseCd;
-	}
-
-	public void setCourseCd(String courseCd) {
-		this.courseCd = courseCd;
-	}
-
-	public String getCourseNm() {
-		return courseNm;
-	}
-
-	public void setCourseNm(String courseNm) {
-		this.courseNm = courseNm;
-	}
-
-	public String getShipownerCd() {
-		return shipownerCd;
-	}
-
-	public void setShipownerCd(String shipownerCd) {
-		this.shipownerCd = shipownerCd;
-	}
-
-	public String getCarrierCd() {
-		return carrierCd;
-	}
-
-	public void setCarrierCd(String carrierCd) {
-		this.carrierCd = carrierCd;
-	}
-
-	public String getCarrierNm() {
-		return carrierNm;
-	}
-
-	public void setCarrierNm(String carrierNm) {
-		this.carrierNm = carrierNm;
-	}
-
-	public String getZoneCd() {
-		return zoneCd;
-	}
-
-	public void setZoneCd(String zoneCd) {
-		this.zoneCd = zoneCd;
-	}
-
-	public String getLocationCd() {
-		return locationCd;
-	}
-
-	public void setLocationCd(String locationCd) {
-		this.locationCd = locationCd;
-	}
-
-	public Integer getPickSeq() {
-		return pickSeq;
-	}
-
-	public void setPickSeq(Integer pickSeq) {
-		this.pickSeq = pickSeq;
-	}
-
-	public String getAssortYn() {
-		return assortYn;
-	}
-
-	public void setAssortYn(String assortYn) {
-		this.assortYn = assortYn;
 	}
 
 	public String getItemCd() {
@@ -557,14 +309,6 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 		this.barcode = barcode;
 	}
 
-	public String getBarcode2() {
-		return barcode2;
-	}
-
-	public void setBarcode2(String barcode2) {
-		this.barcode2 = barcode2;
-	}
-
 	public Integer getPickQty() {
 		return pickQty;
 	}
@@ -581,30 +325,6 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 		this.cmptQty = cmptQty;
 	}
 
-	public Integer getMultiplyQty() {
-		return multiplyQty;
-	}
-
-	public void setMultiplyQty(Integer multiplyQty) {
-		this.multiplyQty = multiplyQty;
-	}
-
-	public Date getInsDatetime() {
-		return insDatetime;
-	}
-
-	public void setInsDatetime(Date insDatetime) {
-		this.insDatetime = insDatetime;
-	}
-
-	public String getInsPersonId() {
-		return insPersonId;
-	}
-
-	public void setInsPersonId(String insPersonId) {
-		this.insPersonId = insPersonId;
-	}
-
 	public String getMheNo() {
 		return mheNo;
 	}
@@ -619,46 +339,6 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setMheDatetime(Date mheDatetime) {
 		this.mheDatetime = mheDatetime;
-	}
-
-	public String getIndirectItemYn() {
-		return indirectItemYn;
-	}
-
-	public void setIndirectItemYn(String indirectItemYn) {
-		this.indirectItemYn = indirectItemYn;
-	}
-
-	public Integer getAssortInQty() {
-		return assortInQty;
-	}
-
-	public void setAssortInQty(Integer assortInQty) {
-		this.assortInQty = assortInQty;
-	}
-
-	public String getItemBcd() {
-		return itemBcd;
-	}
-
-	public void setItemBcd(String itemBcd) {
-		this.itemBcd = itemBcd;
-	}
-
-	public String getItemGcd() {
-		return itemGcd;
-	}
-
-	public void setItemGcd(String itemGcd) {
-		this.itemGcd = itemGcd;
-	}
-
-	public String getOutbTcd() {
-		return outbTcd;
-	}
-
-	public void setOutbTcd(String outbTcd) {
-		this.outbTcd = outbTcd;
 	}
 
 	public String getPackTcd() {

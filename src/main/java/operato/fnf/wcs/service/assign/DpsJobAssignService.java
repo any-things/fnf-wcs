@@ -254,9 +254,10 @@ public class DpsJobAssignService extends AbstractQueryService {
 		StringJoiner dpsJobQry = new StringJoiner(SysConstants.LINE_SEPARATOR);
 		
 		dpsJobQry.add("insert into dps_job_instances(id, mhe_dr_id, dps_assign_yn, dps_assign_at, cell_cd, status, wh_cd, strr_id, strr_nm, work_date, work_unit, wave_no, workseq_no, outb_no, ref_no, shipto_id, shipto_nm, item_cd, item_nm, item_season, item_style, item_color, item_size, barcode, pick_qty, cmpt_qty, mhe_no, mhe_datetime, pack_tcd, rfid_item_yn, box_input_seq, box_no, box_id, waybill_no, box_input_at, box_input_if_yn, box_input_if_at, box_result_if_at)")
-		         .add("select :id, id, 'Y', now(), :cellCd, 'A', wh_cd, strr_id, strr_nm, work_date, work_unit, wave_no, workseq_no, outb_no, ref_no, shipto_id, shipto_nm, item_cd, item_nm, item_season, item_style, item_color, item_size, barcode, pick_qty, cmpt_qty, mhe_no, mhe_datetime, 'H' as pack_tcd, rfid_item_yn, 0 as box_input_seq, box_no, box_id, waybill_no, box_input_at, box_input_if_yn, box_input_if_at, box_result_if_at")
+		         .add("select :id, max(id), 'Y', now(), :cellCd, 'A', max(wh_cd), max(strr_id), max(strr_nm), max(work_date), work_unit, max(wave_no), max(workseq_no), max(outb_no), ref_no, max(shipto_id), max(shipto_nm), item_cd, max(item_nm), max(item_season), max(item_style), max(item_color), max(item_size), max(barcode), sum(pick_qty), sum(cmpt_qty), max(mhe_no), max(mhe_datetime), 'H' as pack_tcd, max(rfid_item_yn), 0 as box_input_seq, max(box_no), max(box_id), max(waybill_no), max(box_input_at), max(box_input_if_yn), max(box_input_if_at), max(box_result_if_at)")
 		         .add("  from MHE_DR")
-		         .add(" WHERE WORK_UNIT = :batchId AND REF_NO = :orderNo AND ITEM_CD = :skuCd");
+		         .add(" WHERE WORK_UNIT = :batchId AND REF_NO = :orderNo AND ITEM_CD = :skuCd")
+		         .add(" GROUP BY WORK_UNIT, REF_NO, ITEM_CD ");
 		
 		Map<String, Object> params = ValueUtil.newMap("id,batchId,orderNo,skuCd,cellCd", UUID.randomUUID().toString(), candidate.getBatchId(), candidate.getOrderNo(), candidate.getSkuCd(), candidate.getCellCd());
 		this.queryManager.executeBySql(dpsJobQry.toString(), params);

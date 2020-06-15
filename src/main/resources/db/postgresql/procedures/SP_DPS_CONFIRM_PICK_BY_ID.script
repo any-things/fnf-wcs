@@ -1,0 +1,97 @@
+-- PROCEDURE: public.sp_dps_confirm_pick_by_id(character varying, integer, integer)
+
+-- DROP PROCEDURE public.sp_dps_confirm_pick_by_id(character varying, integer, integer);
+
+CREATE OR REPLACE PROCEDURE public.sp_dps_confirm_pick_by_id(
+	p_job_instance_id character varying,
+	p_cmpt_qty integer,
+	INOUT p_picked_qty integer)
+LANGUAGE 'plpgsql'
+
+AS $BODY$DECLARE
+
+	-- 작업 정보 
+	V_JOB_ROW DPS_JOB_INSTANCES%ROWTYPE;
+	-- 재고 정보
+	V_STOCK_ROW STOCKS%ROWTYPE;
+	-- 주문 중에 아직 완료되지 않은 라인 개수
+	V_UNFINISHED_CNT INTEGER;
+	
+	-- 작업 상세 정보 UPDATE 수량 
+--    V_CMPT_QTY INTEGER;
+--    V_CMPT_LOOP INTEGER;
+BEGIN
+
+	-- 1. 작업 정보 조회 ( with Lock )
+	SELECT * INTO V_JOB_ROW FROM DPS_JOB_INSTANCES WHERE ID = P_JOB_INSTANCE_ID FOR UPDATE;
+	
+	-- 2. 작업 정보를 찾았다면
+	IF(V_JOB_ROW.ID IS NOT NULL) THEN 
+		-- 확정 수량이 예정 수량 보다 작은 경우
+		IF(V_JOB_ROW.CMPT_QTY = 0 OR V_JOB_ROW.PICK_QTY > V_JOB_ROW.CMPT_QTY) THEN
+			-- 2.1 확정 수량 업데이트
+			-- JobInstance 
+			UPDATE DPS_JOB_INSTANCES SET CMPT_QTY = CMPT_QTY + P_CMPT_QTY, MHE_DATETIME = now() WHERE ID = V_JOB_ROW.ID;
+			P_PICKED_QTY = P_CMPT_QTY;
+			
+			-- MheDr
+--			SELECT P_CMPT_QTY INTO V_CMPT_LOOP;
+			
+			-- LOOP 주문 상세 정보의 UPDATE 대상 데이터를 검색 
+--		    FOR CUR_MHE_DR IN SELECT ID, PICK_QTY-COALESCE(CMPT_QTY,0) AS CMPT_QTY INTO V_MHE_DR FROM MHE_DR WHERE WORK_UNIT = V_JOB_ROW.WORK_UNIT AND REF_NO = V_JOB_ROW.REF_NO AND ITEM_CD = V_JOB_ROW.ITEM_CD AND PICK_QTY != CMPT_QTY
+--		    LOOP
+--		        EXIT WHEN V_CMPT_LOOP <= 0;
+--		        
+				-- 주문 상세 정보의 업데이트 수량 계산 
+--				SELECT  INTO V_CMPT_QTY;
+				
+				-- 업데이트 
+--				UPDATE MHE_DR SET CMPT_QTY = CMPT_QTY + V_CMPT_QTY, MHE_DATETIME = now()
+--				 WHERE ID = CUR_MHE_DR.ID;
+				
+				-- 총 확정 수량 계산 ( LOOP 용 ) 
+--				SELECT V_CMPT_LOOP - V_CMPT_QTY INTO V_CMPT_LOOP;
+		    
+--		    END LOOP;
+
+			-- 2.2 주문 정보 (REF_NO)로 해당 주문이 모두 완료되었는지 확인
+			SELECT COUNT(1) INTO V_UNFINISHED_CNT FROM DPS_JOB_INSTANCES WHERE WORK_UNIT = V_JOB_ROW.WORK_UNIT AND BOX_NO = V_JOB_ROW.BOX_NO AND REF_NO = V_JOB_ROW.REF_NO AND PICK_QTY > CMPT_QTY;
+
+			-- 2.3 주문이 모두 완료되었다면 상태를 'B'로 업데이트
+			IF(V_UNFINISHED_CNT = 0) THEN
+				-- JobInstance
+				UPDATE DPS_JOB_INSTANCES SET STATUS = 'B' WHERE WORK_UNIT = V_JOB_ROW.WORK_UNIT AND BOX_NO = V_JOB_ROW.BOX_NO AND REF_NO = V_JOB_ROW.REF_NO;
+				
+				-- MheDr
+				UPDATE MHE_DR SET STATUS = 'B', CMPT_QTY = PICK_QTY, MHE_DATETIME = now() WHERE WORK_UNIT = V_JOB_ROW.WORK_UNIT AND BOX_NO = V_JOB_ROW.BOX_NO AND REF_NO = V_JOB_ROW.REF_NO;
+				
+			END IF;
+
+			-- 2.4 재고 수량 조회 
+			SELECT ID, ALLOC_QTY INTO V_STOCK_ROW FROM STOCKS WHERE CELL_CD = V_JOB_ROW.CELL_CD AND SKU_CD = V_JOB_ROW.ITEM_CD FOR UPDATE;
+
+			-- 2.5 재고 정보가 있고 할당 수량에서 확정 수량을 뺀 값이 
+			IF(V_STOCK_ROW.ID IS NOT NULL AND V_STOCK_ROW.ALLOC_QTY IS NOT NULL) THEN
+				IF(V_STOCK_ROW.ALLOC_QTY IS NULL OR V_STOCK_ROW.ALLOC_QTY - P_CMPT_QTY < 0) THEN
+					-- 2.5.1 재고의 할당 수량이 NULL이거나 할당 수량 - 확정 수량이 0보다 작으면 0으로 업데이트
+					UPDATE STOCKS SET ALLOC_QTY = 0 WHERE ID = V_STOCK_ROW.id;
+				ELSE 
+					-- 2.5.2 재고의 할당 수량을 빼줌 
+					UPDATE STOCKS SET ALLOC_QTY = ALLOC_QTY - P_CMPT_QTY WHERE ID = V_STOCK_ROW.ID;			
+				END IF;
+			END IF;
+			
+		-- 확정 수량이 예정 수량과 같은 경우
+		ELSE
+			P_PICKED_QTY = 0;
+		END IF;
+		
+		 
+	-- 3. 작업 정보를 못 찾았다면 
+	ELSE
+		P_PICKED_QTY = -1;
+	END IF;
+	
+	COMMIT;
+END
+$BODY$;

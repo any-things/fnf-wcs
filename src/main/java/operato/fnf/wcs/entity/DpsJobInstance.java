@@ -40,6 +40,9 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
 	@Column (name = "work_date", nullable = false, length = 8)
 	private String workDate;
+	
+	@Column (name = "outb_ect_date", nullable = true, length = 8)
+	private String outbEctDate;
 
 	@Column (name = "work_unit", nullable = false, length = 20)
 	private String workUnit;
@@ -195,6 +198,14 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setWorkDate(String workDate) {
 		this.workDate = workDate;
+	}
+
+	public String getOutbEctDate() {
+		return outbEctDate;
+	}
+
+	public void setOutbEctDate(String outbEctDate) {
+		this.outbEctDate = outbEctDate;
 	}
 
 	public String getWorkUnit() {

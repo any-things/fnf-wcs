@@ -156,7 +156,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 			String todayStr = DateUtil.todayStr("yyyyMMdd");
 			Date currentTime = new Date();
 			String currentTimeStr = DateUtil.dateTimeStr(currentTime, "yyyyMMddHHmmss");
-			List<WcsMheDr> orderList = new ArrayList<WcsMheDr>(jobList.size());
+			List<String> orderIdList = new ArrayList<String>(jobList.size());
 			
 			for(DpsJobInstance job : jobList) {
 				// 1. 박스 번호, 박스 전송 시간 설정
@@ -164,21 +164,20 @@ public class DpsBoxSendService extends AbstractQueryService {
 				job.setStatus("S");
 				
 				// 2. 주문 정보 조회
-				WcsMheDr order = this.queryManager.select(WcsMheDr.class, job.getMheDrId());
-				order.setBoxResultIfAt(job.getBoxResultIfAt());
-				order.setStatus(job.getStatus());
-				orderList.add(order);
+				orderIdList.add(job.getMheDrId());
 				
 				// 3. WMS 박스 실적 전송 
-				Map<String, Object> params = ValueUtil.newMap("today,whCd,boxId,orderNo,brandCd,skuCd,pickedQty,jobDate,currentTime", todayStr, job.getWhCd(), boxId, orderNo, job.getStrrId(), job.getItemCd(), job.getCmptQty(), order.getOutbEctDate(), currentTimeStr);
+				Map<String, Object> params = ValueUtil.newMap("today,whCd,boxId,orderNo,brandCd,skuCd,pickedQty,jobDate,currentTime", todayStr, job.getWhCd(), boxId, orderNo, job.getStrrId(), job.getItemCd(), job.getCmptQty(), job.getOutbEctDate(), currentTimeStr);
 				wmsQueryMgr.executeBySql(WMS_PACK_INSERT_SQL, params);
 			}
-				
-			// 3. 주문 상세 정보 업데이트
-			this.queryManager.updateBatch(orderList, "status", "boxResultIfAt");
 			
 			// 4. 작업 정보 업데이트
 			this.queryManager.updateBatch(jobList, "status", "boxResultIfAt");
+			
+			// 5. 작업 상세 정보 업데이트
+			String sql = "update mhe_dr set status = :status, box_result_if_at = :boxResultIfAt where id in (:orderIdList)";
+			Map<String, Object> params = ValueUtil.newMap("orderIdList,status,boxResultIfAt", orderIdList, "S", currentTime);
+			this.queryManager.executeBySql(sql, params);
 		}
 	}
 	

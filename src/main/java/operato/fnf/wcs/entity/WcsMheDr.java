@@ -231,6 +231,9 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "box_input_if_at", nullable = true)
 	private Date boxInputIfAt;
 	
+	@Column (name = "pick_result_if_at", nullable = true)
+	private Date pickResultIfAt;
+	
 	@Column (name = "box_result_if_at", nullable = true)
 	private Date boxResultIfAt;
 		
@@ -747,6 +750,14 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setBoxInputIfAt(Date boxInputIfAt) {
 		this.boxInputIfAt = boxInputIfAt;
+	}
+
+	public Date getPickResultIfAt() {
+		return pickResultIfAt;
+	}
+
+	public void setPickResultIfAt(Date pickResultIfAt) {
+		this.pickResultIfAt = pickResultIfAt;
 	}
 
 	public Date getBoxResultIfAt() {

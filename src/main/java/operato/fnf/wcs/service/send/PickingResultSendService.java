@@ -54,7 +54,7 @@ public class PickingResultSendService extends AbstractQueryService {
 			}
 			
 			// 3. 피킹 실적 전송 시간 업데이트
-			this.queryManager.updateBatch(pickList, "boxResultIfAt");
+			this.queryManager.updateBatch(pickList, "pickResultIfAt");
 		}
 	}
 	
@@ -68,7 +68,7 @@ public class PickingResultSendService extends AbstractQueryService {
 		Query condition = new Query();
 		condition.addFilter("whCd", "ICF");
 		condition.addFilter("workUnit", batch.getId());
-		condition.addFilter("boxResultIfAt", LogisConstants.IS_NULL);
+		condition.addFilter("pickResultIfAt", LogisConstants.IS_NULL);
 		condition.addFilter("cmptQty", LogisConstants.GREATER_THAN_EQUAL, 1);
 		condition.addOrder("boxInputSeq", true);
 		condition.addOrder("mheDatetime", true);

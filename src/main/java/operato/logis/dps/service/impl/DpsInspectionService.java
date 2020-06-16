@@ -262,15 +262,19 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		
 		// 2. 송장 발행 요청
 		String invoiceId = this.dpsBoxSendSvc.requestInvoiceToWms(batch, box.getOrderNo(), box.getBoxId());
-		box.setInvoiceId(invoiceId);
 		
-		// 3. Tray 박스 상태 리셋
-		this.resetTrayBox(box.getBoxTypeCd());
-		
-		// 4. 송장 발행 - 별도 트랜잭션
+		// 3. 주문이 취소되었다면
 		if(ValueUtil.isEqualIgnoreCase(invoiceId, FnFConstants.ORDER_CANCEL_ALL)) {
+			// 주문 취소 처리
 			box.setStatus(LogisConstants.JOB_STATUS_CANCEL);
+			
+		// 4. 주문에 대한 송장이 발행되었다면 
 		} else {
+			// 박스에 송장 번호 설정
+			box.setInvoiceId(invoiceId);
+			// Tray 박스 상태 리셋
+			this.resetTrayBox(box.getBoxTypeCd());
+			// 송장 발행
 			BeanUtil.get(DpsInspectionService.class).printInvoiceLabel(batch, box, printerId);
 		}
 	}
@@ -303,31 +307,33 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		
 		// 5. WMS에 송장 발행 요청
 		String invoiceId = this.dpsBoxSendSvc.requestInvoiceToWmsBySplit(batch, sourceBox.getOrderNo(), sourceBox.getBoxId(), jobList);
-		sourceBox.setInvoiceId(invoiceId);
 		
 		// 6. 송장 번호가 성공이면 
 		if(ValueUtil.isNotEqual(invoiceId, FnFConstants.ORDER_CANCEL_ALL)) {
-			// 6.1 해당 주문으로 남은 검수 항목이 있는지 체크
+			// 6.1 박스에 송장 번호 설정
+			sourceBox.setInvoiceId(invoiceId);
+			
+			// 6.2 해당 주문으로 남은 검수 항목이 있는지 체크
 			condition.remove("itemCd");
 			
-			// 6.2 없다면 Tray 박스 상태 리셋 
+			// 6.3 남은 검수 항목이 없다면 Tray 박스 상태 리셋 
 			if(this.queryManager.selectSize(DpsJobInstance.class, condition) == 0) {
 				this.resetTrayBox(sourceBox.getBoxTypeCd());
 				
-			// 6.3 있으면 분할 이외 주문에 대해서 박스 ID 리셋
+			// 6.4 남은 검수 항목이 있으면 동일 주문의 처리 안 된 주문에 대해서 박스 ID 리셋
 			} else {
 				condition.remove("boxId");
 				
-				// 6.3.1 남은 주문 정보의 BoxId를 null로 업데이트
+				// 6.4.1 남은 주문 정보의 BoxId를 null로 업데이트
 				sql = "update mhe_dr set box_id = null where work_unit = :workUnit and ref_no = :refNo and (waybill_no is null or waybill_no = '')";
 				this.queryManager.executeBySql(sql, condition);
 				
-				// 6.3.2 남은 작업 정보의 BoxId를 null로 업데이트
+				// 6.4.2 남은 작업 정보의 BoxId를 null로 업데이트
 				sql = "update dps_job_instances set box_id = null where work_unit = :workUnit and ref_no = :refNo and (waybill_no is null or waybill_no = '')";
 				this.queryManager.executeBySql(sql, condition);
 			}
 			
-			// 6.4 송장 발행 
+			// 6.5 송장 발행 
 			BeanUtil.get(DpsInspectionService.class).printInvoiceLabel(batch, sourceBox, printerId);
 			
 		// 7. 송장 번호가 주문 전체 취소이면 리턴에 취소 설정

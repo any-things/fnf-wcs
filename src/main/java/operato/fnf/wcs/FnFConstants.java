@@ -6,7 +6,10 @@ package operato.fnf.wcs;
  * @author shortstop
  */
 public class FnFConstants {
-
+	/**
+	 * FnF 이천 물류 센터 코드
+	 */
+	public static final String WH_CD_ICF = "ICF";
 	/**
 	 * 주문 전체 취소
 	 */

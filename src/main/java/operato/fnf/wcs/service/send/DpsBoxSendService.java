@@ -393,11 +393,9 @@ public class DpsBoxSendService extends AbstractQueryService {
 		shmc.setSupportedMediaTypes(ValueUtil.toList(MediaType.APPLICATION_JSON_UTF8));
 		rest.getMessageConverters().add(0, shmc);
 		WaybillResponse res = rest.getForObject(waybillReqUrl, WaybillResponse.class);
-		String errorMsg = res.getErrorMsg();
 		
-		if(res == null || ValueUtil.isNotEqual(LogisConstants.OK_STRING.toUpperCase(), errorMsg)) {
-			String errorCode = res.getErrorCode();
-			if(ValueUtil.isEqualIgnoreCase(errorCode, FnFConstants.INVOICE_RES_CODE_ORDER_CANCEL_ALL)) {
+		if(res == null || ValueUtil.isNotEqual(LogisConstants.OK_STRING.toUpperCase(), res.getErrorMsg())) {			
+			if(ValueUtil.isEqualIgnoreCase(res.getErrorCode(), FnFConstants.INVOICE_RES_CODE_ORDER_CANCEL_ALL)) {
 				return FnFConstants.ORDER_CANCEL_ALL;
 			} else {
 				throw new ElidomRuntimeException("Error When Request Waybill Service To WMS", res.getErrorMsg());

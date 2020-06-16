@@ -27,7 +27,7 @@ public class PickingResultSendService extends AbstractQueryService {
 	/**
 	 * 실적 업데이트 쿼리
 	 */
-	private String resultUpdateQuery = "update mhe_dr set cmpt_qty = :pickedQty where wh_cd = :whCd and work_unit = :batchId and ref_no = :orderNo and outb_no = :outbNo and shipto_id = :shiptoId and item_cd = :skuCd and location_cd = :locationCd";
+	private String resultUpdateQuery = "update mhe_dr set cmpt_qty = :pickedQty, mhe_datetime = now() where wh_cd = :whCd and work_unit = :batchId and ref_no = :orderNo and outb_no = :outbNo and shipto_id = :shiptoId and item_cd = :skuCd and location_cd = :locationCd";
 	
 	/**
 	 * 피킹 실적 전송

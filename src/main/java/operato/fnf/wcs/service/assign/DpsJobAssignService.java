@@ -253,8 +253,8 @@ public class DpsJobAssignService extends AbstractQueryService {
 		// 2. DpsJobInstances 데이터 생성 
 		StringJoiner dpsJobQry = new StringJoiner(SysConstants.LINE_SEPARATOR);
 		
-		dpsJobQry.add("insert into dps_job_instances(id, mhe_dr_id, dps_assign_yn, dps_assign_at, cell_cd, status, wh_cd, strr_id, strr_nm, work_date, work_unit, wave_no, workseq_no, outb_no, ref_no, shipto_id, shipto_nm, item_cd, item_nm, item_season, item_style, item_color, item_size, barcode, pick_qty, cmpt_qty, mhe_no, pack_tcd, rfid_item_yn, box_input_seq)")
-		         .add("select :id, max(id), 'Y', now(), :cellCd, 'A', max(wh_cd), max(strr_id), max(strr_nm), max(work_date), work_unit, max(wave_no), max(workseq_no), max(outb_no), ref_no, max(shipto_id), max(shipto_nm), item_cd, max(item_nm), max(item_season), max(item_style), max(item_color), max(item_size), max(barcode), sum(pick_qty), 0, max(mhe_no), 'H', max(rfid_item_yn), 0")
+		dpsJobQry.add("insert into dps_job_instances(id, mhe_dr_id, dps_assign_yn, dps_assign_at, cell_cd, status, wh_cd, strr_id, strr_nm, work_date, work_unit, wave_no, workseq_no, outb_no, ref_no, shipto_id, shipto_nm, item_cd, item_nm, item_season, item_style, item_color, item_size, barcode, pick_qty, cmpt_qty, mhe_no, pack_tcd, rfid_item_yn, box_input_seq, outb_ect_date)")
+		         .add("select :id, max(id), 'Y', now(), :cellCd, 'A', max(wh_cd), max(strr_id), max(strr_nm), max(work_date), work_unit, max(wave_no), max(workseq_no), max(outb_no), ref_no, max(shipto_id), max(shipto_nm), item_cd, max(item_nm), max(item_season), max(item_style), max(item_color), max(item_size), max(barcode), sum(pick_qty), 0, max(mhe_no), 'H', max(rfid_item_yn), 0, max(outb_ect_date)")
 		         .add("  from MHE_DR")
 		         .add(" WHERE WORK_UNIT = :batchId AND REF_NO = :orderNo AND ITEM_CD = :skuCd")
 		         .add(" GROUP BY WORK_UNIT, REF_NO, ITEM_CD ");

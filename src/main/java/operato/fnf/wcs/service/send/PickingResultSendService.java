@@ -1,6 +1,5 @@
 package operato.fnf.wcs.service.send;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -27,7 +26,7 @@ public class PickingResultSendService extends AbstractQueryService {
 	/**
 	 * 실적 업데이트 쿼리
 	 */
-	private String resultUpdateQuery = "update mhe_dr set cmpt_qty = :pickedQty, mhe_datetime = now() where wh_cd = :whCd and work_unit = :batchId and ref_no = :orderNo and outb_no = :outbNo and shipto_id = :shiptoId and item_cd = :skuCd and location_cd = :locationCd";
+	private String resultUpdateQuery = "update mhe_dr set cmpt_qty = :pickedQty, mhe_datetime = :pickedAt where wh_cd = :whCd and work_unit = :batchId and ref_no = :orderNo and outb_no = :outbNo and shipto_id = :shiptoId and item_cd = :skuCd and location_cd = :locationCd";
 	
 	/**
 	 * 피킹 실적 전송
@@ -41,16 +40,15 @@ public class PickingResultSendService extends AbstractQueryService {
 		
 		if(ValueUtil.isNotEmpty(pickList)) {
 			IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
-			Date currentTime = new Date();
 			
 			// 2. WMS에 전송
 			for(WcsMheDr pickResult : pickList) {
 				// WCS 주문별 실적 정보 I/F
-				Map<String, Object> params = ValueUtil.newMap("whCd,batchId,orderNo,outbNo,shiptoId,skuCd,locationCd,pickedQty", "ICF", batch.getId(), pickResult.getRefNo(), pickResult.getOutbNo(), pickResult.getShiptoId(), pickResult.getItemCd(), pickResult.getLocationCd(), pickResult.getCmptQty());
+				Map<String, Object> params = ValueUtil.newMap("whCd,batchId,orderNo,outbNo,shiptoId,skuCd,locationCd,pickedQty,pickedAt", "ICF", batch.getId(), pickResult.getRefNo(), pickResult.getOutbNo(), pickResult.getShiptoId(), pickResult.getItemCd(), pickResult.getLocationCd(), pickResult.getCmptQty(), pickResult.getMheDatetime());
 				wmsQueryMgr.executeBySql(this.resultUpdateQuery, params);
 				
 				// WCS 주문 정보에 실적 전송 플래그 설정
-				pickResult.setBoxResultIfAt(currentTime);
+				pickResult.setBoxResultIfAt(pickResult.getMheDatetime());
 			}
 			
 			// 3. 피킹 실적 전송 시간 업데이트
@@ -68,7 +66,7 @@ public class PickingResultSendService extends AbstractQueryService {
 		Query condition = new Query();
 		condition.addFilter("whCd", "ICF");
 		condition.addFilter("workUnit", batch.getId());
-		condition.addFilter("pickResultIfAt", LogisConstants.IS_NULL);
+		condition.addFilter("pickResultIfAt", LogisConstants.IS_BLANK);
 		condition.addFilter("cmptQty", LogisConstants.GREATER_THAN_EQUAL, 1);
 		condition.addOrder("boxInputSeq", true);
 		condition.addOrder("mheDatetime", true);

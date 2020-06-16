@@ -66,7 +66,7 @@ public class PickingResultSendService extends AbstractQueryService {
 		Query condition = new Query();
 		condition.addFilter("whCd", "ICF");
 		condition.addFilter("workUnit", batch.getId());
-		condition.addFilter("pickResultIfAt", LogisConstants.IS_BLANK);
+		condition.addFilter("pickResultIfAt", LogisConstants.IS_NULL, LogisConstants.EMPTY_STRING);
 		condition.addFilter("cmptQty", LogisConstants.GREATER_THAN_EQUAL, 1);
 		condition.addOrder("boxInputSeq", true);
 		condition.addOrder("mheDatetime", true);

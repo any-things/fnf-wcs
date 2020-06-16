@@ -161,6 +161,7 @@ public class WaveMonitorJob extends AbstractFnFJob {
 	private List<WcsMheHr> searchStartedWaveList(Domain domain) {
 		Query condition = new Query();
 		condition.addFilter("whCd", "ICF");
+		condition.addFilter("bizType", "SHIPBYDAS");
 		condition.addFilter("status", "B");
 		condition.addFilter("prcsYn", LogisConstants.N_CAP_STRING);
 		return this.queryManager.selectList(WcsMheHr.class, condition);

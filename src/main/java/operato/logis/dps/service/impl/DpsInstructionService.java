@@ -6,7 +6,9 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
+import operato.fnf.wcs.entity.WmsMheHr;
 import xyz.anythings.base.LogisConstants;
+import xyz.anythings.base.entity.EquipGroup;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.entity.Rack;
 import xyz.anythings.base.event.EventConstants;
@@ -15,6 +17,9 @@ import xyz.anythings.base.service.impl.AbstractInstructionService;
 import xyz.anythings.sys.event.model.EventResultSet;
 import xyz.anythings.sys.event.model.SysEvent;
 import xyz.anythings.sys.util.AnyEntityUtil;
+import xyz.anythings.sys.util.AnyOrmUtil;
+import xyz.elidom.dbist.dml.Query;
+import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.util.ThrowUtil;
 import xyz.elidom.util.ValueUtil;
 
@@ -46,6 +51,15 @@ public class DpsInstructionService extends AbstractInstructionService implements
 			batch.setEquipCd(rack.getRackCd());
 			batch.setEquipNm(rack.getRackNm());
 			batch.setEquipGroupCd(rack.getEquipGroupCd());
+			
+			Query condition = AnyOrmUtil.newConditionForExecution(batch.getDomainId());
+			condition.addFilter("equipGroupCd", batch.getEquipGroupCd());
+			EquipGroup eg = this.queryManager.selectByCondition(EquipGroup.class, condition);
+			
+			if(eg != null) {
+				batch.setInputWorkers(eg.getInputWorkers());
+				batch.setTotalWorkers(eg.getTotalWorkers());
+			}
 
 		} else {
 			if(ValueUtil.isEmpty(batch.getEquipCd())) {
@@ -187,10 +201,20 @@ public class DpsInstructionService extends AbstractInstructionService implements
 		batch.setInstructedAt(new Date());
 		this.queryManager.update(batch);
 		
-		// 4. 후 처리 이벤트 
+		// 4. DPS 설비에 상태 전달
+		sql = "update mhe_hr set mhe_no = :equipGroupCd, status = 'A' where wh_cd = 'ICF' and work_unit = :batchId";
+		Map<String, Object> ifParams = ValueUtil.newMap("equipGroupCd,batchId", batch.getEquipGroupCd(), batch.getId());
+		this.queryManager.executeBySql(sql, ifParams);
+
+		// 5. WMS Wave에 상태 전달
+		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
+		sql = "update mhe_hr set mhe_no = :equipGroupCd, status = 'B', rcv_datetime = now() where wh_cd = 'ICF' and work_unit = :batchId";
+		wmsQueryMgr.executeBySql(sql, ifParams);
+		
+		// 6. 후 처리 이벤트 
 		this.publishInstructionEvent(SysEvent.EVENT_STEP_AFTER, batch, equipList, params);
 		
-		// 5. 총 주문 건수 리턴
+		// 7. 총 주문 건수 리턴
 		return batch.getBatchOrderQty();
 	}
 		

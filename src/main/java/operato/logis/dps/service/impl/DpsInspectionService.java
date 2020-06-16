@@ -266,7 +266,9 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		this.resetTrayBox(box.getBoxTypeCd());
 		
 		// 4. 송장 발행 - 별도 트랜잭션
-		BeanUtil.get(DpsInspectionService.class).printInvoiceLabel(batch, box, printerId);
+		if(!ValueUtil.isEqualIgnoreCase(invoiceId, "CANCEL_ALL")) {
+			BeanUtil.get(DpsInspectionService.class).printInvoiceLabel(batch, box, printerId);
+		}
 	}
 
 	@Override

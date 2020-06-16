@@ -197,13 +197,17 @@ public class DpsBoxSendService extends AbstractQueryService {
 		if(ValueUtil.isNotEmpty(boxedOrders)) {
 			WcsMheDr item = boxedOrders.get(0);
 			waybillNo = item.getWaybillNo();
+			String status = BoxPack.BOX_STATUS_EXAMED;
 			
 			if(ValueUtil.isEmpty(waybillNo)) {
 				waybillNo = this.newWaybillNo(boxId);
 				
 				for(WcsMheDr boxedOrder : boxedOrders) {
+					if(ValueUtil.isEqualIgnoreCase(waybillNo, "CANCEL_ALL")) {
+						status = LogisConstants.JOB_STATUS_CANCEL;
+					}
+					
 					boxedOrder.setWaybillNo(waybillNo);
-					boxedOrder.setStatus(BoxPack.BOX_STATUS_EXAMED);
 				}
 				
 				// mhe_dr에 송장 번호 업데이트
@@ -212,7 +216,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 			
 			// dps_job_instance에 송장 번호 업데이트
 			String sql = "update dps_job_instances set waybill_no = :invoiceId, status = :status where work_unit = :batchId and ref_no = :orderNo and box_id = :boxId";
-			this.queryManager.executeBySql(sql, ValueUtil.newMap("batchId,orderNo,boxId,invoiceId,status", batch.getId(), orderNo, boxId, waybillNo, BoxPack.BOX_STATUS_EXAMED));
+			this.queryManager.executeBySql(sql, ValueUtil.newMap("batchId,orderNo,boxId,invoiceId,status", batch.getId(), orderNo, boxId, waybillNo, status));
 		}
 		
 		return waybillNo;
@@ -234,6 +238,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 		if(ValueUtil.isNotEmpty(jobList)) {
 			DpsJobInstance job = jobList.get(0);
 			waybillNo = job.getWaybillNo();
+			String status = BoxPack.BOX_STATUS_EXAMED;
 			
 			if(ValueUtil.isEmpty(waybillNo)) {
 				waybillNo = this.newWaybillNo(boxId);
@@ -241,8 +246,12 @@ public class DpsBoxSendService extends AbstractQueryService {
 			
 			List<String> mheDrIdList = new ArrayList<String>();
 			for(DpsJobInstance item : jobList) {
+				if(ValueUtil.isEqualIgnoreCase(waybillNo, "CANCEL_ALL")) {
+					status = LogisConstants.JOB_STATUS_CANCEL;
+				}
+				
+				item.setStatus(status);
 				item.setWaybillNo(waybillNo);
-				item.setStatus(BoxPack.BOX_STATUS_EXAMED);
 				mheDrIdList.add(item.getMheDrId());
 			}
 				
@@ -251,7 +260,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 			
 			// 주문 정보 업데이트
 			String sql = "update mhe_dr set waybill_no = :invoiceId, status = :status where id in (:mheDrIdList)";
-			this.queryManager.executeBySql(sql, ValueUtil.newMap("invoiceId,mheDrIdList,status", waybillNo, mheDrIdList, BoxPack.BOX_STATUS_EXAMED));
+			this.queryManager.executeBySql(sql, ValueUtil.newMap("invoiceId,mheDrIdList,status", waybillNo, mheDrIdList, status));
 		}
 		
 		// 발행 송장 리턴
@@ -398,7 +407,12 @@ public class DpsBoxSendService extends AbstractQueryService {
 		WaybillResponse res = rest.getForObject(waybillReqUrl, WaybillResponse.class);
 		
 		if(res == null || ValueUtil.isNotEqual("OK", res.getErrorMsg())) {
-			throw new ElidomRuntimeException("Error When Request Waybill Service To WMS", res.getErrorMsg());
+			String errorCode = res.getErrorCode();
+			if(ValueUtil.isEqualIgnoreCase(errorCode, "MSG_FNF159_1")) {
+				return "CANCEL_ALL";
+			} else {
+				throw new ElidomRuntimeException("Error When Request Waybill Service To WMS", res.getErrorMsg());
+			}
 		} else {
 			return res.getWaybillNo();
 		}

@@ -6,8 +6,8 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import operato.fnf.wcs.FnFConstants;
 import operato.fnf.wcs.entity.DpsJobInstance;
@@ -391,17 +391,18 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	}
 	
 	@Override
-	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public int printInvoiceLabel(JobBatch batch, BoxPack box, String printerId) {
 		PrintEvent printEvent = this.createPrintEvent(batch.getDomainId(), box.getBoxId(), box.getInvoiceId(), printerId);
-		this.printLabel(printEvent);
+		this.eventPublisher.publishEvent(printEvent);
+		//this.printLabel(printEvent);
 		return 1;
 	}
 	
 	@Override
 	public int printInvoiceLabel(JobBatch batch, DpsInspection inspection, String printerId) {
 		PrintEvent printEvent = this.createPrintEvent(batch.getDomainId(), inspection.getBoxId(), inspection.getInvoiceId(), printerId);
-		this.printLabel(printEvent);
+		this.eventPublisher.publishEvent(printEvent);
+		//this.printLabel(printEvent);
 		return 1;
 	}
 
@@ -423,13 +424,21 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		
 	}
 	
+	/**
+	 * 라벨 인쇄 이벤트 생성 
+	 * 
+	 * @param domainId
+	 * @param boxId
+	 * @param invoiceId
+	 * @param printerId
+	 * @return
+	 */
 	public PrintEvent createPrintEvent(Long domainId, String boxId, String invoiceId, String printerId) {
-		
 		String labelTemplate = SettingUtil.getValue(domainId, "fnf.dps.invoice.template");
 		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsExpressWaybillPrint.class);
-		Map<String, Object> waybillParams = ValueUtil.newMap("whCd,waybillNo,boxId", "ICF", invoiceId, boxId);
+		Map<String, Object> waybillParams = ValueUtil.newMap("whCd,waybillNo,boxId", FnFConstants.WH_CD_ICF, invoiceId, boxId);
 		WmsExpressWaybillPrint waybillPrint = wmsQueryMgr.selectByCondition(WmsExpressWaybillPrint.class, waybillParams);
-		Map<String, Object> packinfoParams = ValueUtil.newMap("whCd,boxId", "ICF", boxId);
+		Map<String, Object> packinfoParams = ValueUtil.newMap("whCd,boxId", FnFConstants.WH_CD_ICF, boxId);
 		List<WmsExpressWaybillPackinfo> packItems = wmsQueryMgr.selectList(WmsExpressWaybillPackinfo.class, packinfoParams);
 		Map<String, Object> printParams = ValueUtil.newMap("box,items", waybillPrint, packItems);
 		return new PrintEvent(domainId, printerId, labelTemplate, printParams);
@@ -442,6 +451,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	 * @param printerId
 	 * @param parameters
 	 */
+	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, classes = PrintEvent.class)
 	public void printLabel(PrintEvent printEvent) {
 		// 인쇄 옵션 정보 추출
 		Printer printer = this.queryManager.select(Printer.class, printEvent.getPrinterId());
@@ -450,7 +460,6 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		
 		// 인쇄 요청
 		this.printerCtrl.printLabelByLabelTemplate(agentUrl, printerName, printEvent.getPrintTemplate(), printEvent.getTemplateParams());
-		//this.eventPublisher.publishEvent(printEvent);
 	}
 
 }

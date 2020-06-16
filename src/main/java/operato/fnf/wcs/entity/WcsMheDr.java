@@ -57,6 +57,9 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "ref_no", nullable = true, length = 30)
 	private String refNo;
 	
+	@Column (name = "ref_detl_no", nullable = true, length = 50)
+	private String refDetlNo;
+	
 	@Column (name = "chute_no", nullable = true, length = 10)
 	private String chuteNo;
 	
@@ -326,6 +329,14 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setRefNo(String refNo) {
 		this.refNo = refNo;
+	}
+
+	public String getRefDetlNo() {
+		return refDetlNo;
+	}
+
+	public void setRefDetlNo(String refDetlNo) {
+		this.refDetlNo = refDetlNo;
 	}
 
 	public String getChuteNo() {

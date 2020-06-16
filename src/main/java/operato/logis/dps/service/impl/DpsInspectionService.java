@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -451,6 +452,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	 * @param printerId
 	 * @param parameters
 	 */
+	@Async
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, classes = PrintEvent.class)
 	public void printLabel(PrintEvent printEvent) {
 		// 인쇄 옵션 정보 추출

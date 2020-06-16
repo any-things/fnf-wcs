@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import operato.fnf.wcs.service.send.DasBoxSendService;
+import operato.fnf.wcs.service.send.PickingResultSendService;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.sys.event.model.ErrorEvent;
@@ -24,12 +25,18 @@ import xyz.elidom.sys.util.ValueUtil;
  */
 @Component
 public class ResultSendJob extends AbstractFnFJob {
+	
 	/**
 	 * DAS 박스 전송 서비스
 	 */
 	@Autowired
 	private DasBoxSendService dasBoxSendSvc;
-
+	/**
+	 * 피킹 실적 전송 서비스
+	 */
+	@Autowired
+	private PickingResultSendService pickResultSendSvc;
+	
 	/**
 	 * 매 30초 마다  
 	 */
@@ -54,7 +61,10 @@ public class ResultSendJob extends AbstractFnFJob {
 				
 				if(ValueUtil.isNotEmpty(batches)) {
 					for(JobBatch batch : batches) {
-						// WMS 실적 전송
+						// WMS에 피킹 실적 전송
+						this.sendPickResultToWms(domain, batch);
+						
+						// WMS에 박스 실적 전송
 						this.sendBoxResultToWms(domain, batch);
 					}
 				}
@@ -79,7 +89,7 @@ public class ResultSendJob extends AbstractFnFJob {
 	private List<JobBatch> searchRunningBatches(Long domainId) {
 		Query condition = AnyOrmUtil.newConditionForExecution(domainId);
 		condition.addFilter("status", JobBatch.STATUS_RUNNING);
-		condition.addFilter("jobType", LogisConstants.JOB_TYPE_DAS);
+		condition.addFilter("jobType", LogisConstants.IN, ValueUtil.toList(LogisConstants.JOB_TYPE_DAS, LogisConstants.JOB_TYPE_DPS));
 		condition.addOrder("jobType", false);
 		condition.addOrder("instructedAt", true);
 		return this.queryManager.selectList(JobBatch.class, condition);
@@ -92,12 +102,21 @@ public class ResultSendJob extends AbstractFnFJob {
 	 * @param batch
 	 * @return
 	 */
-	private void sendBoxResultToWms(Domain domain, JobBatch batch) {
-		String jobType = batch.getJobType();
-		
-		if(LogisConstants.isDasJobType(jobType)) {
+	private void sendBoxResultToWms(Domain domain, JobBatch batch) {		
+		if(LogisConstants.isDasJobType(batch.getJobType())) {
 			this.dasBoxSendSvc.sendBoxResults(domain, batch);
 		}
+	}
+	
+	/**
+	 * 피킹 실적을 WMS로 전송
+	 * 
+	 * @param domain
+	 * @param batch
+	 * @return
+	 */
+	private void sendPickResultToWms(Domain domain, JobBatch batch) {
+		this.pickResultSendSvc.sendPickingResults(domain, batch);
 	}
 
 }

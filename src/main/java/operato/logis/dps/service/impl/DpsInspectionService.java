@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import operato.fnf.wcs.FnFConstants;
 import operato.fnf.wcs.entity.DpsJobInstance;
 import operato.fnf.wcs.entity.WmsExpressWaybillPackinfo;
 import operato.fnf.wcs.entity.WmsExpressWaybillPrint;
@@ -17,6 +18,7 @@ import operato.logis.dps.model.DpsInspItem;
 import operato.logis.dps.model.DpsInspection;
 import operato.logis.dps.query.store.DpsInspectionQueryStore;
 import operato.logis.dps.service.api.IDpsInspectionService;
+import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.BoxPack;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.entity.Printer;
@@ -266,7 +268,9 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		this.resetTrayBox(box.getBoxTypeCd());
 		
 		// 4. 송장 발행 - 별도 트랜잭션
-		if(!ValueUtil.isEqualIgnoreCase(invoiceId, "CANCEL_ALL")) {
+		if(ValueUtil.isEqualIgnoreCase(invoiceId, FnFConstants.ORDER_CANCEL_ALL)) {
+			box.setStatus(LogisConstants.JOB_STATUS_CANCEL);
+		} else {
 			BeanUtil.get(DpsInspectionService.class).printInvoiceLabel(batch, box, printerId);
 		}
 	}
@@ -300,29 +304,38 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		// 5. WMS에 송장 발행 요청
 		String invoiceId = this.dpsBoxSendSvc.requestInvoiceToWmsBySplit(batch, sourceBox.getOrderNo(), sourceBox.getBoxId(), jobList);
 		sourceBox.setInvoiceId(invoiceId);
-				
-		// 6. 해당 주문으로 남은 검수 항목이 있는지 체크
-		condition.remove("itemCd");
 		
-		// 7. 없다면 Tray 박스 상태 리셋 
-		if(this.queryManager.selectSize(DpsJobInstance.class, condition) == 0) {
-			this.resetTrayBox(sourceBox.getBoxTypeCd());
+		// 6. 송장 번호가 성공이면 
+		if(ValueUtil.isNotEqual(invoiceId, FnFConstants.ORDER_CANCEL_ALL)) {
+			// 6.1 해당 주문으로 남은 검수 항목이 있는지 체크
+			condition.remove("itemCd");
+			
+			// 6.2 없다면 Tray 박스 상태 리셋 
+			if(this.queryManager.selectSize(DpsJobInstance.class, condition) == 0) {
+				this.resetTrayBox(sourceBox.getBoxTypeCd());
+				
+			// 6.3 있으면 분할 이외 주문에 대해서 박스 ID 리셋
+			} else {
+				condition.remove("boxId");
+				
+				// 6.3.1 남은 주문 정보의 BoxId를 null로 업데이트
+				sql = "update mhe_dr set box_id = null where work_unit = :workUnit and ref_no = :refNo and (waybill_no is null or waybill_no = '')";
+				this.queryManager.executeBySql(sql, condition);
+				
+				// 6.3.2 남은 작업 정보의 BoxId를 null로 업데이트
+				sql = "update dps_job_instances set box_id = null where work_unit = :workUnit and ref_no = :refNo and (waybill_no is null or waybill_no = '')";
+				this.queryManager.executeBySql(sql, condition);
+			}
+			
+			// 6.4 송장 발행 
+			BeanUtil.get(DpsInspectionService.class).printInvoiceLabel(batch, sourceBox, printerId);
+			
+		// 7. 송장 번호가 주문 전체 취소이면 리턴에 취소 설정
 		} else {
-			condition.remove("boxId");
-			
-			// 남은 주문 정보의 BoxId를 null로 업데이트
-			sql = "update mhe_dr set box_id = null where work_unit = :workUnit and ref_no = :refNo and (waybill_no is null or waybill_no = '')";
-			this.queryManager.executeBySql(sql, condition);
-			
-			// 남은 작업 정보의 BoxId를 null로 업데이트
-			sql = "update dps_job_instances set box_id = null where work_unit = :workUnit and ref_no = :refNo and (waybill_no is null or waybill_no = '')";
-			this.queryManager.executeBySql(sql, condition);
+			sourceBox.setStatus(LogisConstants.JOB_STATUS_CANCEL);
 		}
 		
-		// 8. 송장 발행 
-		BeanUtil.get(DpsInspectionService.class).printInvoiceLabel(batch, sourceBox, printerId);
-		
-		// 9. 리턴
+		// 8. 리턴
 		return sourceBox;
 	}
 	
@@ -405,9 +418,6 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	}
 	
 	public PrintEvent createPrintEvent(Long domainId, String boxId, String invoiceId, String printerId) {
-		// TODO 테스트 시 하드코딩 제거
-		//boxId = "20200400080413";
-		//invoiceId = "508440851004";
 		
 		String labelTemplate = SettingUtil.getValue(domainId, "fnf.dps.invoice.template");
 		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsExpressWaybillPrint.class);

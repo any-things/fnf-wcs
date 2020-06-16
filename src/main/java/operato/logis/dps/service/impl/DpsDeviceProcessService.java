@@ -637,7 +637,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		this.dpsInspectionService.finishInspection(batch, boxPack, null, printerId);
 
 		// 4. 이벤트 처리 결과 셋팅
-		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, null));
+		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, boxPack));
 		event.setExecuted(true);
 	}
 	

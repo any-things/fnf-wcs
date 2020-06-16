@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import operato.fnf.wcs.FnFConstants;
 import operato.fnf.wcs.entity.DpsJobInstance;
 import operato.fnf.wcs.entity.RfidDpsInspResult;
 import operato.fnf.wcs.entity.RfidResult;
@@ -120,11 +121,12 @@ public class DpsBoxSendService extends AbstractQueryService {
 			String todayStr = DateUtil.todayStr("yyyyMMdd");
 			Date currentTime = new Date();
 			String currentTimeStr = DateUtil.dateTimeStr(currentTime, "yyyyMMddHHmmss");
+			String status = "S";
 			
 			for(WcsMheDr boxedOrder : orderItems) {
 				// 1. 박스 번호, 박스 전송 시간 설정
 				boxedOrder.setBoxResultIfAt(currentTime);
-				boxedOrder.setStatus("S");
+				boxedOrder.setStatus(status);
 				
 				// 2. WMS 박스 실적 전송 
 				Map<String, Object> params = ValueUtil.newMap("today,whCd,boxId,orderNo,brandCd,skuCd,pickedQty,jobDate,currentTime", todayStr, boxedOrder.getWhCd(), boxedOrder.getBoxId(), boxedOrder.getRefNo(), boxedOrder.getStrrId(), boxedOrder.getItemCd(), boxedOrder.getCmptQty(), boxedOrder.getOutbEctDate(), currentTimeStr);
@@ -136,7 +138,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 			
 			// 4. 작업 정보 업데이트
 			String sql = "update dps_job_instances set box_result_if_at = now(), status = :status where work_unit = :batchId and ref_no = :orderNo and box_id = :boxId";
-			this.queryManager.executeBySql(sql, ValueUtil.newMap("batchId,orderNo,boxId,status", batch.getId(), orderNo, boxId, "S"));
+			this.queryManager.executeBySql(sql, ValueUtil.newMap("batchId,orderNo,boxId,status", batch.getId(), orderNo, boxId, status));
 		}
 	}
 	
@@ -157,11 +159,12 @@ public class DpsBoxSendService extends AbstractQueryService {
 			Date currentTime = new Date();
 			String currentTimeStr = DateUtil.dateTimeStr(currentTime, "yyyyMMddHHmmss");
 			List<String> orderIdList = new ArrayList<String>(jobList.size());
+			String status = "S";
 			
 			for(DpsJobInstance job : jobList) {
 				// 1. 박스 번호, 박스 전송 시간 설정
 				job.setBoxResultIfAt(currentTime);
-				job.setStatus("S");
+				job.setStatus(status);
 				
 				// 2. 주문 정보 조회
 				orderIdList.add(job.getMheDrId());
@@ -176,7 +179,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 			
 			// 5. 작업 상세 정보 업데이트
 			String sql = "update mhe_dr set status = :status, box_result_if_at = :boxResultIfAt where id in (:orderIdList)";
-			Map<String, Object> params = ValueUtil.newMap("orderIdList,status,boxResultIfAt", orderIdList, "S", currentTime);
+			Map<String, Object> params = ValueUtil.newMap("orderIdList,status,boxResultIfAt", orderIdList, status, currentTime);
 			this.queryManager.executeBySql(sql, params);
 		}
 	}
@@ -196,23 +199,16 @@ public class DpsBoxSendService extends AbstractQueryService {
 		
 		if(ValueUtil.isNotEmpty(boxedOrders)) {
 			WcsMheDr item = boxedOrders.get(0);
-			waybillNo = item.getWaybillNo();
-			String status = BoxPack.BOX_STATUS_EXAMED;
+			waybillNo = ValueUtil.isEmpty(item.getWaybillNo()) ? this.newWaybillNo(boxId) : item.getWaybillNo();			
+			String status = ValueUtil.isEqualIgnoreCase(waybillNo, FnFConstants.ORDER_CANCEL_ALL) ? LogisConstants.JOB_STATUS_CANCEL : BoxPack.BOX_STATUS_EXAMED;
 			
-			if(ValueUtil.isEmpty(waybillNo)) {
-				waybillNo = this.newWaybillNo(boxId);
-				
-				for(WcsMheDr boxedOrder : boxedOrders) {
-					if(ValueUtil.isEqualIgnoreCase(waybillNo, "CANCEL_ALL")) {
-						status = LogisConstants.JOB_STATUS_CANCEL;
-					}
-					
-					boxedOrder.setWaybillNo(waybillNo);
-				}
-				
-				// mhe_dr에 송장 번호 업데이트
-				this.queryManager.updateBatch(boxedOrders, "waybillNo", "status");
+			for(WcsMheDr boxedOrder : boxedOrders) {
+				boxedOrder.setStatus(status);
+				boxedOrder.setWaybillNo(waybillNo);
 			}
+			
+			// mhe_dr에 송장 번호 업데이트
+			this.queryManager.updateBatch(boxedOrders, "waybillNo", "status");
 			
 			// dps_job_instance에 송장 번호 업데이트
 			String sql = "update dps_job_instances set waybill_no = :invoiceId, status = :status where work_unit = :batchId and ref_no = :orderNo and box_id = :boxId";
@@ -237,19 +233,11 @@ public class DpsBoxSendService extends AbstractQueryService {
 		
 		if(ValueUtil.isNotEmpty(jobList)) {
 			DpsJobInstance job = jobList.get(0);
-			waybillNo = job.getWaybillNo();
-			String status = BoxPack.BOX_STATUS_EXAMED;
-			
-			if(ValueUtil.isEmpty(waybillNo)) {
-				waybillNo = this.newWaybillNo(boxId);
-			}
-			
+			waybillNo = ValueUtil.isEmpty(job.getWaybillNo()) ? this.newWaybillNo(boxId) : job.getWaybillNo();			
+			String status = ValueUtil.isEqualIgnoreCase(waybillNo, FnFConstants.ORDER_CANCEL_ALL) ? LogisConstants.JOB_STATUS_CANCEL : BoxPack.BOX_STATUS_EXAMED;
 			List<String> mheDrIdList = new ArrayList<String>();
+			
 			for(DpsJobInstance item : jobList) {
-				if(ValueUtil.isEqualIgnoreCase(waybillNo, "CANCEL_ALL")) {
-					status = LogisConstants.JOB_STATUS_CANCEL;
-				}
-				
 				item.setStatus(status);
 				item.setWaybillNo(waybillNo);
 				mheDrIdList.add(item.getMheDrId());
@@ -405,11 +393,12 @@ public class DpsBoxSendService extends AbstractQueryService {
 		shmc.setSupportedMediaTypes(ValueUtil.toList(MediaType.APPLICATION_JSON_UTF8));
 		rest.getMessageConverters().add(0, shmc);
 		WaybillResponse res = rest.getForObject(waybillReqUrl, WaybillResponse.class);
+		String errorMsg = res.getErrorMsg();
 		
-		if(res == null || ValueUtil.isNotEqual("OK", res.getErrorMsg())) {
+		if(res == null || ValueUtil.isNotEqual(LogisConstants.OK_STRING.toUpperCase(), errorMsg)) {
 			String errorCode = res.getErrorCode();
-			if(ValueUtil.isEqualIgnoreCase(errorCode, "MSG_FNF159_1")) {
-				return "CANCEL_ALL";
+			if(ValueUtil.isEqualIgnoreCase(errorCode, FnFConstants.INVOICE_RES_CODE_ORDER_CANCEL_ALL)) {
+				return FnFConstants.ORDER_CANCEL_ALL;
 			} else {
 				throw new ElidomRuntimeException("Error When Request Waybill Service To WMS", res.getErrorMsg());
 			}

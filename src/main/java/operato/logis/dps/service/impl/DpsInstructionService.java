@@ -208,7 +208,7 @@ public class DpsInstructionService extends AbstractInstructionService implements
 
 		// 5. WMS Wave에 상태 전달
 		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
-		sql = "update mhe_hr set mhe_no = :equipGroupCd, status = 'B', rcv_datetime = now() where wh_cd = 'ICF' and work_unit = :batchId";
+		sql = "update mhe_hr set mhe_no = :equipGroupCd, status = 'B', rcv_datetime = sysdate where wh_cd = 'ICF' and work_unit = :batchId";
 		wmsQueryMgr.executeBySql(sql, ifParams);
 		
 		// 6. 후 처리 이벤트 

@@ -10,6 +10,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import operato.fnf.wcs.entity.RfidBoxItem;
 import operato.fnf.wcs.entity.RfidResult;
 import operato.fnf.wcs.service.send.DpsBoxSendService;
 import operato.logis.dps.DpsCodeConstants;
@@ -40,6 +41,7 @@ import xyz.anythings.base.service.impl.AbstractLogisService;
 import xyz.anythings.sys.model.BaseResponse;
 import xyz.anythings.sys.util.AnyEntityUtil;
 import xyz.elidom.dbist.dml.Page;
+import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.SysConstants;
 import xyz.elidom.util.ValueUtil;
 
@@ -530,8 +532,9 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		// String skuBarcd = this.queryManager.selectBySql(sql, funcParams, String.class);
 		
 		// 5. RFID 상태값 체크 프로시져 호출
-		Map<String, Object> procParams = ValueUtil.newMap("IN_CD_RFIDUID", rfidId, null, null);
-		Map<?, ?> result = this.queryManager.callReturnProcedure("RFID_IF.PRO_RFIDUID_STATUS_CHECK", procParams, Map.class);
+		Map<String, Object> procParams = ValueUtil.newMap("IN_CD_RFIDUID,OUT_CONFIRM,OUT_MSG,OUT_DEPART,OUT_ITEM_CD,OUT_STYLE,OUT_GOODS,OUT_COLOR,OUT_SIZE,OUT_BARCODE", rfidId, null, null, null, null, null, null, null, null, null);
+		IQueryManager rfidQueryMgr = this.getDataSourceQueryManager(RfidBoxItem.class);
+		Map<?, ?> result = rfidQueryMgr.callReturnProcedure("PRO_RFIDUID_STATUS_CHECK", procParams, Map.class);
 		String successYn = ValueUtil.toString(result.get("OUT_CONFIRM"));
 		
 		// 6. RFID가 문제가 없는 경우 

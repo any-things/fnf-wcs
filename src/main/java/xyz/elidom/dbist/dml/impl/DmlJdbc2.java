@@ -83,6 +83,7 @@ import xyz.elidom.dbist.exception.DbistRuntimeException;
 import xyz.elidom.dbist.metadata.Column;
 import xyz.elidom.dbist.metadata.Sequence;
 import xyz.elidom.dbist.metadata.Table;
+import xyz.elidom.util.ValueUtil;
 
 /**
  * @author Steve M. Jung
@@ -2193,8 +2194,11 @@ public class DmlJdbc2 extends AbstractDml implements Dml {
 		ValueUtils.assertNotEmpty("name", name);
 
 		SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(this.getDataSource());
-		String schema = this.getDataSource().getConnection().getSchema();
-		simpleJdbcCall.withSchemaName(schema);
+		String schema = this.getDomain();
+		if(ValueUtil.isNotEmpty(schema)) {
+			simpleJdbcCall.withSchemaName(schema);
+		}
+		
 		simpleJdbcCall.withProcedureName(name);
 
 		paramMap = paramMap == null ? new HashMap<String, Object>() : paramMap;

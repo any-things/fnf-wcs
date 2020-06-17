@@ -1,6 +1,5 @@
 package operato.logis.dps.service.impl;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -12,12 +11,10 @@ import org.springframework.stereotype.Component;
 
 import operato.fnf.wcs.entity.RfidBoxItem;
 import operato.fnf.wcs.entity.RfidResult;
-import operato.fnf.wcs.service.send.DpsBoxSendService;
 import operato.logis.dps.DpsCodeConstants;
 import operato.logis.dps.DpsConstants;
 import operato.logis.dps.model.DpsBatchInputableBox;
 import operato.logis.dps.model.DpsBatchSummary;
-import operato.logis.dps.model.DpsInspItem;
 import operato.logis.dps.model.DpsInspection;
 import operato.logis.dps.model.DpsSinglePackJobInform;
 import operato.logis.dps.model.DpsSinglePackSummary;
@@ -32,7 +29,6 @@ import xyz.anythings.base.entity.BoxPack;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.entity.JobInput;
 import xyz.anythings.base.entity.JobInstance;
-import xyz.anythings.base.entity.TrayBox;
 import xyz.anythings.base.event.rest.DeviceProcessRestEvent;
 import xyz.anythings.base.model.BatchProgressRate;
 import xyz.anythings.base.model.EquipBatchSet;
@@ -41,7 +37,6 @@ import xyz.anythings.sys.model.BaseResponse;
 import xyz.anythings.sys.util.AnyEntityUtil;
 import xyz.elidom.dbist.dml.Page;
 import xyz.elidom.orm.IQueryManager;
-import xyz.elidom.sys.SysConstants;
 import xyz.elidom.util.ValueUtil;
 
 /**
@@ -71,11 +66,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 	 */
 	@Autowired
 	private DpsInspectionService dpsInspectionService;
-	/**
-	 * 박스 실적 전송 서비스
-	 */
-	@Autowired
-	private DpsBoxSendService dpsBoxSendSvc;
+
 	/*****************************************************************************************************
 	 * 										작 업 진 행 율 A P I
 	 *****************************************************************************************************
@@ -515,28 +506,19 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		Map<String, Object> params = event.getRequestParams();
 		String equipCd = params.get("equipCd").toString();
 		String equipType = params.get("equipType").toString();
-		String orderNo = params.get("orderNo").toString();
 		String rfidId = params.get("rfidId").toString();
 		
 		// 2. 설비 코드로 현재 진행 중인 작업 배치 및 설비 정보 조회 
-		EquipBatchSet equipBatchSet = DpsServiceUtil.findBatchByEquip(event.getDomainId(), equipType, equipCd);
-		JobBatch batch = equipBatchSet.getBatch();
-		
-		// 3. 검수 실적 
-		this.dpsInspectionService.findInspectionByOrder(batch, orderNo, false, true);
-		
-		// 4. rfidId로 RFID 시스템으로 호출 RFID코드 88바코드변환 FUNCTION : RFID_IF.FN_RFID_DECODING
-		// String sql = "SELECT RFID_IF.FN_RFID_DECODING(:rfidId) FROM DUAL";
-		// Map<String, Object> funcParams = ValueUtil.newMap("rfidId", rfidId);
-		// String skuBarcd = this.queryManager.selectBySql(sql, funcParams, String.class);
-		
-		// 5. RFID 상태값 체크 프로시져 호출
-		Map<String, Object> procParams = ValueUtil.newMap("IN_CD_RFIDUID,OUT_CONFIRM,OUT_MSG,OUT_DEPART,OUT_ITEM_CD,OUT_STYLE,OUT_GOODS,OUT_COLOR,OUT_SIZE,OUT_BARCODE", rfidId, null, null, null, null, null, null, null, null, null);
+		DpsServiceUtil.findBatchByEquip(event.getDomainId(), equipType, equipCd);
+				
+		// 3. RFID 상태값 체크 프로시져 호출
+		Map<String, Object> procParams = ValueUtil.newMap("IN_CD_RFIDUID", rfidId);
 		IQueryManager rfidQueryMgr = this.getDataSourceQueryManager(RfidBoxItem.class);
 		Map<?, ?> result = rfidQueryMgr.callReturnProcedure("PRO_RFIDUID_STATUS_CHECK", procParams, Map.class);
+		// 리턴 파라미터 : OUT_CONFIRM, OUT_MSG, OUT_DEPART, OUT_ITEM_CD, OUT_STYLE, OUT_GOODS, OUT_COLOR, OUT_SIZE, OUT_BARCOD
 		String successYn = ValueUtil.toString(result.get("OUT_CONFIRM"));
 		
-		// 6. RFID가 문제가 없는 경우 
+		// 5. RFID가 문제가 없는 경우
 		if(ValueUtil.isEqualIgnoreCase(successYn, LogisConstants.Y_CAP_STRING)) {
 			RfidResult rfid = new RfidResult();
 			rfid.setRfidId(rfidId);
@@ -544,128 +526,12 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 			rfid.setSkuCd(ValueUtil.toString(result.get("OUT_ITEM_CD")));
 			event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, rfid));
 			
-		// 7. RFID가 문제가 있는 경우 
+		// 6. RFID가 문제가 있는 경우 
 		} else {
-			String errorMsg = ValueUtil.isNotEmpty(result.get("OUT_MSG")) ? result.get("OUT_MSG").toString() : SysConstants.EMPTY_STRING;
+			String errorMsg = ValueUtil.isNotEmpty(result.get("OUT_MSG")) ? result.get("OUT_MSG").toString() : "유효하지 않은 RFID!";
 			event.setReturnResult(new BaseResponse(false, errorMsg, null));
 		}
 		
-		event.setExecuted(true);
-	}
-	
-	/**
-	 * DPS 송장 (박스) 분할
-	 * 
-	 * @param event
-	 */
-	@EventListener(classes=DeviceProcessRestEvent.class, condition = "#event.checkCondition('/inspection/split_box', 'dps')")
-	@Order(Ordered.LOWEST_PRECEDENCE)
-	public void splitBox(DeviceProcessRestEvent event) {
-		
-		// 1. 파라미터 
-		Map<String, Object> params = event.getRequestParams();
-		String equipCd = params.get("equipCd").toString();
-		String equipType = params.get("equipType").toString();
-		String trayCd = params.get("trayCd").toString();		
-		String orderNo = params.get("orderNo").toString();
-		String boxId = params.get("boxId").toString();
-		String printerId = params.get("printerId").toString();
-		List<Map<String, Object>> inspItems = event.getRequestPostBody();
-		
-		if(ValueUtil.isEmpty(inspItems)) {
-			event.setReturnResult(new BaseResponse(true, LogisConstants.NG_STRING, null));
-			event.setExecuted(true);
-		} 
-		
-		// 2. 송장 분할 아이템 대상
-		List<DpsInspItem> splitInspItems = new ArrayList<DpsInspItem>(inspItems.size());
-		for(Map<String, Object> item : inspItems) {
-			DpsInspItem inspItem = new DpsInspItem();
-			inspItem.setSkuCd(ValueUtil.toString(item.get("sku_cd")));
-			inspItem.setPickedQty(ValueUtil.toInteger(item.get("picked_qty")));
-			inspItem.setConfirmQty(ValueUtil.toInteger(item.get("confirm_qty")));
-			splitInspItems.add(inspItem);
-		}
-		
-		// 3. 설비 코드로 현재 진행 중인 작업 배치 및 설비 정보 조회 
-		EquipBatchSet equipBatchSet = DpsServiceUtil.findBatchByEquip(event.getDomainId(), equipType, equipCd);
-		JobBatch batch = equipBatchSet.getBatch();
-		
-		// 4. 검수 정보 조회 - 주문 번호가 orderNo이고 박스 ID가 boxId이고 송장 번호가 없는 작업 정보로 검수 정보 조회 
-		BoxPack boxPack = new BoxPack();
-		boxPack.setDomainId(batch.getDomainId());
-		boxPack.setBatchId(batch.getId());
-		boxPack.setBoxTypeCd(trayCd);
-		boxPack.setOrderNo(orderNo);
-		boxPack.setBoxId(boxId);
-		
-		// 5. 송장 분할
-		BoxPack splitBox = this.dpsInspectionService.splitBox(batch, boxPack, splitInspItems, printerId);
-
-		// 6. 이벤트 처리 결과 셋팅
-		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, splitBox));
-		event.setExecuted(true);
-	}
-	
-	/**
-	 * DPS RFID에 의한 송장 (박스) 분할
-	 * 
-	 * @param event
-	 */
-	@EventListener(classes=DeviceProcessRestEvent.class, condition = "#event.checkCondition('/inspection/split_box_rfid', 'dps')")
-	@Order(Ordered.LOWEST_PRECEDENCE)
-	public void splitBoxByRfid(DeviceProcessRestEvent event) {
-		
-		// 1. 파라미터 
-		Map<String, Object> params = event.getRequestParams();
-		String equipCd = params.get("equipCd").toString();
-		String equipType = params.get("equipType").toString();
-		String trayCd = params.get("trayCd").toString();		
-		String orderNo = params.get("orderNo").toString();
-		String boxId = params.get("boxId").toString();
-		String printerId = params.get("printerId").toString();
-		List<Map<String, Object>> inspItems = event.getRequestPostBody();
-		
-		if(ValueUtil.isEmpty(inspItems)) {
-			event.setReturnResult(new BaseResponse(true, LogisConstants.NG_STRING, null));
-			event.setExecuted(true);
-		}
-		
-		// 2. 설비 코드로 현재 진행 중인 작업 배치 및 설비 정보 조회 
-		EquipBatchSet equipBatchSet = DpsServiceUtil.findBatchByEquip(event.getDomainId(), equipType, equipCd);
-		JobBatch batch = equipBatchSet.getBatch();
-		
-		// 3. 송장 분할 RFID 아이템 대상 실적 저장 
-		List<RfidResult> splitInspItems = new ArrayList<RfidResult>(inspItems.size());
-		for(Map<String, Object> item : inspItems) {
-			RfidResult rfidItem = new RfidResult();
-			rfidItem.setRfidId(ValueUtil.toString(item.get("rfid_id")));
-			rfidItem.setSkuCd(ValueUtil.toString(item.get("sku_cd")));
-			rfidItem.setOrderNo(orderNo);
-			rfidItem.setBoxId(boxId);
-			rfidItem.setBatchId(batch.getId());
-			rfidItem.setBrandCd(ValueUtil.toString(item.get("brand_cd")));
-			rfidItem.setJobDate(batch.getJobDate());
-			rfidItem.setShopCd(ValueUtil.toString(item.get("shop_cd")));
-			rfidItem.setOrderQty(ValueUtil.toInteger(item.get("order_qty")));
-			splitInspItems.add(rfidItem);
-		}
-		
-		this.queryManager.insertBatch(splitInspItems);
-		
-		// 4. 검수 정보 조회 - 주문 번호가 orderNo이고 박스 ID가 boxId이고 송장 번호가 없는 작업 정보로 검수 정보 조회 
-		BoxPack boxPack = new BoxPack();
-		boxPack.setDomainId(batch.getDomainId());
-		boxPack.setBatchId(batch.getId());
-		boxPack.setBoxTypeCd(trayCd);
-		boxPack.setOrderNo(orderNo);
-		boxPack.setBoxId(boxId);
-		
-		// 5. 송장 분할
-		BoxPack splitBox = this.dpsInspectionService.splitBoxByRfid(batch, boxPack, splitInspItems, printerId);
-
-		// 6. 이벤트 처리 결과 셋팅
-		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, splitBox));
 		event.setExecuted(true);
 	}
 	
@@ -677,7 +543,6 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 	@EventListener(classes=DeviceProcessRestEvent.class, condition = "#event.checkCondition('/inspection/finish', 'dps')")
 	@Order(Ordered.LOWEST_PRECEDENCE)
 	public void finishInspection(DeviceProcessRestEvent event) {
-		
 		// 1. 파라미터 
 		Map<String, Object> params = event.getRequestParams();
 		String equipCd = params.get("equipCd").toString();
@@ -686,54 +551,28 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		String trayCd = params.get("trayCd").toString();
 		String boxId = params.get("boxId").toString();
 		String printerId = params.get("printerId").toString();
+		List<Map<String, Object>> itemObjs = event.getRequestPostBody();
 		
 		// 2. 설비 코드로 현재 진행 중인 작업 배치 및 설비 정보 조회 
 		EquipBatchSet equipBatchSet = DpsServiceUtil.findBatchByEquip(event.getDomainId(), equipType, equipCd);
 		JobBatch batch = equipBatchSet.getBatch();
 		
-		// 3. 검수 완료
+		// 3. 검수 완료 처리
 		BoxPack boxPack = new BoxPack();
 		boxPack.setDomainId(batch.getDomainId());
 		boxPack.setBatchId(batch.getId());
 		boxPack.setOrderNo(orderNo);
 		boxPack.setBoxTypeCd(trayCd);
 		boxPack.setBoxId(boxId);		
-		this.dpsInspectionService.finishInspection(batch, boxPack, null, printerId);
+		
+		if(ValueUtil.isEmpty(itemObjs)) {
+			this.dpsInspectionService.finishInspection(batch, boxPack, null, printerId);
+		} else {
+			this.dpsInspectionService.finishInspection(batch, boxPack, null, printerId, itemObjs);
+		}
 
 		// 4. 이벤트 처리 결과 셋팅
 		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, boxPack));
-		event.setExecuted(true);
-	}
-	
-	/**
-	 * DPS RFID 출고 검수 완료
-	 * 
-	 * @param event
-	 */
-	@EventListener(classes=DeviceProcessRestEvent.class, condition = "#event.checkCondition('/inspection/finish_by_rfid', 'dps')")
-	@Order(Ordered.LOWEST_PRECEDENCE)
-	public void finishInspectionByRFID(DeviceProcessRestEvent event) {
-		// 1. 파라미터 
-		Map<String, Object> params = event.getRequestParams();
-		String equipCd = params.get("equipCd").toString();
-		String equipType = params.get("equipType").toString();
-		String trayCd = params.get("trayCd").toString();
-		String orderNo = params.get("orderNo").toString();
-		String boxId = params.get("boxId").toString();
-		String printerId = params.get("printerId").toString();
-		
-		// 2. DPS RFID 출고 검수 완료
-		List<Map<String, Object>> rfidList = event.getRequestPostBody();
-		
-		// 2. 설비 코드로 현재 진행 중인 작업 배치 및 설비 정보 조회 
-		EquipBatchSet equipBatchSet = DpsServiceUtil.findBatchByEquip(event.getDomainId(), equipType, equipCd);
-		JobBatch batch = equipBatchSet.getBatch();
-		
-		// 3. 검수 완료
-		this.finishInspectionByRfid(batch, orderNo, trayCd, boxId, rfidList, printerId);
-
-		// 4. 이벤트 처리 결과 셋팅
-		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, null));
 		event.setExecuted(true);
 	}
 	
@@ -806,68 +645,248 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, printedCount));
 		event.setExecuted(true);
 	}
-
+	
 	/**
-	 * RFID 검수 처리 ...
+	 * DPS 송장 (박스) 분할
 	 * 
-	 * @param batch
-	 * @param orderNo
-	 * @param trayCd
-	 * @param boxId
-	 * @param rfidIdList
-	 * @param printerId
+	 * @param event
 	 */
-	private void finishInspectionByRfid(JobBatch batch, String orderNo, String trayCd, String boxId, List<Map<String, Object>> rfidIdList, String printerId) {
-		// 1. WMS로 박스 실적 전송
-		this.dpsBoxSendSvc.sendPackingToWms(batch, orderNo, boxId);
+	@EventListener(classes=DeviceProcessRestEvent.class, condition = "#event.checkCondition('/inspection/split_box', 'dps')")
+	@Order(Ordered.LOWEST_PRECEDENCE)
+	public void splitBox(DeviceProcessRestEvent event) {
 		
-		// 2. 송장 발행 요청
-		String invoiceId = this.dpsBoxSendSvc.requestInvoiceToWms(batch, boxId, boxId);
+		// 1. 파라미터 
+		Map<String, Object> params = event.getRequestParams();
+		String equipCd = params.get("equipCd").toString();
+		String equipType = params.get("equipType").toString();
+		String orderNo = params.get("orderNo").toString();
+		String trayCd = params.get("trayCd").toString();
+		String boxId = params.get("boxId").toString();
+		String printerId = params.get("printerId").toString();
+		List<Map<String, Object>> itemObjs = event.getRequestPostBody();
 		
-		// 3. RFID 검수 실적 저장
-		List<RfidResult> rfidResultList = new ArrayList<RfidResult>(rfidIdList.size());
-		for(Map<String, Object> rfidInfo : rfidIdList) {
-			RfidResult result = new RfidResult();
-			result.setBatchId(batch.getId());
-			result.setBoxId(boxId);
-			result.setJobDate(batch.getJobDate().replace(LogisConstants.DASH, LogisConstants.EMPTY_STRING));
-			result.setRfidId(ValueUtil.toString(rfidInfo.get("rfid_id")));
-			result.setShopCd(ValueUtil.toString(rfidInfo.get("shop_cd")));
-			result.setBrandCd(ValueUtil.toString(rfidInfo.get("brand_cd")));
-			result.setSkuCd(ValueUtil.toString(rfidInfo.get("sku_cd")));
-			result.setOrderQty(ValueUtil.toInteger(rfidInfo.get("order_qty")));
-			result.setInvoiceId(invoiceId);
-			result.setOrderNo(orderNo);
-			rfidResultList.add(result);
+		// 2. 설비 코드로 현재 진행 중인 작업 배치 및 설비 정보 조회 
+		EquipBatchSet equipBatchSet = DpsServiceUtil.findBatchByEquip(event.getDomainId(), equipType, equipCd);
+		JobBatch batch = equipBatchSet.getBatch();
+		
+		// 3. 검수 완료 처리
+		BoxPack boxPack = new BoxPack();
+		boxPack.setDomainId(batch.getDomainId());
+		boxPack.setBatchId(batch.getId());
+		boxPack.setOrderNo(orderNo);
+		boxPack.setBoxTypeCd(trayCd);
+		boxPack.setBoxId(boxId);		
+		
+		if(ValueUtil.isEmpty(itemObjs)) {
+			this.dpsInspectionService.finishInspection(batch, boxPack, null, printerId);
+		} else {
+			this.dpsInspectionService.finishInspection(batch, boxPack, null, printerId, itemObjs);
 		}
-		this.queryManager.insertBatch(rfidResultList);
+
+		// 4. 이벤트 처리 결과 셋팅
+		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, boxPack));
+		event.setExecuted(true);
 		
-		// 4. RFID 검수 실적 전송
-		this.dpsBoxSendSvc.sendPackingToRfid(batch, invoiceId);
-		
-		// 5. 박스 내품 검수 항목 완료 처리
-		Map<String, Object> params = ValueUtil.newMap("domainId,batchId,invoiceId,status", batch.getDomainId(), batch.getId(), invoiceId, BoxPack.BOX_STATUS_EXAMED);
-		String sql = "update mhe_dr set status = :status where wh_cd = 'ICF' and work_unit = :batchId and waybill_no = :invoiceId";
-		this.queryManager.executeBySql(sql, params);
-		
-		// 6. Tray 박스 상태 리셋
-		TrayBox condition = new TrayBox();
-		condition.setTrayCd(trayCd);
-		TrayBox tray = this.queryManager.selectByCondition(TrayBox.class, condition);
-		tray.setStatus(BoxPack.BOX_STATUS_WAIT);
-		this.queryManager.update(tray, "status", "updaterId", "updatedAt");
-		
-		// 7. 검수 정보 조회
-		BoxPack box = new BoxPack();
-		box.setDomainId(batch.getDomainId());
-		box.setBatchId(batch.getId());
-		box.setBoxTypeCd(trayCd);
-		box.setBoxId(boxId);
-		box.setOrderNo(orderNo);
-		DpsInspection inspection = this.dpsInspectionService.findInspectionByBoxPack(box, false);
-		
-		// 8. 송장 발행 - 별도 트랜잭션
-		this.dpsInspectionService.printInvoiceLabel(batch, inspection, printerId);
+//		// 1. 파라미터 
+//		Map<String, Object> params = event.getRequestParams();
+//		String equipCd = params.get("equipCd").toString();
+//		String equipType = params.get("equipType").toString();
+//		String trayCd = params.get("trayCd").toString();		
+//		String orderNo = params.get("orderNo").toString();
+//		String boxId = params.get("boxId").toString();
+//		String printerId = params.get("printerId").toString();
+//		List<Map<String, Object>> inspItems = event.getRequestPostBody();
+//		
+//		if(ValueUtil.isEmpty(inspItems)) {
+//			event.setReturnResult(new BaseResponse(true, LogisConstants.NG_STRING, null));
+//			event.setExecuted(true);
+//		} 
+//		
+//		// 2. 송장 분할 아이템 대상
+//		List<DpsInspItem> splitInspItems = new ArrayList<DpsInspItem>(inspItems.size());
+//		for(Map<String, Object> item : inspItems) {
+//			DpsInspItem inspItem = new DpsInspItem();
+//			inspItem.setSkuCd(ValueUtil.toString(item.get("sku_cd")));
+//			inspItem.setPickedQty(ValueUtil.toInteger(item.get("picked_qty")));
+//			inspItem.setConfirmQty(ValueUtil.toInteger(item.get("confirm_qty")));
+//			splitInspItems.add(inspItem);
+//		}
+//		
+//		// 3. 설비 코드로 현재 진행 중인 작업 배치 및 설비 정보 조회 
+//		EquipBatchSet equipBatchSet = DpsServiceUtil.findBatchByEquip(event.getDomainId(), equipType, equipCd);
+//		JobBatch batch = equipBatchSet.getBatch();
+//		
+//		// 4. 검수 정보 조회 - 주문 번호가 orderNo이고 박스 ID가 boxId이고 송장 번호가 없는 작업 정보로 검수 정보 조회 
+//		BoxPack boxPack = new BoxPack();
+//		boxPack.setDomainId(batch.getDomainId());
+//		boxPack.setBatchId(batch.getId());
+//		boxPack.setBoxTypeCd(trayCd);
+//		boxPack.setOrderNo(orderNo);
+//		boxPack.setBoxId(boxId);
+//		
+//		// 5. 송장 분할
+//		BoxPack splitBox = this.dpsInspectionService.splitBox(batch, boxPack, splitInspItems, printerId);
+//
+//		// 6. 이벤트 처리 결과 셋팅
+//		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, splitBox));
+//		event.setExecuted(true);
 	}
+	
+//	/**
+//	 * DPS RFID에 의한 송장 (박스) 분할
+//	 * 
+//	 * @param event
+//	 */
+//	@EventListener(classes=DeviceProcessRestEvent.class, condition = "#event.checkCondition('/inspection/split_box_rfid', 'dps')")
+//	@Order(Ordered.LOWEST_PRECEDENCE)
+//	public void splitBoxByRfid(DeviceProcessRestEvent event) {
+//		
+//		// 1. 파라미터 
+//		Map<String, Object> params = event.getRequestParams();
+//		String equipCd = params.get("equipCd").toString();
+//		String equipType = params.get("equipType").toString();
+//		String trayCd = params.get("trayCd").toString();		
+//		String orderNo = params.get("orderNo").toString();
+//		String boxId = params.get("boxId").toString();
+//		String printerId = params.get("printerId").toString();
+//		List<Map<String, Object>> inspItems = event.getRequestPostBody();
+//		
+//		if(ValueUtil.isEmpty(inspItems)) {
+//			event.setReturnResult(new BaseResponse(true, LogisConstants.NG_STRING, null));
+//			event.setExecuted(true);
+//		}
+//		
+//		// 2. 설비 코드로 현재 진행 중인 작업 배치 및 설비 정보 조회 
+//		EquipBatchSet equipBatchSet = DpsServiceUtil.findBatchByEquip(event.getDomainId(), equipType, equipCd);
+//		JobBatch batch = equipBatchSet.getBatch();
+//		
+//		// 3. 송장 분할 RFID 아이템 대상 실적 저장 
+//		List<RfidResult> splitInspItems = new ArrayList<RfidResult>(inspItems.size());
+//		for(Map<String, Object> item : inspItems) {
+//			RfidResult rfidItem = new RfidResult();
+//			rfidItem.setRfidId(ValueUtil.toString(item.get("rfid_id")));
+//			rfidItem.setSkuCd(ValueUtil.toString(item.get("sku_cd")));
+//			rfidItem.setOrderNo(orderNo);
+//			rfidItem.setBoxId(boxId);
+//			rfidItem.setBatchId(batch.getId());
+//			rfidItem.setBrandCd(ValueUtil.toString(item.get("brand_cd")));
+//			rfidItem.setJobDate(batch.getJobDate());
+//			rfidItem.setShopCd(ValueUtil.toString(item.get("shop_cd")));
+//			rfidItem.setOrderQty(ValueUtil.toInteger(item.get("order_qty")));
+//			splitInspItems.add(rfidItem);
+//		}
+//		
+//		this.queryManager.insertBatch(splitInspItems);
+//		
+//		// 4. 검수 정보 조회 - 주문 번호가 orderNo이고 박스 ID가 boxId이고 송장 번호가 없는 작업 정보로 검수 정보 조회 
+//		BoxPack boxPack = new BoxPack();
+//		boxPack.setDomainId(batch.getDomainId());
+//		boxPack.setBatchId(batch.getId());
+//		boxPack.setBoxTypeCd(trayCd);
+//		boxPack.setOrderNo(orderNo);
+//		boxPack.setBoxId(boxId);
+//		
+//		// 5. 송장 분할
+//		BoxPack splitBox = this.dpsInspectionService.splitBoxByRfid(batch, boxPack, splitInspItems, printerId);
+//
+//		// 6. 이벤트 처리 결과 셋팅
+//		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, splitBox));
+//		event.setExecuted(true);
+//	}
+//	
+//	/**
+//	 * DPS RFID 출고 검수 완료
+//	 * 
+//	 * @param event
+//	 */
+//	@EventListener(classes=DeviceProcessRestEvent.class, condition = "#event.checkCondition('/inspection/finish_by_rfid', 'dps')")
+//	@Order(Ordered.LOWEST_PRECEDENCE)
+//	public void finishInspectionByRFID(DeviceProcessRestEvent event) {
+//		// 1. 파라미터 
+//		Map<String, Object> params = event.getRequestParams();
+//		String equipCd = params.get("equipCd").toString();
+//		String equipType = params.get("equipType").toString();
+//		String trayCd = params.get("trayCd").toString();
+//		String orderNo = params.get("orderNo").toString();
+//		String boxId = params.get("boxId").toString();
+//		String printerId = params.get("printerId").toString();
+//		
+//		// 2. DPS RFID 출고 검수 완료
+//		List<Map<String, Object>> rfidList = event.getRequestPostBody();
+//		
+//		// 2. 설비 코드로 현재 진행 중인 작업 배치 및 설비 정보 조회 
+//		EquipBatchSet equipBatchSet = DpsServiceUtil.findBatchByEquip(event.getDomainId(), equipType, equipCd);
+//		JobBatch batch = equipBatchSet.getBatch();
+//		
+//		// 3. 검수 완료
+//		this.finishInspectionByRfid(batch, orderNo, trayCd, boxId, rfidList, printerId);
+//
+//		// 4. 이벤트 처리 결과 셋팅
+//		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, null));
+//		event.setExecuted(true);
+//	}
+//
+//	/**
+//	 * RFID 검수 처리 ...
+//	 * 
+//	 * @param batch
+//	 * @param orderNo
+//	 * @param trayCd
+//	 * @param boxId
+//	 * @param rfidIdList
+//	 * @param printerId
+//	 */
+//	private void finishInspectionByRfid(JobBatch batch, String orderNo, String trayCd, String boxId, List<Map<String, Object>> rfidIdList, String printerId) {
+//		// 1. WMS로 박스 실적 전송
+//		this.dpsBoxSendSvc.sendPackingToWms(batch, orderNo, boxId);
+//		
+//		// 2. 송장 발행 요청
+//		String invoiceId = this.dpsBoxSendSvc.requestInvoiceToWms(batch, boxId, boxId);
+//		
+//		// 3. RFID 검수 실적 저장
+//		List<RfidResult> rfidResultList = new ArrayList<RfidResult>(rfidIdList.size());
+//		for(Map<String, Object> rfidInfo : rfidIdList) {
+//			RfidResult result = new RfidResult();
+//			result.setBatchId(batch.getId());
+//			result.setBoxId(boxId);
+//			result.setJobDate(batch.getJobDate().replace(LogisConstants.DASH, LogisConstants.EMPTY_STRING));
+//			result.setRfidId(ValueUtil.toString(rfidInfo.get("rfid_id")));
+//			result.setShopCd(ValueUtil.toString(rfidInfo.get("shop_cd")));
+//			result.setBrandCd(ValueUtil.toString(rfidInfo.get("brand_cd")));
+//			result.setSkuCd(ValueUtil.toString(rfidInfo.get("sku_cd")));
+//			result.setOrderQty(ValueUtil.toInteger(rfidInfo.get("order_qty")));
+//			result.setInvoiceId(invoiceId);
+//			result.setOrderNo(orderNo);
+//			rfidResultList.add(result);
+//		}
+//		this.queryManager.insertBatch(rfidResultList);
+//		
+//		// 4. RFID 검수 실적 전송
+//		this.dpsBoxSendSvc.sendPackingToRfid(batch, invoiceId);
+//		
+//		// 5. 박스 내품 검수 항목 완료 처리
+//		Map<String, Object> params = ValueUtil.newMap("domainId,batchId,invoiceId,status", batch.getDomainId(), batch.getId(), invoiceId, BoxPack.BOX_STATUS_EXAMED);
+//		String sql = "update mhe_dr set status = :status where wh_cd = 'ICF' and work_unit = :batchId and waybill_no = :invoiceId";
+//		this.queryManager.executeBySql(sql, params);
+//		
+//		// 6. Tray 박스 상태 리셋
+//		TrayBox condition = new TrayBox();
+//		condition.setTrayCd(trayCd);
+//		TrayBox tray = this.queryManager.selectByCondition(TrayBox.class, condition);
+//		tray.setStatus(BoxPack.BOX_STATUS_WAIT);
+//		this.queryManager.update(tray, "status", "updaterId", "updatedAt");
+//		
+//		// 7. 검수 정보 조회
+//		BoxPack box = new BoxPack();
+//		box.setDomainId(batch.getDomainId());
+//		box.setBatchId(batch.getId());
+//		box.setBoxTypeCd(trayCd);
+//		box.setBoxId(boxId);
+//		box.setOrderNo(orderNo);
+//		DpsInspection inspection = this.dpsInspectionService.findInspectionByBoxPack(box, false);
+//		
+//		// 8. 송장 발행 - 별도 트랜잭션
+//		this.dpsInspectionService.printInvoiceLabel(batch, inspection, printerId);
+//	}
 	
 }

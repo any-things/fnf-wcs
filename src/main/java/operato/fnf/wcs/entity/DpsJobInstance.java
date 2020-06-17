@@ -85,6 +85,9 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
 	@Column (name = "barcode", nullable = true, length = 100)
 	private String barcode;
+	
+	@Column (name = "barcode2", nullable = true, length = 100)
+	private String barcode2;
 
 	@Column (name = "pick_qty", nullable = false, length = 10)
 	private Integer pickQty;
@@ -318,6 +321,14 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setBarcode(String barcode) {
 		this.barcode = barcode;
+	}
+	
+	public String getBarcode2() {
+		return barcode2;
+	}
+
+	public void setBarcode2(String barcode2) {
+		this.barcode2 = barcode2;
 	}
 
 	public Integer getPickQty() {

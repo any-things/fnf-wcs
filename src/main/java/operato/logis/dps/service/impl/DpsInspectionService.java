@@ -61,6 +61,11 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	 */
 	@Autowired
 	private PrinterController printerCtrl;
+	/**
+	 * 도메인 컨트롤러
+	 */
+	@Autowired
+	private DomainController domainCtrl;
 	
 	/**
 	 * 검수 정보 조회
@@ -248,7 +253,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	}
 
 	@Override
-	public void finishInspection(JobBatch batch, String orderNo, Float boxWeight, String printerId) {
+	public void finishInspection(JobBatch batch, String orderNo, Float boxWeight, String printerId, Object ... params) {
 		
 		// 1. 박스 조회
 		DpsInspection inspection = this.findInspectionByOrder(batch, orderNo, false, true);
@@ -258,11 +263,96 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		box.setBoxId(inspection.getBoxId());
 
 		// 2. 검수 완료 처리 
-		this.finishInspection(batch, box, boxWeight, printerId);
+		this.finishInspection(batch, box, boxWeight, printerId, params);
 	}
 
 	@Override
-	public void finishInspection(JobBatch batch, BoxPack box, Float boxWeight, String printerId) {
+	@SuppressWarnings("unchecked")
+	public void finishInspection(JobBatch batch, BoxPack box, Float boxWeight, String printerId, Object ... params) {
+		// 1. 기타 파라미터가 없다면 수동 스캔 모드의 전체 검수 완료 처리
+		if(params == null || params.length == 0) {
+			this.finishInspectionByAll(batch, box, boxWeight, printerId, null, null);
+			
+		// 2. 파라미터가 하나이면 검수 항목 리스트라고 판단하여 검수 항목 정보로 검수 완료 처리  
+		} else if(params.length >= 1) {
+			List<Map<String, Object>> inspItems = (List<Map<String, Object>>)params[0];
+			this.finishInspectionByItems(batch, box, boxWeight, printerId, inspItems);
+		}
+	}
+	
+	/**
+	 * 검수 항목으로 검수 완료 처리
+	 * 
+	 * @param batch
+	 * @param box
+	 * @param boxWeight
+	 * @param printerId
+	 * @param itemObjs
+	 */
+	private void finishInspectionByItems(JobBatch batch, BoxPack box, Float boxWeight, String printerId, List<Map<String, Object>> itemObjs) {
+		// 1. 검수 항목으로 부터 총 검수 수량을 계산
+		int totalConfirmPcs = 0;
+		
+		for(Map<String, Object> item : itemObjs) {
+			if(item.containsKey("confirm_qty")) {
+				totalConfirmPcs += ValueUtil.toInteger(item.get("confirm_qty"));
+			}
+		}
+		
+		// 2. 주문에 처리되지 않은 주문이 남아있는지 (즉 이 처리가 송장 분할인지) 여부 체크
+		String sql = "select sum(pick_qty) as total_order_qty from dps_job_instances where work_unit = :workUnit and ref_no = :refNo and box_id = :boxId and (waybill_no is null or waybill_no = '')";
+		Map<String, Object> condition = ValueUtil.newMap("workUnit,refNo,boxId", box.getBatchId(), box.getOrderNo(), box.getBoxId());
+		int remainOrderPcs = this.queryManager.selectBySql(sql, condition, Integer.class);
+		boolean isSplitMode = (totalConfirmPcs >= remainOrderPcs);
+		
+		// 3. 상품 스캔 검수 항목 & RFID 검수 항목 리스트 추출 
+		List<DpsInspItem> scanInspItems = new ArrayList<DpsInspItem>();
+		List<RfidResult> rfidInspItems = new ArrayList<RfidResult>();
+		
+		for(Map<String, Object> item : itemObjs) {
+			boolean rfidItemFlag = ValueUtil.isNotEmpty(item.get("rfid_id"));
+			
+			if(rfidItemFlag) {
+				RfidResult rfidItem = new RfidResult();
+				rfidItem.setBatchId(batch.getId());
+				rfidItem.setOrderNo(box.getOrderNo());
+				rfidItem.setBoxId(box.getBoxId());
+				rfidItem.setRfidId(ValueUtil.toString(item.get("rfid_id")));
+				rfidItem.setSkuCd(ValueUtil.toString(item.get("sku_cd")));
+				rfidItem.setBrandCd(ValueUtil.toString(item.get("brand_cd")));
+				rfidItem.setJobDate(batch.getJobDate());
+				rfidItem.setShopCd(ValueUtil.toString(item.get("shop_cd")));
+				rfidItem.setOrderQty(ValueUtil.toInteger(item.get("order_qty")));
+				rfidInspItems.add(rfidItem);
+				
+			} else {
+				DpsInspItem scanItem = new DpsInspItem();
+				scanItem.setSkuCd(ValueUtil.toString(item.get("sku_cd")));
+				scanItem.setPickedQty(ValueUtil.toInteger(item.get("picked_qty")));
+				scanItem.setConfirmQty(ValueUtil.toInteger(item.get("confirm_qty")));
+				scanInspItems.add(scanItem);
+			}
+		}
+		
+		// 4. 분할 혹은 전체 모드로 검수 완료 처리 
+		if(isSplitMode) {
+			this.splitBox(batch, box, scanInspItems, rfidInspItems, printerId);
+		} else {
+			this.finishInspectionByAll(batch, box, boxWeight, printerId, scanInspItems, rfidInspItems);
+		}
+	}
+	
+	/**
+	 * 분할 없이 주문에 대한 검수 완료 처리
+	 * 
+	 * @param batch
+	 * @param box
+	 * @param boxWeight
+	 * @param printerId
+	 * @param scanInspItems
+	 * @param rfidInspItems
+	 */
+	private void finishInspectionByAll(JobBatch batch, BoxPack box, Float boxWeight, String printerId, List<DpsInspItem> scanInspItems, List<RfidResult> rfidInspItems) {
 		// 1. WMS로 박스 실적 전송
 		this.dpsBoxSendSvc.sendPackingToWms(batch, box.getOrderNo(), box.getBoxId());
 		
@@ -278,6 +368,13 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		} else {
 			// 박스에 송장 번호 설정
 			box.setInvoiceId(invoiceId);
+			// RFID 실적 전송
+			if(ValueUtil.isNotEmpty(rfidInspItems)) {
+				// RFID 실적 저장
+				this.queryManager.insertBatch(rfidInspItems);
+				// RFID 실적 전송
+				this.dpsBoxSendSvc.sendPackingToRfid(batch, invoiceId);
+			}			
 			// Tray 박스 상태 리셋
 			this.resetTrayBox(box.getBoxTypeCd());
 			// 송장 발행
@@ -286,7 +383,21 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	}
 
 	@Override
-	public BoxPack splitBox(JobBatch batch, BoxPack sourceBox, List<DpsInspItem> inspectionItems, String printerId) {
+	public BoxPack splitBox(JobBatch batch, BoxPack sourceBox, List<DpsInspItem> inspectionItems, String printerId, Object ... params) {
+		return this.splitBox(batch, sourceBox, inspectionItems, null, printerId);
+	}
+	
+	/**
+	 * RFID로 송장 분할 처리 
+	 * 
+	 * @param batch
+	 * @param sourceBox
+	 * @param scanItemList
+	 * @param rfidItemList
+	 * @param printerId
+	 * @return
+	 */
+	public BoxPack splitBox(JobBatch batch, BoxPack sourceBox, List<DpsInspItem> scanItemList, List<RfidResult> rfidItemList, String printerId) {
 		
 		// 1. 박스 정보로 검수 정보 조회 
 		String sql = "select * from dps_job_instances where work_unit = :workUnit and ref_no = :refNo and box_id = :boxId and (waybill_no is null or waybill_no = '') and item_cd = :itemCd";
@@ -294,7 +405,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		List<DpsJobInstance> jobList = new ArrayList<DpsJobInstance>();
 		
 		// 2. inspectionItems 기준으로 DpsJobInstance 조회
-		for(DpsInspItem inspItem : inspectionItems) {
+		for(DpsInspItem inspItem : scanItemList) {
 			condition.put("itemCd", inspItem.getSkuCd());
 			
 			// 검수 항목 기준으로 DpsJobInstance 조회 - 검수 항목이 작업 수량보다 적으면 작업 분할 
@@ -319,17 +430,21 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 			// 6.1 박스에 송장 번호 설정
 			sourceBox.setInvoiceId(invoiceId);
 			
-			// 6.2 해당 주문으로 남은 검수 항목이 있는지 체크
-			condition.remove("itemCd");
+			// 6.2 RFID 실적 전송
+			if(ValueUtil.isNotEmpty(rfidItemList)) {
+				// 6.2.1 RFID 실적 저장
+				this.queryManager.insertBatch(rfidItemList);
+				// 6.2.2 RFID 실적 전송
+				this.dpsBoxSendSvc.sendPackingToRfid(batch, invoiceId);
+			}
 			
-			// 6.3 남은 검수 항목이 없다면 Tray 박스 상태 리셋 
-			if(this.queryManager.selectSize(DpsJobInstance.class, condition) == 0) {
+			// 6.3 해당 주문에 대해서 검수 처리가 모두 완료되었다면 Tray 박스 상태 리셋 
+			sql = "select * from dps_job_instances where work_unit = :workUnit and ref_no = :refNo and (waybill_no is null or waybill_no = '')";
+			if(this.queryManager.selectSizeBySql(sql, condition) == 0) {
 				this.resetTrayBox(sourceBox.getBoxTypeCd());
 				
 			// 6.4 남은 검수 항목이 있으면 동일 주문의 처리 안 된 주문에 대해서 박스 ID 리셋
-			} else {
-				condition.remove("boxId");
-				
+			} else {				
 				// 6.4.1 남은 주문 정보의 BoxId를 null로 업데이트
 				sql = "update mhe_dr set box_id = null where work_unit = :workUnit and ref_no = :refNo and (waybill_no is null or waybill_no = '')";
 				this.queryManager.executeBySql(sql, condition);
@@ -340,103 +455,6 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 			}
 			
 			// 6.5 송장 발행 
-			BeanUtil.get(DpsInspectionService.class).printInvoiceLabel(batch, sourceBox, printerId);
-			
-		// 7. 송장 번호가 주문 전체 취소이면 리턴에 취소 설정
-		} else {
-			sourceBox.setStatus(LogisConstants.JOB_STATUS_CANCEL);
-		}
-		
-		// 8. 리턴
-		return sourceBox;
-	}
-	
-	/**
-	 * RFID로 송장 분할 처리 
-	 * 
-	 * @param batch
-	 * @param sourceBox
-	 * @param inspectionItems
-	 * @param printerId
-	 * @return
-	 */
-	public BoxPack splitBoxByRfid(JobBatch batch, BoxPack sourceBox, List<RfidResult> inspectionItems, String printerId) {
-		
-		// 1. 박스 정보로 검수 정보 조회 
-		String sql = "select * from dps_job_instances where work_unit = :workUnit and ref_no = :refNo and box_id = :boxId and (waybill_no is null or waybill_no = '') and item_cd = :itemCd";
-		Map<String, Object> condition = ValueUtil.newMap("workUnit,refNo,boxId", sourceBox.getBatchId(), sourceBox.getOrderNo(), sourceBox.getBoxId());
-		
-		// 2. RFID 검수 실적으로 분할 정보 생성
-		List<DpsInspItem> inspItemList = new ArrayList<DpsInspItem>();
-		for(RfidResult rfidItem : inspectionItems) {
-			String skuCd = rfidItem.getSkuCd();
-			DpsInspItem item = null;
-			
-			for(DpsInspItem inspItem : inspItemList) {
-				if(ValueUtil.isEqualIgnoreCase(skuCd, inspItem.getSkuCd())) {
-					item = inspItem;
-					break;
-				}
-			}
-			
-			if(item == null) {
-				item = new DpsInspItem();
-				item.setSkuCd(skuCd);
-				item.setConfirmQty(0);
-			}
-			
-			item.setConfirmQty(item.getConfirmQty() + 1);
-		}		
-
-		// 3. inspectionItems 기준으로 DpsJobInstance 조회
-		List<DpsJobInstance> jobList = new ArrayList<DpsJobInstance>();
-		for(DpsInspItem inspItem : inspItemList) {
-			condition.put("itemCd", inspItem.getSkuCd());
-			
-			// 검수 항목 기준으로 DpsJobInstance 조회 - 검수 항목이 작업 수량보다 적으면 작업 분할 
-			DpsJobInstance originalJob = this.queryManager.selectBySql(sql, condition, DpsJobInstance.class);
-			originalJob = this.splitJob(originalJob, inspItem.getConfirmQty());
-			jobList.add(originalJob);
-		}
-		
-		// 4. 작업 대상이 없다면 리턴 
-		if(ValueUtil.isEmpty(jobList)) {
-			return null;
-		}
-		
-		// 5. WMS에 실적 전송 & WMS에 송장 발행 요청
-		this.dpsBoxSendSvc.sendPackingToWmsBySplit(batch, sourceBox.getOrderNo(), sourceBox.getBoxId(), jobList);		
-		String invoiceId = this.dpsBoxSendSvc.requestInvoiceToWmsBySplit(batch, sourceBox.getOrderNo(), sourceBox.getBoxId(), jobList);
-		
-		// 6. 송장 번호가 성공이면 
-		if(ValueUtil.isNotEqual(invoiceId, FnFConstants.ORDER_CANCEL_ALL)) {
-			// 6.1 박스에 송장 번호 설정
-			sourceBox.setInvoiceId(invoiceId);
-			
-			// 6.2 WMS로 조회한 DpsJobInstance 기준으로 박스 실적 전송
-			this.dpsBoxSendSvc.sendPackingToRfid(batch, invoiceId);
-			
-			// 6.3 해당 주문으로 남은 검수 항목이 있는지 체크
-			condition.remove("itemCd");
-			
-			// 6.4 남은 검수 항목이 없다면 Tray 박스 상태 리셋 
-			if(this.queryManager.selectSize(DpsJobInstance.class, condition) == 0) {
-				this.resetTrayBox(sourceBox.getBoxTypeCd());
-				
-			// 6.5 남은 검수 항목이 있으면 동일 주문의 처리 안 된 주문에 대해서 박스 ID 리셋
-			} else {
-				condition.remove("boxId");
-				
-				// 6.5.1 남은 주문 정보의 BoxId를 null로 업데이트
-				sql = "update mhe_dr set box_id = null where work_unit = :workUnit and ref_no = :refNo and (waybill_no is null or waybill_no = '')";
-				this.queryManager.executeBySql(sql, condition);
-				
-				// 6.5.2 남은 작업 정보의 BoxId를 null로 업데이트
-				sql = "update dps_job_instances set box_id = null where work_unit = :workUnit and ref_no = :refNo and (waybill_no is null or waybill_no = '')";
-				this.queryManager.executeBySql(sql, condition);
-			}
-			
-			// 6.6 송장 발행 
 			BeanUtil.get(DpsInspectionService.class).printInvoiceLabel(batch, sourceBox, printerId);
 			
 		// 7. 송장 번호가 주문 전체 취소이면 리턴에 취소 설정
@@ -497,7 +515,6 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	public int printInvoiceLabel(JobBatch batch, BoxPack box, String printerId) {
 		PrintEvent printEvent = this.createPrintEvent(batch.getDomainId(), box.getBoxId(), box.getInvoiceId(), printerId);
 		this.eventPublisher.publishEvent(printEvent);
-		//this.printLabel(printEvent);
 		return 1;
 	}
 	
@@ -505,7 +522,6 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	public int printInvoiceLabel(JobBatch batch, DpsInspection inspection, String printerId) {
 		PrintEvent printEvent = this.createPrintEvent(batch.getDomainId(), inspection.getBoxId(), inspection.getInvoiceId(), printerId);
 		this.eventPublisher.publishEvent(printEvent);
-		//this.printLabel(printEvent);
 		return 1;
 	}
 
@@ -546,9 +562,6 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		Map<String, Object> printParams = ValueUtil.newMap("box,items", waybillPrint, packItems);
 		return new PrintEvent(domainId, printerId, labelTemplate, printParams);
 	}
-
-	@Autowired
-	private DomainController domainCtrl;
 	
 	/**
 	 * 송장 라벨 인쇄 API
@@ -576,7 +589,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 			
 		} catch (Exception e) {
 			// 예외 처리
-			ErrorEvent errorEvent = new ErrorEvent(domain.getId(), "JOB_DAILY_SUMMARY_ERROR", e, null, true, true);
+			ErrorEvent errorEvent = new ErrorEvent(domain.getId(), "PRINT_LABEL_ERROR", e, null, true, true);
 			this.eventPublisher.publishEvent(errorEvent);
 			
 		} finally {

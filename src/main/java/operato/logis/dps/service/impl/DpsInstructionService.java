@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
+import operato.fnf.wcs.FnFConstants;
 import operato.fnf.wcs.entity.WmsMheHr;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.EquipGroup;
@@ -105,8 +106,8 @@ public class DpsInstructionService extends AbstractInstructionService implements
 	@Override
 	public int mergeBatch(JobBatch mainBatch, JobBatch newBatch, Object... params) {		
 		// 1. 예정 주문 정보의 배치 ID 업데이트
-		Map<String, Object> condition = ValueUtil.newMap("mainBatchId,newBatchId,whCd", mainBatch.getId(), newBatch.getId(), "ICF");
-		String sql = "update mhe_dr set work_unit = :mainBatchId where wh_cd = :whCd and work_unit = :newBatchId";
+		Map<String, Object> condition = ValueUtil.newMap("mainBatchId,newBatchId,whCd,equipGroupCd", mainBatch.getId(), newBatch.getId(), FnFConstants.WH_CD_ICF, mainBatch.getEquipGroupCd());
+		String sql = "update mhe_dr set work_unit = :mainBatchId, mhe_no = :equipGroupCd where wh_cd = :whCd and work_unit = :newBatchId";
 		int retCnt = this.queryManager.executeBySql(sql, condition);
 		
 		// 2. 메인 작업 배치 주문 수 업데이트
@@ -192,8 +193,8 @@ public class DpsInstructionService extends AbstractInstructionService implements
 		}
 		
 		// 3. 작업 지시 실행
-		String sql = "SELECT COUNT(DISTINCT REF_NO) as batch_order_qty, SUM(PICK_QTY) as batch_pcs FROM MHE_DR WHERE WH_CD = 'ICF' AND WORK_UNIT = :batchId";
-		Map<String, Object> condition = ValueUtil.newMap("domainId,batchId", batch.getDomainId(), batch.getId());
+		String sql = "SELECT COUNT(DISTINCT REF_NO) as batch_order_qty, SUM(PICK_QTY) as batch_pcs FROM MHE_DR WHERE WH_CD = :whCd AND WORK_UNIT = :batchId";
+		Map<String, Object> condition = ValueUtil.newMap("domainId,whCd,batchId,equipGroupCd", batch.getDomainId(), FnFConstants.WH_CD_ICF, batch.getId(), batch.getEquipGroupCd());
 		JobBatch qtys = this.queryManager.selectBySql(sql, condition, JobBatch.class);
 		batch.setBatchOrderQty(qtys.getBatchOrderQty());
 		batch.setBatchPcs(qtys.getBatchPcs());
@@ -202,14 +203,16 @@ public class DpsInstructionService extends AbstractInstructionService implements
 		this.queryManager.update(batch);
 		
 		// 4. DPS 설비에 상태 전달
-		sql = "update mhe_hr set mhe_no = :equipGroupCd, status = 'A' where wh_cd = 'ICF' and work_unit = :batchId";
-		Map<String, Object> ifParams = ValueUtil.newMap("equipGroupCd,batchId", batch.getEquipGroupCd(), batch.getId());
-		this.queryManager.executeBySql(sql, ifParams);
+		sql = "update mhe_hr set mhe_no = :equipGroupCd, status = 'A' where wh_cd = :whCd and work_unit = :batchId";
+		this.queryManager.executeBySql(sql, condition);
 
+		sql = "update mhe_dr set mhe_no = :equipGroupCd where wh_cd = :whCd and work_unit = :batchId";
+		this.queryManager.executeBySql(sql, condition);
+		
 		// 5. WMS Wave에 상태 전달
 		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
-		sql = "update mhe_hr set mhe_no = :equipGroupCd, status = 'B', rcv_datetime = sysdate where wh_cd = 'ICF' and work_unit = :batchId";
-		wmsQueryMgr.executeBySql(sql, ifParams);
+		sql = "update mhe_hr set mhe_no = :equipGroupCd, status = 'B', rcv_datetime = sysdate where wh_cd = :whCd and work_unit = :batchId";
+		wmsQueryMgr.executeBySql(sql, condition);
 		
 		// 6. 후 처리 이벤트 
 		this.publishInstructionEvent(SysEvent.EVENT_STEP_AFTER, batch, equipList, params);

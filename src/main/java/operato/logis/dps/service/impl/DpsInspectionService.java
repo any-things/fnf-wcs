@@ -12,6 +12,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 import operato.fnf.wcs.FnFConstants;
 import operato.fnf.wcs.entity.DpsJobInstance;
+import operato.fnf.wcs.entity.RfidResult;
 import operato.fnf.wcs.entity.WmsExpressWaybillPackinfo;
 import operato.fnf.wcs.entity.WmsExpressWaybillPrint;
 import operato.fnf.wcs.service.send.DpsBoxSendService;
@@ -349,6 +350,103 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		// 8. 리턴
 		return sourceBox;
 	}
+	
+	/**
+	 * RFID로 송장 분할 처리 
+	 * 
+	 * @param batch
+	 * @param sourceBox
+	 * @param inspectionItems
+	 * @param printerId
+	 * @return
+	 */
+	public BoxPack splitBoxByRfid(JobBatch batch, BoxPack sourceBox, List<RfidResult> inspectionItems, String printerId) {
+		
+		// 1. 박스 정보로 검수 정보 조회 
+		String sql = "select * from dps_job_instances where work_unit = :workUnit and ref_no = :refNo and box_id = :boxId and (waybill_no is null or waybill_no = '') and item_cd = :itemCd";
+		Map<String, Object> condition = ValueUtil.newMap("workUnit,refNo,boxId", sourceBox.getBatchId(), sourceBox.getOrderNo(), sourceBox.getBoxId());
+		
+		// 2. RFID 검수 실적으로 분할 정보 생성
+		List<DpsInspItem> inspItemList = new ArrayList<DpsInspItem>();
+		for(RfidResult rfidItem : inspectionItems) {
+			String skuCd = rfidItem.getSkuCd();
+			DpsInspItem item = null;
+			
+			for(DpsInspItem inspItem : inspItemList) {
+				if(ValueUtil.isEqualIgnoreCase(skuCd, inspItem.getSkuCd())) {
+					item = inspItem;
+					break;
+				}
+			}
+			
+			if(item == null) {
+				item = new DpsInspItem();
+				item.setSkuCd(skuCd);
+				item.setConfirmQty(0);
+			}
+			
+			item.setConfirmQty(item.getConfirmQty() + 1);
+		}		
+
+		// 3. inspectionItems 기준으로 DpsJobInstance 조회
+		List<DpsJobInstance> jobList = new ArrayList<DpsJobInstance>();
+		for(DpsInspItem inspItem : inspItemList) {
+			condition.put("itemCd", inspItem.getSkuCd());
+			
+			// 검수 항목 기준으로 DpsJobInstance 조회 - 검수 항목이 작업 수량보다 적으면 작업 분할 
+			DpsJobInstance originalJob = this.queryManager.selectBySql(sql, condition, DpsJobInstance.class);
+			originalJob = this.splitJob(originalJob, inspItem.getConfirmQty());
+			jobList.add(originalJob);
+		}
+		
+		// 4. 작업 대상이 없다면 리턴 
+		if(ValueUtil.isEmpty(jobList)) {
+			return null;
+		}
+		
+		// 5. WMS에 실적 전송 & WMS에 송장 발행 요청
+		this.dpsBoxSendSvc.sendPackingToWmsBySplit(batch, sourceBox.getOrderNo(), sourceBox.getBoxId(), jobList);		
+		String invoiceId = this.dpsBoxSendSvc.requestInvoiceToWmsBySplit(batch, sourceBox.getOrderNo(), sourceBox.getBoxId(), jobList);
+		
+		// 6. 송장 번호가 성공이면 
+		if(ValueUtil.isNotEqual(invoiceId, FnFConstants.ORDER_CANCEL_ALL)) {
+			// 6.1 박스에 송장 번호 설정
+			sourceBox.setInvoiceId(invoiceId);
+			
+			// 6.2 WMS로 조회한 DpsJobInstance 기준으로 박스 실적 전송
+			this.dpsBoxSendSvc.sendPackingToRfid(batch, invoiceId);
+			
+			// 6.3 해당 주문으로 남은 검수 항목이 있는지 체크
+			condition.remove("itemCd");
+			
+			// 6.4 남은 검수 항목이 없다면 Tray 박스 상태 리셋 
+			if(this.queryManager.selectSize(DpsJobInstance.class, condition) == 0) {
+				this.resetTrayBox(sourceBox.getBoxTypeCd());
+				
+			// 6.5 남은 검수 항목이 있으면 동일 주문의 처리 안 된 주문에 대해서 박스 ID 리셋
+			} else {
+				condition.remove("boxId");
+				
+				// 6.5.1 남은 주문 정보의 BoxId를 null로 업데이트
+				sql = "update mhe_dr set box_id = null where work_unit = :workUnit and ref_no = :refNo and (waybill_no is null or waybill_no = '')";
+				this.queryManager.executeBySql(sql, condition);
+				
+				// 6.5.2 남은 작업 정보의 BoxId를 null로 업데이트
+				sql = "update dps_job_instances set box_id = null where work_unit = :workUnit and ref_no = :refNo and (waybill_no is null or waybill_no = '')";
+				this.queryManager.executeBySql(sql, condition);
+			}
+			
+			// 6.6 송장 발행 
+			BeanUtil.get(DpsInspectionService.class).printInvoiceLabel(batch, sourceBox, printerId);
+			
+		// 7. 송장 번호가 주문 전체 취소이면 리턴에 취소 설정
+		} else {
+			sourceBox.setStatus(LogisConstants.JOB_STATUS_CANCEL);
+		}
+		
+		// 8. 리턴
+		return sourceBox;
+	}	
 	
 	/**
 	 * 작업 분할 

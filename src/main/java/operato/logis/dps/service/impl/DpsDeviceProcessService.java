@@ -22,7 +22,6 @@ import operato.logis.dps.model.DpsInspection;
 import operato.logis.dps.model.DpsSinglePackJobInform;
 import operato.logis.dps.model.DpsSinglePackSummary;
 import operato.logis.dps.query.store.DpsBatchQueryStore;
-import operato.logis.dps.service.api.IDpsInspectionService;
 import operato.logis.dps.service.api.IDpsJobStatusService;
 import operato.logis.dps.service.api.IDpsPickingService;
 import operato.logis.dps.service.util.DpsBatchJobConfigUtil;
@@ -71,7 +70,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 	 * DPS 출고 검수 서비스
 	 */
 	@Autowired
-	private IDpsInspectionService dpsInspectionService;
+	private DpsInspectionService dpsInspectionService;
 	/**
 	 * 박스 실적 전송 서비스
 	 */
@@ -602,6 +601,68 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		
 		// 5. 송장 분할
 		BoxPack splitBox = this.dpsInspectionService.splitBox(batch, boxPack, splitInspItems, printerId);
+
+		// 6. 이벤트 처리 결과 셋팅
+		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, splitBox));
+		event.setExecuted(true);
+	}
+	
+	/**
+	 * DPS RFID에 의한 송장 (박스) 분할
+	 * 
+	 * @param event
+	 */
+	@EventListener(classes=DeviceProcessRestEvent.class, condition = "#event.checkCondition('/inspection/split_box_rfid', 'dps')")
+	@Order(Ordered.LOWEST_PRECEDENCE)
+	public void splitBoxByRfid(DeviceProcessRestEvent event) {
+		
+		// 1. 파라미터 
+		Map<String, Object> params = event.getRequestParams();
+		String equipCd = params.get("equipCd").toString();
+		String equipType = params.get("equipType").toString();
+		String trayCd = params.get("trayCd").toString();		
+		String orderNo = params.get("orderNo").toString();
+		String boxId = params.get("boxId").toString();
+		String printerId = params.get("printerId").toString();
+		List<Map<String, Object>> inspItems = event.getRequestPostBody();
+		
+		if(ValueUtil.isEmpty(inspItems)) {
+			event.setReturnResult(new BaseResponse(true, LogisConstants.NG_STRING, null));
+			event.setExecuted(true);
+		}
+		
+		// 2. 설비 코드로 현재 진행 중인 작업 배치 및 설비 정보 조회 
+		EquipBatchSet equipBatchSet = DpsServiceUtil.findBatchByEquip(event.getDomainId(), equipType, equipCd);
+		JobBatch batch = equipBatchSet.getBatch();
+		
+		// 3. 송장 분할 RFID 아이템 대상 실적 저장 
+		List<RfidResult> splitInspItems = new ArrayList<RfidResult>(inspItems.size());
+		for(Map<String, Object> item : inspItems) {
+			RfidResult rfidItem = new RfidResult();
+			rfidItem.setRfidId(ValueUtil.toString(item.get("rfid_id")));
+			rfidItem.setSkuCd(ValueUtil.toString(item.get("sku_cd")));
+			rfidItem.setOrderNo(orderNo);
+			rfidItem.setBoxId(boxId);
+			rfidItem.setBatchId(batch.getId());
+			rfidItem.setBrandCd(ValueUtil.toString(item.get("brand_cd")));
+			rfidItem.setJobDate(batch.getJobDate());
+			rfidItem.setShopCd(ValueUtil.toString(item.get("shop_cd")));
+			rfidItem.setOrderQty(ValueUtil.toInteger(item.get("order_qty")));
+			splitInspItems.add(rfidItem);
+		}
+		
+		this.queryManager.insertBatch(splitInspItems);
+		
+		// 4. 검수 정보 조회 - 주문 번호가 orderNo이고 박스 ID가 boxId이고 송장 번호가 없는 작업 정보로 검수 정보 조회 
+		BoxPack boxPack = new BoxPack();
+		boxPack.setDomainId(batch.getDomainId());
+		boxPack.setBatchId(batch.getId());
+		boxPack.setBoxTypeCd(trayCd);
+		boxPack.setOrderNo(orderNo);
+		boxPack.setBoxId(boxId);
+		
+		// 5. 송장 분할
+		BoxPack splitBox = this.dpsInspectionService.splitBoxByRfid(batch, boxPack, splitInspItems, printerId);
 
 		// 6. 이벤트 처리 결과 셋팅
 		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, splitBox));

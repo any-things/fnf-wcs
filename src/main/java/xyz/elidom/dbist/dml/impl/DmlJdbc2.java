@@ -2199,8 +2199,16 @@ public class DmlJdbc2 extends AbstractDml implements Dml {
 			simpleJdbcCall.withSchemaName(schema);
 		}
 		
-		simpleJdbcCall.withProcedureName(name);
-
+		int dotIdx = name.indexOf(".");
+		if(dotIdx > 0) {
+			String catalogName = name.substring(0, dotIdx);
+			String procedureName = name.substring(dotIdx + 1);
+			simpleJdbcCall.withCatalogName(catalogName);
+			simpleJdbcCall.withProcedureName(procedureName);
+		} else {
+			simpleJdbcCall.withProcedureName(name);
+		}
+		
 		paramMap = paramMap == null ? new HashMap<String, Object>() : paramMap;
 		MapSqlParameterSource inParams = new MapSqlParameterSource();
 

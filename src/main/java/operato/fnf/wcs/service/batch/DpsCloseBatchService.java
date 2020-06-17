@@ -6,8 +6,10 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import operato.fnf.wcs.FnFConstants;
 import operato.fnf.wcs.entity.WmsMheHr;
 import operato.logis.wcs.service.impl.WcsBatchProgressService;
+import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.elidom.util.ValueUtil;
@@ -31,7 +33,7 @@ public class DpsCloseBatchService extends AbstractQueryService {
 	private WcsBatchProgressService progressSvc;
 	
 	/**
-	 * MheHr 정보로 부터 JobBatch에 배치 완료 정보를 반영한다.
+	 * DPS 작업 배치 종료
 	 * 
 	 * @param batch
 	 */
@@ -43,13 +45,17 @@ public class DpsCloseBatchService extends AbstractQueryService {
 		this.setBatchInfoOnClosing(batch);
 		
 		// 3. WMS MHE_HR 테이블에 마감 전송
-		String sql = "update mhe_hr set cmpt_qty = :pickedQty, status = :status, cnf_datetime = :finishedAt where wh_cd = 'ICF' and work_unit = :batchId";
-		Map<String, Object> params = ValueUtil.newMap("batchId,status,pickedQty,finishedAt", batch.getId(), "F", batch.getResultPcs(), batch.getFinishedAt());
+		String sql = "update mhe_hr set cmpt_qty = :pickedQty, status = :status, cnf_datetime = :finishedAt where wh_cd = :whCd and work_unit = :batchId";
+		Map<String, Object> params = ValueUtil.newMap("whCd,batchId,status,pickedQty,finishedAt", FnFConstants.WH_CD_ICF, batch.getId(), "F", batch.getResultPcs(), batch.getFinishedAt());
 		this.getDataSourceQueryManager(WmsMheHr.class).executeBySql(sql, params);
 		
 		// 4. WCS MHE_HR 테이블에 마감 전송
-		sql = "update mhe_hr set status = :status, cnf_datetime = :finishedAt, prcs_yn = 'Y', prcs_datetime = :finishedAt where wh_cd = 'ICF' and work_unit = :batchId";
+		sql = "update mhe_hr set status = :status, cmpt_qty = :pickedQty, cnf_datetime = :finishedAt, prcs_yn = 'Y', prcs_datetime = :finishedAt where wh_cd = :whCd and work_unit = :batchId";
 		this.queryManager.executeBySql(sql, params);
+		
+		// 5. 트레이 상태 리셋 
+		sql = "update tray_boxes set status = :status where domain_id = :domainId";
+		this.queryManager.executeBySql(sql, ValueUtil.newMap("domainId,status", batch.getDomainId(), LogisConstants.JOB_STATUS_WAIT));
 	}
 	
 	/**

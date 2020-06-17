@@ -1,6 +1,7 @@
 package operato.logis.dps.service.impl;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -303,7 +304,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		String sql = "select sum(pick_qty) as total_order_qty from dps_job_instances where work_unit = :workUnit and ref_no = :refNo and box_id = :boxId and (waybill_no is null or waybill_no = '')";
 		Map<String, Object> condition = ValueUtil.newMap("workUnit,refNo,boxId", box.getBatchId(), box.getOrderNo(), box.getBoxId());
 		int remainOrderPcs = this.queryManager.selectBySql(sql, condition, Integer.class);
-		boolean isSplitMode = (totalConfirmPcs >= remainOrderPcs);
+		boolean isTotalMode = (totalConfirmPcs >= remainOrderPcs);
 		
 		// 3. 상품 스캔 검수 항목 & RFID 검수 항목 리스트 추출 
 		List<DpsInspItem> scanInspItems = new ArrayList<DpsInspItem>();
@@ -335,7 +336,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		}
 		
 		// 4. 분할 혹은 전체 모드로 검수 완료 처리 
-		if(isSplitMode) {
+		if(!isTotalMode) {
 			this.splitBox(batch, box, scanInspItems, rfidInspItems, printerId);
 		} else {
 			this.finishInspectionByAll(batch, box, boxWeight, printerId, scanInspItems, rfidInspItems);
@@ -353,31 +354,65 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	 * @param rfidInspItems
 	 */
 	private void finishInspectionByAll(JobBatch batch, BoxPack box, Float boxWeight, String printerId, List<DpsInspItem> scanInspItems, List<RfidResult> rfidInspItems) {
-		// 1. WMS로 박스 실적 전송
-		this.dpsBoxSendSvc.sendPackingToWms(batch, box.getOrderNo(), box.getBoxId());
+		// 1. 주문에 대해서 이미 송장이 발행이 되었는지 체크  
+		Map<String, Object> condition = ValueUtil.newMap("whCd,orderNo,boxId", FnFConstants.WH_CD_ICF, box.getOrderNo(), box.getBoxId());
+		String sql = "select waybill_no from mps_express_waybill_print where wh_cd = :whCd and online_order_no = :orderNo and box_id = :boxId";
+		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsExpressWaybillPrint.class);
+		String invoiceId = wmsQueryMgr.selectBySql(sql, condition, String.class);
+
+		// 2. 이미 송장이 발행되지 않았다면 
+		if(ValueUtil.isEmpty(invoiceId)) {
+			// 2.1 WMS로 박스 실적 전송
+			this.dpsBoxSendSvc.sendPackingToWms(batch, box.getOrderNo(), box.getBoxId());
+			// 2.2 송장 발행 요청
+			invoiceId = this.dpsBoxSendSvc.requestInvoiceToWms(batch, box.getOrderNo(), box.getBoxId());
+			
+		// 3. 이미 송장이 발행되었다면 
+		} else {
+			condition.put("status", BoxPack.BOX_STATUS_EXAMED);
+			condition.put("workUnit", batch.getId());
+			condition.put("waybillNo", invoiceId);
+
+			// 3.1 작업 정보 업데이트 - 송장, 상태, 실적 전송 시간 업데이트 
+			sql = "update dps_job_instances set status = :status, box_result_if_at = now(), waybill_no = :waybillNo where wh_cd = :whCd and work_unit = :workUnit and ref_no = :orderNo and (waybill_no is null or waybill_no = '')";
+			this.queryManager.executeBySql(sql, condition);
+			
+			// 3.2 주문  정보 업데이트 - 송장, 상태, 실적 전송 시간 업데이트 
+			sql = "update mhe_dr set status = :status, box_result_if_at = now(), waybill_no = :waybillNo where wh_cd = :whCd and work_unit = :workUnit and ref_no = :orderNo and (waybill_no is null or waybill_no = '')";
+			this.queryManager.executeBySql(sql, condition);		
+		}
 		
-		// 2. 송장 발행 요청
-		String invoiceId = this.dpsBoxSendSvc.requestInvoiceToWms(batch, box.getOrderNo(), box.getBoxId());
-		
-		// 3. 주문이 취소되었다면
+		// 4. 주문이 취소되었다면
 		if(ValueUtil.isEqualIgnoreCase(invoiceId, FnFConstants.ORDER_CANCEL_ALL)) {
 			// 주문 취소 처리
 			box.setStatus(LogisConstants.JOB_STATUS_CANCEL);
 			
-		// 4. 주문에 대한 송장이 발행되었다면 
+		// 5. 주문에 대한 송장이 발행되었다면 
 		} else {
-			// 박스에 송장 번호 설정
+			// 5.1 박스에 송장 번호 설정
 			box.setInvoiceId(invoiceId);
-			// RFID 실적 전송
+			
+			// 5.2 RFID 실적 전송
 			if(ValueUtil.isNotEmpty(rfidInspItems)) {
-				// RFID 실적 저장
-				this.queryManager.insertBatch(rfidInspItems);
-				// RFID 실적 전송
-				this.dpsBoxSendSvc.sendPackingToRfid(batch, invoiceId);
-			}			
-			// Tray 박스 상태 리셋
+				// 5.2.1 이미 RFID 실적이 전송되었는지 체크  
+				sql = "select * from rfid_results where batch_id = :workUnit and invoice_id = :invoiceId";
+				int count = this.queryManager.selectSizeBySql(sql, ValueUtil.newMap("workUnit,invoiceId", batch.getId(), invoiceId));
+				
+				// 5.2.2 이미 RFID 실적이 전송되지 않았다면 RFID 실적 전송 
+				if(count == 0) {
+					for(RfidResult rfid : rfidInspItems) {
+						rfid.setInvoiceId(invoiceId);
+					}
+					// RFID 실적 저장
+					this.queryManager.insertBatch(rfidInspItems);
+					// RFID 실적 전송
+					this.dpsBoxSendSvc.sendPackingToRfid(batch, invoiceId);
+				}
+			}
+			
+			// 5.3 Tray 박스 상태 리셋
 			this.resetTrayBox(box.getBoxTypeCd());
-			// 송장 발행
+			// 5.4 송장 발행
 			BeanUtil.get(DpsInspectionService.class).printInvoiceLabel(batch, box, printerId);
 		}
 	}
@@ -418,51 +453,92 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		if(ValueUtil.isEmpty(jobList)) {
 			return null;
 		}
-						
-		// 4. WMS로 조회한 DpsJobInstance 기준으로 박스 실적 전송
-		this.dpsBoxSendSvc.sendPackingToWmsBySplit(batch, sourceBox.getOrderNo(), sourceBox.getBoxId(), jobList);
 		
-		// 5. WMS에 송장 발행 요청
-		String invoiceId = this.dpsBoxSendSvc.requestInvoiceToWmsBySplit(batch, sourceBox.getOrderNo(), sourceBox.getBoxId(), jobList);
+		// 4. 주문에 대해서 이미 송장이 발행이 되었는지 체크  
+		Map<String, Object> waybillParams = ValueUtil.newMap("whCd,orderNo,boxId", FnFConstants.WH_CD_ICF, sourceBox.getOrderNo(), sourceBox.getBoxId());
+		sql = "select waybill_no from mps_express_waybill_print where wh_cd = :whCd and online_order_no = :orderNo and box_id = :boxId";
+		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsExpressWaybillPrint.class);
+		String invoiceId = wmsQueryMgr.selectBySql(sql, waybillParams, String.class);
 		
-		// 6. 송장 번호가 성공이면 
+		// 5. 송장이 발행이 되지 않았다면 WMS에 실적 전송 및 송장 발행 요청 
+		if(ValueUtil.isEmpty(invoiceId)) {
+			// 5.1 WMS로 조회한 DpsJobInstance 기준으로 박스 실적 전송
+			this.dpsBoxSendSvc.sendPackingToWmsBySplit(batch, sourceBox.getOrderNo(), sourceBox.getBoxId(), jobList);
+			// 5.2 WMS에 송장 발행 요청
+			invoiceId = this.dpsBoxSendSvc.requestInvoiceToWmsBySplit(batch, sourceBox.getOrderNo(), sourceBox.getBoxId(), jobList);
+			
+		// 6. 작업 정보에 송장 업데이트  
+		} else {
+			String jobStatus = BoxPack.BOX_STATUS_EXAMED;
+			
+			// 송장, 상태, 실적 전송 시간 업데이트 
+			if(ValueUtil.isNotEqual(jobStatus, jobList.get(0).getStatus())) {
+				List<String> orderIdList = new ArrayList<String>(jobList.size());
+				Date currentTime = new Date();
+				
+				// 6.1 작업 정보 업데이트
+				for(DpsJobInstance job : jobList) {
+					job.setStatus(jobStatus);
+					job.setWaybillNo(invoiceId);
+					job.setBoxResultIfAt(currentTime);
+					orderIdList.add(job.getMheDrId());
+				}
+				this.queryManager.updateBatch(jobList, "status", "boxResultIfAt", "waybillNo");
+				
+				// 6.2 주문  정보 업데이트
+				sql = "update mhe_dr set status = :status, box_result_if_at = :boxResultIfAt, waybill_no = :waybillNo where id in (:orderIdList)";
+				Map<String, Object> params = ValueUtil.newMap("orderIdList,status,boxResultIfAt,waybillNo", orderIdList, jobStatus, currentTime, invoiceId);
+				this.queryManager.executeBySql(sql, params);
+			}
+		}
+		
+		// 7. 송장 번호가 성공이면 
 		if(ValueUtil.isNotEqual(invoiceId, FnFConstants.ORDER_CANCEL_ALL)) {
-			// 6.1 박스에 송장 번호 설정
+			// 7.1 박스에 송장 번호 설정
 			sourceBox.setInvoiceId(invoiceId);
 			
-			// 6.2 RFID 실적 전송
+			// 7.2 RFID 실적 전송
 			if(ValueUtil.isNotEmpty(rfidItemList)) {
-				// 6.2.1 RFID 실적 저장
-				this.queryManager.insertBatch(rfidItemList);
-				// 6.2.2 RFID 실적 전송
-				this.dpsBoxSendSvc.sendPackingToRfid(batch, invoiceId);
+				sql = "select * from rfid_results where batch_id = :workUnit and invoice_id = :invoiceId";
+				condition.put("invoiceId", invoiceId);
+				int count = this.queryManager.selectSizeBySql(sql, condition);
+				
+				if(count == 0) {
+					// 7.2.1 RFID 실적 저장
+					for(RfidResult rfid : rfidItemList) {
+						rfid.setInvoiceId(invoiceId);
+					}
+					this.queryManager.insertBatch(rfidItemList);
+					// 7.2.2 RFID 실적 전송
+					this.dpsBoxSendSvc.sendPackingToRfid(batch, invoiceId);
+				}
 			}
 			
-			// 6.3 해당 주문에 대해서 검수 처리가 모두 완료되었다면 Tray 박스 상태 리셋 
+			// 7.3 해당 주문에 대해서 검수 처리가 모두 완료되었다면 Tray 박스 상태 리셋 
 			sql = "select * from dps_job_instances where work_unit = :workUnit and ref_no = :refNo and (waybill_no is null or waybill_no = '')";
 			if(this.queryManager.selectSizeBySql(sql, condition) == 0) {
 				this.resetTrayBox(sourceBox.getBoxTypeCd());
 				
-			// 6.4 남은 검수 항목이 있으면 동일 주문의 처리 안 된 주문에 대해서 박스 ID 리셋
+			// 7.4 남은 검수 항목이 있으면 동일 주문의 처리 안 된 주문에 대해서 박스 ID 리셋
 			} else {				
-				// 6.4.1 남은 주문 정보의 BoxId를 null로 업데이트
+				// 7.4.1 남은 주문 정보의 BoxId를 null로 업데이트
 				sql = "update mhe_dr set box_id = null where work_unit = :workUnit and ref_no = :refNo and (waybill_no is null or waybill_no = '')";
 				this.queryManager.executeBySql(sql, condition);
 				
-				// 6.4.2 남은 작업 정보의 BoxId를 null로 업데이트
+				// 7.4.2 남은 작업 정보의 BoxId를 null로 업데이트
 				sql = "update dps_job_instances set box_id = null where work_unit = :workUnit and ref_no = :refNo and (waybill_no is null or waybill_no = '')";
 				this.queryManager.executeBySql(sql, condition);
 			}
 			
-			// 6.5 송장 발행 
+			// 7.5 송장 발행 
 			BeanUtil.get(DpsInspectionService.class).printInvoiceLabel(batch, sourceBox, printerId);
 			
-		// 7. 송장 번호가 주문 전체 취소이면 리턴에 취소 설정
+		// 8. 송장 번호가 주문 전체 취소이면 리턴에 취소 설정
 		} else {
 			sourceBox.setStatus(LogisConstants.JOB_STATUS_CANCEL);
 		}
 		
-		// 8. 리턴
+		// 9. 리턴
 		return sourceBox;
 	}	
 	

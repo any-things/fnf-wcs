@@ -26,8 +26,12 @@ import xyz.anythings.base.entity.Printer;
 import xyz.anythings.base.entity.TrayBox;
 import xyz.anythings.base.rest.PrinterController;
 import xyz.anythings.base.service.impl.AbstractInstructionService;
+import xyz.anythings.sys.event.model.ErrorEvent;
 import xyz.anythings.sys.event.model.PrintEvent;
 import xyz.elidom.orm.IQueryManager;
+import xyz.elidom.sys.entity.Domain;
+import xyz.elidom.sys.rest.DomainController;
+import xyz.elidom.sys.system.context.DomainContext;
 import xyz.elidom.sys.util.SettingUtil;
 import xyz.elidom.sys.util.ThrowUtil;
 import xyz.elidom.sys.util.ValueUtil;
@@ -445,6 +449,9 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		return new PrintEvent(domainId, printerId, labelTemplate, printParams);
 	}
 
+	@Autowired
+	private DomainController domainCtrl;
+	
 	/**
 	 * 송장 라벨 인쇄 API
 	 * 
@@ -455,13 +462,29 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	@Async
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, classes = PrintEvent.class)
 	public void printLabel(PrintEvent printEvent) {
-		// 인쇄 옵션 정보 추출
-		Printer printer = this.queryManager.select(Printer.class, printEvent.getPrinterId());
-		String agentUrl = printer.getPrinterAgentUrl();
-		String printerName = printer.getPrinterDriver();
+		// 현재 도메인 조회
+		Domain domain = this.domainCtrl.findOne(printEvent.getDomainId(), null);
+		// 현재 도메인 설정
+		DomainContext.setCurrentDomain(domain);
 		
-		// 인쇄 요청
-		this.printerCtrl.printLabelByLabelTemplate(agentUrl, printerName, printEvent.getPrintTemplate(), printEvent.getTemplateParams());
+		try {
+			// 인쇄 옵션 정보 추출
+			Printer printer = this.queryManager.select(Printer.class, printEvent.getPrinterId());
+			String agentUrl = printer.getPrinterAgentUrl();
+			String printerName = printer.getPrinterDriver();
+			
+			// 인쇄 요청
+			this.printerCtrl.printLabelByLabelTemplate(agentUrl, printerName, printEvent.getPrintTemplate(), printEvent.getTemplateParams());
+			
+		} catch (Exception e) {
+			// 예외 처리
+			ErrorEvent errorEvent = new ErrorEvent(domain.getId(), "JOB_DAILY_SUMMARY_ERROR", e, null, true, true);
+			this.eventPublisher.publishEvent(errorEvent);
+			
+		} finally {
+			// 스레드 로컬 변수에서 currentDomain 리셋 
+			DomainContext.unsetAll();
+		}
 	}
 
 }

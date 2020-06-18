@@ -56,7 +56,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 	/**
 	 * RFID 박스 검수 완료 정보 추가 쿼리
 	 */
-	private static final String RFID_EXAMED_INSERT_SQL = "INSERT INTO RFID_IF.IF_RFIDHISTORY_RECV(DT_IF_DATE, NO_IF_SEQ, TP_GUBUN, CD_COMPANY, CD_DEPART, DT_DATE, CD_SHOP, CD_BILL, CD_SUBBILL, CD_RFIDUID, TP_HISTORY, TP_STATUS, CD_REGISTER, DM_BF_RECV) VALUES (:today, RFID_IF.SEQ_IF_RFIDHISTORY_RECV.NEXTVAL, 'I', 'FnF', :brandCd, :today, :shopCd, :waybillNo, '1', :rfidUid, '42', '0', :creatorId, sysdate)";	
+	private static final String RFID_EXAMED_INSERT_SQL = "INSERT INTO RFID_IF.IF_RFIDHISTORY_RECV(DT_IF_DATE, NO_IF_SEQ, TP_GUBUN, CD_COMPANY, CD_DEPART, DT_DATE, CD_SHOP, CD_BILL, CD_SUBBILL, CD_RFIDUID, TP_HISTORY, TP_STATUS, CD_REGISTER, DM_BF_RECV) VALUES (:today, RFID_IF.SEQ_IF_RFIDHISTORY_RECV.NEXTVAL, 'I', 'FNF', :brandCd, :today, :shopCd, :waybillNo, :orderNo, :rfidUid, '42', '0', :creatorId, :currentTime)";	
 	
 	/**
 	 * 주문 번호로 Unique 박스 ID 생성
@@ -274,14 +274,13 @@ public class DpsBoxSendService extends AbstractQueryService {
 			IQueryManager rfidQueryMgr = this.getDataSourceQueryManager(RfidDpsInspResult.class);
 			// 이미 해당 송장이 RFID에 존재하는지 체크 
 			int count = rfidQueryMgr.selectSizeBySql(RFID_EXAMED_SELECT_SQL, ValueUtil.newMap("waybillNo", invoiceId));
+			String currentTimeStr = DateUtil.dateTimeStr(new Date(), "yyyyMMddHHmmss");
 			
 			if(count == 0) {
 				for(RfidResult rfidResult : rfidResults) {
 					// RFID 실적 전송
 					String todayStr = rfidResult.getJobDate().replace(LogisConstants.DASH, LogisConstants.EMPTY_STRING);
-					String shopCd = rfidResult.getShopCd();
-					shopCd = ValueUtil.isNotEmpty(shopCd) && shopCd.length() > 10 ? shopCd.substring(0, 10) : shopCd;
-					Map<String, Object> params = ValueUtil.newMap("today,brandCd,shopCd,waybillNo,rfidUid,creatorId", todayStr, rfidResult.getBrandCd(), shopCd, invoiceId, rfidResult.getRfidId(), "WCS");
+					Map<String, Object> params = ValueUtil.newMap("today,brandCd,shopCd,waybillNo,orderNo,rfidUid,creatorId,currentTime", todayStr, rfidResult.getBrandCd(), rfidResult.getShopCd(), invoiceId, rfidResult.getOrderNo(), rfidResult.getRfidId(), "WCS", currentTimeStr);
 					rfidQueryMgr.executeBySql(RFID_EXAMED_INSERT_SQL, params);
 				}
 				

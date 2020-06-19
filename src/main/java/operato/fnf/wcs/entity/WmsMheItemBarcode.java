@@ -63,7 +63,8 @@ public class WmsMheItemBarcode extends xyz.elidom.orm.entity.basic.AbstractStamp
 	@Column (name = "floor_cd", nullable = true, length = 10)
 	private String floorCd;
 	
-	@Column (name = "rfid_item_yn", nullable = true, length = 1)
+	//@Column (name = "rfid_item_yn", nullable = true, length = 1)
+	@Ignore
 	private String rfidItemYn;
 	
 	@Column (name = "upd_datetime", nullable = true, type = ColumnType.DATETIME)

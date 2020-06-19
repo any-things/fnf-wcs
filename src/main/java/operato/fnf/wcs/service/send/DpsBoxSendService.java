@@ -484,7 +484,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 		rest.getMessageConverters().add(0, shmc);
 		WaybillResponse res = rest.getForObject(waybillReqUrl, WaybillResponse.class);
 		
-		if(res == null || ValueUtil.isNotEqual(LogisConstants.OK_STRING.toUpperCase(), res.getErrorMsg())) {		
+		if(res == null || ValueUtil.isNotEqual(LogisConstants.OK_STRING.toUpperCase(), res.getErrorMsg())) {
 			if(!exceptionWhenResNotOk && ValueUtil.isEqualIgnoreCase(res.getErrorCode(), FnFConstants.INVOICE_RES_CODE_ORDER_CANCEL_ALL)) {
 				return FnFConstants.ORDER_CANCEL_ALL;
 			} else {

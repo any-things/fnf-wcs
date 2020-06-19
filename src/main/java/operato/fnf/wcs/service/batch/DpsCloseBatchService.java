@@ -46,7 +46,7 @@ public class DpsCloseBatchService extends AbstractQueryService {
 		
 		// 3. WMS MHE_HR 테이블에 마감 전송
 		String sql = "update mhe_hr set cmpt_qty = :pickedQty, status = :status, cnf_datetime = :finishedAt where wh_cd = :whCd and work_unit = :batchId";
-		Map<String, Object> params = ValueUtil.newMap("whCd,batchId,status,pickedQty,finishedAt", FnFConstants.WH_CD_ICF, batch.getId(), "F", batch.getResultPcs(), batch.getFinishedAt());
+		Map<String, Object> params = ValueUtil.newMap("whCd,batchId,status,pickedQty,finishedAt", FnFConstants.WH_CD_ICF, batch.getId(), "C", batch.getResultPcs(), batch.getFinishedAt());
 		this.getDataSourceQueryManager(WmsMheHr.class).executeBySql(sql, params);
 		
 		// 4. WCS MHE_HR 테이블에 마감 전송

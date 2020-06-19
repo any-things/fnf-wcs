@@ -25,7 +25,6 @@ import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.BoxPack;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.entity.Printer;
-import xyz.anythings.base.entity.TrayBox;
 import xyz.anythings.base.rest.PrinterController;
 import xyz.anythings.base.service.impl.AbstractInstructionService;
 import xyz.anythings.sys.event.model.ErrorEvent;
@@ -410,9 +409,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 				}
 			}
 			
-			// 5.3 Tray 박스 상태 리셋
-			this.resetTrayBox(box.getBoxTypeCd());
-			// 5.4 송장 발행
+			// 5.3 송장 발행
 			BeanUtil.get(DpsInspectionService.class).printInvoiceLabel(batch, box, printerId);
 		}
 	}
@@ -514,23 +511,19 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 				}
 			}
 			
-			// 7.3 해당 주문에 대해서 검수 처리가 모두 완료되었다면 Tray 박스 상태 리셋 
+			// 7.3 남은 검수 항목이 있으면 동일 주문의 처리 안 된 주문에 대해서 박스 ID 리셋
 			sql = "select * from dps_job_instances where work_unit = :workUnit and ref_no = :refNo and (waybill_no is null or waybill_no = '')";
-			if(this.queryManager.selectSizeBySql(sql, condition) == 0) {
-				this.resetTrayBox(sourceBox.getBoxTypeCd());
-				
-			// 7.4 남은 검수 항목이 있으면 동일 주문의 처리 안 된 주문에 대해서 박스 ID 리셋
-			} else {				
-				// 7.4.1 남은 주문 정보의 BoxId를 null로 업데이트
+			if(this.queryManager.selectSizeBySql(sql, condition) > 0) {
+				// 7.3.1 남은 주문 정보의 BoxId를 null로 업데이트
 				sql = "update mhe_dr set box_id = null where work_unit = :workUnit and ref_no = :refNo and (waybill_no is null or waybill_no = '')";
 				this.queryManager.executeBySql(sql, condition);
 				
-				// 7.4.2 남은 작업 정보의 BoxId를 null로 업데이트
+				// 7.3.2 남은 작업 정보의 BoxId를 null로 업데이트
 				sql = "update dps_job_instances set box_id = null where work_unit = :workUnit and ref_no = :refNo and (waybill_no is null or waybill_no = '')";
 				this.queryManager.executeBySql(sql, condition);
 			}
 			
-			// 7.5 송장 발행 
+			// 7.4 송장 발행 
 			BeanUtil.get(DpsInspectionService.class).printInvoiceLabel(batch, sourceBox, printerId);
 			
 		// 8. 송장 번호가 주문 전체 취소이면 리턴에 취소 설정
@@ -574,19 +567,6 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		return originalJob;
 	}
 	
-	/**
-	 * tray 박스 상태 리셋
-	 * 
-	 * @param trayCd
-	 */
-	private void resetTrayBox(String trayCd) {
-		TrayBox condition = new TrayBox();
-		condition.setTrayCd(trayCd);
-		TrayBox tray = this.queryManager.selectByCondition(TrayBox.class, condition);
-		tray.setStatus(BoxPack.BOX_STATUS_WAIT);
-		this.queryManager.update(tray, "status", "updaterId", "updatedAt");		
-	}
-	
 	@Override
 	public int printInvoiceLabel(JobBatch batch, BoxPack box, String printerId) {
 		PrintEvent printEvent = this.createPrintEvent(batch.getDomainId(), box.getBoxId(), box.getInvoiceId(), printerId);
@@ -603,20 +583,19 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 
 	@Override
 	public int printTradeStatement(JobBatch batch, BoxPack box, String printerId) {
-		// TODO Auto-generated method stub
+		// FnF에서는 거래명세서 없음 
 		return 0;
 	}
 
 	@Override
 	public void inspectionAction(Long domainId, String boxPackId) {
-		// TODO Auto-generated method stub
+		// 구현 없음
 		
 	}
 
 	@Override
 	public void inspectionAction(BoxPack box) {
-		// TODO Auto-generated method stub
-		
+		// 구현 없음
 	}
 	
 	/**

@@ -16,6 +16,7 @@ import org.springframework.web.client.RestTemplate;
 
 import operato.fnf.wcs.FnFConstants;
 import operato.fnf.wcs.entity.DpsJobInstance;
+import operato.fnf.wcs.entity.RfidBoxItem;
 import operato.fnf.wcs.entity.RfidDpsInspResult;
 import operato.fnf.wcs.entity.RfidResult;
 import operato.fnf.wcs.entity.WcsMheDr;
@@ -33,6 +34,7 @@ import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.SysConstants;
 import xyz.elidom.sys.util.DateUtil;
 import xyz.elidom.sys.util.SettingUtil;
+import xyz.elidom.sys.util.ThrowUtil;
 import xyz.elidom.sys.util.ValueUtil;
 
 /**
@@ -148,6 +150,23 @@ public class DpsBoxSendService extends AbstractQueryService {
 	}
 	
 	/**
+	 * WMS에 단포 실적 전송
+	 * 
+	 * @param domainId
+	 * @param today
+	 * @param outDate
+	 * @param itemCd
+	 * @param newBoxId
+	 */
+	public void sendSinglePackToWms(Long domainId, String today, String outDate, String brandCd, String itemCd, String newBoxId) {
+		
+		String currentTimeStr = DateUtil.dateTimeStr(new Date(), "yyyyMMddHHmmss");
+		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
+		Map<String, Object> params = ValueUtil.newMap("today,whCd,boxId,orderNo,brandCd,skuCd,pickedQty,jobDate,currentTime", today, FnFConstants.WH_CD_ICF, newBoxId, null, brandCd, itemCd, 1, outDate, currentTimeStr);
+		wmsQueryMgr.executeBySql(WMS_PACK_INSERT_SQL, params);
+	}
+	
+	/**
 	 * 패킹 실적 WMS로 전송
 	 * 
 	 * @param batch
@@ -259,6 +278,33 @@ public class DpsBoxSendService extends AbstractQueryService {
 		// 발행 송장 리턴
 		return waybillNo;
 	}
+		
+	/**
+	 * RFID ID를 체크
+	 * 
+	 * @param rfidId
+	 * @param exceptionWhenInvalid
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public Map<String, Object> checkRfidId(String rfidId, boolean exceptionWhenInvalid) {
+		Map<String, Object> procParams = ValueUtil.newMap("IN_CD_RFIDUID", rfidId);
+		IQueryManager rfidQueryMgr = this.getDataSourceQueryManager(RfidBoxItem.class);
+		Map<String, Object> result = rfidQueryMgr.callReturnProcedure("PRO_RFIDUID_STATUS_CHECK", procParams, Map.class);
+		
+		// 리턴 파라미터 : OUT_CONFIRM, OUT_MSG, OUT_DEPART, OUT_ITEM_CD, OUT_STYLE, OUT_GOODS, OUT_COLOR, OUT_SIZE, OUT_BARCOD
+		String successYn = ValueUtil.toString(result.get("OUT_CONFIRM"));
+		
+		if(ValueUtil.isNotEqual(successYn, LogisConstants.Y_CAP_STRING)) {
+			if(exceptionWhenInvalid) {
+				String msg = ValueUtil.toString(result.get("OUT_MSG"));
+				msg = ValueUtil.isEmpty(msg) ? "스캔한 RFID 코드는 사용할 수 없습니다." : msg;
+				throw ThrowUtil.newValidationErrorWithNoLog(msg);
+			}
+		}
+		
+		return result;
+	}
 
 	/**
 	 * 검수 완료 정보 RFID로 전송
@@ -288,6 +334,26 @@ public class DpsBoxSendService extends AbstractQueryService {
 				this.confirmRfidProcedure(invoiceId);
 			}
 		}
+	}
+	
+	/**
+	 * 단포 검수 완료 정보 RFID로 전송
+	 * 
+	 * @param rfidResult
+	 */
+	public void sendSinglePackingToRfid(RfidResult rfidResult) {
+		
+		String todayStr = DateUtil.todayStr("yyyyMMdd");
+		String invoiceId = rfidResult.getInvoiceId();
+		String currentTimeStr = DateUtil.dateTimeStr(new Date(), "yyyyMMddHHmmss");
+		Map<String, Object> params = ValueUtil.newMap("today,brandCd,shopCd,waybillNo,orderNo,rfidUid,creatorId,currentTime", todayStr, rfidResult.getBrandCd(), rfidResult.getShopCd(), invoiceId, rfidResult.getOrderNo(), rfidResult.getRfidId(), "WCS", currentTimeStr);
+		
+		// RFID 시스템에 단포 실적 전송
+		IQueryManager rfidQueryMgr = this.getDataSourceQueryManager(RfidDpsInspResult.class);
+		rfidQueryMgr.executeBySql(RFID_EXAMED_INSERT_SQL, params);
+
+		// 프로시져 호출 - RFID_IF.PK_IF_RFIDHISTORY_RECV.PRO_IF_RFIDHISTORY_RECV_ONLINE
+		this.confirmRfidProcedure(invoiceId);
 	}
 	
 	/**
@@ -398,7 +464,18 @@ public class DpsBoxSendService extends AbstractQueryService {
 	 * @param boxId
 	 * @return
 	 */
-	private String newWaybillNo(String boxId) {
+	public String newWaybillNo(String boxId) {
+		return this.newWaybillNo(boxId, false);
+	}
+	
+	/**
+	 * 운송장 번호 발행
+	 * 
+	 * @param boxId
+	 * @param exceptionWhenResNotOk
+	 * @return
+	 */
+	public String newWaybillNo(String boxId, boolean exceptionWhenResNotOk) {
 		String waybillReqUrl = SettingUtil.getValue("fnf.waybill_no.request.url", "http://dev.wms.fnf.co.kr/onlineInvoiceMultiPackService/issue_express_waybill");
 		waybillReqUrl += "?WH_CD=ICF&BOX_ID=" + boxId;
 		RestTemplate rest = new RestTemplate();
@@ -407,11 +484,12 @@ public class DpsBoxSendService extends AbstractQueryService {
 		rest.getMessageConverters().add(0, shmc);
 		WaybillResponse res = rest.getForObject(waybillReqUrl, WaybillResponse.class);
 		
-		if(res == null || ValueUtil.isNotEqual(LogisConstants.OK_STRING.toUpperCase(), res.getErrorMsg())) {			
-			if(ValueUtil.isEqualIgnoreCase(res.getErrorCode(), FnFConstants.INVOICE_RES_CODE_ORDER_CANCEL_ALL)) {
+		if(res == null || ValueUtil.isNotEqual(LogisConstants.OK_STRING.toUpperCase(), res.getErrorMsg())) {		
+			if(!exceptionWhenResNotOk && ValueUtil.isEqualIgnoreCase(res.getErrorCode(), FnFConstants.INVOICE_RES_CODE_ORDER_CANCEL_ALL)) {
 				return FnFConstants.ORDER_CANCEL_ALL;
 			} else {
-				throw new ElidomRuntimeException("Error When Request Waybill Service To WMS", res.getErrorMsg());
+				String msg = ValueUtil.isEmpty(res.getErrorMsg()) ? "WMS에서 송장 발행에 실패했습니다." : res.getErrorMsg();
+				throw new ElidomRuntimeException(msg);
 			}
 		} else {
 			return res.getWaybillNo();

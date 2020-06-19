@@ -50,7 +50,6 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "workseq_no", nullable = true, length = 5)
 	private String workseqNo;
 	
-	@PrimaryKey
 	@Column (name = "outb_no", nullable = false, length = 20)
 	private String outbNo;
 	
@@ -66,7 +65,6 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "outb_ect_date", nullable = true, length = 8)
 	private String outbEctDate;
 
-	@PrimaryKey
 	@Column (name = "shipto_id", nullable = false, length = 100)
 	private String shiptoId;
 	
@@ -115,7 +113,6 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "zone_cd", nullable = true, length = 10)
 	private String zoneCd;
 	
-	@PrimaryKey
 	@Column (name = "location_cd", nullable = false, length = 30)
 	private String locationCd;
 	
@@ -125,7 +122,6 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "assort_yn", nullable = true, length = 1)
 	private String assortYn;
 
-	@PrimaryKey
 	@Column (name = "item_cd", nullable = false, length = 30)
 	private String itemCd;
 	

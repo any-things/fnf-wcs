@@ -1,5 +1,6 @@
 package operato.logis.dps.service.impl;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -9,8 +10,11 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import operato.fnf.wcs.entity.RfidBoxItem;
+import operato.fnf.wcs.FnFConstants;
+import operato.fnf.wcs.entity.DpsJobInstance;
 import operato.fnf.wcs.entity.RfidResult;
+import operato.fnf.wcs.entity.WmsMheItemBarcode;
+import operato.fnf.wcs.service.send.DpsBoxSendService;
 import operato.logis.dps.DpsCodeConstants;
 import operato.logis.dps.DpsConstants;
 import operato.logis.dps.model.DpsBatchInputableBox;
@@ -37,6 +41,10 @@ import xyz.anythings.sys.model.BaseResponse;
 import xyz.anythings.sys.util.AnyEntityUtil;
 import xyz.elidom.dbist.dml.Page;
 import xyz.elidom.orm.IQueryManager;
+import xyz.elidom.sys.SysConstants;
+import xyz.elidom.sys.entity.Domain;
+import xyz.elidom.sys.util.DateUtil;
+import xyz.elidom.sys.util.ThrowUtil;
 import xyz.elidom.util.ValueUtil;
 
 /**
@@ -66,6 +74,12 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 	 */
 	@Autowired
 	private DpsInspectionService dpsInspectionService;
+	
+	/**
+	 * DPS 박스 전송 서비스
+	 */
+	@Autowired
+	private DpsBoxSendService dpsBoxSendService;
 
 	/*****************************************************************************************************
 	 * 										작 업 진 행 율 A P I
@@ -292,7 +306,110 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 	 *****************************************************************************************************
 
 	/**
-	 * DPS 단포 피킹 처리
+	 * DPS 무오더 단포 피킹 처리
+	 * 
+	 * @param event
+	 */
+	@EventListener(classes=DeviceProcessRestEvent.class, condition = "#event.checkCondition('/no_order_single_pack/pick', 'dps')")
+	@Order(Ordered.LOWEST_PRECEDENCE)
+	public void noOrderSinglePackPick(DeviceProcessRestEvent event) {
+		
+		// 1. 파라미터 
+		String jobDate = event.getRequestParams().get("jobDate").toString();
+		jobDate = jobDate.replace(SysConstants.DASH, SysConstants.EMPTY_STRING);
+		String skuCd = event.getRequestParams().get("skuCd").toString();
+		
+		// 2. 상품 코드인지 RFID 코드인지 체크
+		if(ValueUtil.isEmpty(skuCd) || skuCd.length() <= 8 || skuCd.length() > 33) {
+			throw ThrowUtil.newValidationErrorWithNoLog("스캔한 바코드가 유효하지 않습니다.");
+		}
+		
+		boolean rfidFlag = skuCd.length() >= 30;
+		String itemCd = null;
+		String shopCd = null;
+		
+		// 3. RFID 코드인 경우 RFID 체크
+		if(rfidFlag) {
+			Map<String, Object> result = this.dpsBoxSendService.checkRfidId(skuCd, true);			
+			// 리턴 파라미터 : OUT_CONFIRM, OUT_MSG, OUT_DEPART, OUT_ITEM_CD, OUT_STYLE, OUT_GOODS, OUT_COLOR, OUT_SIZE, OUT_BARCOD
+			itemCd = ValueUtil.toString(result.get("OUT_ITEM_CD"));
+		} else {
+			itemCd = skuCd;
+		}
+		
+		// 4. 상품 코드로 상품 조회
+		IQueryManager queryMgr = this.getDataSourceQueryManager(WmsMheItemBarcode.class);
+		Map<String, Object> params = ValueUtil.newMap("itemCd", itemCd);
+		WmsMheItemBarcode sku = queryMgr.selectByCondition(WmsMheItemBarcode.class, params);
+		
+		// 5. 상품 조회가 안 되면 에러 
+		if(sku == null) {
+			throw ThrowUtil.newValidationErrorWithNoLog("스캔한 바코드로 상품을 찾을 수 없습니다.");
+		}
+
+		// 6. RFID 상품인 경우 상품 코드를 스캔하는 경우 에러 
+		if(!rfidFlag && ValueUtil.isNotEqual(sku.getRfidItemYn(), LogisConstants.Y_CAP_STRING)) {
+			throw ThrowUtil.newValidationErrorWithNoLog("스캔한 상품은 RFID 상품이니 반드시 RFID 검수를 해야합니다.");
+		}
+				
+		// 7. WMS 실적 전송
+		String todayStr = DateUtil.todayStr("yyyyMMdd");
+		String newBoxId = this.dpsBoxSendService.newBoxId(Domain.currentDomainId(), null, todayStr);
+		this.dpsBoxSendService.sendSinglePackToWms(Domain.currentDomainId(), todayStr, jobDate, sku.getBrand(), itemCd, newBoxId);
+		
+		// 8. WMS 송장 발행
+		String invoiceId = this.dpsBoxSendService.newWaybillNo(newBoxId, true);
+		
+		// 9. RFID 코드인 경우 RFID 실적 전송 
+		if(rfidFlag) {
+			RfidResult rfidResult = new RfidResult();
+			rfidResult.setRfidId(skuCd);
+			rfidResult.setJobDate(jobDate);
+			rfidResult.setBrandCd(sku.getBrand());
+			rfidResult.setSkuCd(itemCd);
+			rfidResult.setBoxId(newBoxId);
+			rfidResult.setOrderQty(1);
+			rfidResult.setInvoiceId(invoiceId);
+			rfidResult.setShopCd(shopCd);
+			this.dpsBoxSendService.sendSinglePackingToRfid(rfidResult);
+			this.queryManager.insert(rfidResult);
+		}
+		
+		// 10. 작업 데이터 생성 ...
+		DpsJobInstance job = new DpsJobInstance();
+		job.setWhCd(FnFConstants.WH_CD_ICF);
+		job.setWorkDate(todayStr);
+		job.setOutbEctDate(jobDate);
+		job.setBoxId(newBoxId);
+		job.setWaybillNo(invoiceId);
+		job.setPackTcd("D");
+		job.setMheNo("M1");
+		job.setItemCd(itemCd);
+		job.setBarcode2(sku.getBarcode2());
+		job.setStrrId(sku.getBrand());
+		job.setBoxInputAt(new Date());
+		job.setCmptQty(1);
+		job.setPickQty(1);
+		job.setItemColor(sku.getItemColor());
+		job.setItemSeason(sku.getItemSeason());
+		job.setItemSize(sku.getItemSize());
+		job.setItemStyle(sku.getItemStyle());
+		job.setMheDatetime(job.getBoxInputAt());
+		job.setMheDrId(LogisConstants.NOT_AVAILABLE_CAP_STRING);
+		job.setWorkUnit(LogisConstants.NOT_AVAILABLE_CAP_STRING);
+		job.setRefNo(LogisConstants.NOT_AVAILABLE_CAP_STRING);
+		job.setCellCd(LogisConstants.NOT_AVAILABLE_CAP_STRING);
+		job.setRfidItemYn(rfidFlag ? LogisConstants.Y_CAP_STRING : LogisConstants.N_CAP_STRING);
+		job.setStatus(LogisConstants.JOB_STATUS_EXAMINATED);
+		this.queryManager.insert(job);
+		
+		// 11. 리턴 
+		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, job));
+		event.setExecuted(true);
+	}
+	
+	/**
+	 * DPS 오더 기반 단포 피킹 처리
 	 * 
 	 * @param event
 	 */
@@ -512,13 +629,10 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		DpsServiceUtil.findBatchByEquip(event.getDomainId(), equipType, equipCd);
 				
 		// 3. RFID 상태값 체크 프로시져 호출
-		Map<String, Object> procParams = ValueUtil.newMap("IN_CD_RFIDUID", rfidId);
-		IQueryManager rfidQueryMgr = this.getDataSourceQueryManager(RfidBoxItem.class);
-		Map<?, ?> result = rfidQueryMgr.callReturnProcedure("PRO_RFIDUID_STATUS_CHECK", procParams, Map.class);
-		// 리턴 파라미터 : OUT_CONFIRM, OUT_MSG, OUT_DEPART, OUT_ITEM_CD, OUT_STYLE, OUT_GOODS, OUT_COLOR, OUT_SIZE, OUT_BARCOD
+		Map<?, ?> result = this.dpsBoxSendService.checkRfidId(rfidId, false);
 		String successYn = ValueUtil.toString(result.get("OUT_CONFIRM"));
 		
-		// 5. RFID가 문제가 없는 경우
+		// 4. RFID가 문제가 없는 경우
 		if(ValueUtil.isEqualIgnoreCase(successYn, LogisConstants.Y_CAP_STRING)) {
 			RfidResult rfid = new RfidResult();
 			rfid.setRfidId(rfidId);
@@ -526,7 +640,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 			rfid.setSkuCd(ValueUtil.toString(result.get("OUT_ITEM_CD")));
 			event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, rfid));
 			
-		// 6. RFID가 문제가 있는 경우 
+		// 5. RFID가 문제가 있는 경우 
 		} else {
 			String errorMsg = ValueUtil.isNotEmpty(result.get("OUT_MSG")) ? result.get("OUT_MSG").toString() : "유효하지 않은 RFID!";
 			event.setReturnResult(new BaseResponse(false, errorMsg, null));

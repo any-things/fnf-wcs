@@ -63,6 +63,9 @@ public class WmsMheItemBarcode extends xyz.elidom.orm.entity.basic.AbstractStamp
 	@Column (name = "floor_cd", nullable = true, length = 10)
 	private String floorCd;
 	
+	@Column (name = "rfid_item_yn", nullable = true, length = 1)
+	private String rfidItemYn;
+	
 	@Column (name = "upd_datetime", nullable = true, type = ColumnType.DATETIME)
 	private Date updDatetime;
 
@@ -160,6 +163,14 @@ public class WmsMheItemBarcode extends xyz.elidom.orm.entity.basic.AbstractStamp
 
 	public void setFloorCd(String floorCd) {
 		this.floorCd = floorCd;
+	}
+
+	public String getRfidItemYn() {
+		return rfidItemYn;
+	}
+
+	public void setRfidItemYn(String rfidItemYn) {
+		this.rfidItemYn = rfidItemYn;
 	}
 
 	public Date getUpdDatetime() {

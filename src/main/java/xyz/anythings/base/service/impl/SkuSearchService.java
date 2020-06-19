@@ -109,7 +109,6 @@ public class SkuSearchService extends AbstractLogisService implements ISkuSearch
 		String selectFields = this.getSkuSelectFieldsByOrder(batch);
 		Map<String, Object> params = ValueUtil.newMap("batchId", batch.getId());
 		
-		// TODO 배치별 주문과 상품 테이블 조인하여 조회
 		StringJoiner sql = new StringJoiner(LogisConstants.LINE_SEPARATOR);
 		sql.add("SELECT DISTINCT ").add(selectFields).add(" FROM MHE_DR WHERE WORK_UNIT = :batchId AND (");
 		int idx = 0;
@@ -159,7 +158,7 @@ public class SkuSearchService extends AbstractLogisService implements ISkuSearch
 	@Override
 	public SKU findSku(Long domainId, String stageCd, String comCd, String skuCd, String skuBarcd, boolean exceptionFlag) {
 		String selectFields = this.getSkuSelectFields(domainId, stageCd);
-		return findSKU(domainId, exceptionFlag, selectFields, "comCd,itemCd,barcode", comCd, skuCd, skuBarcd);
+		return findSKU(domainId, exceptionFlag, selectFields, "comCd,skuCd,skuBarcd", comCd, skuCd, skuBarcd);
 	}
 	
 	@Override

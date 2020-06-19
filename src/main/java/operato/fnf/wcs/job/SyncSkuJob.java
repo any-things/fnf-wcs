@@ -7,6 +7,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import operato.fnf.wcs.FnFConstants;
 import xyz.anythings.base.event.master.SkuReceiptEvent;
 import xyz.anythings.sys.event.EventPublisher;
 import xyz.anythings.sys.event.model.ErrorEvent;
@@ -50,12 +51,12 @@ public class SyncSkuJob extends AbstractFnFJob {
 			DomainContext.setCurrentDomain(domain);
 			
 			try {
-				SkuReceiptEvent event1 = new SkuReceiptEvent(domain.getId(), SkuReceiptEvent.RECEIVE_TYPE_SKU, "FnF", SysEvent.EVENT_STEP_BEFORE);
+				SkuReceiptEvent event1 = new SkuReceiptEvent(domain.getId(), SkuReceiptEvent.RECEIVE_TYPE_SKU, FnFConstants.FNF_COM_CD, SysEvent.EVENT_STEP_BEFORE);
 				event1 = (SkuReceiptEvent)this.eventPublisher.publishEvent(event1);
 				
 				ThreadUtil.sleep(1000);
 				
-				SkuReceiptEvent event2 = new SkuReceiptEvent(domain.getId(), SkuReceiptEvent.RECEIVE_TYPE_SKU, "FnF", SysEvent.EVENT_STEP_AFTER);
+				SkuReceiptEvent event2 = new SkuReceiptEvent(domain.getId(), SkuReceiptEvent.RECEIVE_TYPE_SKU, FnFConstants.FNF_COM_CD, SysEvent.EVENT_STEP_AFTER);
 				event2.setPlanCount(event1.getPlanCount());
 				event2.setLastReceivedAt(event1.getLastReceivedAt());
 				event2 = (SkuReceiptEvent)this.eventPublisher.publishEvent(event2);

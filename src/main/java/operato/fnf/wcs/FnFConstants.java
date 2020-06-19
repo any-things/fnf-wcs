@@ -11,6 +11,10 @@ public class FnFConstants {
 	 */
 	public static final String WH_CD_ICF = "ICF";
 	/**
+	 * FnF 화주사 코드
+	 */
+	public static final String FNF_COM_CD = "FnF";
+	/**
 	 * 주문 전체 취소
 	 */
 	public static final String ORDER_CANCEL_ALL = "CANCEL_ALL";

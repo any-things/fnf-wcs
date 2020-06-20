@@ -242,7 +242,7 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	/**
 	 * 검수자
 	 */
-	@Column (name = "inspector_id", nullable = true)
+	@Column (name = "inspector_id", nullable = true, length = 32)
 	private String inspectorId;
 	
 	/**

@@ -3,7 +3,6 @@ package operato.fnf.wcs.job;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,7 +34,7 @@ public class SyncSkuJob extends AbstractFnFJob {
 	private boolean syncJobRunning = false;
 	
 	@Transactional
-	@Scheduled(cron="0 0 0/1 * * *")
+	//@Scheduled(cron="0 0 0/1 * * *")
 	public void syncJob() {
 		// 스케줄링 활성화 여부 && 이전 작업이 진행 중인 여부 체크
 		if(!this.isJobEnabeld() || this.syncJobRunning) {

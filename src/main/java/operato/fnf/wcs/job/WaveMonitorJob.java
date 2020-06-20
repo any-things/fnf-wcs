@@ -49,10 +49,11 @@ public class WaveMonitorJob extends AbstractFnFJob {
 	private WcsBatchProgressService progressSvc;
 	
 	/**
-	 * 매 3분 마다 실행되어 작업 배치 상태 모니터링 후 변경된 Wave에 대해서 JobBatch에 반영
+	 * 매 2분 마다 실행되어 작업 배치 상태 모니터링 후 변경된 Wave에 대해서 JobBatch에 반영
 	 */
 	@Transactional
-	@Scheduled(cron="45 0/1 * * * *")
+	//@Scheduled(cron="45 0/1 * * * *")
+	@Scheduled(initialDelay=125000, fixedDelay=60000)
 	public void monitorWave() {
 		// 1. 스케줄링 활성화 여부
 		if(!this.isJobEnabeld()) {

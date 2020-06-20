@@ -196,6 +196,12 @@ public class JobBatch extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	@Column (name = "status", length = 10)
 	private String status;
 	
+	/**
+	 * 일별 마감 처리가 되었는지 여부
+	 */
+	@Column (name = "closed_flag")
+	private Boolean closedFlag;
+	
 	@Column (name = "job_config_set_id", length = 40)
 	private String jobConfigSetId;
 	
@@ -480,6 +486,14 @@ public class JobBatch extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 		this.status = status;
 	}
 	
+	public Boolean getClosedFlag() {
+		return closedFlag;
+	}
+
+	public void setClosedFlag(Boolean closedFlag) {
+		this.closedFlag = closedFlag;
+	}
+
 	public String getJobConfigSetId() {
 		return this.jobConfigSetId;
 	}
@@ -543,7 +557,7 @@ public class JobBatch extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 		this.setStatus(status);
 		
 		if(ValueUtil.isEqual(JobBatch.STATUS_CANCEL, status)) {
-			this.setJobSeq("0");
+			this.setJobSeq(LogisConstants.ZERO_STRING);
 			BeanUtil.get(IQueryManager.class).update(this, "jobSeq", "status");
 		} else {
 			BeanUtil.get(IQueryManager.class).update(this, "status");
@@ -607,6 +621,7 @@ public class JobBatch extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 		batch.setBatchOrderQty(receiptItem.getTotalOrders());
 		batch.setBatchPcs(receiptItem.getTotalPcs());
 		batch.setStatus(JobBatch.STATUS_RECEIVE);
+		batch.setClosedFlag(false);
 		BeanUtil.get(IQueryManager.class).insert(batch);
 		return batch;
 	}

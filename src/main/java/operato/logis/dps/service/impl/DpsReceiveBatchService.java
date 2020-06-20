@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import operato.fnf.wcs.FnFConstants;
 import operato.fnf.wcs.entity.WcsMheDr;
 import operato.fnf.wcs.entity.WcsMheHr;
 import operato.fnf.wcs.entity.WmsMheDr;
@@ -41,10 +42,6 @@ import xyz.elidom.util.ValueUtil;
 @Component
 public class DpsReceiveBatchService extends AbstractQueryService {
 
-	/**
-	 * FnF 센터 코드
-	 */
-	private String whCd = "ICF";
 	/**
 	 * 작업 유형
 	 */
@@ -99,7 +96,7 @@ public class DpsReceiveBatchService extends AbstractQueryService {
 	 */
 	private List<BatchReceiptItem> getWmfIfToReceiptItems(BatchReceipt receipt) {
 		String workDate = receipt.getJobDate().replace(LogisConstants.DASH, LogisConstants.EMPTY_STRING);
-		Map<String, Object> params = ValueUtil.newMap("whCd,jobType,jobDate,status", this.whCd, this.DPS_JOB_TYPE, workDate, "A");
+		Map<String, Object> params = ValueUtil.newMap("whCd,jobType,jobDate,status", FnFConstants.WH_CD_ICF, this.DPS_JOB_TYPE, workDate, "A");
 		IQueryManager dsQueryManager = this.getDataSourceQueryManager(WmsMheHr.class);
 		String sql = this.dpsQueryStore.getOrderSummaryToReceive();
 		return dsQueryManager.selectListBySql(sql, params, BatchReceiptItem.class, 0, 0);
@@ -184,7 +181,7 @@ public class DpsReceiveBatchService extends AbstractQueryService {
 	private void cloneData(BatchReceipt receipt, BatchReceiptItem item) throws Exception {
 		// 1. WMS 데이터소스 조회 
 		Query condition = new Query();
-		condition.addFilter("wh_cd", this.whCd);
+		condition.addFilter("wh_cd", FnFConstants.WH_CD_ICF);
 		condition.addFilter("work_unit", item.getWmsBatchNo());
 		
 		// 2. WMS로 부터 배치 정보 조회
@@ -216,8 +213,8 @@ public class DpsReceiveBatchService extends AbstractQueryService {
 				AnyOrmUtil.insertBatch(orderDestList, 100);
 			}
 			
-			// 6. WMS 배치 정보 수신 플래그 업데이트 (TODO WCS 수신 상태 필요한 지 WMS와 협의 필요)
-			wmsBatch.setStatus("W");
+			// 6. WMS 배치 정보 수신 플래그 업데이트
+			wmsBatch.setStatus("B");
 			dsQueryManager.update(wmsBatch);
 		}
 	}
@@ -264,11 +261,11 @@ public class DpsReceiveBatchService extends AbstractQueryService {
 		// 3. 취소 상태 , seq = 0 셋팅 
 		for(Order order : orderList) {
 			order.setStatus(Order.STATUS_CANCEL);
-			order.setJobSeq("0");
+			order.setJobSeq(LogisConstants.ZERO_STRING);
 		}
 		
 		// 4. 배치 update
-		AnyOrmUtil.updateBatch(orderList, 100, "jobSeq",DpsConstants.ENTITY_FIELD_STATUS);
+		AnyOrmUtil.updateBatch(orderList, 100, "jobSeq", DpsConstants.ENTITY_FIELD_STATUS);
 		cnt += orderList.size();
 		
 		// 5. 주문 가공 데이터 삭제  

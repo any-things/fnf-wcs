@@ -26,42 +26,87 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "id", nullable = false, length = 40)
 	private String id;
 	
+	/**
+	 * MHE_DR_ID MHE_DR 테이블의 ID
+	 */
 	@Column (name = "mhe_dr_id", nullable = false, length = 40)
 	private String mheDrId;
 	
+	/**
+	 * 창고 코드 : ICF 고정
+	 */
 	@Column (name = "wh_cd", nullable = false, length = 20)
 	private String whCd;
 	
+	/**
+	 * 브랜드 코드 
+	 */
 	@Column (name = "strr_id", nullable = false, length = 20)
 	private String strrId;
 	
+	/**
+	 * 브랜드 명
+	 */
 	@Column (name = "strr_nm", nullable = true, length = 50)
 	private String strrNm;
 	
+	/**
+	 * 작업일자
+	 */
 	@Column (name = "work_date", nullable = false, length = 8)
 	private String workDate;
 	
+	/**
+	 * 출고예정일
+	 */
 	@Column (name = "outb_ect_date", nullable = true, length = 8)
 	private String outbEctDate;
 
+	/**
+	 * 작업 배치 번호
+	 */
 	@Column (name = "work_unit", nullable = false, length = 20)
 	private String workUnit;
 	
+	/**
+	 * 웨이브 번호
+	 */
 	@Column (name = "wave_no", nullable = true, length = 20)
 	private String waveNo;
 
+	/**
+	 * 작업 차수
+	 */
 	@Column (name = "workseq_no", nullable = true, length = 5)
 	private String workseqNo;
 	
-	@Column (name = "outb_no", nullable = true, length = 20)
-	private String outbNo;
+	/**
+	 * 설비 코드 (장비 식별 번호)
+	 */
+	@Column (name = "mhe_no", nullable = true, length = 20)
+	private String mheNo;
 	
+	/**
+	 * 온라인 주문번호
+	 */
 	@Column (name = "ref_no", nullable = false, length = 30)
 	private String refNo;
 	
+	/**
+	 * 출고번호
+	 */
+	@Column (name = "outb_no", nullable = true, length = 20)
+	private String outbNo;
+	
+	/**
+	 * 매장 코드 
+	 */
 	@Column (name = "shipto_id", nullable = true, length = 100)
 	private String shiptoId;
 	
+	/**
+	 * 매장 명
+	 */
 	@Column (name = "shipto_nm", nullable = true, length = 200)
 	private String shiptoNm;
 
@@ -86,20 +131,23 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "barcode", nullable = true, length = 100)
 	private String barcode;
 	
+	/**
+	 * 상품 바코드
+	 */
 	@Column (name = "barcode2", nullable = true, length = 100)
 	private String barcode2;
 
+	/**
+	 * 주문 수량 
+	 */
 	@Column (name = "pick_qty", nullable = false, length = 10)
 	private Integer pickQty;
 
+	/**
+	 * 확정 수량 
+	 */
 	@Column (name = "cmpt_qty", nullable = true, length = 10)
 	private Integer cmptQty;
-
-	@Column (name = "mhe_no", nullable = true, length = 20)
-	private String mheNo;
-	
-	@Column (name = "mhe_datetime", nullable = true, type = ColumnType.DATETIME)
-	private Date mheDatetime;
 	
 	/**
 	 * 온라인 합/단포 구분 (D: 단포, H: 합포)
@@ -107,20 +155,11 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "pack_tcd", nullable = true, length = 10)
 	private String packTcd;
 	
+	/**
+	 * 셀 번호
+	 */
 	@Column (name = "cell_cd", nullable = false, length = 20)
 	private String cellCd;
-	
-	@Column (name = "rfid_item_yn", nullable = true, length = 1)
-	private String rfidItemYn;
-
-	@Column (name = "dps_assign_yn", nullable = true, length = 1)
-	private String dpsAssignYn;
-	
-	@Column (name = "dps_assign_at", nullable = true)
-	private Date dpsAssignAt;
-	
-	@Column (name = "box_input_seq", nullable = true)
-	private Integer boxInputSeq;
 	
 	/**
 	 * DPS 트레이 박스 번호
@@ -139,22 +178,79 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	 */
 	@Column (name = "waybill_no", nullable = true, length = 30)
 	private String waybillNo;
+	
+	/**
+	 * RFID 필수 검수 여부 
+	 */
+	@Column (name = "rfid_item_yn", nullable = true, length = 1)
+	private String rfidItemYn;
 
+	/**
+	 * 작업 할당 여부
+	 */
+	@Column (name = "dps_assign_yn", nullable = true, length = 1)
+	private String dpsAssignYn;
+	
+	/**
+	 * 작업 할당 시간 
+	 */
+	@Column (name = "dps_assign_at", nullable = true)
+	private Date dpsAssignAt;
+	
+	/**
+	 * DPS에 박스 투입한 순서 (1부터 순차적 Up)
+	 */
+	@Column (name = "box_input_seq", nullable = true)
+	private Integer boxInputSeq;
+
+	/**
+	 * DPS에 박스 투입한 시간
+	 */
 	@Column (name = "box_input_at", nullable = true)
 	private Date boxInputAt;
 	
+	/**
+	 * DPS 설비가 박스 투입된 정보를 가져갔는지 여부 - DPS가 관리  
+	 */
 	@Column (name = "box_input_if_yn", nullable = true, length = 1)
 	private String boxInputIfYn;
 	
+	/**
+	 * DPS 설비가 박스 투입된 정보를 가져간 시간
+	 */
 	@Column (name = "box_input_if_at", nullable = true)
 	private Date boxInputIfAt;
 	
+	/**
+	 * DPS에서 피킹 확정 시간 
+	 */
+	@Column (name = "mhe_datetime", nullable = true, type = ColumnType.DATETIME)
+	private Date mheDatetime;
+	
+	/**
+	 * 박스 실적 전송 시간
+	 */
 	@Column (name = "box_result_if_at", nullable = true)
 	private Date boxResultIfAt;
-		
+	
+	/**
+	 * 검수 시간 
+	 */
+	@Column (name = "inspected_at", nullable = true)
+	private Date inspectedAt;
+	
+	/**
+	 * 검수자
+	 */
+	@Column (name = "inspector_id", nullable = true)
+	private String inspectorId;
+	
+	/**
+	 * 상태 A : 작업 할당, I : 박스 투입, B : 박싱 완료, E : 검수 완료, C : 작업 취소
+	 */
 	@Column (name = "status", nullable = true, length = 1)
 	private String status;
-	
+
 	public String getId() {
 		return id;
 	}
@@ -162,11 +258,11 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	public void setId(String id) {
 		this.id = id;
 	}
-	
+
 	public String getMheDrId() {
 		return mheDrId;
 	}
-	
+
 	public void setMheDrId(String mheDrId) {
 		this.mheDrId = mheDrId;
 	}
@@ -235,12 +331,12 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 		this.workseqNo = workseqNo;
 	}
 
-	public String getOutbNo() {
-		return outbNo;
+	public String getMheNo() {
+		return mheNo;
 	}
 
-	public void setOutbNo(String outbNo) {
-		this.outbNo = outbNo;
+	public void setMheNo(String mheNo) {
+		this.mheNo = mheNo;
 	}
 
 	public String getRefNo() {
@@ -249,6 +345,14 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setRefNo(String refNo) {
 		this.refNo = refNo;
+	}
+
+	public String getOutbNo() {
+		return outbNo;
+	}
+
+	public void setOutbNo(String outbNo) {
+		this.outbNo = outbNo;
 	}
 
 	public String getShiptoId() {
@@ -322,7 +426,7 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	public void setBarcode(String barcode) {
 		this.barcode = barcode;
 	}
-	
+
 	public String getBarcode2() {
 		return barcode2;
 	}
@@ -347,22 +451,6 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 		this.cmptQty = cmptQty;
 	}
 
-	public String getMheNo() {
-		return mheNo;
-	}
-
-	public void setMheNo(String mheNo) {
-		this.mheNo = mheNo;
-	}
-
-	public Date getMheDatetime() {
-		return mheDatetime;
-	}
-
-	public void setMheDatetime(Date mheDatetime) {
-		this.mheDatetime = mheDatetime;
-	}
-
 	public String getPackTcd() {
 		return packTcd;
 	}
@@ -377,6 +465,30 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setCellCd(String cellCd) {
 		this.cellCd = cellCd;
+	}
+
+	public String getBoxNo() {
+		return boxNo;
+	}
+
+	public void setBoxNo(String boxNo) {
+		this.boxNo = boxNo;
+	}
+
+	public String getBoxId() {
+		return boxId;
+	}
+
+	public void setBoxId(String boxId) {
+		this.boxId = boxId;
+	}
+
+	public String getWaybillNo() {
+		return waybillNo;
+	}
+
+	public void setWaybillNo(String waybillNo) {
+		this.waybillNo = waybillNo;
 	}
 
 	public String getRfidItemYn() {
@@ -411,30 +523,6 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 		this.boxInputSeq = boxInputSeq;
 	}
 
-	public String getBoxNo() {
-		return boxNo;
-	}
-
-	public void setBoxNo(String boxNo) {
-		this.boxNo = boxNo;
-	}
-
-	public String getBoxId() {
-		return boxId;
-	}
-
-	public void setBoxId(String boxId) {
-		this.boxId = boxId;
-	}
-
-	public String getWaybillNo() {
-		return waybillNo;
-	}
-
-	public void setWaybillNo(String waybillNo) {
-		this.waybillNo = waybillNo;
-	}
-
 	public Date getBoxInputAt() {
 		return boxInputAt;
 	}
@@ -459,12 +547,36 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 		this.boxInputIfAt = boxInputIfAt;
 	}
 
+	public Date getMheDatetime() {
+		return mheDatetime;
+	}
+
+	public void setMheDatetime(Date mheDatetime) {
+		this.mheDatetime = mheDatetime;
+	}
+
 	public Date getBoxResultIfAt() {
 		return boxResultIfAt;
 	}
 
 	public void setBoxResultIfAt(Date boxResultIfAt) {
 		this.boxResultIfAt = boxResultIfAt;
+	}
+
+	public Date getInspectedAt() {
+		return inspectedAt;
+	}
+
+	public void setInspectedAt(Date inspectedAt) {
+		this.inspectedAt = inspectedAt;
+	}
+
+	public String getInspectorId() {
+		return inspectorId;
+	}
+
+	public void setInspectorId(String inspectorId) {
+		this.inspectorId = inspectorId;
 	}
 
 	public String getStatus() {

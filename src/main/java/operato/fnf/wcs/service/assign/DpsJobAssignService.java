@@ -270,12 +270,7 @@ public class DpsJobAssignService extends AbstractQueryService {
 		// 4. 재고 업데이트
 		Stock s = AnyEntityUtil.findEntityByIdWithLock(false, Stock.class, candidate.getStockId(), "id", "equip_type", "equip_cd", "cell_cd", "com_cd", "sku_cd", "alloc_qty", "load_qty");
 		if(s != null) {
-			s.setLastTranCd(Stock.TRX_ASSIGN);
-			s.setAllocQty(ValueUtil.toInteger(s.getAllocQty()) + assignQty);
-			s.setLoadQty(ValueUtil.toInteger(s.getLoadQty()) - assignQty);
-			if(s.getAllocQty() < 0) s.setAllocQty(0);
-			if(s.getLoadQty() < 0) s.setLoadQty(0);
-			this.queryManager.update(s, "lastTranCd", "allocQty", "loadQty", "updatedAt");
+			s.assignJob(assignQty);
 		}
 		
 		// 5. 할당 가능 수량을 제외한 주문 수량 리턴 

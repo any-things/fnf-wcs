@@ -20,6 +20,7 @@ import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.orm.OrmConstants;
 import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.sys.system.context.DomainContext;
+import xyz.elidom.sys.util.SettingUtil;
 import xyz.elidom.util.ValueUtil;
 
 /**
@@ -54,10 +55,11 @@ public class TowerLampJob extends AbstractFnFJob {
 	private String lampOffStatus = "OFF";
 	
 	/**
-	 * 매 2분 마다 실행되어 DPS 재고 기반으로 경광등 표시기 동기화
+	 * 매 3분 마다 실행되어 DPS 재고 기반으로 경광등 표시기 동기화
 	 */
 	@Transactional
-	@Scheduled(cron="15 0/1 * * * *")
+	//@Scheduled(cron="15 0/1 * * * *")
+	@Scheduled(initialDelay=185000, fixedDelay=60000)
 	public void syncTowerLamp() {
 		// 스케줄링 활성화 여부 && 이전 작업이 진행 중인 여부 체크
 		if(!this.isJobEnabeld() || this.jobRunning) {
@@ -125,8 +127,10 @@ public class TowerLampJob extends AbstractFnFJob {
 	 * @return
 	 */
 	private List<TowerLamp> searchTowerLampAndStatus(JobBatch batch) {
+		
+		Long domainId = batch.getDomainId();
 		String sql = this.fnfDpsQueryStore.getTowerLampStatus();
-		Map<String, Object> params = ValueUtil.newMap("domainId,equipType,equipCd", batch.getDomainId(), batch.getEquipType(), batch.getEquipCd());
+		Map<String, Object> params = ValueUtil.newMap("domainId,equipType,equipCd", domainId, batch.getEquipType(), batch.getEquipCd());
 		List<LampCellStatus> lampStatusList = this.queryManager.selectListBySql(sql, params, LampCellStatus.class, 0, 0);
 		
 		Query condition = AnyOrmUtil.newConditionForExecution(batch.getDomainId());
@@ -149,24 +153,7 @@ public class TowerLampJob extends AbstractFnFJob {
 			int emptyNCellCnt = ValueUtil.toInteger(lampStatusN.getCellCnt(), 0);
 			int totalCellCnt = emptyYCellCnt + emptyNCellCnt;
 			float emptyCellPercent = (totalCellCnt == 0 || emptyYCellCnt == 0) ? 0 : ValueUtil.toFloat(emptyYCellCnt) / ValueUtil.toFloat(totalCellCnt) * 100.0f;
-			
-			if(emptyCellPercent >= 80.0f) {
-				lamp.setLampG(this.lampOnStatus);
-				lamp.setLampR(this.lampOffStatus);
-				lamp.setLampA(this.lampOffStatus);
-				
-			} else if(emptyCellPercent >= 50.0f) {
-				lamp.setLampG(this.lampOffStatus);
-				lamp.setLampR(this.lampOffStatus);
-				lamp.setLampA(this.lampOnStatus);
-				
-			} else {
-				lamp.setLampG(this.lampOffStatus);
-				lamp.setLampR(this.lampOnStatus);
-				lamp.setLampA(this.lampOffStatus);
-			}
-			
-			lamp.setCudFlag_(OrmConstants.CUD_FLAG_UPDATE);
+			this.setLampOnSetting(domainId, lamp, emptyCellPercent);
 		}
 				
 		return lampList;
@@ -201,5 +188,58 @@ public class TowerLampJob extends AbstractFnFJob {
 	private void requestTowerLampLight(Domain domain, JobBatch batch, List<TowerLamp> towerList) {
 		this.towerLampCtrl.multipleUpdate(towerList);
 	}
+	
+	/**
+	 * 경광등 표시기 On 설정
+	 * 
+	 * @param domainId
+	 * @param lamp
+	 * @param emptyCellPercent
+	 */
+	private void setLampOnSetting(Long domainId, TowerLamp lamp, float emptyCellPercent) {
+		
+		float healthRate = this.getStockHealthRate(domainId);
+		float normalRate = this.getStockNormalRate(domainId);
+		
+		if(emptyCellPercent >= healthRate) {
+			lamp.setLampG(this.lampOnStatus);
+			lamp.setLampR(this.lampOffStatus);
+			lamp.setLampA(this.lampOffStatus);
+			
+		} else if(emptyCellPercent >= normalRate && emptyCellPercent < healthRate) {
+			lamp.setLampG(this.lampOffStatus);
+			lamp.setLampR(this.lampOffStatus);
+			lamp.setLampA(this.lampOnStatus);
+			
+		} else {
+			lamp.setLampG(this.lampOffStatus);
+			lamp.setLampR(this.lampOnStatus);
+			lamp.setLampA(this.lampOffStatus);
+		}
+		
+		lamp.setCudFlag_(OrmConstants.CUD_FLAG_UPDATE);
+	}
+	
+	/**
+	 * Health 등급 재고 보충율
+	 * 
+	 * @param domainId
+	 * @return
+	 */
+	private float getStockHealthRate(Long domainId) {
+		String healthRate = SettingUtil.getValue(domainId, "fnf.stock.health.rate", "80");
+		return ValueUtil.toFloat(healthRate);
+	}
 
+	/**
+	 * Normal 등급 재고 보충율
+	 * 
+	 * @param domainId
+	 * @return
+	 */
+	private float getStockNormalRate(Long domainId) {
+		String healthRate = SettingUtil.getValue(domainId, "fnf.stock.normal.rate", "40");
+		return ValueUtil.toFloat(healthRate);
+	}
+	
 }

@@ -49,6 +49,10 @@ public class DpsInspItem {
 	 * 상품 중량
 	 */
 	private Float skuWeight;
+	/**
+	 * RFID 검수 필요 여부
+	 */
+	private String rfidItemYn;
 	
 	public DpsInspItem() {
 	}
@@ -155,6 +159,14 @@ public class DpsInspItem {
 
 	public void setSkuWeight(Float skuWeight) {
 		this.skuWeight = skuWeight;
+	}
+
+	public String getRfidItemYn() {
+		return rfidItemYn;
+	}
+
+	public void setRfidItemYn(String rfidItemYn) {
+		this.rfidItemYn = rfidItemYn;
 	}
 
 }

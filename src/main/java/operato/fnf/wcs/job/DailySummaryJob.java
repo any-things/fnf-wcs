@@ -15,6 +15,7 @@ import xyz.anythings.base.util.LogisBaseUtil;
 import xyz.anythings.sys.event.model.ErrorEvent;
 import xyz.anythings.sys.util.AnyOrmUtil;
 import xyz.elidom.dbist.dml.Query;
+import xyz.elidom.sys.SysConstants;
 import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.sys.system.context.DomainContext;
 import xyz.elidom.sys.util.DateUtil;
@@ -64,6 +65,11 @@ public class DailySummaryJob extends AbstractFnFJob {
 				if(ValueUtil.isNotEmpty(batches)) {
 					for(JobBatch batch : batches) {
 						this.jobSummarySvc.summaryDailyBatchJobs(batch, prevDate);
+						
+						if(ValueUtil.isEqualIgnoreCase(batch.getStatus(), JobBatch.STATUS_END)) {
+							batch.setClosedFlag(true);
+							this.queryManager.update(batch, "closedFlag");
+						}
 					}
 				}
 			} catch (Exception e) {
@@ -79,7 +85,7 @@ public class DailySummaryJob extends AbstractFnFJob {
 	}
 	
 	/**
-	 * 진행 중인 혹은 완료된 배치 리스트를 조회
+	 * 마감 처리가 안 된 진행 중인 혹은 완료된 배치 리스트를 조회
 	 * 
 	 * @param domainId
 	 * @param date
@@ -87,8 +93,10 @@ public class DailySummaryJob extends AbstractFnFJob {
 	 */
 	private List<JobBatch> searchRunningOrClosedBatches(Long domainId, String date) {
 		Query condition = AnyOrmUtil.newConditionForExecution(domainId);
-		condition.addFilter("jobDate", date);
+		condition.addFilter("closedFlag", SysConstants.NOT_EQUAL, true);
 		condition.addFilter("status", LogisConstants.IN, ValueUtil.toList(JobBatch.STATUS_RUNNING, JobBatch.STATUS_END));
+		condition.addOrder("jobDate", true);
+		condition.addOrder("jobType", true);
 		return this.queryManager.selectList(JobBatch.class, condition);
 	}
 

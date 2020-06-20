@@ -159,29 +159,34 @@ public class JobSummaryService extends AbstractQueryService {
 		dailySum.setYear(dateArr[0]);
 		dailySum.setMonth(dateArr[1]);
 		dailySum.setDay(dateArr[2]);
-		int totalResultPcs = 0;
 		
+		// 3. 시간대별 실적을 계산하여 설정
 		for(int i = 0 ; i < 24 ; i++) {
 			int resultQty = this.calc1HourResult(batch, date, i);
 			String hourStr =  (i >= 9) ? LogisConstants.EMPTY_STRING + (i + 1) : LogisConstants.ZERO_STRING + (i + 1);
 			String fieldName = "h" + hourStr + "Result";
 			ClassUtil.setFieldValue(dailySum, fieldName, resultQty);
-			totalResultPcs += resultQty;
 		}
-		dailySum.setResultQty(totalResultPcs);
 		
-		// 배치가 종료되었다면 ...
+		int planQty = batch.getBatchPcs();
+		int resultQty = batch.getResultPcs();
+		float progressRate = (resultQty == 0 || planQty == 0) ? 0.0f : (resultQty * 1.0f / planQty * 10.f) * 100.0f;
+		
+		dailySum.setResultQty(resultQty);
+		dailySum.setPlanQty(planQty);
+		dailySum.setLeftQty(planQty - resultQty);
+		dailySum.setProgressRate(progressRate);
+		
+		// 4. 배치가 종료되었다면 - 배치 총 시간, 설비가동율 등 계산 설정 
 		if(ValueUtil.isEqual(batch.getStatus(), JobBatch.STATUS_END)) {
-			dailySum.setPlanQty(batch.getBatchPcs());
-			dailySum.setLeftQty(dailySum.getPlanQty() - dailySum.getResultQty());
-			
-			// 배치 총 시간 
 			long gap = batch.getFinishedAt().getTime() - batch.getInstructedAt().getTime();
 			float totalMin = ValueUtil.toFloat(gap / ValueUtil.toLong(1000 * 60));
 			float equipRtMin = dailySum.getEquipRuntime();
-			dailySum.setEquipRate(totalMin - equipRtMin);
+			float equipRate = (totalMin == 0 || equipRtMin == 0) ? 0.0f : (equipRtMin / totalMin) * 100.0f;
+			dailySum.setEquipRate(equipRate);
 		}
 		
+		// 5. 일별 서머리 생성
 		this.queryManager.insert(dailySum);
 	}
 	

@@ -146,22 +146,12 @@ public class StockService extends AbstractLogisService implements IStockService 
 
 	@Override
 	public Stock addStock(Stock stock, String tranCd, int addQty) {
-		tranCd = ValueUtil.isEmpty(tranCd) ? Stock.TRX_IN : tranCd;
-		stock.setLastTranCd(tranCd);
-		stock.setLoadQty(ValueUtil.toInteger(stock.getLoadQty()) + addQty);
-		stock.setStockQty(stock.getLoadQty() + stock.getAllocQty());
-		this.queryManager.upsert(stock, "comCd", "skuCd", "skuBarcd", "skuNm", "lastTranCd", "loadQty", "stockQty", "updaterId", "updatedAt");
-		return stock;
+		return stock.addStock(addQty);
 	}
 
 	@Override
 	public Stock removeStock(Stock stock, String tranCd, int removeQty) {
-		tranCd = ValueUtil.isEmpty(tranCd) ? Stock.TRX_OUT : tranCd;
-		stock.setLastTranCd(tranCd);
-		stock.setLoadQty(ValueUtil.toInteger(stock.getLoadQty()) - removeQty);
-		stock.setStockQty(stock.getLoadQty() + stock.getAllocQty());
-		this.queryManager.upsert(stock, "lastTranCd", "loadQty", "stockQty", "updaterId", "updatedAt");
-		return stock;
+		return stock.removeStock(removeQty);
 	}
 	
 	@Override
@@ -171,11 +161,7 @@ public class StockService extends AbstractLogisService implements IStockService 
 			stock = this.findStock(domainId, cellCd, true);
 		}
 		
-		tranCd = ValueUtil.isEmpty(tranCd) ? Stock.TRX_ADJUST : tranCd;
-		stock.setLastTranCd(tranCd);
-		stock.setLoadQty(ValueUtil.toInteger(stock.getLoadQty()) + adjustQty);
-		stock.setStockQty(stock.getLoadQty() + stock.getAllocQty());
-		this.queryManager.update(stock, "comCd", "skuCd", "skuBarcd", "skuNm", "lastTranCd", "loadQty", "stockQty", "updaterId", "updatedAt");
+		stock.adjustStock(adjustQty);
 		return stock;
 	}
 	

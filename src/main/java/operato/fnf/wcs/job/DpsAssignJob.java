@@ -40,7 +40,7 @@ public class DpsAssignJob extends AbstractFnFJob {
 	 * 매 1분 마다 실행되어 DPS 재고 기반으로 주문 할당을 처리
 	 */
 	@Transactional
-	@Scheduled(cron="10 0/1 * * * *")
+	@Scheduled(initialDelay=60000, fixedDelay=60000)
 	public void assignJob() {
 		// 스케줄링 활성화 여부 && 이전 작업이 진행 중인 여부 체크
 		if(!this.isJobEnabeld() || this.assignJobRunning) {

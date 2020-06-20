@@ -38,10 +38,10 @@ public class ResultSendJob extends AbstractFnFJob {
 	private PickingResultSendService pickResultSendSvc;
 	
 	/**
-	 * 매 30초 마다  
+	 * 매 100초 마다  
 	 */
 	@Transactional
-	@Scheduled(initialDelay=30000, fixedDelay=60000)
+	@Scheduled(initialDelay=100000, fixedDelay=60000)
 	public void summaryJob() {
 		// 1. 스케줄링 활성화 여부
 		if(!this.isJobEnabeld()) {

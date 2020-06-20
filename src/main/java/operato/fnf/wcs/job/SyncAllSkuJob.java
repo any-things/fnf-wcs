@@ -137,6 +137,7 @@ public class SyncAllSkuJob extends AbstractFnFJob {
 			toSku.setComCd(this.comCd);
 			toSku.setSkuCd(fromSku.getItemCd());
 			toSku.setSkuBarcd(fromSku.getBarcode2());
+			toSku.setSkuBarcd2(fromSku.getBarcode());
 			toSku.setBrandCd(fromSku.getBrand());
 			toSku.setSeasonCd(fromSku.getItemSeason());
 			toSku.setStyleCd(fromSku.getItemStyle());

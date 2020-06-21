@@ -32,6 +32,7 @@ import xyz.elidom.dev.entity.RangedSeq;
 import xyz.elidom.exception.server.ElidomRuntimeException;
 import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.SysConstants;
+import xyz.elidom.sys.entity.User;
 import xyz.elidom.sys.util.DateUtil;
 import xyz.elidom.sys.util.SettingUtil;
 import xyz.elidom.sys.util.ThrowUtil;
@@ -235,8 +236,8 @@ public class DpsBoxSendService extends AbstractQueryService {
 			this.queryManager.updateBatch(boxedOrders, "waybillNo", "status");
 			
 			// dps_job_instance에 송장 번호 업데이트
-			String sql = "update dps_job_instances set waybill_no = :invoiceId, status = :status where work_unit = :batchId and ref_no = :orderNo and box_id = :boxId";
-			this.queryManager.executeBySql(sql, ValueUtil.newMap("batchId,orderNo,boxId,invoiceId,status", batch.getId(), orderNo, boxId, waybillNo, status));
+			String sql = "update dps_job_instances set waybill_no = :invoiceId, status = :status, inspector_id = :inspectorId, inspected_at = now() where work_unit = :batchId and ref_no = :orderNo and box_id = :boxId";
+			this.queryManager.executeBySql(sql, ValueUtil.newMap("batchId,orderNo,boxId,invoiceId,status,inspectorId", batch.getId(), orderNo, boxId, waybillNo, status, User.currentUser() != null ? User.currentUser().getId() : LogisConstants.EMPTY_STRING));
 		}
 		
 		return waybillNo;
@@ -260,15 +261,19 @@ public class DpsBoxSendService extends AbstractQueryService {
 			waybillNo = ValueUtil.isEmpty(job.getWaybillNo()) ? this.newWaybillNo(boxId) : job.getWaybillNo();			
 			String status = ValueUtil.isEqualIgnoreCase(waybillNo, FnFConstants.ORDER_CANCEL_ALL) ? LogisConstants.JOB_STATUS_CANCEL : BoxPack.BOX_STATUS_EXAMED;
 			List<String> mheDrIdList = new ArrayList<String>();
+			String inspectorId = User.currentUser() != null ? User.currentUser().getId() : LogisConstants.EMPTY_STRING;
+			Date currentTime = new Date();
 			
 			for(DpsJobInstance item : jobList) {
 				item.setStatus(status);
 				item.setWaybillNo(waybillNo);
+				item.setInspectorId(inspectorId);
+				item.setInspectedAt(currentTime);
 				mheDrIdList.add(item.getMheDrId());
 			}
 				
 			// 작업 정보 업데이트
-			this.queryManager.updateBatch(jobList, "waybillNo", "status");
+			this.queryManager.updateBatch(jobList, "waybillNo", "status", "inspectorId", "inspectedAt");
 			
 			// 주문 정보 업데이트
 			String sql = "update mhe_dr set waybill_no = :invoiceId, status = :status where id in (:mheDrIdList)";

@@ -120,11 +120,12 @@ public class DpsJobInstanceController extends AbstractRestService {
 			this.queryManager.executeBySql(sql, params);
 			
 			// 주문 정보 박싱 완료 처리
-			sql = "UPDATE MHE_DR SET STATUS = :jobStatus, CMPT_QTY = PICK_QTY, MHE_DATETIME = now() WHERE WORK_UNIT = :batchId AND BOX_NO = :boxNo AND REF_NO = :orderNo";
+			sql = "UPDATE MHE_DR SET STATUS = :jobStatus, CMPT_QTY = PICK_QTY, MHE_DATETIME = now() WHERE WORK_UNIT = :batchId AND BOX_NO = :trayCd AND REF_NO = :orderNo";
+			this.queryManager.executeBySql(sql, params);
 			
 			// TrayBox 상태를 대기 상태로 업데이트 
 			sql = "UPDATE TRAY_BOXES SET STATUS = :trayStatus WHERE TRAY_CD = :trayCd";
-
+			this.queryManager.executeBySql(sql, params);
 		}
 		
 		// 4. 재고 차감

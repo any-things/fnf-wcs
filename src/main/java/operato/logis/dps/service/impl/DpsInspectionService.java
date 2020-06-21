@@ -653,7 +653,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		this.queryManager.executeBySql(sql, condition);
 		
 		// 주문 정보 업데이트 - 송장, 상태, 실적 전송 시간 업데이트 
-		sql = "update mhe_dr set status = :status, box_result_if_at = now(), waybill_no = :invoiceId, inspected_at = now(), inspector_id = :inspectorId where wh_cd = :whCd and work_unit = :batchId and ref_no = :orderNo and (waybill_no is null or waybill_no = '')";
+		sql = "update mhe_dr set status = :status, box_result_if_at = now(), waybill_no = :invoiceId where wh_cd = :whCd and work_unit = :batchId and ref_no = :orderNo and (waybill_no is null or waybill_no = '')";
 		this.queryManager.executeBySql(sql, condition);
 	}
 	
@@ -690,8 +690,8 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 			this.queryManager.updateBatch(jobList, "status", "waybillNo", "boxResultIfAt", "inspectedAt", "inspectorId");
 			
 			// 주문 정보 업데이트
-			String sql = "update mhe_dr set status = :status, waybill_no = :waybillNo, box_result_if_at = :currentTime, inspected_at = :currentTime, inspector_id = :inspectorId where id in (:orderIdList)";
-			Map<String, Object> params = ValueUtil.newMap("orderIdList,status,waybillNo,inspectorId,currentTime", orderIdList, jobStatus, invoiceId, inspectorId, currentTime);
+			String sql = "update mhe_dr set status = :status, waybill_no = :waybillNo, box_result_if_at = :currentTime where id in (:orderIdList)";
+			Map<String, Object> params = ValueUtil.newMap("orderIdList,status,waybillNo,currentTime", orderIdList, jobStatus, invoiceId, currentTime);
 			this.queryManager.executeBySql(sql, params);
 		}		
 	}
@@ -739,10 +739,10 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	public String sendBoxResultAndGetInvoice(JobBatch batch, String orderNo, String boxId) {
 		
 		// 1. WMS로 박스 실적 전송
-		this.dpsBoxSendSvc.sendPackingToWms(batch, orderNo, orderNo);
+		this.dpsBoxSendSvc.sendPackingToWms(batch, orderNo, boxId);
 		
 		// 2. 송장 발행 요청, TODO 여기서 송장 발행에 실패할 경우 주문 및 작업에 매핑된 박스 ID를 null로 업데이트 -> 이벤트를 던져서 트랜잭션을 별도로 처리하도록 ...
-		String invoiceId = this.dpsBoxSendSvc.requestInvoiceToWms(batch, orderNo, orderNo);
+		String invoiceId = this.dpsBoxSendSvc.requestInvoiceToWms(batch, orderNo, boxId);
 		
 		// 3. 발행 송장 번호 리턴
 		return invoiceId;

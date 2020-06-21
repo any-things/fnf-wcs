@@ -23,6 +23,7 @@ import xyz.elidom.dbist.dml.Page;
 import xyz.elidom.orm.system.annotation.service.ApiDesc;
 import xyz.elidom.orm.system.annotation.service.ServiceDesc;
 import xyz.elidom.sys.SysConstants;
+import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.sys.system.service.AbstractRestService;
 import xyz.elidom.sys.util.ThrowUtil;
 import xyz.elidom.sys.util.ValueUtil;
@@ -94,6 +95,10 @@ public class DpsJobInstanceController extends AbstractRestService {
 		DpsJobInstance job = this.queryManager.select(DpsJobInstance.class, id);
 		if(job == null) {
 			throw ThrowUtil.newNotFoundRecord("terms.menu.DpsJobInstance", id);
+		} else {
+			if(job.getCmptQty() >= job.getPickQty()) {
+				throw ThrowUtil.newValidationErrorWithNoLog("이미 처리된 작업입니다.");
+			}			
 		}
 		
 		job.setCmptQty(job.getPickQty());
@@ -124,7 +129,7 @@ public class DpsJobInstanceController extends AbstractRestService {
 		
 		// 4. 재고 차감
 		sql = "select * from stocks where domain_id = :domainId and cell_cd = :cellCd for update";
-		Stock stock = this.queryManager.selectBySql(sql, ValueUtil.newMap("domainId,cellCd", job.getCellCd()), Stock.class);
+		Stock stock = this.queryManager.selectBySql(sql, ValueUtil.newMap("domainId,cellCd", Domain.currentDomainId(), job.getCellCd()), Stock.class);
 		stock.removeStock(job.getPickQty());
 		
 		// 5. 결과 리턴

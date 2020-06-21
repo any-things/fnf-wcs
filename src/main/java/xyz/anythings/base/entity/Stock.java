@@ -55,6 +55,10 @@ public class Stock extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	 * 트랜잭션 - 작업 할당 (assign) 
 	 */
 	public static final String TRX_ASSIGN = "assign";
+	/**
+	 * 트랜잭션 - 단순 재고 업데이트 (update) 
+	 */
+	public static final String TRX_UPDATE = "update";	
 
 	@PrimaryKey
 	@Column (name = "id", nullable = false, length = 40)
@@ -430,7 +434,7 @@ public class Stock extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	public void afterUpdate() {
 		super.afterUpdate();
 		
-		if(ValueUtil.isEmpty(this.lastTranCd) || ValueUtil.isEmpty(this.skuCd)) {
+		if(ValueUtil.isEmpty(this.lastTranCd) || ValueUtil.isEqualIgnoreCase(this.lastTranCd, Stock.TRX_ASSIGN) || ValueUtil.isEmpty(this.skuCd)) {
 			return;
 		}
 		
@@ -443,12 +447,8 @@ public class Stock extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 		hist.setStockQty(this.stockQty);
 		int inOutQty = 0;
 		
-		// 작업 할당의 경우 Out 수량은 LoadQty로 판단 
-		if(ValueUtil.isEqualIgnoreCase(this.lastTranCd, Stock.TRX_ASSIGN)) {
-			inOutQty = -1 * (this.prevLoadQty - this.loadQty);
-			
-		// 피킹 처리의 경우 Out 수량은 AllocQty로 판단 
-		} else if(ValueUtil.isEqualIgnoreCase(this.lastTranCd, Stock.TRX_PICK)) {
+		// 피킹인 경우 
+		if(ValueUtil.isEqualIgnoreCase(this.lastTranCd, Stock.TRX_PICK)) {
 			inOutQty = -1 * (this.prevAllocQty - this.allocQty);
 			
 		// 나머지는 재고 수량으로 판단

@@ -19,6 +19,7 @@ import xyz.anythings.base.service.util.LogisServiceUtil;
 import xyz.anythings.sys.util.AnyEntityUtil;
 import xyz.anythings.sys.util.AnyOrmUtil;
 import xyz.elidom.dbist.dml.Query;
+import xyz.elidom.sys.util.ThrowUtil;
 import xyz.elidom.sys.util.ValueUtil;
 
 /**
@@ -93,11 +94,26 @@ public class StockService extends AbstractLogisService implements IStockService 
 			stock = this.createStock(domainId, cellCd, sku.getComCd(), sku.getSkuCd(), sku.getSkuNm());
 			
 		} else {
-			if(ValueUtil.isEmpty(stock.getSkuCd())) {
-				stock.setComCd(sku.getComCd());
-				stock.setSkuCd(sku.getSkuCd());
-				stock.setSkuBarcd(sku.getSkuBarcd());
-				stock.setSkuNm(sku.getSkuNm());
+			if(sku != null) {
+				// 재고에 상품 정보가 없다면 sku의 정보를 설정 
+				if(ValueUtil.isEmpty(stock.getSkuCd())) {
+					stock.setComCd(sku.getComCd());
+					stock.setSkuCd(sku.getSkuCd());
+					stock.setSkuBarcd(sku.getSkuBarcd());
+					stock.setSkuNm(sku.getSkuNm());		
+					
+				} else if(ValueUtil.isNotEqual(stock.getSkuCd(), sku.getSkuCd())) {
+					// 재고의 상품 정보와 sku의 상품 정보가 다른 경우 재고 수량이 존재하지 않으면 sku 정보로 재고 설정 
+					if(ValueUtil.toInteger(stock.getAllocQty(), 0) == 0 && ValueUtil.toInteger(stock.getLoadQty(), 0) == 0) {
+						stock.setComCd(sku.getComCd());
+						stock.setSkuCd(sku.getSkuCd());
+						stock.setSkuBarcd(sku.getSkuBarcd());
+						stock.setSkuNm(sku.getSkuNm());
+						
+					} else {
+						throw ThrowUtil.newValidationErrorWithNoLog("해당 재고에 다른 상품 재고가 존재합니다.");
+					}
+				}
 			}
 		}
 		

@@ -92,7 +92,7 @@ public class StockController extends AbstractRestService {
 	@ApiDesc(description = "Create, Update or Delete multiple at one time")
 	public Boolean multipleUpdate(@RequestBody List<Stock> list) {
 		for(Stock stock : list) {
-			stock.setLastTranCd(null);
+			stock.setLastTranCd(Stock.TRX_UPDATE);
 		}
 		
 		return this.cudMultipleData(this.entityClass(), list);

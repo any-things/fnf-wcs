@@ -130,7 +130,7 @@ public class DpsJobInstanceController extends AbstractRestService {
 		// 4. 재고 차감
 		sql = "select * from stocks where domain_id = :domainId and cell_cd = :cellCd for update";
 		Stock stock = this.queryManager.selectBySql(sql, ValueUtil.newMap("domainId,cellCd", Domain.currentDomainId(), job.getCellCd()), Stock.class);
-		stock.removeStock(job.getPickQty());
+		stock.pickJob(job.getPickQty());
 		
 		// 5. 결과 리턴
 		return new BaseResponse(true, SysConstants.OK_STRING, job);

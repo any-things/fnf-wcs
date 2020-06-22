@@ -322,7 +322,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		String printerId = event.getRequestParams().get("printerId").toString();
 		
 		// 2. 상품 코드인지 RFID 코드인지 체크
-		if(ValueUtil.isEmpty(skuCd) || skuCd.length() <= 8 || skuCd.length() > 33) {
+		if(ValueUtil.isEmpty(skuCd) || skuCd.length() > 33) {
 			throw ThrowUtil.newValidationErrorWithNoLog("스캔한 바코드가 유효하지 않습니다.");
 		}
 		
@@ -341,7 +341,8 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		
 		// 4. 상품 코드로 상품 조회
 		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheItemBarcode.class);
-		String sql = "select * from mhe_item_barcode where itemCd = :itemCd or barcode = :itemCd or barcode2 = :itemCd";
+		String sql = "select * from mhe_item_barcode where item_cd = :itemCd";
+		if(!rfidFlag) sql += " or barcode = :itemCd or barcode2 = :itemCd";
 		WmsMheItemBarcode sku = wmsQueryMgr.selectBySql(sql, ValueUtil.newMap("itemCd", itemCd), WmsMheItemBarcode.class);
 
 		// 5. 상품 바코드로 한 번 더 조회 

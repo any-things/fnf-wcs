@@ -519,5 +519,19 @@ public class DpsBoxSendService extends AbstractQueryService {
 		String serialStr = StringUtils.leftPad(LogisConstants.EMPTY_STRING + serialNo, 6, LogisConstants.ZERO_STRING);
 		return prefix + yearMonth + mheNo + serialStr;
 	}
+	
+	/**
+	 * 단포 일별 박스 투입 순서 생성 
+	 * 
+	 * @param domainId
+	 * @param mheNo
+	 * @param todayStr
+	 * @return
+	 */
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public Integer newSinglePackBoxInputSeq(Long domainId, String mheNo, String dateStr) {
+		mheNo = ValueUtil.isEmpty(mheNo) ? "M1" : mheNo;
+		return RangedSeq.increaseSequence(domainId, "DPS_SINGLE_PACK_SEQ", "D", "DATE", dateStr, "MHE_NO", mheNo);
+	}
 
 }

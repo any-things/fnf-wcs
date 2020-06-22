@@ -346,33 +346,29 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		if(!rfidFlag) sql += " or barcode = :itemCd or barcode2 = :itemCd";
 		WmsMheItemBarcode sku = wmsQueryMgr.selectBySql(sql, ValueUtil.newMap("itemCd", itemCd), WmsMheItemBarcode.class);
 
-		// 5. 상품 바코드로 한 번 더 조회 
-		if(!rfidFlag && sku == null) {
-			sku = wmsQueryMgr.selectByCondition(WmsMheItemBarcode.class, ValueUtil.newMap("barcode2", itemCd));
-		}
-		
-		// 6. 상품 조회가 안 되면 에러 
+		// 5. 상품 조회가 안 되면 에러 
 		if(sku == null) {
 			throw ThrowUtil.newValidationErrorWithNoLog("스캔한 바코드로 상품을 찾을 수 없습니다.");
 		}
 
-		// 7. RFID 상품인 경우 상품 코드를 스캔하는 경우 에러 
+		// 6. RFID 상품인 경우 상품 코드를 스캔하는 경우 에러 
 		if(!rfidFlag && ValueUtil.isEqual(sku.getRfidItemYn(), LogisConstants.Y_CAP_STRING)) {
 			// TODO WMS MHE_ITEM_BARCODE에 RFID_ITEM_YN 필드가 추가되면 아래 해제 
 			//throw ThrowUtil.newValidationErrorWithNoLog("스캔한 상품은 RFID 상품이니 반드시 RFID 검수를 해야합니다.");
 		}
 				
-		// 8. WMS 실적 전송
+		// 7. WMS 실적 전송
+		Long domainId = Domain.currentDomainId();
 		String todayStr = DateUtil.todayStr("yyyyMMdd");
-		String newBoxId = this.dpsBoxSendService.newBoxId(Domain.currentDomainId(), null, todayStr);
-		this.dpsBoxSendService.sendSinglePackToWms(Domain.currentDomainId(), todayStr, jobDate, sku.getBrand(), sku.getItemCd(), newBoxId);
+		String newBoxId = this.dpsBoxSendService.newBoxId(domainId, null, todayStr);
+		this.dpsBoxSendService.sendSinglePackToWms(domainId, todayStr, jobDate, sku.getBrand(), sku.getItemCd(), newBoxId);
 		
-		// 9. WMS 송장 발행
+		// 8. WMS 송장 발행
 		String invoiceId = this.dpsBoxSendService.newWaybillNo(newBoxId, true);
 		sql = "select * from mps_express_waybill_print where wh_cd = :whCd and waybill_no = :invoiceId";
 		WmsExpressWaybillPrint label = wmsQueryMgr.selectBySql(sql, ValueUtil.newMap("whCd,invoiceId", FnFConstants.WH_CD_ICF, invoiceId), WmsExpressWaybillPrint.class);
 
-		// 10. RFID 코드인 경우 RFID 실적 전송 
+		// 9. RFID 코드인 경우 RFID 실적 전송 
 		if(rfidFlag) {
 			RfidResult rfidResult = new RfidResult();
 			rfidResult.setRfidId(skuCd);
@@ -388,13 +384,16 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 			this.queryManager.insert(rfidResult);
 		}
 		
-		// 11. 작업 데이터 생성 ...		
+		// 10. 작업 데이터 생성 ...
+		int boxInputSeq = this.dpsBoxSendService.newSinglePackBoxInputSeq(domainId, null, jobDate);
 		DpsJobInstance job = new DpsJobInstance();
 		job.setId(UUID.randomUUID().toString());
 		job.setWhCd(FnFConstants.WH_CD_ICF);
 		job.setWorkDate(todayStr);
 		job.setOutbEctDate(jobDate);
 		job.setRefNo(label.getOnlineOrderNo());
+		job.setOutbNo(label.getRepOutbNo());
+		job.setBoxInputSeq(boxInputSeq);
 		job.setBoxId(newBoxId);
 		job.setWaybillNo(invoiceId);
 		job.setStrrId(sku.getBrand());
@@ -420,7 +419,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		job.setStatus(LogisConstants.JOB_STATUS_EXAMINATED);
 		this.queryManager.insert(job);
 		
-		// 12. 송장 발행
+		// 11. 송장 발행
 		DpsInspection inspection = new DpsInspection();
 		inspection.setBoxId(job.getBoxId());
 		inspection.setInvoiceId(invoiceId);
@@ -428,7 +427,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		batch.setDomainId(Domain.currentDomainId());
 		this.dpsInspectionService.printInvoiceLabel(batch, inspection, printerId);
 		
-		// 13. 리턴 
+		// 12. 리턴 
 		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, job));
 		event.setExecuted(true);
 	}

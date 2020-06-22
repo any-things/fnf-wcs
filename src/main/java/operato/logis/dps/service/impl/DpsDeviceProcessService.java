@@ -369,7 +369,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		
 		// 9. WMS 송장 발행
 		String invoiceId = this.dpsBoxSendService.newWaybillNo(newBoxId, true);
-		sql = "select online_order_no from mps_express_waybill_print where wh_cd = :whCd and waybill_no = :invoiceId";
+		sql = "select * from mps_express_waybill_print where wh_cd = :whCd and waybill_no = :invoiceId";
 		WmsExpressWaybillPrint label = wmsQueryMgr.selectBySql(sql, ValueUtil.newMap("whCd,invoiceId", FnFConstants.WH_CD_ICF, invoiceId), WmsExpressWaybillPrint.class);
 
 		// 10. RFID 코드인 경우 RFID 실적 전송 

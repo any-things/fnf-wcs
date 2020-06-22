@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import operato.fnf.wcs.FnFConstants;
 import operato.fnf.wcs.entity.DpsJobInstance;
 import operato.fnf.wcs.entity.RfidResult;
+import operato.fnf.wcs.entity.WmsExpressWaybillPrint;
 import operato.fnf.wcs.entity.WmsMheItemBarcode;
 import operato.fnf.wcs.service.send.DpsBoxSendService;
 import operato.logis.dps.DpsCodeConstants;
@@ -369,7 +370,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		// 9. WMS 송장 발행
 		String invoiceId = this.dpsBoxSendService.newWaybillNo(newBoxId, true);
 		sql = "select online_order_no from mps_express_waybill_print where wh_cd = :whCd and waybill_no = :invoiceId";
-		String orderNo = wmsQueryMgr.selectBySql(sql, ValueUtil.newMap("whCd,invoiceId", FnFConstants.WH_CD_ICF, invoiceId), String.class);
+		WmsExpressWaybillPrint label = wmsQueryMgr.selectBySql(sql, ValueUtil.newMap("whCd,invoiceId", FnFConstants.WH_CD_ICF, invoiceId), WmsExpressWaybillPrint.class);
 
 		// 10. RFID 코드인 경우 RFID 실적 전송 
 		if(rfidFlag) {
@@ -377,7 +378,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 			rfidResult.setRfidId(skuCd);
 			rfidResult.setJobDate(jobDate);
 			rfidResult.setBrandCd(sku.getBrand());
-			rfidResult.setOrderNo(orderNo);
+			rfidResult.setOrderNo(label.getOnlineOrderNo());
 			rfidResult.setSkuCd(itemCd);
 			rfidResult.setBoxId(newBoxId);
 			rfidResult.setOrderQty(1);
@@ -393,15 +394,18 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		job.setWhCd(FnFConstants.WH_CD_ICF);
 		job.setWorkDate(todayStr);
 		job.setOutbEctDate(jobDate);
-		job.setRefNo(orderNo);
+		job.setRefNo(label.getOnlineOrderNo());
 		job.setBoxId(newBoxId);
 		job.setWaybillNo(invoiceId);
+		job.setStrrId(sku.getBrand());
 		job.setPackTcd("D");
 		job.setMheNo("M1");
 		job.setItemCd(sku.getItemCd());
 		job.setBarcode2(sku.getBarcode2());
-		job.setStrrId(sku.getBrand());
+		job.setBarcode(sku.getBarcode());
 		job.setBoxInputAt(new Date());
+		job.setShiptoId(label.getShiptoId());
+		job.setShiptoNm(label.getShiptoNm());
 		job.setCmptQty(1);
 		job.setPickQty(1);
 		job.setItemColor(sku.getItemColor());

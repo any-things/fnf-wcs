@@ -415,10 +415,8 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		this.queryManager.insert(job);
 		
 		// 12. 송장 발행
-		Map<String, Object> jobParams = ValueUtil.newMap("orderNo,invoiceId", orderNo, invoiceId);
-		DpsJobInstance jobInstance = this.queryManager.selectByCondition(DpsJobInstance.class, jobParams);
 		DpsInspection inspection = new DpsInspection();
-		inspection.setBoxId(jobInstance.getBoxId());
+		inspection.setBoxId(job.getBoxId());
 		inspection.setInvoiceId(invoiceId);
 		JobBatch batch = new JobBatch();
 		batch.setDomainId(Domain.currentDomainId());
@@ -726,7 +724,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		String invoiceId = params.get("invoiceId").toString();
 		
 		// 2. 단포 정보 조회
-		Map<String, Object> jobParams = ValueUtil.newMap("orderNo,invoiceId", orderNo, invoiceId);
+		Map<String, Object> jobParams = ValueUtil.newMap("refNo,waybillNo", orderNo, invoiceId);
 		DpsJobInstance jobInstance = this.queryManager.selectByCondition(DpsJobInstance.class, jobParams);
 		DpsInspection inspection = new DpsInspection();
 		inspection.setBoxId(jobInstance.getBoxId());

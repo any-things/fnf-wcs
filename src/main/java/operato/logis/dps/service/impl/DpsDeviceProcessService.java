@@ -341,7 +341,8 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		
 		// 4. 상품 코드로 상품 조회
 		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheItemBarcode.class);
-		WmsMheItemBarcode sku = wmsQueryMgr.selectByCondition(WmsMheItemBarcode.class, ValueUtil.newMap("itemCd", itemCd));
+		String sql = "select * from mhe_item_barcode where itemCd = :itemCd or barcode = :itemCd or barcode2 = :itemCd";
+		WmsMheItemBarcode sku = wmsQueryMgr.selectBySql(sql, ValueUtil.newMap("itemCd", itemCd), WmsMheItemBarcode.class);
 
 		// 5. 상품 바코드로 한 번 더 조회 
 		if(!rfidFlag && sku == null) {
@@ -366,7 +367,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		
 		// 9. WMS 송장 발행
 		String invoiceId = this.dpsBoxSendService.newWaybillNo(newBoxId, true);
-		String sql = "select online_order_no from mps_express_waybill_print where wh_cd = :whCd and waybill_no = :invoiceId";
+		sql = "select online_order_no from mps_express_waybill_print where wh_cd = :whCd and waybill_no = :invoiceId";
 		String orderNo = wmsQueryMgr.selectBySql(sql, ValueUtil.newMap("whCd,invoiceId", FnFConstants.WH_CD_ICF, invoiceId), String.class);
 
 		// 10. RFID 코드인 경우 RFID 실적 전송 

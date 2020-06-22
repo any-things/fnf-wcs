@@ -26,6 +26,10 @@ public class DpsInspItem {
 	 */
 	private String skuBarcd;
 	/**
+	 * 상품 바코드2
+	 */
+	private String skuBarcd2;
+	/**
 	 * 상품 스타일 
 	 */
 	private String skuStyle;
@@ -111,6 +115,14 @@ public class DpsInspItem {
 
 	public void setSkuBarcd(String skuBarcd) {
 		this.skuBarcd = skuBarcd;
+	}
+
+	public String getSkuBarcd2() {
+		return skuBarcd2;
+	}
+
+	public void setSkuBarcd2(String skuBarcd2) {
+		this.skuBarcd2 = skuBarcd2;
 	}
 
 	public String getSkuStyle() {

@@ -319,6 +319,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		String jobDate = event.getRequestParams().get("jobDate").toString();
 		jobDate = jobDate.replace(SysConstants.DASH, SysConstants.EMPTY_STRING);
 		String skuCd = event.getRequestParams().get("skuCd").toString();
+		String printerId = event.getRequestParams().get("printerId").toString();
 		
 		// 2. 상품 코드인지 RFID 코드인지 체크
 		if(ValueUtil.isEmpty(skuCd) || skuCd.length() <= 8 || skuCd.length() > 33) {
@@ -413,7 +414,17 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		job.setStatus(LogisConstants.JOB_STATUS_EXAMINATED);
 		this.queryManager.insert(job);
 		
-		// 12. 리턴 
+		// 12. 송장 발행
+		Map<String, Object> jobParams = ValueUtil.newMap("orderNo,invoiceId", orderNo, invoiceId);
+		DpsJobInstance jobInstance = this.queryManager.selectByCondition(DpsJobInstance.class, jobParams);
+		DpsInspection inspection = new DpsInspection();
+		inspection.setBoxId(jobInstance.getBoxId());
+		inspection.setInvoiceId(invoiceId);
+		JobBatch batch = new JobBatch();
+		batch.setDomainId(Domain.currentDomainId());
+		this.dpsInspectionService.printInvoiceLabel(batch, inspection, printerId);
+		
+		// 13. 리턴 
 		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, job));
 		event.setExecuted(true);
 	}
@@ -697,6 +708,35 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 
 		// 4. 이벤트 처리 결과 셋팅
 		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, boxPack));
+		event.setExecuted(true);
+	}
+	
+	/**
+	 * DPS 단포 송장 출력 
+	 * 
+	 * @param event
+	 */
+	@EventListener(classes=DeviceProcessRestEvent.class, condition = "#event.checkCondition('/single_pack_print_invoice', 'dps')")
+	@Order(Ordered.LOWEST_PRECEDENCE)
+	public void printSingleInvoiceLabel(DeviceProcessRestEvent event) {
+		// 1. 파라미터 
+		Map<String, Object> params = event.getRequestParams();
+		String printerId = params.get("printerId").toString();
+		String orderNo = params.get("orderNo").toString();
+		String invoiceId = params.get("invoiceId").toString();
+		
+		// 2. 단포 정보 조회
+		Map<String, Object> jobParams = ValueUtil.newMap("orderNo,invoiceId", orderNo, invoiceId);
+		DpsJobInstance jobInstance = this.queryManager.selectByCondition(DpsJobInstance.class, jobParams);
+		DpsInspection inspection = new DpsInspection();
+		inspection.setBoxId(jobInstance.getBoxId());
+		inspection.setInvoiceId(invoiceId);
+		JobBatch batch = new JobBatch();
+		batch.setDomainId(Domain.currentDomainId());
+		int printedCount = this.dpsInspectionService.printInvoiceLabel(batch, inspection, printerId);
+		
+		// 3. 이벤트 처리 결과 셋팅
+		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, printedCount));
 		event.setExecuted(true);
 	}
 	

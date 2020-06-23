@@ -147,10 +147,12 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		String sql = this.dpsInspectionQueryStore.getSearchInspectionItemsQuery();
 		List<DpsInspItem> items = this.queryManager.selectListBySql(sql, params, DpsInspItem.class, 0, 0);
 		
-		// 상태가 '박싱 완료' 상태면 WMS에 취소 상태 반영
+		// 상태가 '박싱 완료' 상태면 
 		if(ValueUtil.isEqualIgnoreCase(LogisConstants.JOB_STATUS_BOXED, inspection.getStatus())) {
+			// WMS에 주문 상태를 조회하여
 			List<DpsInspItem> wmsItems = this.dpsBoxSendSvc.checkInpectionItemsToWms(inspection);
 			
+			// WMS에 처리할 주문이 남아 있다면  검수 항목에 반영한다. 
 			if(ValueUtil.isNotEmpty(wmsItems)) {
 				for(DpsInspItem wmsItem : wmsItems) {
 					for(DpsInspItem wcsItem : items) {
@@ -165,12 +167,14 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 				
 				inspection.setItems(wmsItems);
 				
+			// 검수할 항목이 없고 상태가 '취소'이면 주문에 '취소'로 상태 업데이트 
+			} else {
 				if(ValueUtil.isEqualIgnoreCase(LogisConstants.JOB_STATUS_CANCEL, inspection.getStatus())) {
 					// 주문, 작업에 상태 '주문 취소'로 변경 
 					Map<String, Object> boxParams = ValueUtil.newMap("batchId,orderNo,status", inspection.getBatchId(), inspection.getOrderNo(), LogisConstants.JOB_STATUS_CANCEL);
 					sql = "update mhe_dr set status = :status where work_unit = :batchId and ref_no = :orderNo and (waybill_no is null or waybill_no = '')";
 					this.queryManager.executeBySql(sql, boxParams);
-				}	
+				}				
 			}
 			
 		} else {

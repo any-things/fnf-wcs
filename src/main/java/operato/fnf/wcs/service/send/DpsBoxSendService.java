@@ -20,8 +20,11 @@ import operato.fnf.wcs.entity.RfidBoxItem;
 import operato.fnf.wcs.entity.RfidDpsInspResult;
 import operato.fnf.wcs.entity.RfidResult;
 import operato.fnf.wcs.entity.WcsMheDr;
+import operato.fnf.wcs.entity.WmsDpsActualOrder;
 import operato.fnf.wcs.entity.WmsMheHr;
 import operato.fnf.wcs.service.model.WaybillResponse;
+import operato.logis.dps.model.DpsInspItem;
+import operato.logis.dps.model.DpsInspection;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.BoxPack;
 import xyz.anythings.base.entity.JobBatch;
@@ -148,6 +151,60 @@ public class DpsBoxSendService extends AbstractQueryService {
 			String sql = "update dps_job_instances set box_result_if_at = now(), status = :status where work_unit = :batchId and ref_no = :orderNo and box_id = :boxId";
 			this.queryManager.executeBySql(sql, ValueUtil.newMap("batchId,orderNo,boxId,status", batch.getId(), orderNo, boxId, status));
 		}
+	}
+	
+	/**
+	 * WMS에 주문 상태(취소된 상태 여부)를 체크 
+	 *  
+	 * @param domainId
+	 * @param refNo
+	 * @param boxId
+	 */
+	public List<DpsInspItem> checkInpectionItemsToWms(DpsInspection inspection) {
+		String sql = "select strr_id as brand_cd, item_cd as sku_cd, item_season as sku_season, item_color as sku_color, item_size as sku_size, outb_ect_qty as order_qty, to_pick_qty as picked_qty, done_qty as confirm_qty from dps_actual_order where wh_cd = :whCd and ref_no = :refNo and item_season != 'X'";
+		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsDpsActualOrder.class);
+		List<DpsInspItem> inspectionItems = wmsQueryMgr.selectListBySql(sql, ValueUtil.newMap("whCd,refNo", FnFConstants.WH_CD_ICF, inspection.getOrderNo()), DpsInspItem.class, 0, 0);
+		
+		if(ValueUtil.isNotEmpty(inspectionItems)) {
+			List<DpsInspItem> filteredItems = new ArrayList<DpsInspItem>();
+			int totalInspectedPcs = 0;
+			
+			for(DpsInspItem item : inspectionItems) {
+				totalInspectedPcs += item.getConfirmQty();
+				
+				// 검수 수량이 피킹 수량 보다 작으면 검수 대상
+				if(item.getPickedQty() > item.getConfirmQty()) {
+					item.setOrderQty(item.getPickedQty() - item.getConfirmQty());
+					item.setPickedQty(item.getOrderQty());
+					item.setConfirmQty(0);
+					filteredItems.add(item);
+				}				
+			}
+			
+			if(filteredItems.isEmpty()) {
+				if(totalInspectedPcs == 0) {
+					inspection.setStatus(LogisConstants.JOB_STATUS_CANCEL);
+					// throw ThrowUtil.newValidationErrorWithNoLog("해당 주문 [주문번호 : " + inspection.getOrderNo() + "]는 취소되었습니다.");
+				} else {
+					// throw ThrowUtil.newValidationErrorWithNoLog("해당 주문 [주문번호 : " + inspection.getOrderNo() + "]는 검수할 항목이 남아있지 않습니다.");
+				}
+			}			
+		}
+		
+		return inspectionItems;
+	}
+	
+	/**
+	 * 총 검수해야 할 수량을 계산해서 리턴
+	 * 
+	 * @param domainId
+	 * @param orderNo
+	 * @return
+	 */
+	public int checkTotalToInspectionQty(Long domainId, String orderNo) {
+		String sql = "select COALESCE(sum(to_pick_qty - done_qty), 0) as inspection_qty from dps_actual_order where wh_cd = :whCd and ref_no = :refNo and item_season != 'X'";
+		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsDpsActualOrder.class);
+		return wmsQueryMgr.selectBySql(sql, ValueUtil.newMap("whCd,refNo", FnFConstants.WH_CD_ICF, orderNo), Integer.class);
 	}
 	
 	/**

@@ -7,15 +7,15 @@ import xyz.elidom.dbist.annotation.Ignore;
 import xyz.elidom.dbist.annotation.Table;
 
 /**
- * 출력 송장 박스 내품 조회를 위한 WMS I/F 테이블
+ * WMS 온라인 주문 취소 수량 가감, 현재 주문 출고 오더 정보
  */
-@Table(name = "mps_express_waybill_packinfo", ignoreDdl = true, idStrategy = GenerationRule.UUID, dataSourceType=DataSourceType.DATASOURCE)
-public class WmsExpressWaybillPackinfo extends xyz.elidom.orm.entity.basic.AbstractStamp {
+@Table(name = "dps_actual_order", ignoreDdl = true, idStrategy = GenerationRule.UUID, dataSourceType=DataSourceType.DATASOURCE)
+public class WmsDpsActualOrder extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	/**
 	 * SerialVersion UID
 	 */
-	private static final long serialVersionUID = -5487516093806045871L;
+	private static final long serialVersionUID = 2300297509181542667L;
 
 	@Ignore
 	private String id;
@@ -23,11 +23,14 @@ public class WmsExpressWaybillPackinfo extends xyz.elidom.orm.entity.basic.Abstr
 	@Column (name = "wh_cd", length = 50)
 	private String whCd;
 
-	@Column (name = "box_id", length = 50)
-	private String boxId;
+	@Column (name = "ref_no", length = 50)
+	private String refNo;
 
-	@Column (name = "strr_id", length = 20)
+	@Column (name = "strr_id", length = 50)
 	private String strrId;
+	
+	@Column (name = "item_cd", length = 30)
+	private String itemCd;
 
 	@Column (name = "item_season", length = 10)
 	private String itemSeason;
@@ -41,14 +44,23 @@ public class WmsExpressWaybillPackinfo extends xyz.elidom.orm.entity.basic.Abstr
 	@Column (name = "item_size", length = 10)
 	private String itemSize;
 
-	@Column (name = "item_cd", length = 30)
-	private String itemCd;
-
-	@Column (name = "item_nm", length = 30)
-	private String itemNm;
+	/**
+	 * 출고 예정 주문 수량
+	 */
+	@Column (name = "outb_ect_qty", length = 10)
+	private Integer outbEctQty;
 	
-	@Column (name = "qty")
-	private Integer qty;
+	/**
+	 * 출고 대상 수량 (취소 수량 가감)
+	 */
+	@Column (name = "to_pick_qty", length = 10)
+	private Integer toPickQty;
+	
+	/**
+	 * 완료된 수량
+	 */
+	@Column (name = "done_qty", length = 10)
+	private Integer doneQty;
 
 	public String getId() {
 		return id;
@@ -66,12 +78,12 @@ public class WmsExpressWaybillPackinfo extends xyz.elidom.orm.entity.basic.Abstr
 		this.whCd = whCd;
 	}
 
-	public String getBoxId() {
-		return boxId;
+	public String getRefNo() {
+		return refNo;
 	}
 
-	public void setBoxId(String boxId) {
-		this.boxId = boxId;
+	public void setRefNo(String refNo) {
+		this.refNo = refNo;
 	}
 
 	public String getStrrId() {
@@ -80,6 +92,14 @@ public class WmsExpressWaybillPackinfo extends xyz.elidom.orm.entity.basic.Abstr
 
 	public void setStrrId(String strrId) {
 		this.strrId = strrId;
+	}
+
+	public String getItemCd() {
+		return itemCd;
+	}
+
+	public void setItemCd(String itemCd) {
+		this.itemCd = itemCd;
 	}
 
 	public String getItemSeason() {
@@ -114,28 +134,28 @@ public class WmsExpressWaybillPackinfo extends xyz.elidom.orm.entity.basic.Abstr
 		this.itemSize = itemSize;
 	}
 
-	public String getItemCd() {
-		return itemCd;
+	public Integer getOutbEctQty() {
+		return outbEctQty;
 	}
 
-	public void setItemCd(String itemCd) {
-		this.itemCd = itemCd;
+	public void setOutbEctQty(Integer outbEctQty) {
+		this.outbEctQty = outbEctQty;
 	}
 
-	public String getItemNm() {
-		return itemNm;
+	public Integer getToPickQty() {
+		return toPickQty;
 	}
 
-	public void setItemNm(String itemNm) {
-		this.itemNm = itemNm;
+	public void setToPickQty(Integer toPickQty) {
+		this.toPickQty = toPickQty;
 	}
 
-	public Integer getQty() {
-		return qty;
+	public Integer getDoneQty() {
+		return doneQty;
 	}
 
-	public void setQty(Integer qty) {
-		this.qty = qty;
+	public void setDoneQty(Integer doneQty) {
+		this.doneQty = doneQty;
 	}
 
 }

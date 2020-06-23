@@ -12,6 +12,10 @@ public class DpsInspItem {
 	/**
 	 * 매장 코드 
 	 */
+	private String brandCd;
+	/**
+	 * 매장 코드 
+	 */
 	private String shopCd;
 	/**
 	 * 상품 코드 
@@ -30,6 +34,10 @@ public class DpsInspItem {
 	 */
 	private String skuBarcd2;
 	/**
+	 * 상품 시즌
+	 */
+	private String skuSeason;
+	/**
 	 * 상품 스타일 
 	 */
 	private String skuStyle;
@@ -41,6 +49,10 @@ public class DpsInspItem {
 	 * 상품 사이즈 
 	 */
 	private String skuSize;
+	/**
+	 * 최초 주문 수량 
+	 */
+	private Integer orderQty;
 	/**
 	 * 피킹 수량 
 	 */
@@ -57,6 +69,10 @@ public class DpsInspItem {
 	 * RFID 검수 필요 여부
 	 */
 	private String rfidItemYn;
+	/**
+	 * 사은품 여부
+	 */
+	private String giftYn;
 	
 	public DpsInspItem() {
 	}
@@ -85,6 +101,14 @@ public class DpsInspItem {
 		this.pickedQty = pickedQty;
 	}
 	
+	public String getBrandCd() {
+		return brandCd;
+	}
+
+	public void setBrandCd(String brandCd) {
+		this.brandCd = brandCd;
+	}
+
 	public String getShopCd() {
 		return shopCd;
 	}
@@ -125,6 +149,14 @@ public class DpsInspItem {
 		this.skuBarcd2 = skuBarcd2;
 	}
 
+	public String getSkuSeason() {
+		return skuSeason;
+	}
+
+	public void setSkuSeason(String skuSeason) {
+		this.skuSeason = skuSeason;
+	}
+
 	public String getSkuStyle() {
 		return skuStyle;
 	}
@@ -147,6 +179,14 @@ public class DpsInspItem {
 
 	public void setSkuSize(String skuSize) {
 		this.skuSize = skuSize;
+	}
+
+	public Integer getOrderQty() {
+		return orderQty;
+	}
+
+	public void setOrderQty(Integer orderQty) {
+		this.orderQty = orderQty;
 	}
 
 	public Integer getPickedQty() {
@@ -179,6 +219,14 @@ public class DpsInspItem {
 
 	public void setRfidItemYn(String rfidItemYn) {
 		this.rfidItemYn = rfidItemYn;
+	}
+
+	public String getGiftYn() {
+		return giftYn;
+	}
+
+	public void setGiftYn(String giftYn) {
+		this.giftYn = giftYn;
 	}
 
 }

@@ -140,9 +140,31 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 			params.put("invoiceId", inspection.getInvoiceId());
 		}
 		
+		// 검수 항목 정보 조회 
 		String sql = this.dpsInspectionQueryStore.getSearchInspectionItemsQuery();
 		List<DpsInspItem> items = this.queryManager.selectListBySql(sql, params, DpsInspItem.class, 0, 0);
-		inspection.setItems(items);
+		
+		// 상태가 '박싱 완료' 상태면 WMS에 취소 상태 반영
+		if(ValueUtil.isEqualIgnoreCase(LogisConstants.JOB_STATUS_BOXED, inspection.getStatus())) {
+			List<DpsInspItem> wmsItems = this.dpsBoxSendSvc.checkInpectionItemsToWms(inspection);
+			
+			for(DpsInspItem wmsItem : wmsItems) {
+				for(DpsInspItem wcsItem : items) {
+					if(ValueUtil.isEqualIgnoreCase(wmsItem.getSkuCd(), wcsItem.getSkuCd())) {
+						wmsItem.setRfidItemYn(wcsItem.getRfidItemYn());
+						wmsItem.setSkuBarcd(wcsItem.getSkuBarcd());
+						wmsItem.setSkuBarcd2(wcsItem.getSkuBarcd2());
+						wmsItem.setSkuNm(wcsItem.getSkuNm());
+					}
+				}
+			}
+			
+			inspection.setItems(wmsItems);
+			
+		} else {
+			inspection.setItems(items);
+		}
+		
 		return inspection;
 	}
 	
@@ -305,9 +327,12 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		}
 		
 		// 2. 주문에 처리되지 않은 주문이 남아있는지 (즉 이 처리가 송장 분할인지) 여부 체크
-		String sql = "select sum(pick_qty) as total_order_qty from dps_job_instances where work_unit = :workUnit and ref_no = :refNo and box_id = :boxId and (waybill_no is null or waybill_no = '')";
-		Map<String, Object> condition = ValueUtil.newMap("workUnit,refNo,boxId", box.getBatchId(), box.getOrderNo(), box.getBoxId());
-		int remainOrderPcs = this.queryManager.selectBySql(sql, condition, Integer.class);
+		//String sql = "select sum(pick_qty) as total_order_qty from dps_job_instances where work_unit = :workUnit and ref_no = :refNo and box_id = :boxId and (waybill_no is null or waybill_no = '')";
+		//Map<String, Object> condition = ValueUtil.newMap("workUnit,refNo,boxId", box.getBatchId(), box.getOrderNo(), box.getBoxId());
+		// int remainOrderPcs = this.queryManager.selectBySql(sql, condition, Integer.class);
+		
+		// 2. 송장 분할 여부 수정 -> WMS dps_actual_order 테이블에서 sum(to_pick_qty - done_qty)과 totalConfirmPcs와 같으면 sum(to_pick_qty - done_qty)이 크면 분할
+		int remainOrderPcs = this.dpsBoxSendSvc.checkTotalToInspectionQty(batch.getDomainId(), box.getOrderNo());
 		boolean isTotalMode = (totalConfirmPcs >= remainOrderPcs);
 		
 		// 3. 상품 스캔 검수 항목 & RFID 검수 항목 리스트 추출 

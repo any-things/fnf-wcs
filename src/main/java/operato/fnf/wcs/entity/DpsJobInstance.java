@@ -12,8 +12,8 @@ import xyz.elidom.dbist.annotation.Table;
 /*
  * DPS 작업 할당 및 작업 처리
  */
-@Table(name = "dps_job_instances", idStrategy = GenerationRule.UUID, uniqueFields="whCd,workUnit,refNo,cellCd,itemCd", indexes = {
-	@Index(name = "ix_dps_job_instances_01", columnList = "wh_cd,work_unit,ref_no,cell_cd,item_cd", unique = true)
+@Table(name = "dps_job_instances", idStrategy = GenerationRule.UUID, indexes = {
+	@Index(name = "ix_dps_job_instances_01", columnList = "wh_cd,work_unit,ref_no,cell_cd,item_cd")
 })
 public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -373,12 +374,13 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 			}
 		}
 		
-		// 4. 분할 혹은 전체 모드로 검수 완료 처리 
-		if(!isTotalMode) {
+		// 4. 분할 혹은 전체 모드로 검수 완료 처리
+		this.splitBox(batch, box, scanInspItems, rfidInspItems, printerId);
+		/*if(!isTotalMode) {
 			this.splitBox(batch, box, scanInspItems, rfidInspItems, printerId);
 		} else {
 			this.finishInspectionByAll(batch, box, boxWeight, printerId, scanInspItems, rfidInspItems);
-		}
+		}*/
 	}
 	
 	/**
@@ -746,7 +748,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 				
 				// 1. SplitJob 생성
 				DpsJobInstance splittedJob = ValueUtil.populate(originalJob, new DpsJobInstance());
-				splittedJob.setId(null);
+				splittedJob.setId(UUID.randomUUID().toString());
 				splittedJob.setPickQty(originalJob.getPickQty() - inspectedQty);
 				splittedJob.setCmptQty(splittedJob.getPickQty());
 				splittedJob.setBoxId(null);

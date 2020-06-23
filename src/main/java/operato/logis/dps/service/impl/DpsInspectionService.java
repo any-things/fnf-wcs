@@ -148,18 +148,27 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		if(ValueUtil.isEqualIgnoreCase(LogisConstants.JOB_STATUS_BOXED, inspection.getStatus())) {
 			List<DpsInspItem> wmsItems = this.dpsBoxSendSvc.checkInpectionItemsToWms(inspection);
 			
-			for(DpsInspItem wmsItem : wmsItems) {
-				for(DpsInspItem wcsItem : items) {
-					if(ValueUtil.isEqualIgnoreCase(wmsItem.getSkuCd(), wcsItem.getSkuCd())) {
-						wmsItem.setRfidItemYn(wcsItem.getRfidItemYn());
-						wmsItem.setSkuBarcd(wcsItem.getSkuBarcd());
-						wmsItem.setSkuBarcd2(wcsItem.getSkuBarcd2());
-						wmsItem.setSkuNm(wcsItem.getSkuNm());
+			if(ValueUtil.isNotEmpty(wmsItems)) {
+				for(DpsInspItem wmsItem : wmsItems) {
+					for(DpsInspItem wcsItem : items) {
+						if(ValueUtil.isEqualIgnoreCase(wmsItem.getSkuCd(), wcsItem.getSkuCd())) {
+							wmsItem.setRfidItemYn(wcsItem.getRfidItemYn());
+							wmsItem.setSkuBarcd(wcsItem.getSkuBarcd());
+							wmsItem.setSkuBarcd2(wcsItem.getSkuBarcd2());
+							wmsItem.setSkuNm(wcsItem.getSkuNm());
+						}
 					}
 				}
+				
+				inspection.setItems(wmsItems);
+				
+				if(ValueUtil.isEqualIgnoreCase(LogisConstants.JOB_STATUS_CANCEL, inspection.getStatus())) {
+					// 주문, 작업에 상태 '주문 취소'로 변경 
+					Map<String, Object> boxParams = ValueUtil.newMap("batchId,orderNo,status", inspection.getBatchId(), inspection.getOrderNo(), LogisConstants.JOB_STATUS_CANCEL);
+					sql = "update mhe_dr set status = :status where work_unit = :batchId and ref_no = :orderNo and (waybill_no is null or waybill_no = '')";
+					this.queryManager.executeBySql(sql, boxParams);
+				}	
 			}
-			
-			inspection.setItems(wmsItems);
 			
 		} else {
 			inspection.setItems(items);

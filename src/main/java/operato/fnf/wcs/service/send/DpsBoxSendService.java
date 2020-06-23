@@ -186,12 +186,14 @@ public class DpsBoxSendService extends AbstractQueryService {
 					inspection.setStatus(LogisConstants.JOB_STATUS_CANCEL);
 					// throw ThrowUtil.newValidationErrorWithNoLog("해당 주문 [주문번호 : " + inspection.getOrderNo() + "]는 취소되었습니다.");
 				} else {
-					// throw ThrowUtil.newValidationErrorWithNoLog("해당 주문 [주문번호 : " + inspection.getOrderNo() + "]는 검수할 항목이 남아있지 않습니다.");
+					throw ThrowUtil.newValidationErrorWithNoLog("해당 주문 [주문번호 : " + inspection.getOrderNo() + "]는 검수할 항목이 남아있지 않습니다.");
 				}
-			}			
+			}
+			
+			return filteredItems;
+		} else {
+			return null;
 		}
-		
-		return inspectionItems;
 	}
 	
 	/**

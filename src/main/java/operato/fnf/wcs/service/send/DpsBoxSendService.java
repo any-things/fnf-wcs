@@ -19,7 +19,6 @@ import operato.fnf.wcs.entity.DpsJobInstance;
 import operato.fnf.wcs.entity.RfidBoxItem;
 import operato.fnf.wcs.entity.RfidDpsInspResult;
 import operato.fnf.wcs.entity.RfidResult;
-import operato.fnf.wcs.entity.WcsMheDr;
 import operato.fnf.wcs.entity.WmsDpsActualOrder;
 import operato.fnf.wcs.entity.WmsMheHr;
 import operato.fnf.wcs.service.model.WaybillResponse;
@@ -122,8 +121,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 	 * @param orderNo
 	 * @param boxId
 	 */
-	//@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public void sendPackingToWms(JobBatch batch, String orderNo, String boxId) {
+	/*public void sendPackingToWms(JobBatch batch, String orderNo, String boxId) {
 		
 		List<WcsMheDr> orderItems = this.searchBoxItemsByOrder(batch.getId(), orderNo, boxId);
 		
@@ -151,7 +149,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 			String sql = "update dps_job_instances set box_result_if_at = now(), status = :status where work_unit = :batchId and ref_no = :orderNo and box_id = :boxId";
 			this.queryManager.executeBySql(sql, ValueUtil.newMap("batchId,orderNo,boxId,status", batch.getId(), orderNo, boxId, status));
 		}
-	}
+	}*/
 	
 	/**
 	 * WMS에 주문 상태(취소된 상태 여부)를 체크 
@@ -204,6 +202,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 	 * @return
 	 */
 	public int checkTotalToInspectionQty(Long domainId, String orderNo) {
+		
 		String sql = "select COALESCE(sum(to_pick_qty - done_qty), 0) as inspection_qty from dps_actual_order where wh_cd = :whCd and ref_no = :refNo and item_season != 'X'";
 		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsDpsActualOrder.class);
 		return wmsQueryMgr.selectBySql(sql, ValueUtil.newMap("whCd,refNo", FnFConstants.WH_CD_ICF, orderNo), Integer.class);
@@ -276,15 +275,14 @@ public class DpsBoxSendService extends AbstractQueryService {
 	 * @param boxId
 	 * @return
 	 */
-	//@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public String requestInvoiceToWms(JobBatch batch, String orderNo, String boxId) {
+	/*public String requestInvoiceToWms(JobBatch batch, String orderNo, String boxId) {
 		List<WcsMheDr> boxedOrders = this.searchBoxItemsByBoxId(batch.getId(), orderNo, boxId);
 		String waybillNo = null;
 		
 		if(ValueUtil.isNotEmpty(boxedOrders)) {
 			WcsMheDr item = boxedOrders.get(0);
 			waybillNo = ValueUtil.isEmpty(item.getWaybillNo()) ? this.newWaybillNo(boxId, true) : item.getWaybillNo();			
-			String status = BoxPack.BOX_STATUS_EXAMED;//ValueUtil.isEqualIgnoreCase(waybillNo, FnFConstants.ORDER_CANCEL_ALL) ? LogisConstants.JOB_STATUS_CANCEL : BoxPack.BOX_STATUS_EXAMED;
+			String status = BoxPack.BOX_STATUS_EXAMED; //ValueUtil.isEqualIgnoreCase(waybillNo, FnFConstants.ORDER_CANCEL_ALL) ? LogisConstants.JOB_STATUS_CANCEL : BoxPack.BOX_STATUS_EXAMED;
 			
 			for(WcsMheDr boxedOrder : boxedOrders) {
 				boxedOrder.setStatus(status);
@@ -300,7 +298,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 		}
 		
 		return waybillNo;
-	}
+	}*/
 	
 	/**
 	 * WMS에 송장 발행 요청 
@@ -317,8 +315,8 @@ public class DpsBoxSendService extends AbstractQueryService {
 		
 		if(ValueUtil.isNotEmpty(jobList)) {
 			DpsJobInstance job = jobList.get(0);
-			waybillNo = ValueUtil.isEmpty(job.getWaybillNo()) ? this.newWaybillNo(boxId, true) : job.getWaybillNo();
-			String status = BoxPack.BOX_STATUS_EXAMED;//ValueUtil.isEqualIgnoreCase(waybillNo, FnFConstants.ORDER_CANCEL_ALL) ? LogisConstants.JOB_STATUS_CANCEL : BoxPack.BOX_STATUS_EXAMED;
+			waybillNo = ValueUtil.isEmpty(job.getWaybillNo()) ? this.newWaybillNo(boxId, true) : job.getWaybillNo();			
+			String status = BoxPack.BOX_STATUS_EXAMED;
 			List<String> mheDrIdList = new ArrayList<String>();
 			String inspectorId = User.currentUser() != null ? User.currentUser().getId() : LogisConstants.EMPTY_STRING;
 			Date currentTime = new Date();
@@ -474,7 +472,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 	 * @param boxId
 	 * @return
 	 */
-	private List<WcsMheDr> searchBoxItemsByOrder(String batchId, String orderNo, String boxId) {
+	/*private List<WcsMheDr> searchBoxItemsByOrder(String batchId, String orderNo, String boxId) {
 		Query condition = new Query();
 		condition.addFilter("whCd", "ICF");
 		condition.addFilter("workUnit", batchId);
@@ -485,7 +483,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 		}
 		condition.addOrder("mheDatetime", true);
 		return this.queryManager.selectList(WcsMheDr.class, condition);
-	}
+	}*/
 	
 	/**
 	 * 박스 ID로 박스 실적 주문 조회
@@ -495,7 +493,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 	 * @param boxId
 	 * @return
 	 */
-	private List<WcsMheDr> searchBoxItemsByBoxId(String batchId, String orderNo, String boxId) {
+	/*private List<WcsMheDr> searchBoxItemsByBoxId(String batchId, String orderNo, String boxId) {
 		Query condition = new Query();
 		condition.addFilter("whCd", "ICF");
 		condition.addFilter("workUnit", batchId);
@@ -504,7 +502,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 		condition.addFilter("boxId", boxId);
 		condition.addOrder("mheDatetime", true);
 		return this.queryManager.selectList(WcsMheDr.class, condition);
-	}
+	}*/
 	
 	/**
 	 * 송장 번호로 RFID 검수 실적 조회

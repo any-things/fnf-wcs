@@ -17,6 +17,7 @@ import operato.fnf.wcs.entity.DpsJobInstance;
 import operato.fnf.wcs.entity.RfidResult;
 import operato.fnf.wcs.entity.WmsExpressWaybillPackinfo;
 import operato.fnf.wcs.entity.WmsExpressWaybillPrint;
+import operato.fnf.wcs.event.DpsResetBox;
 import operato.fnf.wcs.service.send.DpsBoxSendService;
 import operato.logis.dps.model.DpsInspItem;
 import operato.logis.dps.model.DpsInspection;
@@ -30,6 +31,7 @@ import xyz.anythings.base.rest.PrinterController;
 import xyz.anythings.base.service.impl.AbstractInstructionService;
 import xyz.anythings.sys.event.model.ErrorEvent;
 import xyz.anythings.sys.event.model.PrintEvent;
+import xyz.elidom.exception.server.ElidomRuntimeException;
 import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.sys.entity.User;
@@ -307,7 +309,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		
 		// 1. 기타 파라미터가 없다면 수동 스캔 모드의 전체 검수 완료 처리
 		if(params == null || params.length == 0) {
-			this.finishInspectionByAll(batch, box, boxWeight, printerId, null, null);
+			throw ThrowUtil.newValidationErrorWithNoLog("검수 항목이 없어서 검수를 진행할 수 없습니다.");
 			
 		// 2. 파라미터가 하나이면 검수 항목 리스트라고 판단하여 검수 항목 정보로 검수 완료 처리  
 		} else if(params.length >= 1) {
@@ -325,27 +327,9 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	 * @param printerId
 	 * @param itemObjs
 	 */
-	private void finishInspectionByItems(JobBatch batch, BoxPack box, Float boxWeight, String printerId, List<Map<String, Object>> itemObjs) {
+	private BoxPack finishInspectionByItems(JobBatch batch, BoxPack box, Float boxWeight, String printerId, List<Map<String, Object>> itemObjs) {
 		
-		// 1. 검수 항목으로 부터 총 검수 수량을 계산
-		//int totalConfirmPcs = 0;
-		
-		//for(Map<String, Object> item : itemObjs) {
-		//	if(item.containsKey("confirm_qty")) {
-		//		totalConfirmPcs += ValueUtil.toInteger(item.get("confirm_qty"));
-		//	}
-		//}
-		
-		// 2. 주문에 처리되지 않은 주문이 남아있는지 (즉 이 처리가 송장 분할인지) 여부 체크
-		//String sql = "select sum(pick_qty) as total_order_qty from dps_job_instances where work_unit = :workUnit and ref_no = :refNo and box_id = :boxId and (waybill_no is null or waybill_no = '')";
-		//Map<String, Object> condition = ValueUtil.newMap("workUnit,refNo,boxId", box.getBatchId(), box.getOrderNo(), box.getBoxId());
-		// int remainOrderPcs = this.queryManager.selectBySql(sql, condition, Integer.class);
-		
-		// 2. 송장 분할 여부 수정 -> WMS dps_actual_order 테이블에서 sum(to_pick_qty - done_qty)과 totalConfirmPcs와 같으면 sum(to_pick_qty - done_qty)이 크면 분할
-		//int remainOrderPcs = this.dpsBoxSendSvc.checkTotalToInspectionQty(batch.getDomainId(), box.getOrderNo());
-		//boolean isTotalMode = (totalConfirmPcs >= remainOrderPcs);
-		
-		// 3. 상품 스캔 검수 항목 & RFID 검수 항목 리스트 추출 
+		// 1. 상품 스캔 검수 항목 & RFID 검수 항목 리스트 추출 
 		List<DpsInspItem> scanInspItems = new ArrayList<DpsInspItem>();
 		List<RfidResult> rfidInspItems = new ArrayList<RfidResult>();
 		
@@ -374,60 +358,12 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 			}
 		}
 		
-		// 4. 분할 혹은 전체 모드로 검수 완료 처리
-		this.splitBox(batch, box, scanInspItems, rfidInspItems, printerId);
-		
-		/*if(!isTotalMode) {
-			this.splitBox(batch, box, scanInspItems, rfidInspItems, printerId);
-		} else {
-			this.finishInspectionByAll(batch, box, boxWeight, printerId, scanInspItems, rfidInspItems);
-		}*/
+		// 2. 검수 항목으로 검수 완료 처리
+		return this.doFinishInspectionByItems(batch, box, scanInspItems, rfidInspItems, printerId);
 	}
 	
 	/**
-	 * 분할 없이 주문에 대한 검수 완료 처리
-	 * 
-	 * @param batch
-	 * @param box
-	 * @param boxWeight
-	 * @param printerId
-	 * @param scanInspItems
-	 * @param rfidInspItems
-	 */
-	private void finishInspectionByAll(JobBatch batch, BoxPack box, Float boxWeight, String printerId, List<DpsInspItem> scanInspItems, List<RfidResult> rfidInspItems) {
-		
-		// 1. 주문에 대해서 이미 송장이 발행이 되었는지 체크  
-		String invoiceId = this.findInvoiceNoByOrderNoToWms(batch.getDomainId(), box.getOrderNo(), box.getBoxId());
-
-		// 2. 이미 송장이 발행되지 않았다면 WMS로 박스 실적 전송 && 송장 발행 요청
-		if(ValueUtil.isEmpty(invoiceId)) {
-			invoiceId = this.sendBoxResultAndGetInvoice(batch, box.getOrderNo(), box.getBoxId());
-			
-		// 3. 이미 송장이 발행되었다면 주문, 작업 정보에 검수 완료로 업데이트 
-		} else {
-			this.updateInvoiceIdToOrders(batch.getDomainId(), batch.getId(), box.getOrderNo(), box.getBoxId(), invoiceId, User.currentUser().getId());
-		}
-		
-		// 4. 주문이 취소되었다면
-		if(ValueUtil.isEqualIgnoreCase(invoiceId, FnFConstants.ORDER_CANCEL_ALL)) {
-			// 주문 취소 처리되었다고 화면에 알려줌
-			box.setStatus(LogisConstants.JOB_STATUS_CANCEL);
-			
-		// 5. 주문에 대한 송장이 발행되었다면 
-		} else {
-			// 5.1 박스에 송장 번호 설정
-			box.setInvoiceId(invoiceId);
-			
-			// 5.2 RFID 실적 전송
-			this.processRfidResults(batch, invoiceId, rfidInspItems);
-						
-			// 5.3 송장 발행
-			BeanUtil.get(DpsInspectionService.class).printInvoiceLabel(batch, box, printerId);
-		}
-	}
-	
-	/**
-	 * RFID로 송장 분할 처리 
+	 * 검수 항목으로 검수 완료 처리
 	 * 
 	 * @param batch
 	 * @param sourceBox
@@ -436,7 +372,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	 * @param printerId
 	 * @return
 	 */
-	public BoxPack splitBox(JobBatch batch, BoxPack sourceBox, List<DpsInspItem> scanItemList, List<RfidResult> rfidItemList, String printerId) {
+	public BoxPack doFinishInspectionByItems(JobBatch batch, BoxPack sourceBox, List<DpsInspItem> scanItemList, List<RfidResult> rfidItemList, String printerId) {
 		
 		// 1. 박스 정보로 검수 정보 조회 
 		List<DpsJobInstance> jobList = this.splitJobsForInspection(batch.getDomainId(), batch.getId(), sourceBox.getOrderNo(), sourceBox.getBoxId(), scanItemList);
@@ -484,7 +420,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	@Override
 	public BoxPack splitBox(JobBatch batch, BoxPack sourceBox, List<DpsInspItem> inspectionItems, String printerId, Object ... params) {
 		
-		return this.splitBox(batch, sourceBox, inspectionItems, null, printerId);
+		return this.doFinishInspectionByItems(batch, sourceBox, inspectionItems, null, printerId);
 	}
 	
 	@Override
@@ -544,9 +480,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	/**
 	 * 송장 라벨 인쇄 API
 	 * 
-	 * @param templateName
-	 * @param printerId
-	 * @param parameters
+	 * @param printEvent
 	 */
 	@Async
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, classes = PrintEvent.class)
@@ -675,61 +609,37 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	/**
 	 * 주문, 작업 정보에 송장 정보 및 검수 완료 정보 업데이트
 	 * 
-	 * @param domainId
-	 * @param batchId
-	 * @param orderNo
-	 * @param boxId
-	 * @param invoiceId
-	 * @param inspectorId
-	 */
-	private void updateInvoiceIdToOrders(Long domainId, String batchId, String orderNo, String boxId, String invoiceId, String inspectorId) {
-		
-		// 작업 정보 업데이트 - 송장, 상태, 실적 전송 시간 업데이트 
-		String sql = "update dps_job_instances set status = :status, box_result_if_at = now(), waybill_no = :invoiceId, inspected_at = now(), inspector_id = :inspectorId where wh_cd = :whCd and work_unit = :batchId and ref_no = :orderNo and (waybill_no is null or waybill_no = '')";
-		Map<String, Object> condition = ValueUtil.newMap("whCd,batchId,orderNo,boxId,invoiceId,inspectorId,status", FnFConstants.WH_CD_ICF, batchId, orderNo, boxId, invoiceId, inspectorId, BoxPack.BOX_STATUS_EXAMED);
-		this.queryManager.executeBySql(sql, condition);
-		
-		// 주문 정보 업데이트 - 송장, 상태, 실적 전송 시간 업데이트 
-		sql = "update mhe_dr set status = :status, box_result_if_at = now(), waybill_no = :invoiceId where wh_cd = :whCd and work_unit = :batchId and ref_no = :orderNo and (waybill_no is null or waybill_no = '')";
-		this.queryManager.executeBySql(sql, condition);
-	}
-	
-	/**
-	 * 주문, 작업 정보에 송장 정보 및 검수 완료 정보 업데이트
-	 * 
 	 * @param jobList
 	 * @param invoiceId
 	 * @param inspectorId
 	 */
 	private void updateInvoiceIdToOrders(List<DpsJobInstance> jobList, String invoiceId, String inspectorId) {
 		
-		if(ValueUtil.isEmpty(jobList)) {
-			return;
-		}
-		
-		String jobStatus = BoxPack.BOX_STATUS_EXAMED;
-		DpsJobInstance firstJob = jobList.get(0);
-		
-		// 송장, 상태, 실적 전송 시간 업데이트 
-		if(ValueUtil.isNotEqual(jobStatus, firstJob.getStatus())) {
-			List<String> orderIdList = new ArrayList<String>(jobList.size());
-			Date currentTime = new Date();
+		if(ValueUtil.isNotEmpty(jobList)) {
+			String jobStatus = BoxPack.BOX_STATUS_EXAMED;
+			DpsJobInstance firstJob = jobList.get(0);
 			
-			// 작업 정보 업데이트
-			for(DpsJobInstance job : jobList) {
-				job.setStatus(jobStatus);
-				job.setWaybillNo(invoiceId);
-				job.setBoxResultIfAt(currentTime);
-				job.setInspectedAt(currentTime);
-				job.setInspectorId(inspectorId);
-				orderIdList.add(job.getMheDrId());
+			// 송장, 상태, 실적 전송 시간 업데이트 
+			if(ValueUtil.isNotEqual(jobStatus, firstJob.getStatus())) {
+				List<String> orderIdList = new ArrayList<String>(jobList.size());
+				Date currentTime = new Date();
+				
+				// 작업 정보 업데이트
+				for(DpsJobInstance job : jobList) {
+					job.setStatus(jobStatus);
+					job.setWaybillNo(invoiceId);
+					job.setBoxResultIfAt(currentTime);
+					job.setInspectedAt(currentTime);
+					job.setInspectorId(inspectorId);
+					orderIdList.add(job.getMheDrId());
+				}
+				this.queryManager.updateBatch(jobList, "status", "waybillNo", "boxResultIfAt", "inspectedAt", "inspectorId");
+				
+				// 주문 정보 업데이트
+				String sql = "update mhe_dr set status = :status, waybill_no = :waybillNo, box_result_if_at = :currentTime where id in (:orderIdList)";
+				Map<String, Object> params = ValueUtil.newMap("orderIdList,status,waybillNo,currentTime", orderIdList, jobStatus, invoiceId, currentTime);
+				this.queryManager.executeBySql(sql, params);
 			}
-			this.queryManager.updateBatch(jobList, "status", "waybillNo", "boxResultIfAt", "inspectedAt", "inspectorId");
-			
-			// 주문 정보 업데이트
-			String sql = "update mhe_dr set status = :status, waybill_no = :waybillNo, box_result_if_at = :currentTime where id in (:orderIdList)";
-			Map<String, Object> params = ValueUtil.newMap("orderIdList,status,waybillNo,currentTime", orderIdList, jobStatus, invoiceId, currentTime);
-			this.queryManager.executeBySql(sql, params);
 		}		
 	}
 	
@@ -766,26 +676,6 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	}
 	
 	/**
-	 * WMS에 박스 실적 전송 및 송장 번호 발행
-	 * 
-	 * @param batch
-	 * @param orderNo
-	 * @param boxId
-	 * @return
-	 */
-	public String sendBoxResultAndGetInvoice(JobBatch batch, String orderNo, String boxId) {
-		
-		// 1. WMS로 박스 실적 전송
-		this.dpsBoxSendSvc.sendPackingToWms(batch, orderNo, boxId);
-		
-		// 2. 송장 발행 요청, TODO 여기서 송장 발행에 실패할 경우 주문 및 작업에 매핑된 박스 ID를 null로 업데이트 -> 이벤트를 던져서 트랜잭션을 별도로 처리하도록 ...
-		String invoiceId = this.dpsBoxSendSvc.requestInvoiceToWms(batch, orderNo, boxId);
-		
-		// 3. 발행 송장 번호 리턴
-		return invoiceId;
-	}
-	
-	/**
 	 * 송장 분할을 위한 WMS에 박스 실적 전송 및 송장 번호 발행
 	 * 
 	 * @param batch
@@ -799,11 +689,144 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		// 1. WMS로 조회한 작업 기준으로 박스 실적 전송
 		this.dpsBoxSendSvc.sendPackingToWmsBySplit(batch, orderNo, boxId, jobList);
 		
-		// 2. WMS에 송장 발행 요청, TODO 여기서 송장 발행에 실패할 경우 jobList에 매핑된 박스 ID를 null로 업데이트 -> 이벤트를 던져서 트랜잭션을 별도로 처리하도록 ...
-		String invoiceId = this.dpsBoxSendSvc.requestInvoiceToWmsBySplit(batch, orderNo, boxId, jobList);
+		// 2. WMS에 송장 발행 요청
+		String invoiceId = null;
+		
+		try {
+			invoiceId = this.dpsBoxSendSvc.requestInvoiceToWmsBySplit(batch, orderNo, boxId, jobList);
+			
+		} catch(RuntimeException re) {
+			throw re;
+			
+		} catch(Throwable th) {
+			// 오류 발생시 박스 리셋 이벤트를 던져 해당 주문의 boxId를 리셋한다. 
+			this.eventPublisher.publishEvent(new DpsResetBox(batch.getDomainId(), batch.getId(), orderNo, boxId));
+			
+			// throw
+			String msg = th.getCause() == null ? th.getMessage() : th.getCause().getMessage();
+			ElidomRuntimeException ere = new ElidomRuntimeException(msg, th);
+			throw ere;
+		}
 	
 		// 3. 발행 송장 번호 리턴
 		return invoiceId;
 	}
+	
+	/**
+	 * 주문에 대한 사은품 리스트 조회
+	 * 
+	 * @param batch
+	 * @param boxId
+	 * @return
+	 */
+	public List<DpsInspItem> searchGiftItems(JobBatch batch, String boxId) {
+		String sql = "select item_cd as sku_cd, item_nm as sku_nm, qty as order_qty from mps_express_waybill_packinfo where wh_cd = :whCd and box_id = :boxId";
+		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsExpressWaybillPackinfo.class);
+		Map<String, Object> params = ValueUtil.newMap("whCd,boxId", FnFConstants.WH_CD_ICF, boxId);
+		return wmsQueryMgr.selectListBySql(sql, params, DpsInspItem.class, 0, 0);
+	}
+	
+	/**
+	 * 주문 정보의 박스 ID를 다시 리셋
+	 * 
+	 * @param event
+	 */
+	@Async
+	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, classes = DpsResetBox.class)
+	public void resetOrdersBoxId(DpsResetBox event) {
+		
+		if(ValueUtil.isNotEmpty(event.getOrderNo()) && ValueUtil.isNotEmpty(event.getBoxId())) {
+			String sql = "update mhe_dr set box_id = null where ref_no = :orderNo and box_id = :boxId";
+			Map<String, Object> params = ValueUtil.newMap("orderNo,boxId", event.getOrderNo(), event.getBoxId());
+			this.queryManager.executeBySql(sql, params);
+		
+			sql = "update dps_job_instances set box_id = null where ref_no = :orderNo and box_id = :boxId";
+			this.queryManager.executeBySql(sql, params);
+		}
+	}
+	
+	/**
+	 * 분할 없이 주문에 대한 검수 완료 처리
+	 * 
+	 * @param batch
+	 * @param box
+	 * @param boxWeight
+	 * @param printerId
+	 * @param scanInspItems
+	 * @param rfidInspItems
+	 */
+	/*private void finishInspectionByAll(JobBatch batch, BoxPack box, Float boxWeight, String printerId, List<DpsInspItem> scanInspItems, List<RfidResult> rfidInspItems) {
+		
+		// 1. 주문에 대해서 이미 송장이 발행이 되었는지 체크  
+		String invoiceId = this.findInvoiceNoByOrderNoToWms(batch.getDomainId(), box.getOrderNo(), box.getBoxId());
+
+		// 2. 이미 송장이 발행되지 않았다면 WMS로 박스 실적 전송 && 송장 발행 요청
+		if(ValueUtil.isEmpty(invoiceId)) {
+			invoiceId = this.sendBoxResultAndGetInvoice(batch, box.getOrderNo(), box.getBoxId());
+			
+		// 3. 이미 송장이 발행되었다면 주문, 작업 정보에 검수 완료로 업데이트 
+		} else {
+			this.updateInvoiceIdToOrders(batch.getDomainId(), batch.getId(), box.getOrderNo(), box.getBoxId(), invoiceId, User.currentUser().getId());
+		}
+		
+		// 4. 주문이 취소되었다면
+		if(ValueUtil.isEqualIgnoreCase(invoiceId, FnFConstants.ORDER_CANCEL_ALL)) {
+			// 주문 취소 처리되었다고 화면에 알려줌
+			box.setStatus(LogisConstants.JOB_STATUS_CANCEL);
+			
+		// 5. 주문에 대한 송장이 발행되었다면 
+		} else {
+			// 5.1 박스에 송장 번호 설정
+			box.setInvoiceId(invoiceId);
+			
+			// 5.2 RFID 실적 전송
+			this.processRfidResults(batch, invoiceId, rfidInspItems);
+						
+			// 5.3 송장 발행
+			BeanUtil.get(DpsInspectionService.class).printInvoiceLabel(batch, box, printerId);
+		}
+	}*/
+
+	/**
+	 * 주문, 작업 정보에 송장 정보 및 검수 완료 정보 업데이트
+	 * 
+	 * @param domainId
+	 * @param batchId
+	 * @param orderNo
+	 * @param boxId
+	 * @param invoiceId
+	 * @param inspectorId
+	 */
+	/*private void updateInvoiceIdToOrders(Long domainId, String batchId, String orderNo, String boxId, String invoiceId, String inspectorId) {
+		
+		// 작업 정보 업데이트 - 송장, 상태, 실적 전송 시간 업데이트 
+		String sql = "update dps_job_instances set status = :status, box_result_if_at = now(), waybill_no = :invoiceId, inspected_at = now(), inspector_id = :inspectorId where wh_cd = :whCd and work_unit = :batchId and ref_no = :orderNo and (waybill_no is null or waybill_no = '')";
+		Map<String, Object> condition = ValueUtil.newMap("whCd,batchId,orderNo,boxId,invoiceId,inspectorId,status", FnFConstants.WH_CD_ICF, batchId, orderNo, boxId, invoiceId, inspectorId, BoxPack.BOX_STATUS_EXAMED);
+		this.queryManager.executeBySql(sql, condition);
+		
+		// 주문 정보 업데이트 - 송장, 상태, 실적 전송 시간 업데이트 
+		sql = "update mhe_dr set status = :status, box_result_if_at = now(), waybill_no = :invoiceId where wh_cd = :whCd and work_unit = :batchId and ref_no = :orderNo and (waybill_no is null or waybill_no = '')";
+		this.queryManager.executeBySql(sql, condition);
+	}*/
+
+	/**
+	 * WMS에 박스 실적 전송 및 송장 번호 발행
+	 * 
+	 * @param batch
+	 * @param orderNo
+	 * @param boxId
+	 * @return
+	 */
+	/*public String sendBoxResultAndGetInvoice(JobBatch batch, String orderNo, String boxId) {
+		
+		// 1. WMS로 박스 실적 전송
+		this.dpsBoxSendSvc.sendPackingToWms(batch, orderNo, boxId);
+		
+		// 2. 송장 발행 요청
+		String invoiceId = this.dpsBoxSendSvc.requestInvoiceToWms(batch, orderNo, boxId);
+		
+		// 3. 발행 송장 번호 리턴
+		return invoiceId;
+	}*/
 
 }

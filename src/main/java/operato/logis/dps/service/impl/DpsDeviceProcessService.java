@@ -21,6 +21,7 @@ import operato.logis.dps.DpsCodeConstants;
 import operato.logis.dps.DpsConstants;
 import operato.logis.dps.model.DpsBatchInputableBox;
 import operato.logis.dps.model.DpsBatchSummary;
+import operato.logis.dps.model.DpsInspItem;
 import operato.logis.dps.model.DpsInspection;
 import operato.logis.dps.model.DpsSinglePackJobInform;
 import operato.logis.dps.model.DpsSinglePackSummary;
@@ -353,8 +354,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 
 		// 6. RFID 상품인 경우 상품 코드를 스캔하는 경우 에러 
 		if(!rfidFlag && ValueUtil.isEqual(sku.getRfidItemYn(), LogisConstants.Y_CAP_STRING)) {
-			// TODO WMS MHE_ITEM_BARCODE에 RFID_ITEM_YN 필드가 추가되면 아래 해제 
-			//throw ThrowUtil.newValidationErrorWithNoLog("스캔한 상품은 RFID 상품이니 반드시 RFID 검수를 해야합니다.");
+			throw ThrowUtil.newValidationErrorWithNoLog("스캔한 상품은 RFID 상품이니 반드시 RFID 검수를 해야합니다.");
 		}
 				
 		// 7. WMS 실적 전송
@@ -681,6 +681,60 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 	@EventListener(classes=DeviceProcessRestEvent.class, condition = "#event.checkCondition('/inspection/finish', 'dps')")
 	@Order(Ordered.LOWEST_PRECEDENCE)
 	public void finishInspection(DeviceProcessRestEvent event) {
+		
+		// 1. 파라미터 
+		Map<String, Object> params = event.getRequestParams();
+		String equipCd = params.get("equipCd").toString();
+		String equipType = params.get("equipType").toString();
+		String orderNo = params.get("orderNo").toString();
+		String trayCd = params.get("trayCd").toString();
+		String boxId = params.get("boxId").toString();
+		String printerId = params.get("printerId").toString();
+		List<Map<String, Object>> itemObjs = event.getRequestPostBody();
+
+		// 2. 검수 항목 존재 체크
+		if(ValueUtil.isEmpty(itemObjs)) {
+			throw ThrowUtil.newValidationErrorWithNoLog("검수 항목이 없어서 검수를 진행할 수 없습니다.");
+		}
+		
+		// 3. 설비 코드로 현재 진행 중인 작업 배치 및 설비 정보 조회 
+		EquipBatchSet equipBatchSet = DpsServiceUtil.findBatchByEquip(event.getDomainId(), equipType, equipCd);
+		JobBatch batch = equipBatchSet.getBatch();
+		
+		// 4. 박스 정보 생성
+		BoxPack boxPack = new BoxPack();
+		boxPack.setDomainId(batch.getDomainId());
+		boxPack.setBatchId(batch.getId());
+		boxPack.setOrderNo(orderNo);
+		boxPack.setBoxTypeCd(trayCd);
+		boxPack.setBoxId(boxId);
+		
+		// 5. 검수 완료 처리 
+		this.dpsInspectionService.finishInspection(batch, boxPack, null, printerId, itemObjs);
+		
+		// 6. 사은품 조회
+		List<DpsInspItem> giftItems = this.dpsInspectionService.searchGiftItems(batch, boxId);
+		DpsInspection result = new DpsInspection();
+		result.setBoxId(boxId);
+		result.setOrderNo(orderNo);
+		result.setStatus(boxPack.getStatus());
+		result.setItems(giftItems);
+
+		// 7. 이벤트 처리 결과 셋팅
+		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, result));
+		event.setExecuted(true);
+	}
+	
+	/**
+	 * DPS 송장 (박스) 분할 
+	 * TODO 제거 - 출고 검수 완료와 로직이 동일
+	 * 
+	 * @param event
+	 */
+	@EventListener(classes=DeviceProcessRestEvent.class, condition = "#event.checkCondition('/inspection/split_box', 'dps')")
+	@Order(Ordered.LOWEST_PRECEDENCE)
+	public void splitBox(DeviceProcessRestEvent event) {
+		
 		// 1. 파라미터 
 		Map<String, Object> params = event.getRequestParams();
 		String equipCd = params.get("equipCd").toString();
@@ -691,11 +745,16 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		String printerId = params.get("printerId").toString();
 		List<Map<String, Object>> itemObjs = event.getRequestPostBody();
 		
-		// 2. 설비 코드로 현재 진행 중인 작업 배치 및 설비 정보 조회 
+		// 2. 검수 항목 존재 체크
+		if(ValueUtil.isEmpty(itemObjs)) {
+			throw ThrowUtil.newValidationErrorWithNoLog("검수 항목이 없어서 검수를 진행할 수 없습니다.");
+		}
+		
+		// 3. 설비 코드로 현재 진행 중인 작업 배치 및 설비 정보 조회 
 		EquipBatchSet equipBatchSet = DpsServiceUtil.findBatchByEquip(event.getDomainId(), equipType, equipCd);
 		JobBatch batch = equipBatchSet.getBatch();
 		
-		// 3. 검수 완료 처리
+		// 4. 검수 완료를 위한 박스 생성
 		BoxPack boxPack = new BoxPack();
 		boxPack.setDomainId(batch.getDomainId());
 		boxPack.setBatchId(batch.getId());
@@ -703,13 +762,10 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		boxPack.setBoxTypeCd(trayCd);
 		boxPack.setBoxId(boxId);		
 		
-		if(ValueUtil.isEmpty(itemObjs)) {
-			this.dpsInspectionService.finishInspection(batch, boxPack, null, printerId);
-		} else {
-			this.dpsInspectionService.finishInspection(batch, boxPack, null, printerId, itemObjs);
-		}
+		// 5. 송장 분할 처리 
+		this.dpsInspectionService.finishInspection(batch, boxPack, null, printerId, itemObjs);
 
-		// 4. 이벤트 처리 결과 셋팅
+		// 6. 이벤트 처리 결과 셋팅
 		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, boxPack));
 		event.setExecuted(true);
 	}
@@ -722,15 +778,18 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 	@EventListener(classes=DeviceProcessRestEvent.class, condition = "#event.checkCondition('/single_pack_print_invoice', 'dps')")
 	@Order(Ordered.LOWEST_PRECEDENCE)
 	public void printSingleInvoiceLabel(DeviceProcessRestEvent event) {
+		
 		// 1. 파라미터 
 		Map<String, Object> params = event.getRequestParams();
 		String printerId = params.get("printerId").toString();
 		String orderNo = params.get("orderNo").toString();
 		String invoiceId = params.get("invoiceId").toString();
 		
-		// 2. 단포 정보 조회
+		// 2. 단포 작업 정보 조회
 		Map<String, Object> jobParams = ValueUtil.newMap("refNo,waybillNo", orderNo, invoiceId);
 		DpsJobInstance jobInstance = this.queryManager.selectByCondition(DpsJobInstance.class, jobParams);
+		
+		// 3. 단포 송장 인쇄를 위한 정보 조회
 		DpsInspection inspection = new DpsInspection();
 		inspection.setBoxId(jobInstance.getBoxId());
 		inspection.setInvoiceId(invoiceId);
@@ -738,7 +797,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		batch.setDomainId(Domain.currentDomainId());
 		int printedCount = this.dpsInspectionService.printInvoiceLabel(batch, inspection, printerId);
 		
-		// 3. 이벤트 처리 결과 셋팅
+		// 4. 이벤트 처리 결과 셋팅
 		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, printedCount));
 		event.setExecuted(true);
 	}
@@ -751,6 +810,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 	@EventListener(classes=DeviceProcessRestEvent.class, condition = "#event.checkCondition('/print_invoice', 'dps')")
 	@Order(Ordered.LOWEST_PRECEDENCE)
 	public void printInvoiceLabel(DeviceProcessRestEvent event) {
+		
 		// 1. 파라미터 
 		Map<String, Object> params = event.getRequestParams();
 		String equipCd = params.get("equipCd").toString();
@@ -774,7 +834,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		}
 				
 		// 5. 이벤트 처리 결과 셋팅
-		String message = printedCount == 1 ? LogisConstants.OK_STRING : "송장 분할되어 [" + printedCount + "] 장 출력되었습니다.";
+		String message = (printedCount >= 1) ? LogisConstants.OK_STRING : "송장 분할되어 [" + printedCount + "] 장 출력되었습니다.";
 		event.setReturnResult(new BaseResponse(true, message, printedCount));
 		event.setExecuted(true);
 	}
@@ -810,48 +870,6 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		
 		// 5. 이벤트 처리 결과 셋팅  
 		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, printedCount));
-		event.setExecuted(true);
-	}
-	
-	/**
-	 * DPS 송장 (박스) 분할
-	 * 
-	 * @param event
-	 */
-	@EventListener(classes=DeviceProcessRestEvent.class, condition = "#event.checkCondition('/inspection/split_box', 'dps')")
-	@Order(Ordered.LOWEST_PRECEDENCE)
-	public void splitBox(DeviceProcessRestEvent event) {
-		
-		// 1. 파라미터 
-		Map<String, Object> params = event.getRequestParams();
-		String equipCd = params.get("equipCd").toString();
-		String equipType = params.get("equipType").toString();
-		String orderNo = params.get("orderNo").toString();
-		String trayCd = params.get("trayCd").toString();
-		String boxId = params.get("boxId").toString();
-		String printerId = params.get("printerId").toString();
-		List<Map<String, Object>> itemObjs = event.getRequestPostBody();
-		
-		// 2. 설비 코드로 현재 진행 중인 작업 배치 및 설비 정보 조회 
-		EquipBatchSet equipBatchSet = DpsServiceUtil.findBatchByEquip(event.getDomainId(), equipType, equipCd);
-		JobBatch batch = equipBatchSet.getBatch();
-		
-		// 3. 검수 완료 처리
-		BoxPack boxPack = new BoxPack();
-		boxPack.setDomainId(batch.getDomainId());
-		boxPack.setBatchId(batch.getId());
-		boxPack.setOrderNo(orderNo);
-		boxPack.setBoxTypeCd(trayCd);
-		boxPack.setBoxId(boxId);		
-		
-		if(ValueUtil.isEmpty(itemObjs)) {
-			this.dpsInspectionService.finishInspection(batch, boxPack, null, printerId);
-		} else {
-			this.dpsInspectionService.finishInspection(batch, boxPack, null, printerId, itemObjs);
-		}
-
-		// 4. 이벤트 처리 결과 셋팅
-		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, boxPack));
 		event.setExecuted(true);
 	}
 	

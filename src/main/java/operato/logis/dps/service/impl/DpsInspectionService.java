@@ -328,13 +328,13 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	private void finishInspectionByItems(JobBatch batch, BoxPack box, Float boxWeight, String printerId, List<Map<String, Object>> itemObjs) {
 		
 		// 1. 검수 항목으로 부터 총 검수 수량을 계산
-		int totalConfirmPcs = 0;
+		//int totalConfirmPcs = 0;
 		
-		for(Map<String, Object> item : itemObjs) {
-			if(item.containsKey("confirm_qty")) {
-				totalConfirmPcs += ValueUtil.toInteger(item.get("confirm_qty"));
-			}
-		}
+		//for(Map<String, Object> item : itemObjs) {
+		//	if(item.containsKey("confirm_qty")) {
+		//		totalConfirmPcs += ValueUtil.toInteger(item.get("confirm_qty"));
+		//	}
+		//}
 		
 		// 2. 주문에 처리되지 않은 주문이 남아있는지 (즉 이 처리가 송장 분할인지) 여부 체크
 		//String sql = "select sum(pick_qty) as total_order_qty from dps_job_instances where work_unit = :workUnit and ref_no = :refNo and box_id = :boxId and (waybill_no is null or waybill_no = '')";
@@ -342,8 +342,8 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		// int remainOrderPcs = this.queryManager.selectBySql(sql, condition, Integer.class);
 		
 		// 2. 송장 분할 여부 수정 -> WMS dps_actual_order 테이블에서 sum(to_pick_qty - done_qty)과 totalConfirmPcs와 같으면 sum(to_pick_qty - done_qty)이 크면 분할
-		int remainOrderPcs = this.dpsBoxSendSvc.checkTotalToInspectionQty(batch.getDomainId(), box.getOrderNo());
-		boolean isTotalMode = (totalConfirmPcs >= remainOrderPcs);
+		//int remainOrderPcs = this.dpsBoxSendSvc.checkTotalToInspectionQty(batch.getDomainId(), box.getOrderNo());
+		//boolean isTotalMode = (totalConfirmPcs >= remainOrderPcs);
 		
 		// 3. 상품 스캔 검수 항목 & RFID 검수 항목 리스트 추출 
 		List<DpsInspItem> scanInspItems = new ArrayList<DpsInspItem>();
@@ -376,6 +376,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		
 		// 4. 분할 혹은 전체 모드로 검수 완료 처리
 		this.splitBox(batch, box, scanInspItems, rfidInspItems, printerId);
+		
 		/*if(!isTotalMode) {
 			this.splitBox(batch, box, scanInspItems, rfidInspItems, printerId);
 		} else {

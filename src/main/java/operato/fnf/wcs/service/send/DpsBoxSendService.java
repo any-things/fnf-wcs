@@ -283,8 +283,8 @@ public class DpsBoxSendService extends AbstractQueryService {
 		
 		if(ValueUtil.isNotEmpty(boxedOrders)) {
 			WcsMheDr item = boxedOrders.get(0);
-			waybillNo = ValueUtil.isEmpty(item.getWaybillNo()) ? this.newWaybillNo(boxId) : item.getWaybillNo();			
-			String status = ValueUtil.isEqualIgnoreCase(waybillNo, FnFConstants.ORDER_CANCEL_ALL) ? LogisConstants.JOB_STATUS_CANCEL : BoxPack.BOX_STATUS_EXAMED;
+			waybillNo = ValueUtil.isEmpty(item.getWaybillNo()) ? this.newWaybillNo(boxId, true) : item.getWaybillNo();			
+			String status = BoxPack.BOX_STATUS_EXAMED;//ValueUtil.isEqualIgnoreCase(waybillNo, FnFConstants.ORDER_CANCEL_ALL) ? LogisConstants.JOB_STATUS_CANCEL : BoxPack.BOX_STATUS_EXAMED;
 			
 			for(WcsMheDr boxedOrder : boxedOrders) {
 				boxedOrder.setStatus(status);
@@ -317,8 +317,8 @@ public class DpsBoxSendService extends AbstractQueryService {
 		
 		if(ValueUtil.isNotEmpty(jobList)) {
 			DpsJobInstance job = jobList.get(0);
-			waybillNo = ValueUtil.isEmpty(job.getWaybillNo()) ? this.newWaybillNo(boxId) : job.getWaybillNo();			
-			String status = ValueUtil.isEqualIgnoreCase(waybillNo, FnFConstants.ORDER_CANCEL_ALL) ? LogisConstants.JOB_STATUS_CANCEL : BoxPack.BOX_STATUS_EXAMED;
+			waybillNo = ValueUtil.isEmpty(job.getWaybillNo()) ? this.newWaybillNo(boxId, true) : job.getWaybillNo();
+			String status = BoxPack.BOX_STATUS_EXAMED;//ValueUtil.isEqualIgnoreCase(waybillNo, FnFConstants.ORDER_CANCEL_ALL) ? LogisConstants.JOB_STATUS_CANCEL : BoxPack.BOX_STATUS_EXAMED;
 			List<String> mheDrIdList = new ArrayList<String>();
 			String inspectorId = User.currentUser() != null ? User.currentUser().getId() : LogisConstants.EMPTY_STRING;
 			Date currentTime = new Date();

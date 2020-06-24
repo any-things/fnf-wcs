@@ -64,9 +64,6 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
 	@Column (name = "outb_ect_date", nullable = true, length = 8)
 	private String outbEctDate;
-	
-	@Column (name = "outb_tcd_nm", nullable = true, length = 100)
-	private String outbTcdNm;
 
 	@Column (name = "shipto_id", nullable = false, length = 100)
 	private String shiptoId;
@@ -184,6 +181,9 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	@Column (name = "outb_tcd", nullable = true, length = 20)
 	private String outbTcd;
+	
+	@Column (name = "outb_tcd_nm", nullable = true, length = 100)
+	private String outbTcdNm;
 	
 	/**
 	 * 온라인 합/단포 구분 (D: 단포, H: 합포)
@@ -664,6 +664,14 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setOutbTcd(String outbTcd) {
 		this.outbTcd = outbTcd;
+	}
+
+	public String getOutbTcdNm() {
+		return outbTcdNm;
+	}
+
+	public void setOutbTcdNm(String outbTcdNm) {
+		this.outbTcdNm = outbTcdNm;
 	}
 
 	public String getPackTcd() {

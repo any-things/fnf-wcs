@@ -84,12 +84,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	 */
 	private DpsInspection findInspection(Long domainId, String batchId, String equipGroupCd, String sql, Map<String, Object> params, boolean exceptionWhenEmpty) {
 		
-		String status = ValueUtil.toString(params.get("status"));
-		
-		if(ValueUtil.isNotEmpty(status) && ValueUtil.isEqualIgnoreCase(status, BoxPack.BOX_STATUS_EXAMED)) {
-			params.put("onlyOne", true);
-		}
-		
+		params.put("onlyOne", true);
 		DpsInspection inspection = this.queryManager.selectBySql(sql, params, DpsInspection.class);
 		
 		if(inspection == null) {
@@ -174,7 +169,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 					Map<String, Object> boxParams = ValueUtil.newMap("batchId,orderNo,status", inspection.getBatchId(), inspection.getOrderNo(), LogisConstants.JOB_STATUS_CANCEL);
 					sql = "update mhe_dr set status = :status where work_unit = :batchId and ref_no = :orderNo and (waybill_no is null or waybill_no = '')";
 					this.queryManager.executeBySql(sql, boxParams);
-				}				
+				}
 			}
 			
 		} else {

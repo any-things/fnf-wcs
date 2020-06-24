@@ -46,6 +46,7 @@ import xyz.elidom.dbist.dml.Page;
 import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.SysConstants;
 import xyz.elidom.sys.entity.Domain;
+import xyz.elidom.sys.entity.User;
 import xyz.elidom.sys.util.DateUtil;
 import xyz.elidom.sys.util.ThrowUtil;
 import xyz.elidom.util.ValueUtil;
@@ -412,6 +413,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		job.setItemSize(sku.getItemSize());
 		job.setItemStyle(sku.getItemStyle());
 		job.setMheDatetime(job.getBoxInputAt());
+		job.setInspectorId(User.currentUser() != null ? User.currentUser().getId() : null);
 		job.setMheDrId(LogisConstants.NOT_AVAILABLE_CAP_STRING);
 		job.setWorkUnit(LogisConstants.NOT_AVAILABLE_CAP_STRING);
 		job.setCellCd(LogisConstants.NOT_AVAILABLE_CAP_STRING);

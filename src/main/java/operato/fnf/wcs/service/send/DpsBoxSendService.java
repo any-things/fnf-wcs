@@ -33,7 +33,6 @@ import xyz.elidom.dev.entity.RangedSeq;
 import xyz.elidom.exception.server.ElidomRuntimeException;
 import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.SysConstants;
-import xyz.elidom.sys.entity.User;
 import xyz.elidom.sys.util.DateUtil;
 import xyz.elidom.sys.util.SettingUtil;
 import xyz.elidom.sys.util.ThrowUtil;
@@ -196,41 +195,23 @@ public class DpsBoxSendService extends AbstractQueryService {
 	 * @param batch
 	 * @param orderNo
 	 * @param boxId
+	 * @param inspectionItems 검수 항목
 	 * @param jobList 작업 리스트 
-	 * @param rfidItemList RFID 검수 정보
 	 */
-	public void sendPackingToWms(JobBatch batch, String orderNo, String boxId, List<DpsJobInstance> jobList, List<RfidResult> rfidItemList) {
+	public void sendPackingToWms(JobBatch batch, String orderNo, String boxId, List<DpsInspItem> inspectionItems) {
 		
-		if(ValueUtil.isNotEmpty(jobList)) {
+		if(ValueUtil.isNotEmpty(inspectionItems)) {
 			IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
 			String todayStr = DateUtil.todayStr("yyyyMMdd");
 			Date currentTime = new Date();
 			String currentTimeStr = DateUtil.dateTimeStr(currentTime, "yyyyMMddHHmmss");
-			List<String> orderIdList = new ArrayList<String>(jobList.size());
-			String status = "S";
 			
-			for(DpsJobInstance job : jobList) {
-				// 1. 박스 번호, 박스 전송 시간 설정
-				job.setBoxResultIfAt(currentTime);
-				job.setStatus(status);
-				
-				// 2. 주문 정보 조회
-				orderIdList.add(job.getMheDrId());
-				
-				// 3. WMS 박스 실적 전송 
-				Map<String, Object> params = ValueUtil.newMap("today,whCd,boxId,orderNo,brandCd,skuCd,pickedQty,jobDate,currentTime,outbTcd,rfidId", todayStr, job.getWhCd(), boxId, orderNo, job.getStrrId(), job.getItemCd(), job.getCmptQty(), job.getOutbEctDate(), currentTimeStr, null, null);
-				wmsQueryMgr.executeBySql(WMS_PACK_INSERT_SQL, params);
+			for(DpsInspItem item : inspectionItems) {
+				// WMS에 박스 실적 전송 
+				String outbDate = ValueUtil.isEmpty(item.getOutbEctDate()) ? batch.getJobDate() : item.getOutbEctDate();
+				Map<String, Object> params = ValueUtil.newMap("today,whCd,boxId,orderNo,brandCd,skuCd,pickedQty,jobDate,currentTime,outbTcd,rfidId", todayStr, FnFConstants.WH_CD_ICF, boxId, orderNo, item.getBrandCd(), item.getSkuCd(), item.getConfirmQty(), outbDate, currentTimeStr, null, item.getRfidId());
+				wmsQueryMgr.executeBySql(WMS_PACK_INSERT_SQL, params);				
 			}
-
-			// TODO RFID 리스트 처리
-			
-			// 4. 작업 정보 업데이트
-			this.queryManager.updateBatch(jobList, "status", "boxResultIfAt");
-			
-			// 5. 작업 상세 정보 업데이트
-			String sql = "update mhe_dr set status = :status, box_result_if_at = :boxResultIfAt where id in (:orderIdList)";
-			Map<String, Object> params = ValueUtil.newMap("orderIdList,status,boxResultIfAt", orderIdList, status, currentTime);
-			this.queryManager.executeBySql(sql, params);
 		}
 	}
 		
@@ -240,39 +221,12 @@ public class DpsBoxSendService extends AbstractQueryService {
 	 * @param batch
 	 * @param orderNo
 	 * @param boxId
-	 * @param jobList
-	 * @param rfidItemList
+	 * @param inspectionItems 검수 항목
 	 * @return
 	 */
-	public String requestInvoiceToWms(JobBatch batch, String orderNo, String boxId, List<DpsJobInstance> jobList, List<RfidResult> rfidItemList) {
-		String waybillNo = null;
+	public String requestInvoiceToWms(JobBatch batch, String orderNo, String boxId, List<DpsInspItem> inspectionItems) {
 		
-		if(ValueUtil.isNotEmpty(jobList)) {
-			DpsJobInstance job = jobList.get(0);
-			waybillNo = ValueUtil.isEmpty(job.getWaybillNo()) ? this.newWaybillNo(boxId, true) : job.getWaybillNo();			
-			String status = BoxPack.BOX_STATUS_EXAMED;
-			List<String> mheDrIdList = new ArrayList<String>();
-			String inspectorId = User.currentUser() != null ? User.currentUser().getId() : LogisConstants.EMPTY_STRING;
-			Date currentTime = new Date();
-			
-			for(DpsJobInstance item : jobList) {
-				item.setStatus(status);
-				item.setWaybillNo(waybillNo);
-				item.setInspectorId(inspectorId);
-				item.setInspectedAt(currentTime);
-				mheDrIdList.add(item.getMheDrId());
-			}
-				
-			// 작업 정보 업데이트
-			this.queryManager.updateBatch(jobList, "waybillNo", "status", "inspectorId", "inspectedAt");
-			
-			// 주문 정보 업데이트
-			String sql = "update mhe_dr set waybill_no = :invoiceId, status = :status where id in (:mheDrIdList)";
-			this.queryManager.executeBySql(sql, ValueUtil.newMap("invoiceId,mheDrIdList,status", waybillNo, mheDrIdList, status));
-		}
-		
-		// 발행 송장 리턴
-		return waybillNo;
+		return this.newWaybillNo(boxId, true);
 	}
 		
 	/**

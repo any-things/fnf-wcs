@@ -14,6 +14,10 @@ public class DpsInspItem {
 	 */
 	private String brandCd;
 	/**
+	 * 출고예정일자
+	 */
+	private String outbEctDate;
+	/**
 	 * 매장 코드 
 	 */
 	private String shopCd;
@@ -73,6 +77,10 @@ public class DpsInspItem {
 	 * 사은품 여부
 	 */
 	private String giftYn;
+	/**
+	 * RFID ID
+	 */
+	private String rfidId;
 	
 	public DpsInspItem() {
 	}
@@ -107,6 +115,14 @@ public class DpsInspItem {
 
 	public void setBrandCd(String brandCd) {
 		this.brandCd = brandCd;
+	}
+
+	public String getOutbEctDate() {
+		return outbEctDate;
+	}
+
+	public void setOutbEctDate(String outbEctDate) {
+		this.outbEctDate = outbEctDate;
 	}
 
 	public String getShopCd() {
@@ -227,6 +243,14 @@ public class DpsInspItem {
 
 	public void setGiftYn(String giftYn) {
 		this.giftYn = giftYn;
+	}
+
+	public String getRfidId() {
+		return rfidId;
+	}
+
+	public void setRfidId(String rfidId) {
+		this.rfidId = rfidId;
 	}
 
 }

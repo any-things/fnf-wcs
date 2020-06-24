@@ -64,6 +64,9 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
 	@Column (name = "outb_ect_date", nullable = true, length = 8)
 	private String outbEctDate;
+	
+	@Column (name = "outb_tcd_nm", nullable = true, length = 100)
+	private String outbTcdNm;
 
 	@Column (name = "shipto_id", nullable = false, length = 100)
 	private String shiptoId;

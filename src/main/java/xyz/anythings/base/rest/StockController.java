@@ -152,7 +152,7 @@ public class StockController extends AbstractRestService {
 		if(stock != null && stock.getOrderQty() > 0) {
 			stock.setEquipType(equipType);
 			stock.setEquipCd(equipCd);
-			stock.setOrderQty(stock.getOrderQty() - stock.getAllocQty() - stock.getPickedQty());
+			stock.setOrderQty(stock.getOrderQty() - stock.getAllocQty() - stock.getLoadQty());
 		} else {
 			stock = new Stock();
 			stock.setOrderQty(0);
@@ -200,13 +200,41 @@ public class StockController extends AbstractRestService {
 			loadQty = sku.getBoxInQty() * loadQty;
 		}
 
-		// 4. 재고 조회
-		Stock stock = this.stockService.findOrCreateStock(domainId, cellCd, sku);
+		// 4. 재고 조회시 Lock을 걸고 조회
+		String sql = "select * from stocks where domain_id = :domainId and cell_cd = :cellCd for update";
+		Stock stock = this.queryManager.selectBySql(sql, ValueUtil.newMap("domainId,cellCd", domainId, cellCd), Stock.class);
 		
-		// 5. 재고 보충
-		stock = this.stockService.addStock(stock, Stock.TRX_IN, loadQty);
+		// 5. 재고가 없다면 생성 
+		if(stock == null) {
+			stock = this.stockService.createStock(domainId, cellCd, sku.getComCd(), sku.getSkuCd(), sku.getSkuNm());
+			
+		// 6. 재고가 있다면 
+		} else {
+			// 재고에 상품 정보가 없다면 sku의 정보를 설정 
+			if(ValueUtil.isEmpty(stock.getSkuCd())) {
+				stock.setComCd(sku.getComCd());
+				stock.setSkuCd(sku.getSkuCd());
+				stock.setSkuBarcd(sku.getSkuBarcd());
+				stock.setSkuNm(sku.getSkuNm());
+				
+			} else if(ValueUtil.isNotEqual(stock.getSkuCd(), sku.getSkuCd())) {
+				// 재고의 상품 정보와 sku의 상품 정보가 다른 경우 재고 수량이 존재하지 않으면 sku 정보로 재고 설정 
+				if(ValueUtil.toInteger(stock.getAllocQty(), 0) == 0 && ValueUtil.toInteger(stock.getLoadQty(), 0) == 0) {
+					stock.setComCd(sku.getComCd());
+					stock.setSkuCd(sku.getSkuCd());
+					stock.setSkuBarcd(sku.getSkuBarcd());
+					stock.setSkuNm(sku.getSkuNm());
+					
+				} else {
+					throw ThrowUtil.newValidationErrorWithNoLog("해당 재고에 다른 상품 재고가 존재합니다.");
+				}
+			}
+		}
+				
+		// 7. 재고 보충
+		this.stockService.addStock(stock, Stock.TRX_IN, loadQty);
 
-		// 6. 재고 리턴
+		// 8. 재고 리턴
 		return stock;
 	}
 	

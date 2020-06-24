@@ -322,6 +322,8 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		String jobDate = event.getRequestParams().get("jobDate").toString();
 		jobDate = jobDate.replace(SysConstants.DASH, SysConstants.EMPTY_STRING);
 		String skuCd = event.getRequestParams().get("skuCd").toString();
+		// 출고 유형 - F300 : 직영몰판매출고, F350	 : 제휴몰판매출고
+		String outbTcd = event.getRequestParams().get("outbTcd").toString();
 		String printerId = event.getRequestParams().get("printerId").toString();
 		
 		// 2. 상품 코드인지 RFID 코드인지 체크
@@ -330,12 +332,14 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		}
 		
 		boolean rfidFlag = skuCd.length() >= 30;
+		String rfidId = null;
 		String itemCd = null;
 		String shopCd = null;
 		
 		// 3. RFID 코드인 경우 RFID 체크
 		if(rfidFlag) {
-			Map<String, Object> result = this.dpsBoxSendService.checkRfidId(skuCd, true);			
+			rfidId = skuCd;
+			Map<String, Object> result = this.dpsBoxSendService.checkRfidId(rfidId, true);			
 			// 리턴 파라미터 : OUT_CONFIRM, OUT_MSG, OUT_DEPART, OUT_ITEM_CD, OUT_STYLE, OUT_GOODS, OUT_COLOR, OUT_SIZE, OUT_BARCOD
 			itemCd = ValueUtil.toString(result.get("OUT_ITEM_CD"));
 		} else {
@@ -362,7 +366,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		Long domainId = Domain.currentDomainId();
 		String todayStr = DateUtil.todayStr("yyyyMMdd");
 		String newBoxId = this.dpsBoxSendService.newBoxId(domainId, null, todayStr);
-		this.dpsBoxSendService.sendSinglePackToWms(domainId, todayStr, jobDate, sku.getBrand(), sku.getItemCd(), newBoxId);
+		this.dpsBoxSendService.sendSinglePackToWms(domainId, todayStr, jobDate, sku.getBrand(), sku.getItemCd(), newBoxId, outbTcd, rfidId);
 		
 		// 8. WMS 송장 발행
 		String invoiceId = this.dpsBoxSendService.newWaybillNo(newBoxId, true);
@@ -381,7 +385,6 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 			rfidResult.setOrderQty(1);
 			rfidResult.setInvoiceId(invoiceId);
 			rfidResult.setShopCd(shopCd);
-			this.dpsBoxSendService.sendSinglePackingToRfid(rfidResult);
 			this.queryManager.insert(rfidResult);
 		}
 		
@@ -399,6 +402,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		job.setWaybillNo(invoiceId);
 		job.setStrrId(sku.getBrand());
 		job.setPackTcd("D");
+		job.setOutbTcd(outbTcd);
 		job.setMheNo("M1");
 		job.setItemCd(sku.getItemCd());
 		job.setBarcode2(sku.getBarcode2());
@@ -729,7 +733,6 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 	
 	/**
 	 * DPS 송장 (박스) 분할 
-	 * TODO 제거 - 출고 검수 완료와 로직이 동일
 	 * 
 	 * @param event
 	 */

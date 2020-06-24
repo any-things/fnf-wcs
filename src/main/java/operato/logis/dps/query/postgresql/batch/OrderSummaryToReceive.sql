@@ -4,6 +4,7 @@ SELECT
 	 '' AS STAGE_CD,
 	 'DPS' AS JOB_TYPE,
 	 HR.work_unit AS WMS_BATCH_NO,
+	 HR.wave_no AS WCS_BATCH_NO,
 	 HR.workseq_no AS JOB_SEQ,
 	 HR.descr AS MESSAGE,
 	 HR.strr_id AS BRAND_CD,

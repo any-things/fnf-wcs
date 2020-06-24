@@ -61,6 +61,12 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	 */
 	@Column (name = "outb_ect_date", nullable = true, length = 8)
 	private String outbEctDate;
+	
+	/**
+	 * 출고 유형
+	 */
+	@Column (name = "outb_tcd", nullable = true, length = 30)
+	private String outbTcd;
 
 	/**
 	 * 작업 배치 번호
@@ -305,6 +311,14 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setOutbEctDate(String outbEctDate) {
 		this.outbEctDate = outbEctDate;
+	}
+
+	public String getOutbTcd() {
+		return outbTcd;
+	}
+
+	public void setOutbTcd(String outbTcd) {
+		this.outbTcd = outbTcd;
 	}
 
 	public String getWorkUnit() {

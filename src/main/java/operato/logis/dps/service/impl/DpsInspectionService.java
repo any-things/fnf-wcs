@@ -391,7 +391,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		
 		// 4. 송장이 발행이 되지 않았다면 WMS에 실적 전송 및 송장 발행 요청 
 		if(ValueUtil.isEmpty(invoiceId)) {
-			invoiceId = this.sendBoxResultAndGetInvoiceBySplit(batch, sourceBox.getOrderNo(), sourceBox.getBoxId(), jobList);
+			invoiceId = this.sendBoxResultAndGetInvoice(batch, sourceBox.getOrderNo(), sourceBox.getBoxId(), jobList, rfidItemList);
 			
 		// 5. 주문, 작업 정보에 검수 완료로 업데이트
 		} else { 
@@ -403,13 +403,10 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 			// 6.1 박스에 송장 번호 설정
 			sourceBox.setInvoiceId(invoiceId);
 			
-			// 6.2 RFID 실적 전송
-			this.processRfidResults(batch, invoiceId, rfidItemList);
-						
-			// 6.3 남은 검수 항목이 있으면 동일 주문의 처리 안 된 주문에 대해서 박스 ID 리셋
+			// 6.2 남은 검수 항목이 있으면 동일 주문의 처리 안 된 주문에 대해서 박스 ID 리셋
 			this.resetBoxIdRemainJobs(batch.getDomainId(), batch.getId(), sourceBox.getOrderNo());
 						
-			// 6.4 송장 발행 
+			// 6.3 송장 발행 
 			BeanUtil.get(DpsInspectionService.class).printInvoiceLabel(batch, sourceBox, printerId);
 			
 		// 7. 송장 번호가 주문 전체 취소이면 리턴에 취소 설정
@@ -563,35 +560,6 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	}
 	
 	/**
-	 * RFID 실적 처리
-	 * 
-	 * @param batch
-	 * @param invoiceId
-	 * @param rfidInspItems
-	 */
-	private void processRfidResults(JobBatch batch, String invoiceId, List<RfidResult> rfidInspItems) {
-		
-		// RFID 실적 전송
-		if(ValueUtil.isNotEmpty(rfidInspItems)) {
-			// 이미 RFID 실적이 전송되었는지 체크  
-			String sql = "select * from rfid_results where batch_id = :workUnit and invoice_id = :invoiceId";
-			int count = this.queryManager.selectSizeBySql(sql, ValueUtil.newMap("workUnit,invoiceId", batch.getId(), invoiceId));
-			
-			// 이미 RFID 실적이 전송되지 않았다면 RFID 실적 전송 
-			if(count == 0) {
-				for(RfidResult rfid : rfidInspItems) {
-					rfid.setInvoiceId(invoiceId);
-				}
-				
-				// RFID 실적 저장
-				this.queryManager.insertBatch(rfidInspItems);
-				// RFID 실적 전송
-				this.dpsBoxSendSvc.sendPackingToRfid(batch, invoiceId);
-			}
-		}
-	}
-	
-	/**
 	 * 송장 할당이 안 된 주문, 작업에 박스 ID 리셋
 	 * 
 	 * @param domainId
@@ -686,18 +654,19 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	 * @param orderNo
 	 * @param boxId
 	 * @param jobList
+	 * @param rfidItemList
 	 * @return
 	 */
-	public String sendBoxResultAndGetInvoiceBySplit(JobBatch batch, String orderNo, String boxId, List<DpsJobInstance> jobList) {
+	public String sendBoxResultAndGetInvoice(JobBatch batch, String orderNo, String boxId, List<DpsJobInstance> jobList, List<RfidResult> rfidItemList) {
 		
-		// 1. WMS로 조회한 작업 기준으로 박스 실적 전송
-		this.dpsBoxSendSvc.sendPackingToWmsBySplit(batch, orderNo, boxId, jobList);
+		// 1. WMS로 조회한 작업 & RFID 검수 내역 기준으로 박스 실적 전송
+		this.dpsBoxSendSvc.sendPackingToWms(batch, orderNo, boxId, jobList, rfidItemList);
 		
 		// 2. WMS에 송장 발행 요청
 		String invoiceId = null;
 		
 		try {
-			invoiceId = this.dpsBoxSendSvc.requestInvoiceToWmsBySplit(batch, orderNo, boxId, jobList);
+			invoiceId = this.dpsBoxSendSvc.requestInvoiceToWms(batch, orderNo, boxId, jobList, rfidItemList);
 			
 		} catch(RuntimeException re) {
 			throw re;
@@ -724,6 +693,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	 * @return
 	 */
 	public List<DpsInspItem> searchGiftItems(JobBatch batch, String boxId) {
+		
 		String sql = "select item_cd as sku_cd, item_nm as sku_nm, qty as order_qty from mps_express_waybill_packinfo where wh_cd = :whCd and box_id = :boxId and item_season = 'X'";
 		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsExpressWaybillPackinfo.class);
 		Map<String, Object> params = ValueUtil.newMap("whCd,boxId", FnFConstants.WH_CD_ICF, boxId);
@@ -831,6 +801,35 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		
 		// 3. 발행 송장 번호 리턴
 		return invoiceId;
+	}*/
+	
+	/**
+	 * RFID 실적 처리
+	 * 
+	 * @param batch
+	 * @param invoiceId
+	 * @param rfidInspItems
+	 */
+	/*private void processRfidResults(JobBatch batch, String invoiceId, List<RfidResult> rfidInspItems) {
+		
+		// RFID 실적 전송
+		if(ValueUtil.isNotEmpty(rfidInspItems)) {
+			// 이미 RFID 실적이 전송되었는지 체크  
+			String sql = "select * from rfid_results where batch_id = :workUnit and invoice_id = :invoiceId";
+			int count = this.queryManager.selectSizeBySql(sql, ValueUtil.newMap("workUnit,invoiceId", batch.getId(), invoiceId));
+			
+			// 이미 RFID 실적이 전송되지 않았다면 RFID 실적 전송 
+			if(count == 0) {
+				for(RfidResult rfid : rfidInspItems) {
+					rfid.setInvoiceId(invoiceId);
+				}
+				
+				// RFID 실적 저장
+				this.queryManager.insertBatch(rfidInspItems);
+				// RFID 실적 전송
+				this.dpsBoxSendSvc.sendPackingToRfid(batch, invoiceId);
+			}
+		}
 	}*/
 
 }

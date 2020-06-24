@@ -724,7 +724,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	 * @return
 	 */
 	public List<DpsInspItem> searchGiftItems(JobBatch batch, String boxId) {
-		String sql = "select item_cd as sku_cd, item_nm as sku_nm, qty as order_qty from mps_express_waybill_packinfo where wh_cd = :whCd and box_id = :boxId";
+		String sql = "select item_cd as sku_cd, item_nm as sku_nm, qty as order_qty from mps_express_waybill_packinfo where wh_cd = :whCd and box_id = :boxId and item_season = 'X'";
 		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsExpressWaybillPackinfo.class);
 		Map<String, Object> params = ValueUtil.newMap("whCd,boxId", FnFConstants.WH_CD_ICF, boxId);
 		return wmsQueryMgr.selectListBySql(sql, params, DpsInspItem.class, 0, 0);

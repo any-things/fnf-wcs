@@ -664,11 +664,12 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		
 		// 4. RFID가 문제가 없는 경우
 		if(ValueUtil.isEqualIgnoreCase(successYn, LogisConstants.Y_CAP_STRING)) {
-			RfidResult rfid = new RfidResult();
-			rfid.setRfidId(rfidId);
-			rfid.setBrandCd(ValueUtil.toString(result.get("OUT_DEPART")));
-			rfid.setSkuCd(ValueUtil.toString(result.get("OUT_ITEM_CD")));
-			event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, rfid));
+			DpsInspItem item = new DpsInspItem();
+			item.setRfidId(rfidId);
+			item.setBrandCd(ValueUtil.toString(result.get("OUT_DEPART")));
+			item.setSkuCd(ValueUtil.toString(result.get("OUT_ITEM_CD")));
+			item.setSkuBarcd2(ValueUtil.toString(result.get("OUT_BARCODE")));
+			event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, item));
 			
 		// 5. RFID가 문제가 있는 경우 
 		} else {

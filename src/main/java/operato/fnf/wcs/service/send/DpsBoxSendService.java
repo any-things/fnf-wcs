@@ -209,7 +209,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 			for(DpsInspItem item : inspectionItems) {
 				// WMS에 박스 실적 전송
 				Map<String, Object> params = ValueUtil.newMap("today,whCd,boxId,orderNo,brandCd,skuCd,pickedQty,jobDate,currentTime,outbTcd,rfidId", todayStr, FnFConstants.WH_CD_ICF, boxId, orderNo, item.getBrandCd(), item.getSkuCd(), item.getConfirmQty(), item.getOutbEctDate(), currentTimeStr, null, item.getRfidId());
-				wmsQueryMgr.executeBySql(WMS_PACK_INSERT_SQL, params);				
+				wmsQueryMgr.executeBySql(WMS_PACK_INSERT_SQL, params);
 			}
 		}
 	}

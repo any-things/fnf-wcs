@@ -156,6 +156,8 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 							wmsItem.setSkuBarcd(wcsItem.getSkuBarcd());
 							wmsItem.setSkuBarcd2(wcsItem.getSkuBarcd2());
 							wmsItem.setSkuNm(wcsItem.getSkuNm());
+							wmsItem.setOutbEctDate(wcsItem.getOutbEctDate());
+							wmsItem.setShopCd(wcsItem.getShopCd());
 						}
 					}
 				}
@@ -333,18 +335,20 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		
 		for(Map<String, Object> item : itemObjs) {
 			DpsInspItem scanItem = new DpsInspItem();
-			scanItem.setRfidItemYn(LogisConstants.N_CAP_STRING);
+			scanItem.setRfidItemYn(ValueUtil.toString(item.get("rfid_item_yn")));
 			scanItem.setBrandCd(ValueUtil.toString(item.get("brand_cd")));
 			scanItem.setSkuCd(ValueUtil.toString(item.get("sku_cd")));
+			scanItem.setSkuBarcd(ValueUtil.toString(item.get("sku_barcd")));
+			scanItem.setSkuBarcd2(ValueUtil.toString(item.get("sku_barcd2")));
 			scanItem.setPickedQty(ValueUtil.toInteger(item.get("picked_qty")));
 			scanItem.setConfirmQty(ValueUtil.toInteger(item.get("confirm_qty")));
 			scanItem.setOutbEctDate(ValueUtil.toString(item.get("outb_ect_date")));
+			scanItem.setShopCd(ValueUtil.toString(item.get("shop_cd")));
+			scanItem.setOrderQty(ValueUtil.toInteger(item.get("order_qty")));
+			scanItem.setPickedQty(ValueUtil.toInteger(item.get("picked_qty")));
 			
-			if(ValueUtil.isNotEmpty(item.get("rfid_id"))) {
-				scanItem.setRfidItemYn(LogisConstants.Y_CAP_STRING);
+			if(ValueUtil.isEqualIgnoreCase(LogisConstants.Y_CAP_STRING, scanItem.getRfidItemYn())) {
 				scanItem.setRfidId(ValueUtil.toString(item.get("rfid_id")));
-				scanItem.setShopCd(ValueUtil.toString(item.get("shop_cd")));
-				scanItem.setOrderQty(ValueUtil.toInteger(item.get("order_qty")));
 			}
 			
 			inspectionItems.add(scanItem);

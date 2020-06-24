@@ -72,7 +72,10 @@ public class Cell extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 
 	@Column (name = "active_flag", length = 1)
 	private Boolean activeFlag;
-  
+	
+	@Column (name = "class_cd", length = 30)
+	private String classCd;
+
 	public String getId() {
 		return id;
 	}
@@ -200,7 +203,15 @@ public class Cell extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	public void setActiveFlag(Boolean activeFlag) {
 		this.activeFlag = activeFlag;
 	}
-	
+	  
+	public String getClassCd() {
+		return classCd;
+	}
+
+	public void setClassCd(String classCd) {
+		this.classCd = classCd;
+	}
+
 	@Override
 	public void afterUpdate() {
 		super.afterUpdate();

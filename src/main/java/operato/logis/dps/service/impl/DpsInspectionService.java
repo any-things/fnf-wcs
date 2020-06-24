@@ -338,6 +338,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 			scanItem.setSkuCd(ValueUtil.toString(item.get("sku_cd")));
 			scanItem.setPickedQty(ValueUtil.toInteger(item.get("picked_qty")));
 			scanItem.setConfirmQty(ValueUtil.toInteger(item.get("confirm_qty")));
+			scanItem.setOutbEctDate(ValueUtil.toString(item.get("outb_ect_date")));
 			
 			if(ValueUtil.isNotEmpty(item.get("rfid_id"))) {
 				scanItem.setRfidItemYn(LogisConstants.Y_CAP_STRING);

@@ -186,10 +186,7 @@ public class WmsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	@Column (name = "outb_tcd", nullable = true, length = 20)
 	private String outbTcd;
-	
-	@Column (name = "outb_tcd_nm", nullable = true, length = 100)
-	private String outbTcdNm;
-	
+		
 	@Column (name = "pack_tcd", nullable = true, length = 10)
 	private String packTcd;
 	
@@ -610,14 +607,6 @@ public class WmsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setOutbTcd(String outbTcd) {
 		this.outbTcd = outbTcd;
-	}
-
-	public String getOutbTcdNm() {
-		return outbTcdNm;
-	}
-
-	public void setOutbTcdNm(String outbTcdNm) {
-		this.outbTcdNm = outbTcdNm;
 	}
 
 	public String getPackTcd() {

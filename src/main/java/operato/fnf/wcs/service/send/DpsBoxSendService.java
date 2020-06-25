@@ -121,6 +121,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 	 */
 	public List<DpsInspItem> checkInpectionItemsToWms(DpsInspection inspection) {
 		
+		// sql = "select * from (select strr_id as brand_cd, item_cd as sku_cd, item_season as sku_season, item_color as sku_color, item_size as sku_size, outb_ect_qty as order_qty, (to_pick_qty - done_qty) as picked_qty, 0 as confirm_qty from dps_actual_order where wh_cd = :whCd and ref_no = :refNo and item_season != 'X') a where a.picked_qty > 0"; 
 		String sql = "select strr_id as brand_cd, item_cd as sku_cd, item_season as sku_season, item_color as sku_color, item_size as sku_size, outb_ect_qty as order_qty, to_pick_qty as picked_qty, done_qty as confirm_qty from dps_actual_order where wh_cd = :whCd and ref_no = :refNo and item_season != 'X'";
 		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsDpsActualOrder.class);
 		List<DpsInspItem> inspectionItems = wmsQueryMgr.selectListBySql(sql, ValueUtil.newMap("whCd,refNo", FnFConstants.WH_CD_ICF, inspection.getOrderNo()), DpsInspItem.class, 0, 0);
@@ -142,8 +143,10 @@ public class DpsBoxSendService extends AbstractQueryService {
 			}
 			
 			if(filteredItems.isEmpty()) {
+				// 전체 취소된 주문 
 				if(totalInspectedPcs == 0) {
 					inspection.setStatus(LogisConstants.JOB_STATUS_CANCEL);
+				// 더 이상 검수할 항목이 남아 있지 않은 주문
 				} else {
 					throw ThrowUtil.newValidationErrorWithNoLog("해당 주문 [주문번호 : " + inspection.getOrderNo() + "]는 검수할 항목이 남아있지 않습니다.");
 				}

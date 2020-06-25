@@ -167,9 +167,13 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 			// 검수할 항목이 없고 상태가 '취소'이면 주문에 '취소'로 상태 업데이트 
 			} else {
 				if(ValueUtil.isEqualIgnoreCase(LogisConstants.JOB_STATUS_CANCEL, inspection.getStatus())) {
-					// 주문, 작업에 상태 '주문 취소'로 변경 
+					// 주문에 상태 '주문 취소'로 변경
 					Map<String, Object> boxParams = ValueUtil.newMap("batchId,orderNo,status", inspection.getBatchId(), inspection.getOrderNo(), LogisConstants.JOB_STATUS_CANCEL);
 					sql = "update mhe_dr set status = :status where work_unit = :batchId and ref_no = :orderNo and (waybill_no is null or waybill_no = '')";
+					this.queryManager.executeBySql(sql, boxParams);
+					
+					// 주문에 상태 '주문 취소'로 변경
+					sql = "update dps_job_instances set status = :status where work_unit = :batchId and ref_no = :orderNo and (waybill_no is null or waybill_no = '')";
 					this.queryManager.executeBySql(sql, boxParams);
 				}
 			}
@@ -570,7 +574,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 			// 검수 처리할 남은 수량 정보 
 			int remainQty = totalConfirmQty;
 			
-			// 각 상품별로 순회하면서 검수 수량만큼의 검수 확정 처리한다.
+			// 각 상품별로 순회하면서 검수 수량 만큼 검수 확정 처리한다.
 			for(DpsJobInstance job : jobList) {
 				if(ValueUtil.isEqualIgnoreCase(job.getItemCd(), skuCd)) {
 					
@@ -592,7 +596,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 			
 			// 5. 마지막으로 작업, 주문에 대한 상태 업데이트
 			if(ValueUtil.isNotEmpty(toInspectJobList)) {
-				this.queryManager.updateBatch(toInspectJobList);
+				this.queryManager.updateBatch(toInspectJobList, "waybillNo", "status", "inspectedAt", "inspectorId", "boxResultIfAt");
 				
 				sql = "update mhe_dr set waybill_no = :invoiceId, status = :status, box_result_if_at = :boxResultIfAt where id in (:orderIdList)";
 				Map<String, Object> params = ValueUtil.newMap("orderIdList,invoiceId,status,boxResultIfAt", orderIdList, invoiceId, BoxPack.BOX_STATUS_EXAMED, currentTime);

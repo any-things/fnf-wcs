@@ -16,6 +16,7 @@ import operato.fnf.wcs.entity.DpsJobInstance;
 import operato.fnf.wcs.entity.RfidResult;
 import operato.fnf.wcs.entity.WmsExpressWaybillPrint;
 import operato.fnf.wcs.entity.WmsMheItemBarcode;
+import operato.fnf.wcs.rest.DpsJobInstanceController;
 import operato.fnf.wcs.service.send.DpsBoxSendService;
 import operato.logis.dps.DpsCodeConstants;
 import operato.logis.dps.DpsConstants;
@@ -43,6 +44,7 @@ import xyz.anythings.base.service.impl.AbstractLogisService;
 import xyz.anythings.sys.model.BaseResponse;
 import xyz.anythings.sys.util.AnyEntityUtil;
 import xyz.elidom.dbist.dml.Page;
+import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.SysConstants;
 import xyz.elidom.sys.entity.Domain;
@@ -78,12 +80,16 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 	 */
 	@Autowired
 	private DpsInspectionService dpsInspectionService;
-	
 	/**
 	 * DPS 박스 전송 서비스
 	 */
 	@Autowired
 	private DpsBoxSendService dpsBoxSendService;
+	/**
+	 * DPS 작업 컨트롤러
+	 */
+	@Autowired
+	private DpsJobInstanceController dpsJobController;
 
 	/*****************************************************************************************************
 	 * 										작 업 진 행 율 A P I
@@ -302,6 +308,125 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		
 		// 7. 이벤트 처리 결과 셋팅 
 		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, inputList));
+		event.setExecuted(true);
+	}
+	
+	/*****************************************************************************************************
+	 * 									 합 포 처 리 A P I
+	 *****************************************************************************************************
+	 
+	/**
+	 * DPS 합포 피킹 처리 가능 여부 체크 
+	 * 
+	 * @param event
+	 */
+	@EventListener(classes=DeviceProcessRestEvent.class, condition = "#event.checkCondition('/picking/finish_possible', 'dps')")
+	@Order(Ordered.LOWEST_PRECEDENCE)
+	public void checkFinishPickingPossible(DeviceProcessRestEvent event) {
+		
+		// 1. 파라미터 
+		Map<String, Object> params = event.getRequestParams();
+		String equipCd = params.get("equipCd").toString();
+		String equipType = params.get("equipType").toString();
+		String orderNo = ValueUtil.toString(params.get("orderNo"));
+		String trayCd = ValueUtil.toString(params.get("trayCd"));
+
+		// 2. 설비 코드로 현재 진행 중인 작업 배치 및 설비 정보 조회
+		EquipBatchSet equipBatchSet = DpsServiceUtil.findBatchByEquip(event.getDomainId(), equipType, equipCd);
+		JobBatch batch = equipBatchSet.getBatch();
+		
+		// 3. 작업 정보 조회
+		Query condition = new Query();
+		condition.addFilter("workUnit", batch.getId());
+		
+		if(ValueUtil.isNotEmpty(orderNo)) {
+			condition.addFilter("refNo", orderNo);
+			condition.addFilter("status", SysConstants.IN, ValueUtil.toList("A", "I", "P"));
+		}
+		
+		if(ValueUtil.isNotEmpty(trayCd)) {
+			condition.addFilter("boxNo", trayCd);
+			condition.addFilter("status", LogisConstants.JOB_STATUS_INPUT);
+		}
+		
+		// 4. 작업 정보 조회
+		List<DpsJobInstance> jobList = this.queryManager.selectList(DpsJobInstance.class, condition);
+		if(ValueUtil.isEmpty(jobList)) {
+			throw ThrowUtil.newValidationErrorWithNoLog("피킹 처리할 작업이 존재하지 않습니다.");
+		}
+		
+		// 5. 이벤트 처리 결과 리턴
+		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, jobList.get(0).getRefNo()));
+		event.setExecuted(true);
+	}
+	
+	/**
+	 * DPS 합포 피킹 완료 처리 
+	 * 
+	 * @param event
+	 */
+	@EventListener(classes=DeviceProcessRestEvent.class, condition = "#event.checkCondition('/picking/finish', 'dps')")
+	@Order(Ordered.LOWEST_PRECEDENCE)
+	public void finishPicking(DeviceProcessRestEvent event) {
+		
+		// 1. 파라미터 
+		Map<String, Object> params = event.getRequestParams();
+		String equipCd = params.get("equipCd").toString();
+		String equipType = params.get("equipType").toString();
+		String orderNo = ValueUtil.toString(params.get("orderNo"));
+		String trayCd = ValueUtil.toString(params.get("trayCd"));
+
+		// 2. 설비 코드로 현재 진행 중인 작업 배치 및 설비 정보 조회
+		EquipBatchSet equipBatchSet = DpsServiceUtil.findBatchByEquip(event.getDomainId(), equipType, equipCd);
+		JobBatch batch = equipBatchSet.getBatch();
+
+		List<DpsJobInstance> jobList = null;
+		Query condition = new Query();
+		condition.addFilter("workUnit", batch.getId());
+		
+		// 3. 주문 번호로 처리할 주문 조회
+		if(ValueUtil.isNotEmpty(orderNo)) {
+			condition.addFilter("refNo", orderNo);
+			condition.addFilter("status", SysConstants.IN, ValueUtil.toList("A", "I", "P"));
+			
+		// 4. 트레이 박스로 처리할 주문 조회
+		} else if(ValueUtil.isNotEmpty(trayCd)) {
+			condition.addFilter("boxNo", trayCd);
+			condition.addFilter("status", LogisConstants.JOB_STATUS_INPUT);
+			 
+		} else {
+			throw ThrowUtil.newValidationErrorWithNoLog("수동 피킹 작업을 위해 주문번호 혹은 트레이 박스 정보가 필요합니다.");
+		}
+		
+		jobList = this.queryManager.selectList(DpsJobInstance.class, condition);
+		
+		// 5. 작업을 찾지 못했다면 에러 발생
+		if(ValueUtil.isEmpty(jobList)) {
+			throw ThrowUtil.newValidationErrorWithNoLog("처리할 대상 주문을 찾지 못했습니다.");
+		}
+		
+		// 6. 주문 번호 설정 
+		if(ValueUtil.isEmpty(orderNo)) {
+			orderNo = jobList.get(0).getRefNo();
+		}
+		
+		// 7. 강제 피킹 처리
+		DpsJobInstance lastJob = null;
+		for(DpsJobInstance job : jobList) {
+			BaseResponse res = this.dpsJobController.processJobInstance(job.getId());
+			if(res != null) {
+				lastJob = (DpsJobInstance)res.getResult();
+			}
+		}
+		
+		// 8. 박싱 처리가 잘 되었는지 체크 후 이벤트 처리 결과 셋팅
+		if(lastJob != null && ValueUtil.isEqualIgnoreCase(lastJob.getStatus(), BoxPack.BOX_STATUS_BOXED)) {
+			event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, orderNo));	
+		} else {
+			event.setReturnResult(new BaseResponse(false, LogisConstants.NG_STRING, "수동 피킹 처리에 실패했습니다."));
+		}
+
+		// 9. 이벤트 처리 결과 리턴
 		event.setExecuted(true);
 	}
 	

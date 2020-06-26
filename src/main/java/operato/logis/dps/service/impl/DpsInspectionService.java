@@ -695,7 +695,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	 * @param event
 	 */
 	@Async
-	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, classes = DpsResetBox.class)
+	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMPLETION, classes = DpsResetBox.class)
 	public void resetOrdersBoxId(DpsResetBox event) {
 		
 		if(ValueUtil.isNotEmpty(event.getOrderNo()) && ValueUtil.isNotEmpty(event.getBoxId())) {

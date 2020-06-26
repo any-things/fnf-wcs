@@ -165,12 +165,13 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 		query.addFilter("jobDate", SysConstants.BETWEEN, betDate);  
 		List<Order> orders = this.queryManager.selectList(Order.class, query);
 		List<String> batchList = AnyValueUtil.filterValueListBy(orders, "batchId");
+		if(ValueUtil.isEmpty(batchList)) {
+			batchList.add("1");
+		}
 		
 		
 		Map<String,Object> params = ValueUtil.newMap("jobDate,batchId", jobDate, batchList);
-		List<BatchReceiptItem> wmsOrderList = this.getFnfQueryManager().selectListBySql(this.batchQueryStore.getWmsIfToSrtnReceiptDataQuery(), params, BatchReceiptItem.class, 0, 0);
-		//TODO WMS에서 수신 받을 데이터를 조회 할때 모든 데이터를 조회 해야 하는것인가? 아니면 화면에서 선택한 날짜를 From_Date와 비교해서 조회 할것이냐
-		// WCS Job_Batches 테이블과 비교한다 WMS에서 조회된 데이터와 WCS에 있는 데이터는 제외해야한다.
+//		List<BatchReceiptItem> wmsOrderList = this.getFnfQueryManager().selectListBySql(this.batchQueryStore.getWmsIfToSrtnReceiptDataQuery(), params, BatchReceiptItem.class, 0, 0);
 		
 		return this.getFnfQueryManager().selectListBySql(this.batchQueryStore.getWmsIfToSrtnReceiptDataQuery(), params, BatchReceiptItem.class, 0, 0);
 	}

@@ -132,9 +132,9 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		this.interfaceRack(batch);
 				
 		
-//		AnyOrmUtil.updateBatch(cellList, 100, "classCd");
-//		batch.setStatus(JobBatch.STATUS_RUNNING);
-//		this.queryManager.update(batch, "status");
+		AnyOrmUtil.updateBatch(cellList, 100, "classCd");
+		batch.setStatus(JobBatch.STATUS_RUNNING);
+		this.queryManager.update(batch, "status");
 		// TODO agent에 정보 생성후 전달 해야한다.
 		
 		return preprocesses.size();
@@ -171,6 +171,10 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		List<WmsWmtUifImpInbRtnTrg> rtnTrgList = dsQueryManager.selectList(WmsWmtUifImpInbRtnTrg.class, wmsCondition);
 		
 		List<String> skuCdList = AnyValueUtil.filterValueListBy(rtnTrgList, "refDetlNo");
+		
+		if(ValueUtil.isEmpty(skuCdList)) {
+			skuCdList.add("1");
+		}
 		
 		String skuInfoQuery = queryStore.getSrtnCnfmQuery();
 		Map<String,Object> sqlParams = ValueUtil.newMap("batchId,skuCd", batch.getId(), skuCdList);
@@ -214,7 +218,7 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		
 		List<String> skuCdList = AnyValueUtil.filterValueListBy(preprocesses, "cellAssgnCd");
 		Query condition = AnyOrmUtil.newConditionForExecution(domainId);
-		condition.addSelect("skuCd", "skuBarcd");
+		condition.addSelect("skuCd", "skuBarcd", "skuBarcd2");
 		condition.addFilter("skuCd", SysConstants.IN, skuCdList);
 		condition.addFilter("batchId", batch.getId());
 		List<Order> skuInfoList = this.queryManager.selectList(Order.class, condition);
@@ -238,6 +242,7 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 					wcsMheDasOrder.setCellNo(preProcess.getClassCd());
 					wcsMheDasOrder.setChuteNo(preProcess.getSubEquipCd());
 					wcsMheDasOrder.setBarcode(skuInfo.getSkuBarcd());
+					wcsMheDasOrder.setBarcode2(skuInfo.getSkuBarcd2());
 				}
 			}
 			dasOrderList.add(wcsMheDasOrder);

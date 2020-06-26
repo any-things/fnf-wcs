@@ -291,16 +291,16 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 			this.getFnfQueryManager().executeBySql(this.batchQueryStore.getWmsIfToSdasReceiptUpdateQuery(), params);
 		} else if(ValueUtil.isEqual(item.getJobType(), SmsConstants.JOB_TYPE_SRTN)) {
 
-			String type = "";
-			if(item.getBatchId().split("-").length > 3) {
-				//type 을 저장하는 곳이 없음(필요한지 불필요한지 판단 필요)
-				type = item.getBatchId().split("-")[2];
-			}
-			
-			Map<String,Object> params = ValueUtil.newMap("status,strrId,season,type,seq",
-					this.receiveStatus, jobBatch.getBrandCd(), jobBatch.getSeasonCd(), type, jobBatch.getJobSeq());
-	 
-			this.getFnfQueryManager().executeBySql(this.batchQueryStore.getWmsIfToSrtnReceiptUpdateQuery(), params);
+//			String type = "";
+//			if(item.getBatchId().split("-").length > 3) {
+//				//type 을 저장하는 곳이 없음(필요한지 불필요한지 판단 필요)
+//				type = item.getBatchId().split("-")[2];
+//			}
+//			
+//			Map<String,Object> params = ValueUtil.newMap("status,strrId,season,type,seq",
+//					this.receiveStatus, jobBatch.getBrandCd(), jobBatch.getSeasonCd(), type, jobBatch.getJobSeq());
+//	 
+//			this.getFnfQueryManager().executeBySql(this.batchQueryStore.getWmsIfToSrtnReceiptUpdateQuery(), params);
 		}
 	}
 	

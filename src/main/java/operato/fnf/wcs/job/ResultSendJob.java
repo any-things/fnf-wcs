@@ -66,6 +66,9 @@ public class ResultSendJob extends AbstractFnFJob {
 						
 						// WMS에 박스 실적 전송
 						this.sendBoxResultToWms(domain, batch);
+						
+						// RFID에 박스 취소 실적 전송
+						this.sendBoxCancelToRfid(domain, batch);
 					}
 				}
 			} catch (Exception e) {
@@ -117,6 +120,17 @@ public class ResultSendJob extends AbstractFnFJob {
 	 */
 	private void sendPickResultToWms(Domain domain, JobBatch batch) {
 		this.pickResultSendSvc.sendPickingResults(domain, batch);
+	}
+
+	/**
+	 * 박스 취소 실적을 RFID로 전송
+	 * 
+	 * @param domain
+	 * @param batch
+	 * @return
+	 */
+	private void sendBoxCancelToRfid(Domain domain, JobBatch batch) {
+		// TODO 
 	}
 
 }

@@ -8,6 +8,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import operato.fnf.wcs.FnFConstants;
 import operato.fnf.wcs.entity.WcsMheHr;
 import operato.fnf.wcs.service.batch.DasCloseBatchService;
 import operato.fnf.wcs.service.batch.DasStartBatchService;
@@ -161,7 +162,7 @@ public class WaveMonitorJob extends AbstractFnFJob {
 	 */
 	private List<WcsMheHr> searchStartedWaveList(Domain domain) {
 		Query condition = new Query();
-		condition.addFilter("whCd", "ICF");
+		condition.addFilter("whCd", FnFConstants.WH_CD_ICF);
 		condition.addFilter("bizType", "SHIPBYDAS");
 		condition.addFilter("status", "B");
 		condition.addFilter("prcsYn", LogisConstants.N_CAP_STRING);
@@ -176,7 +177,7 @@ public class WaveMonitorJob extends AbstractFnFJob {
 	 */
 	private List<WcsMheHr> searchFinishedWaveList(Domain domain) {
 		Query condition = new Query();
-		condition.addFilter("whCd", "ICF");
+		condition.addFilter("whCd", FnFConstants.WH_CD_ICF);
 		condition.addFilter("status", "C");
 		condition.addFilter("bizType", "SHIPBYDAS");
 		condition.addFilter("endDatetime", LogisConstants.IS_NULL, LogisConstants.EMPTY_STRING);

@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import operato.fnf.wcs.FnFConstants;
 import operato.logis.wcs.query.WcsQueryStore;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
@@ -66,7 +67,7 @@ public class WcsBatchProgressService extends AbstractQueryService {
 			return 0;
 		}
 		
-		Map<String, Object> params = ValueUtil.newMap("whCd,batchId", "ICF", batch.getId());
+		Map<String, Object> params = ValueUtil.newMap("whCd,batchId", FnFConstants.WH_CD_ICF, batch.getId());
 		return this.queryManager.selectBySql(sql, params, Integer.class);
 	}
 	
@@ -91,7 +92,7 @@ public class WcsBatchProgressService extends AbstractQueryService {
 			return 0;
 		}
 		
-		Map<String, Object> params = ValueUtil.newMap("whCd,batchId", "ICF", batch.getId());
+		Map<String, Object> params = ValueUtil.newMap("whCd,batchId", FnFConstants.WH_CD_ICF, batch.getId());
 		return this.queryManager.selectBySql(sql, params, Integer.class);
 	}
 	
@@ -116,7 +117,7 @@ public class WcsBatchProgressService extends AbstractQueryService {
 			return 0;
 		}
 		
-		Map<String, Object> params = ValueUtil.newMap("whCd,batchId", "ICF", batch.getId());
+		Map<String, Object> params = ValueUtil.newMap("whCd,batchId", FnFConstants.WH_CD_ICF, batch.getId());
 		return this.queryManager.selectBySql(sql, params, Integer.class);
 	}
 	

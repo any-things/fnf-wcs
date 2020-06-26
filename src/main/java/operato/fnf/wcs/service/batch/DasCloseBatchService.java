@@ -1,6 +1,8 @@
 package operato.fnf.wcs.service.batch;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,7 +10,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import operato.fnf.wcs.entity.WcsMheBox;
 import operato.fnf.wcs.entity.WcsMheHr;
+import operato.fnf.wcs.entity.WmsMheBox;
 import operato.fnf.wcs.entity.WmsMheHr;
 import operato.fnf.wcs.query.store.FnFDasQueryStore;
 import xyz.anythings.base.LogisConstants;
@@ -46,6 +50,7 @@ public class DasCloseBatchService extends AbstractQueryService {
 	 */
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void closeBatch(Long domainId, WcsMheHr wcsMheHr) {
+		
 		// 1. WCS MHE_HR 정보로 부터 작업 배치를 조회 
 		Query condition = AnyOrmUtil.newConditionForExecution(domainId);
 		condition.addFilter("id", wcsMheHr.getWorkUnit());
@@ -60,26 +65,15 @@ public class DasCloseBatchService extends AbstractQueryService {
 		
 		// 3. 배치에 반영 
 		this.setBatchInfoOnClosing(batch);
-				
-		// 4. WcsMheHr 엔티티에 반영
-		wcsMheHr.setStatus("F");
-		wcsMheHr.setEndDatetime(new Date());
-		wcsMheHr.setPrcsYn(LogisConstants.Y_CAP_STRING);
-		wcsMheHr.setPrcsDatetime(new Date());
-		this.queryManager.update(wcsMheHr, "status", "endDatetime", "prcsYn", "prcsDatetime");
+
+		// 4. WMS에 박스 실적 한 번에 전송
+		this.sendAllBoxToWms(batch);
 		
 		// 5. WMS MHE_HR 테이블에 반영
-		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
-		condition = new Query();
-		condition.addFilter("whCd", wcsMheHr.getWhCd());
-		condition.addFilter("workUnit", wcsMheHr.getWorkUnit());
-		WmsMheHr wmsWave = wmsQueryMgr.selectByCondition(WmsMheHr.class, condition);
+		this.closeWmsWave(batch, wcsMheHr);
 		
-		if(wmsWave != null) {
-			wmsWave.setStatus("F");
-			wmsWave.setEndDatetime(new Date());
-			wmsQueryMgr.update(wmsWave, "status", "endDatetime");
-		}
+		// 6. WcsMheHr 엔티티에 반영
+		this.closeWcsWave(batch, wcsMheHr);		
 	}
 	
 	/**
@@ -177,6 +171,77 @@ public class DasCloseBatchService extends AbstractQueryService {
 		}
 		
 		this.jobSummarySvc.summaryTotalBatchJobs(batch);
+	}
+
+	/**
+	 * 박스 전송 실적을 한 번에 전송
+	 * 
+	 * @param batch
+	 * @return
+	 */
+	private int sendAllBoxToWms(JobBatch batch) {
+		// 배치별 박스 실적 모두 조회
+		Query condition = new Query();
+		condition.addFilter("workUnit", batch.getId());
+		// TODO 취소 실적은 제외 조건
+		List<WcsMheBox> wcsBoxList = this.queryManager.selectList(WcsMheBox.class, condition);
+		List<WmsMheBox> wmsBoxList = new ArrayList<WmsMheBox>();
+		
+		// 배치별 박스 실적 WMS로 전송
+		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheBox.class);
+		for(WcsMheBox fromBox : wcsBoxList) {
+			WmsMheBox toBox = ValueUtil.populate(fromBox, new WmsMheBox());
+			wmsBoxList.add(toBox);
+			
+			if(wmsBoxList.size() >= 500) {
+				wmsQueryMgr.insertBatch(wmsBoxList);
+				wmsBoxList.clear();
+			}
+		}
+		
+		if(!wmsBoxList.isEmpty()) {
+			wmsQueryMgr.insertBatch(wmsBoxList);
+			wmsBoxList.clear();
+		}
+		
+		return wcsBoxList.size();
+	}
+	
+	/**
+	 * WMS Wave를 마감 처리 
+	 * 
+	 * @param batch
+	 * @param wcsMheHr
+	 */
+	private void closeWmsWave(JobBatch batch, WcsMheHr wcsMheHr) {
+		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
+		Query condition = new Query();
+		condition.addFilter("whCd", wcsMheHr.getWhCd());
+		condition.addFilter("workUnit", wcsMheHr.getWorkUnit());
+		WmsMheHr wmsWave = wmsQueryMgr.selectByCondition(WmsMheHr.class, condition);
+		
+		if(wmsWave != null) {
+			wmsWave.setCmptQty(batch.getResultPcs());
+			wmsWave.setStatus("F");
+			wmsWave.setCnfDatetime(new Date());
+			wmsQueryMgr.update(wmsWave, "cmptQty", "status", "cnfDatetime");
+		}		
+	}
+
+	/**
+	 * WCS Wave 마감 처리
+	 * 
+	 * @param batch
+	 * @param wcsMheHr
+	 */
+	private void closeWcsWave(JobBatch batch, WcsMheHr wcsMheHr) {
+		Date currentTime = new Date();
+		wcsMheHr.setStatus("F");
+		wcsMheHr.setCnfDatetime(currentTime);
+		wcsMheHr.setEndDatetime(currentTime);
+		wcsMheHr.setPrcsDatetime(currentTime);
+		wcsMheHr.setPrcsYn(LogisConstants.Y_CAP_STRING);
+		this.queryManager.update(wcsMheHr, "status", "cnfDatetime", "endDatetime", "prcsDatetime", "prcsYn");		
 	}
 
 }

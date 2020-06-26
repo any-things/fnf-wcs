@@ -65,7 +65,7 @@ public class PickingResultSendService extends AbstractQueryService {
 	 */
 	private List<WcsMheDr> searchPickResultList(JobBatch batch) {
 		Query condition = new Query();
-		condition.addFilter("whCd", "ICF");
+		condition.addFilter("whCd", FnFConstants.WH_CD_ICF);
 		condition.addFilter("workUnit", batch.getId());
 		condition.addFilter("pickResultIfAt", LogisConstants.IS_NULL, LogisConstants.EMPTY_STRING);
 		condition.addFilter("cmptQty", LogisConstants.GREATER_THAN_EQUAL, 1);

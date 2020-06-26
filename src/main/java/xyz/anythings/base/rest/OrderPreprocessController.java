@@ -245,8 +245,8 @@ public class OrderPreprocessController extends AbstractRestService {
 		JobBatch jobBatch = new JobBatch();
 		jobBatch.setId(input.get("batchId").toString());
 		jobBatch = this.queryManager.select(jobBatch);
+		@SuppressWarnings("unchecked")
 		Map<String, Object> chuteStatus = (Map<String, Object>) input.get("chuteStatus");
-		
 		return this.preprocessService.generatePreprocess(jobBatch, chuteStatus);
 	}
 	

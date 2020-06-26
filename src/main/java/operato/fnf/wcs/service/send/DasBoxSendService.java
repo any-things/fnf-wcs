@@ -292,7 +292,7 @@ public class DasBoxSendService extends AbstractQueryService {
 	@SuppressWarnings("rawtypes")
 	private List<Map> searchRfidBoxResults(IQueryManager rfidQueryMgr, JobBatch batch) {
 		String sql = "SELECT * FROM RFID_IF.IF_PASDELIVERY_SEND	WHERE DS_BATCH_NO = :batchId AND TP_STATUS = '0'";
-		return rfidQueryMgr.selectListBySql(sql, new HashMap<String, Object>(), Map.class, 0, 0);
+		return rfidQueryMgr.selectListBySql(sql, ValueUtil.newMap("batchId", batch.getId()), Map.class, 0, 0);
 	}
 
 	/**

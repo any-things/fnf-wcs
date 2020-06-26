@@ -15,7 +15,8 @@ import xyz.elidom.dbist.annotation.Table;
  * @author shortstop
  */
 @Table(name = "mhe_hr", idStrategy = GenerationRule.UUID, uniqueFields="whCd,workUnit", indexes = {
-	@Index(name = "ix_mhe_hr_01", columnList = "wh_cd,work_unit", unique = true)
+	@Index(name = "ix_mhe_hr_01", columnList = "wh_cd,work_unit", unique = true),
+	@Index(name = "ix_mhe_hr_02", columnList = "work_date,biz_type,mhe_no")
 })
 public class WcsMheHr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	

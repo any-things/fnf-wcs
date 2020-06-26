@@ -13,7 +13,10 @@ import xyz.elidom.dbist.annotation.Table;
  * 상세 분배 지시내역 - DAS, DPS
  */
 @Table(name = "mhe_dr", idStrategy = GenerationRule.UUID, uniqueFields="whCd,workUnit,shiptoId,outbNo,locationCd,itemCd", indexes = {
-	@Index(name = "ix_mhe_dr_01", columnList = "wh_cd,work_unit,shipto_id,outb_no,location_cd,item_cd", unique = true)
+	@Index(name = "ix_mhe_dr_01", columnList = "wh_cd,work_unit,shipto_id,outb_no,location_cd,item_cd", unique = true),
+	@Index(name = "ix_mhe_dr_02", columnList = "work_unit,biz_type,ref_no"),
+	@Index(name = "ix_mhe_dr_03", columnList = "work_unit,status,box_no,box_id,box_input_seq"),
+	@Index(name = "ix_mhe_dr_04", columnList = "work_unit,chute_no,item_cd")
 })
 public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	

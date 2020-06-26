@@ -13,7 +13,9 @@ import xyz.elidom.dbist.annotation.Table;
  * 박스별 패킹 내역 수신 - DAS, 소터 (DPS 해당 없음)
  */
 @Table(name = "mhe_box", idStrategy = GenerationRule.UUID, uniqueFields="whCd,workUnit,shiptoId,itemCd,boxNo", indexes = {
-	@Index(name = "ix_mhe_box_01", columnList = "wh_cd,work_unit,shipto_id,item_cd,box_no", unique = true)
+	@Index(name = "ix_mhe_box_01", columnList = "wh_cd,work_unit,shipto_id,item_cd,box_no", unique = true),
+	@Index(name = "ix_mhe_box_02", columnList = "work_unit,outb_no,box_no"),
+	@Index(name = "ix_mhe_box_03", columnList = "work_date,strr_id,mhe_no,box_no")
 })
 public class WcsMheBox extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
@@ -70,6 +72,12 @@ public class WcsMheBox extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
 	@Column (name = "if_datetime", type = ColumnType.DATETIME)
 	private Date ifDatetime;
+	
+	@Column (name = "del_yn", length = 1)
+	private String delYn;
+	
+	@Column (name = "del_datetime", type = ColumnType.DATETIME)
+	private Date delDatetime;
 
 	public String getId() {
 		return id;
@@ -197,6 +205,22 @@ public class WcsMheBox extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setIfDatetime(Date ifDatetime) {
 		this.ifDatetime = ifDatetime;
+	}
+
+	public String getDelYn() {
+		return delYn;
+	}
+
+	public void setDelYn(String delYn) {
+		this.delYn = delYn;
+	}
+
+	public Date getDelDatetime() {
+		return delDatetime;
+	}
+
+	public void setDelDatetime(Date delDatetime) {
+		this.delDatetime = delDatetime;
 	}
 
 }

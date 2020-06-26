@@ -8,8 +8,8 @@ import xyz.elidom.dbist.annotation.Index;
 import xyz.elidom.dbist.annotation.Table;
 
 @Table(name = "mhe_das_order", idStrategy = GenerationRule.UUID, uniqueFields="batchNo,jobDate,jobType,cellNo,item_cd", indexes = {
-		@Index(name = "ix_mhe_das_order_01", columnList = "batch_no,job_date,job_type,cell_no,item_cd", unique = true)
-	})
+	@Index(name = "ix_mhe_das_order_01", columnList = "batch_no,job_date,job_type,cell_no,item_cd", unique = true)
+})
 public class WcsMheDasOrder extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	/**
 	 * SerialVersion UID

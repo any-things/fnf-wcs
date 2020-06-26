@@ -13,7 +13,12 @@ import xyz.elidom.dbist.annotation.Table;
  * DPS 작업 할당 및 작업 처리
  */
 @Table(name = "dps_job_instances", idStrategy = GenerationRule.UUID, indexes = {
-	@Index(name = "ix_dps_job_instances_01", columnList = "wh_cd,work_unit,ref_no,cell_cd,item_cd")
+	@Index(name = "ix_dps_job_instances_01", columnList = "wh_cd,work_unit,ref_no,cell_cd,item_cd"),
+	@Index(name = "ix_dps_job_instances_02", columnList = "work_date,pack_tcd,outb_tcd,inspector_id"),
+	@Index(name = "ix_dps_job_instances_03", columnList = "work_date,strr_id"),
+	@Index(name = "ix_dps_job_instances_04", columnList = "work_date,shipto_nm"),
+	@Index(name = "ix_dps_job_instances_05", columnList = "work_unit,status,box_no,box_id,box_input_seq"),
+	@Index(name = "ix_dps_job_instances_06", columnList = "waybill_no")
 })
 public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
@@ -190,12 +195,6 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	 */
 	@Column (name = "rfid_item_yn", nullable = true, length = 1)
 	private String rfidItemYn;
-
-	/**
-	 * 작업 할당 여부
-	 */
-	@Column (name = "dps_assign_yn", nullable = true, length = 1)
-	private String dpsAssignYn;
 	
 	/**
 	 * 작업 할당 시간 
@@ -511,14 +510,6 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setRfidItemYn(String rfidItemYn) {
 		this.rfidItemYn = rfidItemYn;
-	}
-
-	public String getDpsAssignYn() {
-		return dpsAssignYn;
-	}
-
-	public void setDpsAssignYn(String dpsAssignYn) {
-		this.dpsAssignYn = dpsAssignYn;
 	}
 
 	public Date getDpsAssignAt() {

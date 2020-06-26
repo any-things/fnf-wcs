@@ -1,6 +1,7 @@
 package operato.logis.sms.service.impl.srtn;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -186,11 +187,7 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 		// 5. 3번과 2번의 조합으로 슈트별 오더를 지정 (루프)
 		// 6. 주문 가공 정보 업데이트
 		
-		if(ValueUtil.isEqual(batch.getStatus(), JobBatch.STATUS_WAIT) || ValueUtil.isEqual(batch.getStatus(), JobBatch.STATUS_READY)) {
-			String deleteSql = "DELETE FROM ORDER_PREPROCESSES WHERE BATCH_ID = :batchId";
-			Map<String, Object> deleteParamMap = ValueUtil.newMap("batchId", batch.getId());
-			this.queryManager.executeBySql(deleteSql, deleteParamMap);
-		}
+		this.resetOrderList(batch);
 		
 		List<String> enableChute = new ArrayList<String>();
 		for(Entry<String, Object> entry : chuteStatus.entrySet()) {
@@ -348,6 +345,26 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 //		String rackSql = "update racks set status = :status, batch_id = orders.batch_id from (select * from order_preprocesses where batch_id = :batchId) as orders where racks.chute_no = orders.sub_equip_cd";
 //		Map<String, Object> rackParamMap = ValueUtil.newMap("status,batchId", JobBatch.STATUS_READY, batch.getId());
 //		this.queryManager.executeBySql(rackSql, rackParamMap);
+	}
+	
+	private void resetOrderList(JobBatch batch) {
+		String selectSql = "SELECT BATCH_ID FROM ORDER_PREPROCESSES GROUP BY BATCH_ID";
+		List<Map> batchIdList = this.queryManager.selectListBySql(selectSql, new HashMap<String, Object>(), Map.class, 0, 0);
+		
+		if(ValueUtil.isNotEmpty(batchIdList)) {
+			List<String> batchIds = new ArrayList<String>();
+			for (Map batchId : batchIdList) {
+				batchIds.add(ValueUtil.toString(batchId.get("batch_id")));
+			}
+			
+			String updateSql = "UPDATE JOB_BATCHES SET STATUS = :status, UPDATED_AT = NOW() WHERE ID IN ( :id )";
+			Map<String, Object> updateParamMap = ValueUtil.newMap("status,id", JobBatch.STATUS_WAIT, batchIds);
+			this.queryManager.executeBySql(updateSql, updateParamMap);
+			
+			String deleteSql = "DELETE FROM ORDER_PREPROCESSES WHERE JOB_TYPE = :jobType";
+			Map<String, Object> deleteParamMap = ValueUtil.newMap("jobType", batch.getJobType());
+			this.queryManager.executeBySql(deleteSql, deleteParamMap);
+		}
 	}
 	
 }

@@ -1,5 +1,6 @@
 package operato.logis.sms.service.impl;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -22,10 +23,12 @@ import xyz.anythings.base.service.util.BatchJobConfigUtil;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.anythings.sys.util.AnyEntityUtil;
 import xyz.anythings.sys.util.AnyOrmUtil;
+import xyz.anythings.sys.util.AnyValueUtil;
 import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.exception.server.ElidomRuntimeException;
 import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.orm.manager.DataSourceManager;
+import xyz.elidom.sys.SysConstants;
 import xyz.elidom.sys.util.DateUtil;
 import xyz.elidom.sys.util.SettingUtil;
 import xyz.elidom.util.BeanUtil;
@@ -66,8 +69,9 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 	public void handleReadyToReceive(BatchReceiveEvent event) {
 		BatchReceipt receipt = event.getReceiptData();
 		String jobType = event.getJobType();
+		String jobDate = event.getJobDate();
 		
-		receipt = this.createReadyToReceiveData(receipt,jobType);
+		receipt = this.createReadyToReceiveData(receipt, jobType, jobDate);
 		event.setReceiptData(receipt);
 	}
 	
@@ -84,13 +88,14 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 		
 		BatchReceipt runBatchReceipt = this.checkRunningOrderReceipt(receipt,jobType);
 		if(runBatchReceipt != null) return runBatchReceipt;
+		String jobDate = ValueUtil.toString(params[0]);
 		
 		// 2. WMS IF 테이블에서 수신 대상 데이터 확인
 		List<BatchReceiptItem> receiptItems = null;
 		if(ValueUtil.isEqual(jobType, SmsConstants.JOB_TYPE_SDAS)) {
 			receiptItems = this.getWmfIfToSdasReceiptItems(receipt, jobType);
 		} else if(ValueUtil.isEqual(jobType, SmsConstants.JOB_TYPE_SRTN)) {
-			receiptItems = this.getWmfIfToSrtnReceiptItems(receipt, jobType);
+			receiptItems = this.getWmfIfToSrtnReceiptItems(receipt, jobType, jobDate);
 		}
 		
 		
@@ -151,9 +156,18 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 	 * @param receipt
 	 * @return
 	 */
-	private List<BatchReceiptItem> getWmfIfToSrtnReceiptItems(BatchReceipt receipt, String jobType) {
-		Map<String,Object> params = ValueUtil.newMap("domainId,whCd,status",
-				receipt.getDomainId(), this.whCd, this.createStatus);
+	private List<BatchReceiptItem> getWmfIfToSrtnReceiptItems(BatchReceipt receipt, String jobType, String jobDate) {
+		Query query = AnyOrmUtil.newConditionForExecution(receipt.getDomainId());
+		
+		String fromDate = DateUtil.dateStr(DateUtil.addDate(DateUtil.parse(jobDate, DateUtil.getDateFormat()), -30), DateUtil.getDateFormat());
+		
+		String[] betDate = {fromDate, jobDate};
+		query.addFilter("jobDate", SysConstants.BETWEEN, betDate);  
+		List<Order> orders = this.queryManager.selectList(Order.class, query);
+		List<String> batchList = AnyValueUtil.filterValueListBy(orders, "batchId");
+		
+		
+		Map<String,Object> params = ValueUtil.newMap("jobDate,batchId", jobDate, batchList);
 		List<BatchReceiptItem> wmsOrderList = this.getFnfQueryManager().selectListBySql(this.batchQueryStore.getWmsIfToSrtnReceiptDataQuery(), params, BatchReceiptItem.class, 0, 0);
 		//TODO WMS에서 수신 받을 데이터를 조회 할때 모든 데이터를 조회 해야 하는것인가? 아니면 화면에서 선택한 날짜를 From_Date와 비교해서 조회 할것이냐
 		// WCS Job_Batches 테이블과 비교한다 WMS에서 조회된 데이터와 WCS에 있는 데이터는 제외해야한다.

@@ -658,12 +658,13 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 			invoiceId = this.dpsBoxSendSvc.requestInvoiceToWms(batch, orderNo, boxId, inspectionItems);
 			
 		} catch(RuntimeException re) {
+			// 오류 발생시 박스 리셋 이벤트를 던져 해당 주문의 boxId를 리셋한다. 
+			this.eventPublisher.publishEvent(new DpsResetBox(batch.getDomainId(), batch.getId(), orderNo, boxId));
 			throw re;
 			
 		} catch(Throwable th) {
 			// 오류 발생시 박스 리셋 이벤트를 던져 해당 주문의 boxId를 리셋한다. 
 			this.eventPublisher.publishEvent(new DpsResetBox(batch.getDomainId(), batch.getId(), orderNo, boxId));
-			
 			// throw
 			String msg = th.getCause() == null ? th.getMessage() : th.getCause().getMessage();
 			ElidomRuntimeException ere = new ElidomRuntimeException(msg, th);

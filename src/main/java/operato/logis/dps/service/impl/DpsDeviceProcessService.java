@@ -320,7 +320,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 	 * 
 	 * @param event
 	 */
-	@EventListener(classes=DeviceProcessRestEvent.class, condition = "#event.checkCondition('/picking/finish_possible', 'dps')")
+	@EventListener(classes=DeviceProcessRestEvent.class, condition = "#event.checkCondition('/picking/finish/possible', 'dps')")
 	@Order(Ordered.LOWEST_PRECEDENCE)
 	public void checkFinishPickingPossible(DeviceProcessRestEvent event) {
 		
@@ -330,6 +330,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		String equipType = params.get("equipType").toString();
 		String orderNo = ValueUtil.toString(params.get("orderNo"));
 		String trayCd = ValueUtil.toString(params.get("trayCd"));
+		String boxId = ValueUtil.toString(params.get("boxId"));
 
 		// 2. 설비 코드로 현재 진행 중인 작업 배치 및 설비 정보 조회
 		EquipBatchSet equipBatchSet = DpsServiceUtil.findBatchByEquip(event.getDomainId(), equipType, equipCd);
@@ -338,15 +339,17 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		// 3. 작업 정보 조회
 		Query condition = new Query();
 		condition.addFilter("workUnit", batch.getId());
+		condition.addFilter("status", SysConstants.IN, ValueUtil.toList("I", "P"));
+		condition.addOrder("boxInputSeq", false);
 		
 		if(ValueUtil.isNotEmpty(orderNo)) {
 			condition.addFilter("refNo", orderNo);
-			condition.addFilter("status", SysConstants.IN, ValueUtil.toList("A", "I", "P"));
-		}
-		
-		if(ValueUtil.isNotEmpty(trayCd)) {
+			
+		} else if(ValueUtil.isNotEmpty(trayCd)) {
 			condition.addFilter("boxNo", trayCd);
-			condition.addFilter("status", LogisConstants.JOB_STATUS_INPUT);
+			
+		} else if(ValueUtil.isNotEmpty(boxId)) {
+			condition.addFilter("boxId", boxId);
 		}
 		
 		// 4. 작업 정보 조회
@@ -374,43 +377,24 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		String equipCd = params.get("equipCd").toString();
 		String equipType = params.get("equipType").toString();
 		String orderNo = ValueUtil.toString(params.get("orderNo"));
-		String trayCd = ValueUtil.toString(params.get("trayCd"));
 
 		// 2. 설비 코드로 현재 진행 중인 작업 배치 및 설비 정보 조회
 		EquipBatchSet equipBatchSet = DpsServiceUtil.findBatchByEquip(event.getDomainId(), equipType, equipCd);
 		JobBatch batch = equipBatchSet.getBatch();
 
-		List<DpsJobInstance> jobList = null;
+		// 3. 주문 번호로 작업 조회 
 		Query condition = new Query();
 		condition.addFilter("workUnit", batch.getId());
+		condition.addFilter("refNo", orderNo);
+		condition.addFilter("status", SysConstants.IN, ValueUtil.toList("I", "P"));
+		List<DpsJobInstance> jobList = this.queryManager.selectList(DpsJobInstance.class, condition);;
 		
-		// 3. 주문 번호로 처리할 주문 조회
-		if(ValueUtil.isNotEmpty(orderNo)) {
-			condition.addFilter("refNo", orderNo);
-			condition.addFilter("status", SysConstants.IN, ValueUtil.toList("A", "I", "P"));
-			
-		// 4. 트레이 박스로 처리할 주문 조회
-		} else if(ValueUtil.isNotEmpty(trayCd)) {
-			condition.addFilter("boxNo", trayCd);
-			condition.addFilter("status", LogisConstants.JOB_STATUS_INPUT);
-			 
-		} else {
-			throw ThrowUtil.newValidationErrorWithNoLog("수동 피킹 작업을 위해 주문번호 혹은 트레이 박스 정보가 필요합니다.");
-		}
-		
-		jobList = this.queryManager.selectList(DpsJobInstance.class, condition);
-		
-		// 5. 작업을 찾지 못했다면 에러 발생
+		// 4. 작업을 찾지 못했다면 에러 발생
 		if(ValueUtil.isEmpty(jobList)) {
 			throw ThrowUtil.newValidationErrorWithNoLog("처리할 대상 주문을 찾지 못했습니다.");
 		}
 		
-		// 6. 주문 번호 설정 
-		if(ValueUtil.isEmpty(orderNo)) {
-			orderNo = jobList.get(0).getRefNo();
-		}
-		
-		// 7. 강제 피킹 처리
+		// 5. 강제 피킹 처리
 		DpsJobInstance lastJob = null;
 		for(DpsJobInstance job : jobList) {
 			BaseResponse res = this.dpsJobController.processJobInstance(job.getId());
@@ -419,14 +403,14 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 			}
 		}
 		
-		// 8. 박싱 처리가 잘 되었는지 체크 후 이벤트 처리 결과 셋팅
+		// 6. 박싱 처리가 잘 되었는지 체크 후 이벤트 처리 결과 셋팅
 		if(lastJob != null && ValueUtil.isEqualIgnoreCase(lastJob.getStatus(), BoxPack.BOX_STATUS_BOXED)) {
 			event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, orderNo));	
 		} else {
 			event.setReturnResult(new BaseResponse(false, LogisConstants.NG_STRING, "수동 피킹 처리에 실패했습니다."));
 		}
 
-		// 9. 이벤트 처리 결과 리턴
+		// 7. 이벤트 처리 결과 리턴
 		event.setExecuted(true);
 	}
 	
@@ -486,7 +470,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		if(!rfidFlag && ValueUtil.isEqual(sku.getRfidItemYn(), LogisConstants.Y_CAP_STRING)) {
 			throw ThrowUtil.newValidationErrorWithNoLog("스캔한 상품은 RFID 상품이니 반드시 RFID 검수를 해야합니다.");
 		}
-				
+		
 		// 7. WMS 실적 전송
 		Long domainId = Domain.currentDomainId();
 		String todayStr = DateUtil.todayStr("yyyyMMdd");

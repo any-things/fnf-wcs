@@ -136,6 +136,7 @@ public class DpsJobInstanceController extends AbstractRestService {
 		}
 		
 		// 5. 결과 리턴
+		job = this.queryManager.select(job);
 		return new BaseResponse(true, SysConstants.OK_STRING, job);
 	}
 

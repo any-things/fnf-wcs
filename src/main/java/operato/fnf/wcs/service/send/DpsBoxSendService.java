@@ -50,16 +50,6 @@ public class DpsBoxSendService extends AbstractQueryService {
 	 * WMS 박스 실적 정보 추가 쿼리
 	 */
 	private static final String WMS_PACK_INSERT_SQL = "INSERT INTO MPS_PACKING_CMPT(INTERFACE_CRT_DT, INTERFACE_NO, WH_CD, BOX_ID, REF_NO, STRR_ID, ITEM_CD, PACK_QTY, OUTB_ECT_DATE, IF_CRT_ID, IF_CRT_DTM, OUTB_TCD, RFID_UID) VALUES (:today, SEQ_MPS_PACKING_CMPT.NEXTVAL, :whCd, :boxId, :orderNo, :brandCd, :skuCd, :pickedQty, :jobDate, 'wcs', :currentTime, :outbTcd, :rfidId)";
-
-	/**
-	 * RFID 박스 검수 완료 정보 추가 쿼리
-	 */
-	//private static final String RFID_EXAMED_SELECT_SQL = "SELECT * FROM RFID_IF.IF_RFIDHISTORY_RECV WHERE CD_REGISTER = 'WCS' AND CD_BILL = :waybillNo";	
-
-	/**
-	 * RFID 박스 검수 완료 정보 추가 쿼리
-	 */
-	//private static final String RFID_EXAMED_INSERT_SQL = "INSERT INTO RFID_IF.IF_RFIDHISTORY_RECV(DT_IF_DATE, NO_IF_SEQ, TP_GUBUN, CD_COMPANY, CD_DEPART, DT_DATE, CD_SHOP, CD_BILL, CD_SUBBILL, CD_RFIDUID, TP_HISTORY, TP_STATUS, CD_REGISTER, DM_BF_RECV) VALUES (:today, RFID_IF.SEQ_IF_RFIDHISTORY_RECV.NEXTVAL, 'I', 'FNF', :brandCd, :today, :shopCd, :waybillNo, :orderNo, :rfidUid, '42', '0', :creatorId, :currentTime)";	
 	
 	/**
 	 * 주문 번호로 Unique 박스 ID 생성
@@ -173,7 +163,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 	}
 	
 	/**
-	 * WMS에 단포 실적 전송
+	 * WMS에 단포 실적 전송 & WMS에 송장 번호 발행
 	 * 
 	 * @param domainId
 	 * @param today
@@ -183,54 +173,41 @@ public class DpsBoxSendService extends AbstractQueryService {
 	 * @param newBoxId
 	 * @param outbTcd
 	 * @param rfidId
+	 * @return 발행된 송장번호
 	 */
-	public void sendSinglePackToWms(Long domainId, String today, String outDate, String brandCd, String itemCd, String newBoxId, String outbTcd, String rfidId) {
+	public String sendSinglePackToWms(Long domainId, String today, String outDate, String brandCd, String itemCd, String newBoxId, String outbTcd, String rfidId) {
 		
 		String currentTimeStr = DateUtil.dateTimeStr(new Date(), "yyyyMMddHHmmss");
-		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
 		Map<String, Object> params = ValueUtil.newMap("today,whCd,boxId,orderNo,brandCd,skuCd,pickedQty,jobDate,currentTime,outbTcd,rfidId", today, FnFConstants.WH_CD_ICF, newBoxId, null, brandCd, itemCd, 1, outDate, currentTimeStr, outbTcd, rfidId);
-		wmsQueryMgr.executeBySql(WMS_PACK_INSERT_SQL, params);
+		this.getDataSourceQueryManager(WmsMheHr.class).executeBySql(WMS_PACK_INSERT_SQL, params);
+		return this.newWaybillNo(newBoxId, true);
 	}
 	
 	/**
-	 * 패킹 실적 WMS로 전송
+	 * 패킹 실적 WMS로 전송 & WMS에 송장 번호 발행
 	 * 
 	 * @param batch
 	 * @param orderNo
 	 * @param boxId
 	 * @param inspectionItems 검수 항목
-	 * @param jobList 작업 리스트 
+	 * @return 발행된 송장번호
 	 */
-	public void sendPackingToWms(JobBatch batch, String orderNo, String boxId, List<DpsInspItem> inspectionItems) {
+	public String sendPackingToWms(JobBatch batch, String orderNo, String boxId, List<DpsInspItem> inspectionItems) {
 		
-		if(ValueUtil.isNotEmpty(inspectionItems)) {
-			IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
-			String todayStr = DateUtil.todayStr("yyyyMMdd");
-			Date currentTime = new Date();
-			String currentTimeStr = DateUtil.dateTimeStr(currentTime, "yyyyMMddHHmmss");
-			
-			for(DpsInspItem item : inspectionItems) {
-				// WMS에 박스 실적 전송
-				Map<String, Object> params = ValueUtil.newMap("today,whCd,boxId,orderNo,brandCd,skuCd,pickedQty,jobDate,currentTime,outbTcd,rfidId", todayStr, FnFConstants.WH_CD_ICF, boxId, orderNo, item.getBrandCd(), item.getSkuCd(), item.getConfirmQty(), item.getOutbEctDate(), currentTimeStr, null, item.getRfidId());
-				wmsQueryMgr.executeBySql(WMS_PACK_INSERT_SQL, params);
-			}
+		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
+		String todayStr = DateUtil.todayStr("yyyyMMdd");
+		Date currentTime = new Date();
+		String currentTimeStr = DateUtil.dateTimeStr(currentTime, "yyyyMMddHHmmss");
+		
+		for(DpsInspItem item : inspectionItems) {
+			// WMS에 박스 실적 전송
+			Map<String, Object> params = ValueUtil.newMap("today,whCd,boxId,orderNo,brandCd,skuCd,pickedQty,jobDate,currentTime,outbTcd,rfidId", todayStr, FnFConstants.WH_CD_ICF, boxId, orderNo, item.getBrandCd(), item.getSkuCd(), item.getConfirmQty(), item.getOutbEctDate(), currentTimeStr, null, item.getRfidId());
+			wmsQueryMgr.executeBySql(WMS_PACK_INSERT_SQL, params);
 		}
-	}
-		
-	/**
-	 * WMS에 송장 발행 요청 
-	 * 
-	 * @param batch
-	 * @param orderNo
-	 * @param boxId
-	 * @param inspectionItems 검수 항목
-	 * @return
-	 */
-	public String requestInvoiceToWms(JobBatch batch, String orderNo, String boxId, List<DpsInspItem> inspectionItems) {
 		
 		return this.newWaybillNo(boxId, true);
 	}
-		
+			
 	/**
 	 * RFID ID를 체크
 	 * 
@@ -302,16 +279,6 @@ public class DpsBoxSendService extends AbstractQueryService {
 	 * 운송장 번호 발행
 	 * 
 	 * @param boxId
-	 * @return
-	 */
-	public String newWaybillNo(String boxId) {
-		return this.newWaybillNo(boxId, false);
-	}
-	
-	/**
-	 * 운송장 번호 발행
-	 * 
-	 * @param boxId
 	 * @param exceptionWhenResNotOk
 	 * @return
 	 */
@@ -368,80 +335,4 @@ public class DpsBoxSendService extends AbstractQueryService {
 		mheNo = ValueUtil.isEmpty(mheNo) ? "M1" : mheNo;
 		return RangedSeq.increaseSequence(domainId, "DPS_SINGLE_PACK_SEQ", "D", "DATE", dateStr, "MHE_NO", mheNo);
 	}
-
-	/**
-	 * 검수 완료 정보 RFID로 전송
-	 * 
-	 * @param batch
-	 * @param invoiceId
-	 */
-	/*public void sendPackingToRfid(JobBatch batch, String invoiceId) {
-		
-		List<RfidResult> rfidResults = this.searchRfidResultByInvoice(batch.getDomainId(), batch.getId(), invoiceId);
-		
-		if(ValueUtil.isNotEmpty(rfidResults)) {
-			IQueryManager rfidQueryMgr = this.getDataSourceQueryManager(RfidDpsInspResult.class);
-			// 이미 해당 송장이 RFID에 존재하는지 체크 
-			int count = rfidQueryMgr.selectSizeBySql(RFID_EXAMED_SELECT_SQL, ValueUtil.newMap("waybillNo", invoiceId));
-			String currentTimeStr = DateUtil.dateTimeStr(new Date(), "yyyyMMddHHmmss");
-			
-			if(count == 0) {
-				for(RfidResult rfidResult : rfidResults) {
-					// RFID 실적 전송
-					String todayStr = rfidResult.getJobDate().replace(LogisConstants.DASH, LogisConstants.EMPTY_STRING);
-					Map<String, Object> params = ValueUtil.newMap("today,brandCd,shopCd,waybillNo,orderNo,rfidUid,creatorId,currentTime", todayStr, rfidResult.getBrandCd(), rfidResult.getShopCd(), invoiceId, rfidResult.getOrderNo(), rfidResult.getRfidId(), "WCS", currentTimeStr);
-					rfidQueryMgr.executeBySql(RFID_EXAMED_INSERT_SQL, params);
-				}
-				
-				// 프로시져 호출 - RFID_IF.PK_IF_RFIDHISTORY_RECV.PRO_IF_RFIDHISTORY_RECV_ONLINE
-				this.confirmRfidProcedure(invoiceId);
-			}
-		}
-	}*/
-	
-	/**
-	 * 단포 검수 완료 정보 RFID로 전송
-	 * 
-	 * @param rfidResult
-	 */
-	/*public void sendSinglePackingToRfid(RfidResult rfidResult) {
-		
-		String todayStr = DateUtil.todayStr("yyyyMMdd");
-		String invoiceId = rfidResult.getInvoiceId();
-		String currentTimeStr = DateUtil.dateTimeStr(new Date(), "yyyyMMddHHmmss");
-		Map<String, Object> params = ValueUtil.newMap("today,brandCd,shopCd,waybillNo,orderNo,rfidUid,creatorId,currentTime", todayStr, rfidResult.getBrandCd(), rfidResult.getShopCd(), invoiceId, rfidResult.getOrderNo(), rfidResult.getRfidId(), "WCS", currentTimeStr);
-		
-		// RFID 시스템에 단포 실적 전송
-		IQueryManager rfidQueryMgr = this.getDataSourceQueryManager(RfidDpsInspResult.class);
-		rfidQueryMgr.executeBySql(RFID_EXAMED_INSERT_SQL, params);
-
-		// 프로시져 호출 - RFID_IF.PK_IF_RFIDHISTORY_RECV.PRO_IF_RFIDHISTORY_RECV_ONLINE
-		this.confirmRfidProcedure(invoiceId);
-	}*/
-	
-	/**
-	 * RFID 프로시져 호출
-	 * 
-	 * @param invoiceId
-	 */
-	/*
-		// 1. 조건 생성
-		Map<String, Object> params = ValueUtil.newMap("IN_NO_WAYBILL", invoiceId);
-		// 2. 작업 지시 프로시져 콜 
-		IQueryManager rfidQueryMgr = this.getDataSourceQueryManager(RfidDpsInspResult.class);
-		Map<?, ?> result = rfidQueryMgr.callReturnProcedure("PK_IF_RFIDHISTORY_RECV.PRO_IF_RFIDHISTORY_RECV_ONLINE", params, Map.class);
-		// 3. 결과 파싱 
-		String successYn = ValueUtil.toString(result.get("OUT_YN_SUCCESS"));
-		
-		if(ValueUtil.isEqualIgnoreCase(successYn, LogisConstants.N_CAP_STRING)) {
-			String errorMsg = ValueUtil.isNotEmpty(result.get("OUT_ERRMSG")) ? result.get("OUT_ERRMSG").toString() : SysConstants.EMPTY_STRING;
-			
-			if(ValueUtil.isNotEmpty(errorMsg)) {
-				throw new ElidomRuntimeException(errorMsg);
-			} else {
-				throw new ElidomRuntimeException("Failed to DPS RFID Confirm Procedure!");
-			}
-		}
-	}*/
-
 }

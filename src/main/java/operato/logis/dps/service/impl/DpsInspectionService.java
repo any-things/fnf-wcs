@@ -648,14 +648,12 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	 */
 	public String sendBoxResultAndGetInvoice(JobBatch batch, String orderNo, String boxId, List<DpsInspItem> inspectionItems) {
 		
-		// 1. WMS로 조회한 작업 & RFID 검수 내역 기준으로 박스 실적 전송
-		this.dpsBoxSendSvc.sendPackingToWms(batch, orderNo, boxId, inspectionItems);
-		
-		// 2. WMS에 송장 발행 요청
+		// WMS에서 발행한 송장 번호
 		String invoiceId = null;
 		
 		try {
-			invoiceId = this.dpsBoxSendSvc.requestInvoiceToWms(batch, orderNo, boxId, inspectionItems);
+			// WMS로 박스 실적 전송 && 송장 발행 
+			invoiceId = this.dpsBoxSendSvc.sendPackingToWms(batch, orderNo, boxId, inspectionItems);
 			
 		} catch(RuntimeException re) {
 			// 오류 발생시 박스 리셋 이벤트를 던져 해당 주문의 boxId를 리셋한다. 
@@ -671,7 +669,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 			throw ere;
 		}
 	
-		// 3. 발행 송장 번호 리턴
+		// 발행 송장 번호 리턴
 		return invoiceId;
 	}
 	

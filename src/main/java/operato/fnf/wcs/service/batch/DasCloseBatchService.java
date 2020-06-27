@@ -21,6 +21,7 @@ import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.anythings.sys.util.AnyOrmUtil;
 import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.orm.IQueryManager;
+import xyz.elidom.sys.SysConstants;
 import xyz.elidom.util.ValueUtil;
 
 /**
@@ -183,7 +184,8 @@ public class DasCloseBatchService extends AbstractQueryService {
 		// 배치별 박스 실적 모두 조회
 		Query condition = new Query();
 		condition.addFilter("workUnit", batch.getId());
-		// TODO 취소 실적은 제외 조건
+		// 박스 취소가 아닌 모든 박스 실적을 전송
+		condition.addFilter("delYn", SysConstants.NOT_EQUAL, LogisConstants.Y_CAP_STRING);
 		List<WcsMheBox> wcsBoxList = this.queryManager.selectList(WcsMheBox.class, condition);
 		List<WmsMheBox> wmsBoxList = new ArrayList<WmsMheBox>();
 		

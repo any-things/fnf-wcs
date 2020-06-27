@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 
 import operato.fnf.wcs.FnFConstants;
 import operato.fnf.wcs.entity.DpsJobInstance;
-import operato.fnf.wcs.entity.RfidResult;
 import operato.fnf.wcs.entity.WmsExpressWaybillPrint;
 import operato.fnf.wcs.entity.WmsMheItemBarcode;
 import operato.fnf.wcs.rest.DpsJobInstanceController;
@@ -443,7 +442,6 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		boolean rfidFlag = skuCd.length() >= 30;
 		String rfidId = null;
 		String itemCd = null;
-		String shopCd = null;
 		
 		// 3. RFID 코드인 경우 RFID 체크
 		if(rfidFlag) {
@@ -475,15 +473,14 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		Long domainId = Domain.currentDomainId();
 		String todayStr = DateUtil.todayStr("yyyyMMdd");
 		String newBoxId = this.dpsBoxSendService.newBoxId(domainId, null, todayStr);
-		this.dpsBoxSendService.sendSinglePackToWms(domainId, todayStr, jobDate, sku.getBrand(), sku.getItemCd(), newBoxId, outbTcd, rfidId);
+		String invoiceId = this.dpsBoxSendService.sendSinglePackToWms(domainId, todayStr, jobDate, sku.getBrand(), sku.getItemCd(), newBoxId, outbTcd, rfidId);
 		
 		// 8. WMS 송장 발행
-		String invoiceId = this.dpsBoxSendService.newWaybillNo(newBoxId, true);
 		sql = "select * from mps_express_waybill_print where wh_cd = :whCd and waybill_no = :invoiceId";
 		WmsExpressWaybillPrint label = wmsQueryMgr.selectBySql(sql, ValueUtil.newMap("whCd,invoiceId", FnFConstants.WH_CD_ICF, invoiceId), WmsExpressWaybillPrint.class);
 
 		// 9. RFID 코드인 경우 RFID 실적 전송 
-		if(rfidFlag) {
+		/*if(rfidFlag) {
 			RfidResult rfidResult = new RfidResult();
 			rfidResult.setRfidId(skuCd);
 			rfidResult.setJobDate(jobDate);
@@ -495,7 +492,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 			rfidResult.setInvoiceId(invoiceId);
 			rfidResult.setShopCd(shopCd);
 			this.queryManager.insert(rfidResult);
-		}
+		}*/
 		
 		// 10. 작업 데이터 생성 ...
 		int boxInputSeq = this.dpsBoxSendService.newSinglePackBoxInputSeq(domainId, null, jobDate);
@@ -539,7 +536,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		inspection.setBoxId(job.getBoxId());
 		inspection.setInvoiceId(invoiceId);
 		JobBatch batch = new JobBatch();
-		batch.setDomainId(Domain.currentDomainId());
+		batch.setDomainId(domainId);
 		this.dpsInspectionService.printInvoiceLabel(batch, inspection, printerId);
 		
 		// 12. 리턴 

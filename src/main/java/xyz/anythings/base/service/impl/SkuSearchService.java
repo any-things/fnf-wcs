@@ -5,8 +5,11 @@ import java.util.Map;
 import java.util.StringJoiner;
 import java.util.regex.Pattern;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import operato.fnf.wcs.FnFConstants;
+import operato.fnf.wcs.entity.WmsMheItemBarcode;
 import xyz.anythings.base.LogisCodeConstants;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
@@ -16,6 +19,8 @@ import xyz.anythings.base.service.api.ISkuSearchService;
 import xyz.anythings.sys.util.AnyEntityUtil;
 import xyz.anythings.sys.util.AnyOrmUtil;
 import xyz.elidom.dbist.dml.Query;
+import xyz.elidom.orm.IQueryManager;
+import xyz.elidom.orm.manager.DataSourceManager;
 import xyz.elidom.sys.SysConstants;
 import xyz.elidom.sys.util.SettingUtil;
 import xyz.elidom.sys.util.ThrowUtil;
@@ -31,6 +36,12 @@ import xyz.elidom.util.ValueUtil;
 @Component("baseSkuSearchService")
 public class SkuSearchService extends AbstractLogisService implements ISkuSearchService {
 
+	/**
+	 * 데이터소스 매니저
+	 */
+	@Autowired
+	private DataSourceManager dataSourceMgr;
+	
 	@Override
 	public String validateSkuCd(JobBatch batch, String skuCd) {
 		skuCd = ValueUtil.isEmpty(skuCd) ? skuCd : skuCd.trim();
@@ -143,11 +154,16 @@ public class SkuSearchService extends AbstractLogisService implements ISkuSearch
 
 	@Override
 	public SKU findSku(Long domainId, String comCd, String skuCd, boolean exceptionWhenEmpty) {
-		Query condition = AnyOrmUtil.newConditionForExecution(domainId);
+		/*Query condition = AnyOrmUtil.newConditionForExecution(domainId);
 		condition.addFilter("comCd", comCd);
 		condition.addFilter("skuCd", skuCd);
-		SKU sku = this.queryManager.selectByCondition(SKU.class, condition);
-
+		SKU sku = this.queryManager.selectByCondition(SKU.class, condition);*/
+		
+		IQueryManager wmsQueryMgr = this.dataSourceMgr.getQueryManager(WmsMheItemBarcode.class);
+		String sql = "select :comCd as com_cd, item_cd as sku_cd, barcode2 as sku_barcd, barcode as sku_barcd2, '' as sku_nm, 1 as box_in_qty, brand as brand_cd, item_season as season_cd, item_style as style_cd, item_color as color_cd, item_size as size_cd, floor_cd as sku_class, item_gcd as sku_type, item_gcd_nm as sku_desc from mhe_item_barcode where item_cd = :skuCd";
+		Map<String, Object> params = ValueUtil.newMap("comCd,skuCd", FnFConstants.FNF_COM_CD, skuCd);
+		SKU sku = wmsQueryMgr.selectBySql(sql, params, SKU.class);
+		
 		if(sku == null && exceptionWhenEmpty) {
 			throw ThrowUtil.newValidationErrorWithNoLog(ThrowUtil.notFoundRecordMsg("terms.menu.SKU", skuCd));
 		}

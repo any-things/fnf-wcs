@@ -18,9 +18,9 @@ import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.entity.SKU;
 import xyz.anythings.base.entity.Stock;
 import xyz.anythings.base.model.EquipBatchSet;
+import xyz.anythings.base.service.api.ISkuSearchService;
 import xyz.anythings.base.service.api.IStockService;
 import xyz.anythings.base.service.util.LogisServiceUtil;
-import xyz.anythings.sys.util.AnyEntityUtil;
 import xyz.elidom.dbist.dml.Page;
 import xyz.elidom.orm.system.annotation.service.ApiDesc;
 import xyz.elidom.orm.system.annotation.service.ServiceDesc;
@@ -41,6 +41,12 @@ public class StockController extends AbstractRestService {
 	 */
 	@Autowired
 	private IStockService stockService;
+	
+	/**
+	 * 상품 조회 서비스
+	 */
+	@Autowired
+	private ISkuSearchService skuSearchService;
 
 	@Override
 	protected Class<?> entityClass() {
@@ -174,8 +180,11 @@ public class StockController extends AbstractRestService {
 			@RequestParam(name = "fixed_flag", required = false) Boolean fixedFlag) {
 		
 		Long domainId = Domain.currentDomainId();
-		SKU sku = AnyEntityUtil.findEntityBy(domainId, true, SKU.class, "id,com_cd,sku_cd,sku_barcd,sku_nm", "comCd,skuCd", comCd, skuCd);
+		// WMS에서 상품 정보 조회
+		SKU sku = this.skuSearchService.findSku(domainId, comCd, skuCd, true);
+		// 재고 조회 - 없으면 생성
 		Stock stock = this.stockService.findOrCreateStock(domainId, cellCd, sku);
+		// 필요 수량 조회 
 		return this.stockService.calcuateOrderStock(stock);
 	}
 	
@@ -193,7 +202,7 @@ public class StockController extends AbstractRestService {
 		Long domainId = Domain.currentDomainId();
 		
 		// 2. SKU 조회
-		SKU sku = AnyEntityUtil.findEntityBy(domainId, true, SKU.class, "id,box_in_qty,com_cd,sku_cd,sku_barcd,sku_nm", "comCd,skuCd", comCd, skuCd);
+		SKU sku = this.skuSearchService.findSku(domainId, comCd, skuCd, true);
 
 		// 3. 수량 단위가 박스 단위이면 박스 수량과 적치 수량을 곱해서 처리 
 		if(ValueUtil.isEqualIgnoreCase("B", qtyUnit)) {

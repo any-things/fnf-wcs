@@ -14,6 +14,7 @@ import xyz.anythings.base.entity.Stock;
 import xyz.anythings.base.entity.Stocktaking;
 import xyz.anythings.base.model.EquipBatchSet;
 import xyz.anythings.base.query.store.StockQueryStore;
+import xyz.anythings.base.service.api.ISkuSearchService;
 import xyz.anythings.base.service.api.IStockService;
 import xyz.anythings.base.service.util.LogisServiceUtil;
 import xyz.anythings.sys.util.AnyEntityUtil;
@@ -35,6 +36,11 @@ public class StockService extends AbstractLogisService implements IStockService 
 	 */
 	@Autowired
 	private StockQueryStore stockQueryStore;
+	/**
+	 * 상품 조회 서비스
+	 */
+	@Autowired
+	private ISkuSearchService skuSearchService;
 	
 	@Override
 	public Stock findStock(Long domainId, String cellCd, boolean exceptionWhenEmpty) {
@@ -64,7 +70,8 @@ public class StockService extends AbstractLogisService implements IStockService 
 		SKU sku = null;
 		
 		if(ValueUtil.isNotEmpty(skuCd)) {
-			sku = AnyEntityUtil.findEntityBy(domainId, true, SKU.class, "id,com_cd,sku_cd,sku_barcd,sku_nm", "comCd,skuCd", comCd, skuCd);
+			//sku = AnyEntityUtil.findEntityBy(domainId, true, SKU.class, "id,com_cd,sku_cd,sku_barcd,sku_nm", "comCd,skuCd", comCd, skuCd);
+			sku = this.skuSearchService.findSku(domainId, comCd, skuCd, true);
 		}
 		
 		if(sku != null) {
@@ -149,7 +156,8 @@ public class StockService extends AbstractLogisService implements IStockService 
 		SKU sku = null;
 		
 		if(ValueUtil.isEmpty(skuNm)) {
-			sku = AnyEntityUtil.findEntityBy(domainId, true, SKU.class, "id,com_cd,sku_cd,sku_barcd,sku_nm", "comCd,skuCd", comCd, skuCd);
+			//sku = AnyEntityUtil.findEntityBy(domainId, true, SKU.class, "id,com_cd,sku_cd,sku_barcd,sku_nm", "comCd,skuCd", comCd, skuCd);
+			sku = this.skuSearchService.findSku(domainId, comCd, skuCd, true);
 			
 		} else {
 			sku = new SKU();

@@ -576,10 +576,11 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 			
 			// 각 상품별로 순회하면서 검수 수량 만큼 검수 확정 처리한다.
 			for(DpsJobInstance job : jobList) {
+				if(remainQty <= 0) {
+					break;
+				}
+				
 				if(ValueUtil.isEqualIgnoreCase(job.getItemCd(), skuCd)) {
-					
-					if(remainQty <= 0) break;
-					
 					int jobCmptQty = job.getCmptQty();
 					// 검수 처리할 작업 : 검수 처리할 수량이 작업 확정 수량 보다 크거나 같다면 전부 검수 확정 처리 or 작업 확정 수량이 검수 처리할 수량 보다 크다면 분할 처리 후 검수 확정 처리
 					DpsJobInstance toInspectJob = (remainQty >= jobCmptQty) ? job : this.splitJob(job, remainQty);
@@ -589,51 +590,53 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 					toInspectJob.setInspectorId(inspectorId);
 					toInspectJob.setBoxResultIfAt(currentTime);
 					toInspectJobList.add(toInspectJob);
-					remainQty = remainQty - jobCmptQty;
 					orderIdList.add(toInspectJob.getMheDrId());
+					
+					// 남은 검수 확정 수량 계산
+					remainQty = remainQty - jobCmptQty;
 				}
 			}
+		}
+		
+		// 5. 마지막으로 작업, 주문에 대한 상태 업데이트
+		if(ValueUtil.isNotEmpty(toInspectJobList)) {
+			this.queryManager.updateBatch(toInspectJobList, "waybillNo", "status", "inspectedAt", "inspectorId", "boxResultIfAt");
 			
-			// 5. 마지막으로 작업, 주문에 대한 상태 업데이트
-			if(ValueUtil.isNotEmpty(toInspectJobList)) {
-				this.queryManager.updateBatch(toInspectJobList, "waybillNo", "status", "inspectedAt", "inspectorId", "boxResultIfAt");
-				
-				sql = "update mhe_dr set waybill_no = :invoiceId, status = :status, box_result_if_at = :boxResultIfAt where id in (:orderIdList)";
-				Map<String, Object> params = ValueUtil.newMap("orderIdList,invoiceId,status,boxResultIfAt", orderIdList, invoiceId, BoxPack.BOX_STATUS_EXAMED, currentTime);
-				this.queryManager.executeBySql(sql, params);
-			}
+			sql = "update mhe_dr set waybill_no = :invoiceId, status = :status, box_result_if_at = :boxResultIfAt where id in (:orderIdList)";
+			Map<String, Object> params = ValueUtil.newMap("orderIdList,invoiceId,status,boxResultIfAt", orderIdList, invoiceId, BoxPack.BOX_STATUS_EXAMED, currentTime);
+			this.queryManager.executeBySql(sql, params);
 		}
 	}
 	
 	/**
 	 * 작업 분할 
 	 * 
-	 * @param originalJob
-	 * @param splitQty
+	 * @param originalJob 분할될 작업 정보
+	 * @param inspectedQty 검수 처리할 수량 
 	 * @return
 	 */
-	private DpsJobInstance splitJob(DpsJobInstance originalJob, int splitQty) {
+	private DpsJobInstance splitJob(DpsJobInstance originalJob, int inspectedQty) {
 		
-		if(originalJob != null) { 
-			// 작업 정보의 주문 수량이 검수 확인 수량보다 크다면 작업 분할 처리 
-			if(originalJob.getPickQty() > splitQty) {
-				int inspectedQty = originalJob.getPickQty() - splitQty;
-				
-				// 1. SplitJob 생성
-				DpsJobInstance splittedJob = ValueUtil.populate(originalJob, new DpsJobInstance());
-				splittedJob.setId(UUID.randomUUID().toString());
-				splittedJob.setPickQty(originalJob.getPickQty() - inspectedQty);
-				splittedJob.setCmptQty(splittedJob.getPickQty());
-				splittedJob.setBoxId(null);
-				this.queryManager.insert(splittedJob);
-				
-				// 2. 원래 작업 수량 업데이트 
-				originalJob.setPickQty(inspectedQty);
-				originalJob.setCmptQty(inspectedQty);
-				this.queryManager.update(originalJob, "pickQty", "cmptQty");
-			}
+		// 1. 작업 정보의 확정 수량이 검수 처리할 수량 보다 큰지 판단
+		int splitQty = originalJob.getCmptQty() - inspectedQty;
+		
+		// 2. 작업 정보의 주문 수량이 검수 확인 수량보다 크다면 작업 분할 처리하고 그렇지 않다면 작업을 분할하지 않고 ...
+		if(splitQty > 0) {			
+			// 2.1 분할 작업 생성
+			DpsJobInstance splittedJob = ValueUtil.populate(originalJob, new DpsJobInstance());
+			splittedJob.setId(UUID.randomUUID().toString());
+			splittedJob.setPickQty(splitQty);
+			splittedJob.setCmptQty(splitQty);
+			splittedJob.setBoxId(null);
+			this.queryManager.insert(splittedJob);
+			
+			// 2.2 원래 작업 수량 업데이트 
+			originalJob.setPickQty(inspectedQty);
+			originalJob.setCmptQty(inspectedQty);
+			this.queryManager.update(originalJob, "pickQty", "cmptQty");
 		}
 		
+		// 3. 원래 작업 리턴
 		return originalJob;
 	}
 	

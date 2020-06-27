@@ -159,6 +159,7 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		}
 	}
 	
+	@SuppressWarnings("rawtypes")
 	private void interfaceSorter(JobBatch batch) {
 		// TODO 연구소 테스트 DB로 검수결과 확정 테이블이 없어 임시로 매장예정정보로 테스트
 		Query wmsCondition = new Query();

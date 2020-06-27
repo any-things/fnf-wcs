@@ -81,10 +81,10 @@ public class DpsReceiveBatchService extends AbstractQueryService {
 			item.setBatchId(item.getWmsBatchNo());
 			item.setBatchReceiptId(receipt.getId());
 			this.queryManager.insert(item);
+			receipt.addItem(item);
 		}
 		
-		// 3. 수신 아이템 설정 및 리턴
-		receipt.setItems(receiptItems);
+		// 3. 배치 수신 결과 리턴
 		return receipt;
 	}
 	

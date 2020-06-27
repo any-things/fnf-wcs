@@ -1,6 +1,5 @@
 package operato.logis.sms.service.impl;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -84,8 +83,8 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 	 * @return
 	 */
 	private BatchReceipt createReadyToReceiveData(BatchReceipt receipt, String jobType, Object ... params) {
-		// 1. 대기 상태 이거나 진행 중인 수신이 있는지 확인
 		
+		// 1. 대기 상태 이거나 진행 중인 수신이 있는지 확인
 		BatchReceipt runBatchReceipt = this.checkRunningOrderReceipt(receipt,jobType);
 		if(runBatchReceipt != null) return runBatchReceipt;
 		String jobDate = ValueUtil.toString(params[0]);
@@ -98,20 +97,20 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 			receiptItems = this.getWmfIfToSrtnReceiptItems(receipt, jobType, jobDate);
 		}
 		
-		
 		// 3 수신 아이템 데이터 생성 
 		for(BatchReceiptItem item : receiptItems) {
 			item.setBatchId(item.getWmsBatchNo());
 			item.setBatchReceiptId(receipt.getId());
 			this.queryManager.insert(item);
+			receipt.addItem(item);
 		}
 		
-		BatchReceiptItem items = new BatchReceiptItem();
+		/*BatchReceiptItem items = new BatchReceiptItem();
 		items.setBatchReceiptId(receipt.getId());
-		receiptItems = this.queryManager.selectList(BatchReceiptItem.class, items);
+		receiptItems = this.queryManager.selectList(BatchReceiptItem.class, items);*/
 		
 		// 4. 수신 아이템 설정 및 리턴
-		receipt.setItems(receiptItems);
+		//receipt.setItems(receiptItems);
 		return receipt;
 	}
 	

@@ -70,6 +70,7 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 		return ValueUtil.newMap("regions,preprocesses,summary", shopChutes, preprocesses, summaryByChutes);
 	}
 
+	@SuppressWarnings({ "unchecked", "null" })
 	@Override
 	public int generatePreprocess(JobBatch batch, Object... params) {
 		/**
@@ -146,6 +147,7 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 		
 	}
 
+	@SuppressWarnings("null")
 	@Override
 	public int assignEquipLevel(JobBatch batch, String equipCds, List<OrderPreprocess> items, boolean automatically) {
 		// 1. 상품 정보가 존재하는지 체크
@@ -228,6 +230,7 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 		// 3. 주문 가공 정보 업데이트
 	}
 	
+	@SuppressWarnings("unchecked")
 	private int availableChuteCount(Long domainId, String sorterCd, boolean activeFlag, List<String> enableChute) {
 		String sql = "SELECT SUM(EXT_CELL_CNT) AS CELL_CNT FROM CHUTES WHERE SORTER_CD = :sorterCd AND ACTIVE_FLAG = :activeFlag AND STATUS = :status AND CHUTE_NO IN ( :chuteNo )";
 		
@@ -347,6 +350,7 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 //		this.queryManager.executeBySql(rackSql, rackParamMap);
 	}
 	
+	@SuppressWarnings("rawtypes")
 	private void resetOrderList(JobBatch batch) {
 		String selectSql = "SELECT BATCH_ID FROM ORDER_PREPROCESSES GROUP BY BATCH_ID";
 		List<Map> batchIdList = this.queryManager.selectListBySql(selectSql, new HashMap<String, Object>(), Map.class, 0, 0);

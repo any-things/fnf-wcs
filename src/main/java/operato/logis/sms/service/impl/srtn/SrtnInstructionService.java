@@ -11,11 +11,13 @@ import org.springframework.stereotype.Component;
 import operato.fnf.wcs.entity.WcsMheDasOrder;
 import operato.fnf.wcs.entity.WcsMhePasOrder;
 import operato.fnf.wcs.entity.WmsWmtUifImpInbRtnTrg;
+import operato.fnf.wcs.entity.WmsWmtUifWcsInbRtnCnfm;
 import operato.logis.sms.query.SmsQueryStore;
 import xyz.anythings.base.entity.Cell;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.entity.Order;
 import xyz.anythings.base.entity.OrderPreprocess;
+import xyz.anythings.base.entity.Rack;
 import xyz.anythings.base.service.api.IInstructionService;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.anythings.sys.util.AnyOrmUtil;
@@ -114,7 +116,7 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		condition.addOrder("cellCd", false);
 		List<Cell> cellList = this.queryManager.selectList(Cell.class, condition);
 		
-		// 3. 슈트 중에 현재 작업 중이거나 사용 불가한 슈트가 있는지 체크
+		// 3. cell 중에 현재 작업 중이거나 사용 불가한 슈트가 있는지 체크
 		for(Cell cell : cellList) {
 			if(ValueUtil.isNotEmpty(cell.getClassCd())) {
 				// 호기에 다른 작업 배치가 할당되어 있습니다
@@ -130,7 +132,8 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		}
 		this.interfaceSorter(batch);
 		this.interfaceRack(batch);
-				
+		
+		this.updateRackStatus(batch, preprocesses);
 		
 		AnyOrmUtil.updateBatch(cellList, 100, "classCd");
 		batch.setStatus(JobBatch.STATUS_RUNNING);
@@ -168,9 +171,9 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		}
 		
 		IQueryManager dsQueryManager = this.getDataSourceQueryManager(WmsWmtUifImpInbRtnTrg.class);
-		List<WmsWmtUifImpInbRtnTrg> rtnTrgList = dsQueryManager.selectList(WmsWmtUifImpInbRtnTrg.class, wmsCondition);
+		List<WmsWmtUifWcsInbRtnCnfm> rtnCnfmList = dsQueryManager.selectList(WmsWmtUifWcsInbRtnCnfm.class, wmsCondition);
 		
-		List<String> skuCdList = AnyValueUtil.filterValueListBy(rtnTrgList, "refDetlNo");
+		List<String> skuCdList = AnyValueUtil.filterValueListBy(rtnCnfmList, "refDetlNo");
 		
 		if(ValueUtil.isEmpty(skuCdList)) {
 			skuCdList.add("1");
@@ -181,21 +184,21 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		List<Map> skuInfoList = this.queryManager.selectListBySql(skuInfoQuery, sqlParams, Map.class, 0, 0);
 		
 		
-		List<WcsMhePasOrder> pasOrderList = new ArrayList<WcsMhePasOrder>(rtnTrgList.size());
+		List<WcsMhePasOrder> pasOrderList = new ArrayList<WcsMhePasOrder>(rtnCnfmList.size());
 		
-		for (WmsWmtUifImpInbRtnTrg rtnTrg : rtnTrgList) {
+		for (WmsWmtUifWcsInbRtnCnfm cnfmTrg : rtnCnfmList) {
 			WcsMhePasOrder wcsMhePasOrder = new WcsMhePasOrder();
 			wcsMhePasOrder.setId(UUID.randomUUID().toString());
 			wcsMhePasOrder.setBatchNo(batch.getId());
-			wcsMhePasOrder.setJobDate(rtnTrg.getInbEctDate());
+			wcsMhePasOrder.setJobDate(cnfmTrg.getInbDate());
 			wcsMhePasOrder.setJobType(WcsMhePasOrder.JOB_TYPE_RTN);
-			wcsMhePasOrder.setBoxId(rtnTrg.getRefNo());
-			wcsMhePasOrder.setSkuCd(rtnTrg.getRefDetlNo());
-			wcsMhePasOrder.setOrderQty(rtnTrg.getInbEctQty());
+			wcsMhePasOrder.setBoxId(cnfmTrg.getRefNo());
+			wcsMhePasOrder.setSkuCd(cnfmTrg.getRefDetlNo());
+			wcsMhePasOrder.setOrderQty(cnfmTrg.getInbCmptQty());
 			wcsMhePasOrder.setInsDatetime(DateUtil.getDate());
 			
 			for (Map skuInfo : skuInfoList) {
-				if(ValueUtil.isEqual(skuInfo.get("sku_cd"), rtnTrg.getRefDetlNo())) {
+				if(ValueUtil.isEqual(skuInfo.get("sku_cd"), cnfmTrg.getRefDetlNo())) {
 					wcsMhePasOrder.setSkuBcd(ValueUtil.toString(skuInfo.get("sku_barcd")));
 					wcsMhePasOrder.setChuteNo(ValueUtil.toString(skuInfo.get("sub_equip_cd")));	
 				}
@@ -251,5 +254,19 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		if(ValueUtil.isNotEmpty(dasOrderList)) {
 			AnyOrmUtil.insertBatch(dasOrderList, 100);
 		}
+	}
+	
+	private void updateRackStatus(JobBatch batch, List<OrderPreprocess> preprocesses) {
+		List<String> chuteList = AnyValueUtil.filterValueListBy(preprocesses, "subEquipCd");
+		
+		Query condition = AnyOrmUtil.newConditionForExecution(batch.getDomainId());
+		condition.addFilter("chuteNo", SysConstants.IN, chuteList);
+		List<Rack> rackList = this.queryManager.selectList(Rack.class, condition);
+		for (Rack rack : rackList) {
+			rack.setBatchId(batch.getBatchGroupId());
+			rack.setStatus(JobBatch.STATUS_RUNNING);
+		}
+		
+		AnyOrmUtil.updateBatch(rackList, 100, "batchId", "status");
 	}
 }

@@ -237,6 +237,45 @@ public class OrderPreprocessController extends AbstractRestService {
 	}
 	
 	/**
+	 * 주문 가공 Cell 바꾸기
+	 * 
+	 * @param batchId
+	 * @param items
+	 * @return
+	 */
+	@RequestMapping(value = "/{id}/swap_cell", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ApiDesc(description = "Swap CellCd")
+	public Map<String, Object> swapCell(
+			@PathVariable("id") String batchId,
+			@RequestBody Map<String, Object> items) {
+		
+		JobBatch batch = this.checkBatchStatus(batchId);
+		
+		if(ValueUtil.isEmpty(items.get("prev_id"))) {
+			throw ThrowUtil.newNotAllowedEmptyInfo("terms.label.id");
+		} else if(ValueUtil.isEmpty(items.get("current_id"))) {
+			throw ThrowUtil.newNotAllowedEmptyInfo("terms.label.id");
+		}
+		
+		String prev_id = ValueUtil.toString(items.get("prev_id"));
+		String current_id = ValueUtil.toString(items.get("current_id"));
+		
+		OrderPreprocess prevPreProcess = AnyEntityUtil.findEntityById(true, OrderPreprocess.class, prev_id);
+		OrderPreprocess currentPreProcess = AnyEntityUtil.findEntityById(true, OrderPreprocess.class, current_id);
+		
+		prevPreProcess.setSubEquipCd(ValueUtil.toString(items.get("current_chute_no")));
+		prevPreProcess.setClassCd(ValueUtil.toString(items.get("current_cell_cd")));
+		
+		currentPreProcess.setSubEquipCd(ValueUtil.toString(items.get("prev_chute_no")));
+		currentPreProcess.setClassCd(ValueUtil.toString(items.get("prev_cell_cd")));
+		
+		this.update(prev_id, prevPreProcess);
+		this.update(current_id, currentPreProcess);
+		
+		return ValueUtil.newMap("result", SysConstants.OK_STRING);
+	}
+	
+	/**
 	 * 주문 자동 가공
 	 */
 	@RequestMapping(value="/generate_order", method=RequestMethod.POST, consumes=MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
@@ -279,6 +318,16 @@ public class OrderPreprocessController extends AbstractRestService {
 		
 		if(!LogisConstants.isB2BJobType(batch.getJobType())) {
 			throw ThrowUtil.newNotSupportedMethodYet();
+		}
+		
+		return batch;
+	}
+	
+	private JobBatch checkBatchStatus(String batchId) {
+		JobBatch batch = AnyEntityUtil.findEntityById(true, JobBatch.class, batchId);
+		
+		if(ValueUtil.isNotEqual(batch.getStatus(), JobBatch.STATUS_WAIT) && ValueUtil.isNotEqual(batch.getStatus(), JobBatch.STATUS_READY)) {
+			throw ThrowUtil.newInvalidStatus(batch.getStatus(), batch.getId(), JobBatch.STATUS_WAIT + ", " + JobBatch.STATUS_READY);
 		}
 		
 		return batch;

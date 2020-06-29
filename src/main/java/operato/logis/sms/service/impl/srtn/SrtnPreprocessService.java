@@ -62,12 +62,12 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 		}
 		
 		// 4. 호기 정보 조회 - 주문 가공 화면의 우측 호기 리스트
-		List<ChuteStatus> shopChutes = this.chuteAssignmentStatus(batch);
+//		List<ChuteStatus> shopChutes = this.chuteAssignmentStatus(batch);
 		// 5. 호기별 물량 요약 정보 - 주문 가공 화면의 우측 상단 호기별 물량 요약 정보
 		List<SdasPreprocessSummary> summaryByChutes = this.preprocessSummaryByChutes(batch);
 		// 7. 리턴 데이터 셋
 		
-		return ValueUtil.newMap("regions,preprocesses,summary", shopChutes, preprocesses, summaryByChutes);
+		return ValueUtil.newMap("regions,preprocesses,summary", preprocesses, preprocesses, summaryByChutes);
 	}
 
 	@SuppressWarnings({ "unchecked", "null" })

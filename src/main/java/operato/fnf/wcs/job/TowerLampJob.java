@@ -137,21 +137,11 @@ public class TowerLampJob extends AbstractFnFJob {
 		List<TowerLamp> lampList = this.queryManager.selectList(TowerLamp.class, condition);
 		
 		for(TowerLamp lamp : lampList) {
-			LampCellStatus lampStatusY = this.findLampCellStatus(lampStatusList, lamp, LogisConstants.Y_CAP_STRING);
-			if(lampStatusY == null) {
-				lampStatusY = new LampCellStatus(lamp.getTowerLampCd(), LogisConstants.Y_CAP_STRING, 0); 
-				lampStatusList.add(lampStatusY);
-			}
+			LampCellStatus lampStatus = this.findLampCellStatus(lampStatusList, lamp);
 			
-			LampCellStatus lampStatusN = this.findLampCellStatus(lampStatusList, lamp, LogisConstants.N_CAP_STRING);
-			if(lampStatusN == null) {
-				lampStatusN = new LampCellStatus(lamp.getTowerLampCd(), LogisConstants.N_CAP_STRING, 0); 
-				lampStatusList.add(lampStatusN);
-			}
+			int emptyYCellCnt = ValueUtil.toInteger(lampStatus.getEmptyCellCnt(), 0);
+			int totalCellCnt = ValueUtil.toInteger(lampStatus.getTotCellCnt(), 0);
 			
-			int emptyYCellCnt = ValueUtil.toInteger(lampStatusY.getCellCnt(), 0);
-			int emptyNCellCnt = ValueUtil.toInteger(lampStatusN.getCellCnt(), 0);
-			int totalCellCnt = emptyYCellCnt + emptyNCellCnt;
 			float emptyCellPercent = (totalCellCnt == 0 || emptyYCellCnt == 0) ? 0 : ValueUtil.toFloat(emptyYCellCnt) / ValueUtil.toFloat(totalCellCnt) * 100.0f;
 			this.setLampOnSetting(domainId, lamp, emptyCellPercent);
 		}
@@ -164,13 +154,12 @@ public class TowerLampJob extends AbstractFnFJob {
 	 * 
 	 * @param lampStatusList
 	 * @param lamp
-	 * @param emptyYn
 	 * @return
 	 */
-	private LampCellStatus findLampCellStatus(List<LampCellStatus> lampStatusList, TowerLamp lamp, String emptyYn) {
+	private LampCellStatus findLampCellStatus(List<LampCellStatus> lampStatusList, TowerLamp lamp) {
 		
 		for(LampCellStatus lampStatus : lampStatusList) {
-			if(ValueUtil.isEqualIgnoreCase(lamp.getTowerLampCd(), lampStatus.getTowerLampCd()) && ValueUtil.isEqualIgnoreCase(emptyYn, lampStatus.getEmptyYn())) {
+			if(ValueUtil.isEqualIgnoreCase(lamp.getTowerLampCd(), lampStatus.getTowerLampCd())) {
 				return lampStatus;
 			}
 		}

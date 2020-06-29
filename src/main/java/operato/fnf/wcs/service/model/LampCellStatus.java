@@ -11,21 +11,20 @@ public class LampCellStatus {
 	 */
 	private String towerLampCd;
 	/**
-	 * 빈 셀 여부 
+	 * 빈 셀 개수 
 	 */
-	private String emptyYn;
+	private Integer emptyCellCnt;
+	
 	/**
-	 * 셀 개수
+	 * 채워진 셀 개수 
 	 */
-	private Integer cellCnt;
+	private Integer fillCellCnt;
+	/**
+	 * 전체 셀 개수
+	 */
+	private Integer totCellCnt;
 	
 	public LampCellStatus() {
-	}
-	
-	public LampCellStatus(String towerLampCd, String emptyYn, Integer cellCnt) {
-		this.towerLampCd = towerLampCd;
-		this.emptyYn = emptyYn;
-		this.cellCnt = cellCnt;
 	}
 
 	public String getTowerLampCd() {
@@ -36,20 +35,27 @@ public class LampCellStatus {
 		this.towerLampCd = towerLampCd;
 	}
 
-	public String getEmptyYn() {
-		return emptyYn;
+	public Integer getEmptyCellCnt() {
+		return emptyCellCnt;
 	}
 
-	public void setEmptyYn(String emptyYn) {
-		this.emptyYn = emptyYn;
+	public void setEmptyCellCnt(Integer emptyCellCnt) {
+		this.emptyCellCnt = emptyCellCnt;
 	}
 
-	public Integer getCellCnt() {
-		return cellCnt;
+	public Integer getFillCellCnt() {
+		return fillCellCnt;
 	}
 
-	public void setCellCnt(Integer cellCnt) {
-		this.cellCnt = cellCnt;
+	public void setFillCellCnt(Integer fillCellCnt) {
+		this.fillCellCnt = fillCellCnt;
 	}
 
+	public Integer getTotCellCnt() {
+		return totCellCnt;
+	}
+
+	public void setTotCellCnt(Integer totCellCnt) {
+		this.totCellCnt = totCellCnt;
+	}
 }

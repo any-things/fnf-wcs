@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import operato.fnf.wcs.entity.WcsMheBox;
+import operato.fnf.wcs.entity.WcsMheDr;
 import operato.fnf.wcs.entity.WcsMheHr;
 import operato.fnf.wcs.entity.WmsMheBox;
 import operato.fnf.wcs.entity.WmsMheHr;
@@ -60,21 +61,24 @@ public class DasCloseBatchService extends AbstractQueryService {
 		if(batch == null) {
 			return;
 		}
-		
-		// 2. 10분 생산성 최종 마감
-		this.closeProductivity(batch);
-		
-		// 3. 배치에 반영 
-		this.setBatchInfoOnClosing(batch);
 
-		// 4. WMS에 박스 실적 한 번에 전송
+		// 2. WMS에 박스 실적 한 번에 전송
 		this.sendAllBoxToWms(batch);
 		
-		// 5. WMS MHE_HR 테이블에 반영
+		// 3. WMS에 최종 피킹 실적을 한 번에 전송
+		this.sendAllPickingToWms(batch);
+		
+		// 4. 10분 생산성 최종 마감
+		this.closeProductivity(batch);
+		
+		// 5. 배치에 반영 
+		this.setBatchInfoOnClosing(batch);
+		
+		// 6. WMS MHE_HR 테이블에 반영
 		this.closeWmsWave(batch, wcsMheHr);
 		
-		// 6. WcsMheHr 엔티티에 반영
-		this.closeWcsWave(batch, wcsMheHr);		
+		// 7. WCS MHE_HR 테이블에 반영
+		this.closeWcsWave(batch, wcsMheHr);
 	}
 	
 	/**
@@ -206,7 +210,39 @@ public class DasCloseBatchService extends AbstractQueryService {
 			wmsBoxList.clear();
 		}
 		
+		// 박스 전송 플래그 및 시간 업데이트
+		String sql = "update mhe_box set if_yn = 'Y', if_datetime = sysdate where work_unit = :batchId";
+		this.queryManager.executeBySql(sql, ValueUtil.newMap("batchId", batch.getId()));
+		
+		// 박스 리스트 사이즈 리턴
 		return wcsBoxList.size();
+	}
+	
+	/**
+	 * 피킹 실적을 한 번에 전송
+	 * 
+	 * @param batch
+	 * @return
+	 */
+	private int sendAllPickingToWms(JobBatch batch) {
+		// WCS 배치 주문 정보 모두 조회
+		Query condition = new Query();
+		condition.addSelect("whCd,workUnit,shiptoId,outbNo,locationCd,itemCd,cmptQty");
+		condition.addFilter("workUnit", batch.getId());
+		List<WcsMheDr> wcsOrders = this.queryManager.selectList(WcsMheDr.class, condition);
+		
+		// WMS 배치 주문 정보에 업데이트
+		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheBox.class);
+		String sql = "update mhe_dr set cmpt_qty = :cmptQty where wh_cd = :whCd and work_unit = :workUnit and shipto_id = :shiptoId and outb_no = :outbNo and location_cd = :locationCd and item_cd = :itemCd";
+		int updatedCount = 0;
+		
+		for(WcsMheDr wcsOrder : wcsOrders) {
+			Map<String, Object> params = ValueUtil.newMap("whCd,workUnit,shiptoId,outbNo,locationCd,itemCd,cmptQty", wcsOrder.getWhCd(), wcsOrder.getWorkUnit(), wcsOrder.getShiptoId(), wcsOrder.getOutbNo(), wcsOrder.getLocationCd(), wcsOrder.getItemCd(), wcsOrder.getCmptQty());
+			updatedCount += wmsQueryMgr.executeBySql(sql, params);
+		}
+		
+		// 업데이트 개수 리턴
+		return updatedCount;
 	}
 	
 	/**

@@ -139,11 +139,11 @@ public class TowerLampJob extends AbstractFnFJob {
 		for(TowerLamp lamp : lampList) {
 			LampCellStatus lampStatus = this.findLampCellStatus(lampStatusList, lamp);
 			
-			int emptyYCellCnt = ValueUtil.toInteger(lampStatus.getEmptyCellCnt(), 0);
+			int fillCellCnt = ValueUtil.toInteger(lampStatus.getFillCellCnt(), 0);
 			int totalCellCnt = ValueUtil.toInteger(lampStatus.getTotCellCnt(), 0);
 			
-			float emptyCellPercent = (totalCellCnt == 0 || emptyYCellCnt == 0) ? 0 : ValueUtil.toFloat(emptyYCellCnt) / ValueUtil.toFloat(totalCellCnt) * 100.0f;
-			this.setLampOnSetting(domainId, lamp, emptyCellPercent);
+			float fillCellPercent = (totalCellCnt == 0 || fillCellCnt == 0) ? 0 : ValueUtil.toFloat(fillCellCnt) / ValueUtil.toFloat(totalCellCnt) * 100.0f;
+			this.setLampOnSetting(domainId, lamp, fillCellPercent);
 		}
 				
 		return lampList;
@@ -183,19 +183,19 @@ public class TowerLampJob extends AbstractFnFJob {
 	 * 
 	 * @param domainId
 	 * @param lamp
-	 * @param emptyCellPercent
+	 * @param fillCellPercent
 	 */
-	private void setLampOnSetting(Long domainId, TowerLamp lamp, float emptyCellPercent) {
+	private void setLampOnSetting(Long domainId, TowerLamp lamp, float fillCellPercent) {
 		
 		float healthRate = this.getStockHealthRate(domainId);
 		float normalRate = this.getStockNormalRate(domainId);
 		
-		if(emptyCellPercent >= healthRate) {
+		if(fillCellPercent >= healthRate) {
 			lamp.setLampG(this.lampOnStatus);
 			lamp.setLampR(this.lampOffStatus);
 			lamp.setLampA(this.lampOffStatus);
 			
-		} else if(emptyCellPercent >= normalRate && emptyCellPercent < healthRate) {
+		} else if(fillCellPercent >= normalRate && fillCellPercent < healthRate) {
 			lamp.setLampG(this.lampOffStatus);
 			lamp.setLampR(this.lampOffStatus);
 			lamp.setLampA(this.lampOnStatus);

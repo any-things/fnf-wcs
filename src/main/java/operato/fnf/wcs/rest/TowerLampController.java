@@ -1,7 +1,7 @@
 package operato.fnf.wcs.rest;
 
-import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -168,15 +168,19 @@ public class TowerLampController extends AbstractRestService {
 	@RequestMapping(value="/agent/update/status", method=RequestMethod.PUT, consumes=MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
 	@ApiDesc(description="Call Request From Agent : Tower Lamp Status Update")
 	public void updateStatusFromAgent(@RequestBody TowerLamp input) {
-		input.setUpdatedAt(new Date());
-		this.queryManager.update(input, "status", "updatedAt");
+		
+		Map<String, Object> params = ValueUtil.newMap("lampId,status", input.getId(), input.getStatus());
+		String sql = "update tower_lamp set status = :status, updater_id = 'lamp-agent', updated_at = now() where id = :lampId";
+		this.queryManager.executeBySql(sql, params);
 	}
 	
 	@RequestMapping(value="/agent/update/lamp", method=RequestMethod.PUT, consumes=MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
 	@ApiDesc(description="Call Request From Agent : Tower Lamp lamp Update")
 	public void updateLampFromAgent(@RequestBody TowerLamp input) {
-		input.setUpdatedAt(new Date());
-		this.queryManager.update(input, "lampR", "lampG", "lampA", "updatedAt");
+		
+		Map<String, Object> params = ValueUtil.newMap("lampId,lampR,lampG,lampA", input.getId(), input.getLampR(), input.getLampG(), input.getLampA());
+		String sql = "update tower_lamp set lamp_r = :lampR, lamp_g = :lampG, lamp_a = :lampA, updater_id = 'lamp-agent', updated_at = now() where id = :lampId";
+		this.queryManager.executeBySql(sql, params);
 	}
 
 }

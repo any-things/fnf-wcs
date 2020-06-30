@@ -12,8 +12,8 @@ import xyz.elidom.dbist.annotation.Table;
 /*
  * 박스별 패킹 내역 수신 - DAS, 소터 (DPS 해당 없음)
  */
-@Table(name = "mhe_box", idStrategy = GenerationRule.UUID, uniqueFields="whCd,workUnit,shiptoId,itemCd,boxNo", indexes = {
-	@Index(name = "ix_mhe_box_01", columnList = "wh_cd,work_unit,shipto_id,item_cd,box_no", unique = true),
+@Table(name = "mhe_box", idStrategy = GenerationRule.UUID, uniqueFields="whCd,workUnit,shiptoId,itemCd,boxNo,boxSeq", indexes = {
+	@Index(name = "ix_mhe_box_01", columnList = "wh_cd,work_unit,shipto_id,item_cd,box_no,box_seq", unique = true),
 	@Index(name = "ix_mhe_box_02", columnList = "work_unit,outb_no,box_no"),
 	@Index(name = "ix_mhe_box_03", columnList = "work_date,strr_id,mhe_no,box_no")
 })
@@ -57,6 +57,9 @@ public class WcsMheBox extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
 	@Column (name = "box_no", nullable = false, length = 30)
 	private String boxNo;
+	
+	@Column (name = "box_seq", nullable = true, length = 10)
+	private Integer boxSeq;
 	
 	@Column (name = "cmpt_qty", nullable = true, length = 10)
 	private Integer cmptQty;
@@ -165,6 +168,14 @@ public class WcsMheBox extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setBoxNo(String boxNo) {
 		this.boxNo = boxNo;
+	}
+
+	public Integer getBoxSeq() {
+		return boxSeq;
+	}
+
+	public void setBoxSeq(Integer boxSeq) {
+		this.boxSeq = boxSeq;
 	}
 
 	public Integer getCmptQty() {

@@ -61,14 +61,11 @@ public class ResultSendJob extends AbstractFnFJob {
 				
 				if(ValueUtil.isNotEmpty(batches)) {
 					for(JobBatch batch : batches) {
-						// WMS에 피킹 실적 전송
-						this.sendPickResultToWms(domain, batch);
+						// DAS에서 올려 준 피킹 실적을 WMS에 피킹 실적 전송
+						this.sendPickResults(domain, batch);
 						
-						// WMS에 박스 실적 전송
-						this.sendBoxResultToWms(domain, batch);
-						
-						// RFID에 박스 취소 실적 전송
-						this.sendBoxCancelToRfid(domain, batch);
+						// RFID에 박스 실적 전송 - 박스 실적 전송 & 박스 취소 & RFID 검수 정보 수신까지 처리
+						this.sendBoxResults(domain, batch);
 					}
 				}
 			} catch (Exception e) {
@@ -99,13 +96,13 @@ public class ResultSendJob extends AbstractFnFJob {
 	}
 	
 	/**
-	 * 박스 실적을 WMS로 전송
+	 * 박스 실적을 RFID로 전송
 	 * 
 	 * @param domain
 	 * @param batch
 	 * @return
 	 */
-	private void sendBoxResultToWms(Domain domain, JobBatch batch) {		
+	private void sendBoxResults(Domain domain, JobBatch batch) {		
 		if(LogisConstants.isDasJobType(batch.getJobType())) {
 			this.dasBoxSendSvc.sendBoxResults(domain, batch);
 		}
@@ -118,19 +115,8 @@ public class ResultSendJob extends AbstractFnFJob {
 	 * @param batch
 	 * @return
 	 */
-	private void sendPickResultToWms(Domain domain, JobBatch batch) {
+	private void sendPickResults(Domain domain, JobBatch batch) {
 		this.pickResultSendSvc.sendPickingResults(domain, batch);
-	}
-
-	/**
-	 * 박스 취소 실적을 RFID로 전송
-	 * 
-	 * @param domain
-	 * @param batch
-	 * @return
-	 */
-	private void sendBoxCancelToRfid(Domain domain, JobBatch batch) {
-		// TODO 
 	}
 
 }

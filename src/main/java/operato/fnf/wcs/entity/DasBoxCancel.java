@@ -16,12 +16,13 @@ import xyz.elidom.orm.OrmConstants;
  * @author shortstop
  */
 @Table(name = "mhe_das_box_cancel", idStrategy = GenerationRule.UUID, indexes = {
-	@Index(name = "ix_das_box_cancel_01", columnList = "batch_no"),
-	@Index(name = "ix_das_box_cancel_02", columnList = "mhe_no"),
-	@Index(name = "ix_das_box_cancel_03", columnList = "sort_date"),
-	@Index(name = "ix_das_box_cancel_04", columnList = "box_id"),
-	@Index(name = "ix_das_box_cancel_05", columnList = "prcs_yn"),
-	@Index(name = "ix_das_box_cancel_06", columnList = "created_at")
+	@Index(name = "ix_das_box_cancel_01", columnList = "wh_cd,batch_no,box_id,box_seq", unique = true),
+	@Index(name = "ix_das_box_cancel_02", columnList = "batch_no"),
+	@Index(name = "ix_das_box_cancel_03", columnList = "mhe_no"),
+	@Index(name = "ix_das_box_cancel_04", columnList = "sort_date"),
+	@Index(name = "ix_das_box_cancel_05", columnList = "box_id"),
+	@Index(name = "ix_das_box_cancel_06", columnList = "prcs_yn"),
+	@Index(name = "ix_das_box_cancel_07", columnList = "created_at")
 })
 public class DasBoxCancel extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	/**
@@ -48,17 +49,23 @@ public class DasBoxCancel extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "sort_date", length = 8)
 	private String sortDate;
 
-	@Column (name = "sort_seq", length = 3)
+	@Column (name = "sort_seq", length = 5)
 	private String sortSeq;
 
 	@Column (name = "box_id", length = 30)
 	private String boxId;
+	
+	@Column (name = "box_seq", length = 5)
+	private Integer boxSeq;
 
 	@Column (name = "prcs_yn", length = 1)
 	private String prcsYn;
 	
 	@Column(name = OrmConstants.TABLE_FIELD_CREATED_AT, type = ColumnType.DATETIME)
 	private Date createdAt;
+	
+	@Column(name = "prcs_at", type = ColumnType.DATETIME)
+	private Date prcsAt;
   
 	public String getId() {
 		return id;
@@ -123,6 +130,14 @@ public class DasBoxCancel extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	public void setBoxId(String boxId) {
 		this.boxId = boxId;
 	}
+	
+	public Integer getBoxSeq() {
+		return boxSeq;
+	}
+
+	public void setBoxSeq(Integer boxSeq) {
+		this.boxSeq = boxSeq;
+	}
 
 	public String getPrcsYn() {
 		return prcsYn;
@@ -138,6 +153,14 @@ public class DasBoxCancel extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setCreatedAt(Date createdAt) {
 		this.createdAt = createdAt;
+	}
+
+	public Date getPrcsAt() {
+		return prcsAt;
+	}
+
+	public void setPrcsAt(Date prcsAt) {
+		this.prcsAt = prcsAt;
 	}
 
 }

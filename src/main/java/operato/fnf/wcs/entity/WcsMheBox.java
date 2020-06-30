@@ -70,11 +70,23 @@ public class WcsMheBox extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "mhe_datetime", nullable = true, type = ColumnType.DATETIME)
 	private Date mheDatetime;
 	
+	/**
+	 * RFID 전송 여부
+	 */
 	@Column (name = "if_yn", length = 1)
 	private String ifYn;
 	
+	/**
+	 * RFID 전송 시간
+	 */
 	@Column (name = "if_datetime", type = ColumnType.DATETIME)
 	private Date ifDatetime;
+	
+	/**
+	 * WMS 전송 시간
+	 */
+	@Column (name = "cnf_datetime", type = ColumnType.DATETIME)
+	private Date cnfDatetime;
 	
 	@Column (name = "del_yn", length = 1)
 	private String delYn;
@@ -216,6 +228,14 @@ public class WcsMheBox extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setIfDatetime(Date ifDatetime) {
 		this.ifDatetime = ifDatetime;
+	}
+
+	public Date getCnfDatetime() {
+		return cnfDatetime;
+	}
+
+	public void setCnfDatetime(Date cnfDatetime) {
+		this.cnfDatetime = cnfDatetime;
 	}
 
 	public String getDelYn() {

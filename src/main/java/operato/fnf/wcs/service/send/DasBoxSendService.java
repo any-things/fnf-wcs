@@ -16,7 +16,6 @@ import operato.fnf.wcs.entity.RfidBoxItem;
 import operato.fnf.wcs.entity.RfidBoxResult;
 import operato.fnf.wcs.entity.WcsMheBox;
 import operato.fnf.wcs.entity.WmsMheBox;
-import operato.fnf.wcs.entity.WmsMheHr;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.sys.service.AbstractQueryService;
@@ -44,7 +43,7 @@ public class DasBoxSendService extends AbstractQueryService {
 	/**
 	 * RFID 박스 취소 I/F 순서 쿼리
 	 */
-	private static final String RFID_BOX_DEL_IF_SEQ = "SELECT SEQ_IF_PASDELIVERY_DEL_RECV.NEXTVAL FROM DUAL";
+	private static final String RFID_BOX_DEL_IF_SEQ = "SELECT RFID_IF.SEQ_IF_PASDELIVERY_DEL_RECV.NEXTVAL FROM DUAL";
 	/**
 	 * RFID 박스 취소 정보 전송 쿼리
 	 */
@@ -60,20 +59,17 @@ public class DasBoxSendService extends AbstractQueryService {
 	public void sendBoxResults(Domain domain, JobBatch batch) {
 		
 		Long domainId = batch.getDomainId();
-		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
 		IQueryManager rfidQueryMgr = this.getDataSourceQueryManager(RfidBoxItem.class);
 		DasBoxSendService boxSendSvc = BeanUtil.get(DasBoxSendService.class);
 		
 		// 1. 박스 완료 실적 조회
 		List<WcsMheBox> boxOrderList = this.searchBoxedOrderList(batch);
-		// 2. WMS에 전송
+		// 2. RFID에 전송
 		for(WcsMheBox order : boxOrderList) {
-			// 2.1 WCS 주문별 실적 정보 
-			List<WcsMheBox> boxedOrders = this.searchBoxResult(order.getWorkUnit(), order.getOutbNo());
-			// 2.2 WCS 주문별 실적 정보를 WMS 패킹 정보로 복사
-			boxSendSvc.sendPackingsToWms(domainId, wmsQueryMgr, boxedOrders);
-			// 2.3 WCS 주문별 실적 정보를 RFID 패킹 정보로 복사
-			boxSendSvc.sendPackingsToRfid(domainId, wmsQueryMgr, boxedOrders);
+			// 2.1 DAS로 부터 올라온 WCS 박스 실적 정보 조회 
+			List<WcsMheBox> packings = this.searchBoxResult(order.getWorkUnit(), order.getOutbNo());
+			// 2.2 WCS 주문별 실적 정보를 RFID 패킹 정보로 복사
+			boxSendSvc.sendPackingsToRfid(domainId, rfidQueryMgr, packings);
 		}
 
 		// 3. 박스 취소 실적 조회
@@ -134,6 +130,7 @@ public class DasBoxSendService extends AbstractQueryService {
 		Query condition = new Query();
 		condition.addFilter("whCd", FnFConstants.WH_CD_ICF);
 		condition.addFilter("workUnit", batchId);
+		condition.addFilter("delYn", LogisConstants.NOT_EQUAL, LogisConstants.Y_CAP_STRING);
 		condition.addFilter("ifYn", LogisConstants.NOT_EQUAL, LogisConstants.Y_CAP_STRING);
 		condition.addFilter("outbNo", orderId);
 		condition.addOrder("mheDatetime", true);
@@ -185,14 +182,19 @@ public class DasBoxSendService extends AbstractQueryService {
 		
 		if(ValueUtil.isNotEmpty(boxedOrders)) {
 			List<RfidBoxItem> toRfidBoxList = new ArrayList<RfidBoxItem>(boxedOrders.size());
+			Date currentTime = new Date();
 			
 			for(WcsMheBox boxedOrder : boxedOrders) {
 				// WMS 전송 데이터 생성 
 				RfidBoxItem rfidBox = this.newDasRfidBoxItem(boxedOrder);
 				toRfidBoxList.add(rfidBox);
+				
+				boxedOrder.setIfYn(LogisConstants.Y_CAP_STRING);
+				boxedOrder.setIfDatetime(currentTime);
 			}
 			
 			wmsQueryMgr.insertBatch(toRfidBoxList);
+			this.queryManager.updateBatch(boxedOrders);
 		}
 	}
 	
@@ -212,16 +214,17 @@ public class DasBoxSendService extends AbstractQueryService {
 		rfidBoxItem.setDtDelivery(fromBox.getWorkDate());
 		rfidBoxItem.setDsBatchNo(fromBox.getWorkUnit());
 		rfidBoxItem.setNoBox(fromBox.getBoxNo());
-		// TODO 운송장 번호가 박스 번호 맞는지 체크
 		rfidBoxItem.setNoWaybill(fromBox.getBoxNo());
 		rfidBoxItem.setIfCdItem(fromBox.getItemCd());
+		// TODO YN_ASSORT는 주문 정보를 조회해서 넘기는지 체크
 		rfidBoxItem.setYnAssort(LogisConstants.N_CAP_STRING);
 		rfidBoxItem.setCdShop(fromBox.getShiptoId());
 		rfidBoxItem.setTpDelivery("1");
 		rfidBoxItem.setDsShuteno(null);
 		rfidBoxItem.setOutbNo(fromBox.getOutbNo());
 		rfidBoxItem.setQtDelivery(fromBox.getCmptQty());
-		rfidBoxItem.setDmBfRecv(DateUtil.dateStr(new Date(), "YYYYMMDDHHMMSS"));
+		String dmBfRecv = DateUtil.dateStr(new Date(), "yyyyMMddHHmmss");
+		rfidBoxItem.setDmBfRecv(dmBfRecv);
 		rfidBoxItem.setYnCancel(LogisConstants.N_CAP_STRING);
 		rfidBoxItem.setTpWeight("0");
 		rfidBoxItem.setTpSend("0");
@@ -251,17 +254,16 @@ public class DasBoxSendService extends AbstractQueryService {
 		// 2. RFID에 박스 삭제 데이터 전송 
 		String jobDate = batch.getJobDate().replaceAll(SysConstants.DASH, SysConstants.EMPTY_STRING);
 		Date currentTime = new Date();
-		String currentTimeStr = DateUtil.dateStr(currentTime, "YYYYMMDDHHMMSS");
-		// TODO 운송장 번호가 박스 번호 맞는지 체크
-		Map<String, Object> delBox = ValueUtil.newMap("workDate,ifSeqNo,whCd,brandCd,equipType,boxId,invoiceId,currentTime", jobDate, ifSeqNo, FnFConstants.WH_CD_ICF, cancelBox.getStrrId(), cancelBox.getBoxId(), cancelBox.getBoxId(), currentTimeStr);	
+		String currentTimeStr = DateUtil.dateStr(currentTime, "yyyyMMddHHmmss");
+		Map<String, Object> delBox = ValueUtil.newMap("workDate,ifSeqNo,whCd,brandCd,equipType,boxId,invoiceId,currentTime", jobDate, ifSeqNo, FnFConstants.WH_CD_ICF, cancelBox.getStrrId(), "2", cancelBox.getBoxId(), cancelBox.getBoxId(), currentTimeStr);	
 		rfidQueryMgr.executeBySql(RFID_DELETE_SQL, delBox);
 		
 		// 3. RFID 프로시셔 호출을 위한 파라미터 생성 
 		Map<String, Object> params = ValueUtil.newMap("IN_DT_IF_DATE,IN_NO_IF_SEQ,IN_CD_COMPANY", jobDate, ifSeqNo, "FNF");
 		// 4. 작업 지시 프로시져 콜 
-		Map<?, ?> result = rfidQueryMgr.callReturnProcedure("RFID_IF.PRO_IF_PASDELIVERY_DEL_RECV", params, Map.class);
+		Map<?, ?> result = rfidQueryMgr.callReturnProcedure("PRO_IF_PASDELIVERY_DEL_RECV", params, Map.class);
 		// 5. 결과 파싱 
-		String successYn = ValueUtil.toString(result.get("OUT_YN_SUCCESS"));
+		String successYn = ValueUtil.toString(result.get("OUT_YN_ERROR"));
 		
 		if(ValueUtil.isEqualIgnoreCase(successYn, LogisConstants.N_CAP_STRING)) {
 			String errorMsg = ValueUtil.isNotEmpty(result.get("OUT_ERRMSG")) ? result.get("OUT_ERRMSG").toString() : "Failed to DPS RFID Delete Confirm Procedure!";
@@ -269,17 +271,14 @@ public class DasBoxSendService extends AbstractQueryService {
 		}
 		
 		// 6. WCS 박스 취소 정보 수행
-		Query condition = new Query();
-		condition.addFilter("workUnit", batch.getId());
-		condition.addFilter("boxId", cancelBox.getBoxId());
-		WcsMheBox cancelBoxResult = this.queryManager.selectByCondition(WcsMheBox.class, condition);
-		cancelBoxResult.setDelYn(LogisConstants.Y_CAP_STRING);
-		cancelBoxResult.setDelDatetime(currentTime);
-		this.queryManager.update(cancelBoxResult, "delYn", "delDatetime");
+		String sql = "update mhe_box set del_yn = 'Y', del_datetime = now() where work_unit = :workUnit and box_no = :boxNo and box_seq = :boxSeq";
+		Map<String, Object> boxParams = ValueUtil.newMap("workUnit,boxNo,boxSeq", batch.getId(), cancelBox.getBoxId(), cancelBox.getBoxSeq());
+		this.queryManager.executeBySql(sql, boxParams);
 		
 		// 7. 박스 취소 정보 실행 플래그 업데이트
 		cancelBox.setPrcsYn(LogisConstants.Y_CAP_STRING);
-		this.queryManager.update("prcsYn");
+		cancelBox.setPrcsAt(currentTime);
+		this.queryManager.update(cancelBox, "prcsYn", "prcsAt");
 	}
 
 	/**

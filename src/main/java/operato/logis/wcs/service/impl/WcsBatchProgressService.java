@@ -151,7 +151,12 @@ public class WcsBatchProgressService extends AbstractQueryService {
 	public float calcBatchUph(JobBatch batch, Date toTime) {
 		long duration = toTime.getTime() - batch.getInstructedAt().getTime();
 		int pcs = batch.getResultPcs();
-		return ValueUtil.toFloat(ValueUtil.toFloat(pcs * 1000 * 60 * 60) / ValueUtil.toFloat(duration));
+		
+		if(duration > 0) {
+			return ValueUtil.toFloat(ValueUtil.toFloat(pcs * 1000 * 60 * 60) / ValueUtil.toFloat(duration));
+		} else {
+			return 0.0f;
+		}
 	}
 
 }

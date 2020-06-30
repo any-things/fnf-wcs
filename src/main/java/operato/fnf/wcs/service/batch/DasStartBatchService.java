@@ -60,8 +60,8 @@ public class DasStartBatchService extends AbstractQueryService {
 		if(wmsWave != null) {
 			wmsWave.setStatus("B");
 			wmsWave.setMheNo(wcsMheHr.getMheNo());
-			wmsWave.setCnfDatetime(new Date());
-			wmsQueryMgr.update(wmsWave, "status", "mheNo", "cnfDatetime");
+			wmsWave.setRcvDatetime(new Date());
+			wmsQueryMgr.update(wmsWave, "status", "mheNo", "rcvDatetime");
 		}
 	}
 	

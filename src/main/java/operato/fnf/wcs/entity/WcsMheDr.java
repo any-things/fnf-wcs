@@ -242,6 +242,12 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "status", nullable = true, length = 1)
 	private String status;
 	
+	/**
+	 * DPS 부분 할당 강제 할당 YN
+	 */
+	@Column (name = "dps_partial_assign_yn", nullable = true, length = 1)
+	private String dpsPartialAssignYn;
+	
 	public String getId() {
 		return id;
 	}
@@ -786,4 +792,11 @@ public class WcsMheDr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 		this.status = status;
 	}
 
+	public String getDpsPartialAssignYn() {
+		return dpsPartialAssignYn;
+	}
+	
+	public void setDpsPartialAssignYn(String dpsPartialAssignYn) {
+		this.dpsPartialAssignYn = dpsPartialAssignYn;
+	}
 }

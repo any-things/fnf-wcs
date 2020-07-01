@@ -64,7 +64,7 @@ public class ResultSendJob extends AbstractFnFJob {
 						// DAS에서 올려 준 피킹 실적을 WMS에 피킹 실적 전송
 						this.sendPickResults(domain, batch);
 						
-						// RFID에 박스 실적 전송 - 박스 실적 전송 & 박스 취소 & RFID 검수 정보 수신까지 처리
+						// RFID에 박스 실적 전송 - 박스 실적 전송 & 박스 취소까지 처리
 						this.sendBoxResults(domain, batch);
 					}
 				}

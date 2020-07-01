@@ -1,21 +1,17 @@
 package operato.fnf.wcs.entity;
 
 import xyz.elidom.dbist.annotation.Column;
-import xyz.elidom.dbist.annotation.DataSourceType;
 import xyz.elidom.dbist.annotation.GenerationRule;
 import xyz.elidom.dbist.annotation.Ignore;
 import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.Table;
 
-/*
- * 아소트 상품 하위 내품 상품 수량 정보
- * 패션 부문 DAS, 소터
+/**
+ * WMS 데이터베이스 assort_item 뷰에 대한 링크 테이블의 엔티티 
+ * 
+ * @author shortstop
  */
-@Table(name = "assort_item"
-	 , ignoreDdl = true
-	 , idStrategy = GenerationRule.UUID
-     , dataSourceType=DataSourceType.DATASOURCE 
-     , uniqueFields="strrId,itemCd")
+@Table(name = "assort_item", ignoreDdl = true, idStrategy = GenerationRule.NONE)
 public class WmsAssortItem extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
 	/**
@@ -112,4 +108,5 @@ public class WmsAssortItem extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	public void setQty(Integer qty) {
 		this.qty = qty;
 	}
+
 }

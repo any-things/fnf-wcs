@@ -1,59 +1,61 @@
 package operato.fnf.wcs.entity;
 
-import xyz.elidom.dbist.annotation.Index;
-
-import java.util.Date;
-
 import xyz.elidom.dbist.annotation.Column;
-import xyz.elidom.dbist.annotation.ColumnType;
-import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.GenerationRule;
+import xyz.elidom.dbist.annotation.Ignore;
+import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.Table;
-import xyz.elidom.orm.OrmConstants;
 
-@Table(name = "rfid_box_results", idStrategy = GenerationRule.UUID, uniqueFields="whCd,brandCd,outDate,batchId,equipType,boxId", indexes = {
-	@Index(name = "ix_rfid_box_results_0", columnList = "wh_cd,brand_cd,out_date,batch_id,equip_type,box_id", unique = true),
-	@Index(name = "ix_rfid_box_results_1", columnList = "batch_id,insp_result"),
-	@Index(name = "ix_rfid_box_results_2", columnList = "invoice_id"),
-	@Index(name = "ix_rfid_box_results_3", columnList = "box_id")
-})
+/**
+ * RFID 데이터베이스 if_pasdelivery_send 테이블에 대한 링크 테이블의 엔티티
+ * 
+ * @author shortstop
+ */
+@Table(name = "if_pasdelivery_send", ignoreDdl = true, idStrategy = GenerationRule.NONE)
 public class RfidBoxResult extends xyz.elidom.orm.entity.basic.AbstractStamp {
+	
 	/**
 	 * SerialVersion UID
 	 */
 	private static final long serialVersionUID = 715655136778200694L;
 
-	@PrimaryKey
-	@Column (name = "id", nullable = false, length = 40)
+	@Ignore
 	private String id;
-
-	@Column (name = "wh_cd", length = 20)
-	private String whCd;
-
-	@Column (name = "brand_cd", length = 10)
-	private String brandCd;
-
-	@Column (name = "out_date", length = 8)
-	private String outDate;
-
-	@Column (name = "batch_id", length = 20)
-	private String batchId;
-
-	@Column (name = "equip_type", length = 2)
-	private String equipType;
-
-	@Column (name = "box_id", length = 20)
-	private String boxId;
-
-	@Column (name = "invoice_id", length = 50)
-	private String invoiceId;
-
-	@Column (name = "insp_result", length = 1)
-	private String inspResult;
 	
-	@Column(name = OrmConstants.TABLE_FIELD_CREATED_AT, type = ColumnType.DATETIME)
-	private Date createdAt;
-  
+	@PrimaryKey
+	@Column (name = "cd_warehouse", length = 10)
+	private String cdWarehouse;
+
+	@PrimaryKey
+	@Column (name = "cd_brand", length = 10)
+	private String cdBrand;
+
+	@PrimaryKey
+	@Column (name = "tp_machine", length = 2)
+	private String tpMachine;
+
+	@PrimaryKey
+	@Column (name = "no_box", length = 20)
+	private String noBox;
+
+	@Column (name = "no_waybill", length = 50)
+	private String noWaybill;
+
+	@Column (name = "result_st", length = 1)
+	private String resultSt;
+	
+	@Column (name = "tp_status", length = 1)
+	private String tpStatus;
+	
+	@Column (name = "dm_bf_send", length = 14)
+	private String dmBfSend;
+	
+	@Column (name = "dm_af_send", length = 14)
+	private String dmAfSend;
+	
+	@Column (name = "ds_errmsg", length = 4000)
+	private String dsErrmsg;
+
 	public String getId() {
 		return id;
 	}
@@ -62,76 +64,84 @@ public class RfidBoxResult extends xyz.elidom.orm.entity.basic.AbstractStamp {
 		this.id = id;
 	}
 
-	public String getWhCd() {
-		return whCd;
+	public String getCdWarehouse() {
+		return cdWarehouse;
 	}
 
-	public void setWhCd(String whCd) {
-		this.whCd = whCd;
+	public void setCdWarehouse(String cdWarehouse) {
+		this.cdWarehouse = cdWarehouse;
 	}
 
-	public String getBrandCd() {
-		return brandCd;
+	public String getCdBrand() {
+		return cdBrand;
 	}
 
-	public void setBrandCd(String brandCd) {
-		this.brandCd = brandCd;
+	public void setCdBrand(String cdBrand) {
+		this.cdBrand = cdBrand;
 	}
 
-	public String getOutDate() {
-		return outDate;
+	public String getTpMachine() {
+		return tpMachine;
 	}
 
-	public void setOutDate(String outDate) {
-		this.outDate = outDate;
+	public void setTpMachine(String tpMachine) {
+		this.tpMachine = tpMachine;
 	}
 
-	public String getBatchId() {
-		return batchId;
+	public String getNoBox() {
+		return noBox;
 	}
 
-	public void setBatchId(String batchId) {
-		this.batchId = batchId;
+	public void setNoBox(String noBox) {
+		this.noBox = noBox;
 	}
 
-	public String getEquipType() {
-		return equipType;
+	public String getNoWaybill() {
+		return noWaybill;
 	}
 
-	public void setEquipType(String equipType) {
-		this.equipType = equipType;
+	public void setNoWaybill(String noWaybill) {
+		this.noWaybill = noWaybill;
 	}
 
-	public String getBoxId() {
-		return boxId;
+	public String getResultSt() {
+		return resultSt;
 	}
 
-	public void setBoxId(String boxId) {
-		this.boxId = boxId;
+	public void setResultSt(String resultSt) {
+		this.resultSt = resultSt;
 	}
 
-	public String getInvoiceId() {
-		return invoiceId;
+	public String getTpStatus() {
+		return tpStatus;
 	}
 
-	public void setInvoiceId(String invoiceId) {
-		this.invoiceId = invoiceId;
+	public void setTpStatus(String tpStatus) {
+		this.tpStatus = tpStatus;
 	}
 
-	public String getInspResult() {
-		return inspResult;
+	public String getDmBfSend() {
+		return dmBfSend;
 	}
 
-	public void setInspResult(String inspResult) {
-		this.inspResult = inspResult;
+	public void setDmBfSend(String dmBfSend) {
+		this.dmBfSend = dmBfSend;
 	}
 
-	public Date getCreatedAt() {
-		return createdAt;
+	public String getDmAfSend() {
+		return dmAfSend;
 	}
 
-	public void setCreatedAt(Date createdAt) {
-		this.createdAt = createdAt;
+	public void setDmAfSend(String dmAfSend) {
+		this.dmAfSend = dmAfSend;
+	}
+
+	public String getDsErrmsg() {
+		return dsErrmsg;
+	}
+
+	public void setDsErrmsg(String dsErrmsg) {
+		this.dsErrmsg = dsErrmsg;
 	}
 
 }

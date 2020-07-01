@@ -13,8 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 import operato.fnf.wcs.FnFConstants;
 import operato.fnf.wcs.entity.DasBoxCancel;
 import operato.fnf.wcs.entity.RfidBoxItem;
-import operato.fnf.wcs.entity.RfidBoxResult;
 import operato.fnf.wcs.entity.WcsMheBox;
+import operato.fnf.wcs.entity.WmsAssortItem;
 import operato.fnf.wcs.entity.WmsMheBox;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
@@ -55,7 +55,6 @@ public class DasBoxSendService extends AbstractQueryService {
 	 * @param domain
 	 * @param batch
 	 */
-	@SuppressWarnings("rawtypes")
 	public void sendBoxResults(Domain domain, JobBatch batch) {
 		
 		Long domainId = batch.getDomainId();
@@ -77,13 +76,6 @@ public class DasBoxSendService extends AbstractQueryService {
 		// 4. RFID에 박스 취소 전송
 		for(DasBoxCancel cancelBox : cancelBoxList) {
 			boxSendSvc.sendCancelPackingsToRfid(rfidQueryMgr, batch, cancelBox);
-		}
-		
-		// 5. RFID로 부터 새로운 박스 검수 결과 조회
-		List<Map> rfidBoxResults = this.searchRfidBoxResults(rfidQueryMgr, batch);
-		// 4. RFID로 부터 박스 결과 수신
-		for(Map rfidBoxResult : rfidBoxResults) {
-			boxSendSvc.receiveRfidBoxResult(rfidQueryMgr, rfidBoxResult);
 		}
 	}
 	
@@ -216,8 +208,11 @@ public class DasBoxSendService extends AbstractQueryService {
 		rfidBoxItem.setNoBox(fromBox.getBoxNo());
 		rfidBoxItem.setNoWaybill(fromBox.getBoxNo());
 		rfidBoxItem.setIfCdItem(fromBox.getItemCd());
-		// TODO YN_ASSORT는 주문 정보를 조회해서 넘기는지 체크
-		rfidBoxItem.setYnAssort(LogisConstants.N_CAP_STRING);
+
+		// 아소트 여부 조회 후 설정 
+		int count = this.queryManager.selectSize(WmsAssortItem.class, ValueUtil.newMap("itemCd", fromBox.getItemCd()));
+		rfidBoxItem.setYnAssort(count > 0 ? LogisConstants.Y_CAP_STRING : LogisConstants.N_CAP_STRING);
+		
 		rfidBoxItem.setCdShop(fromBox.getShiptoId());
 		rfidBoxItem.setTpDelivery("1");
 		rfidBoxItem.setDsShuteno(null);
@@ -279,44 +274,6 @@ public class DasBoxSendService extends AbstractQueryService {
 		cancelBox.setPrcsYn(LogisConstants.Y_CAP_STRING);
 		cancelBox.setPrcsAt(currentTime);
 		this.queryManager.update(cancelBox, "prcsYn", "prcsAt");
-	}
-
-	/**
-	 * RFID로 부터 검수 실적을 조회
-	 * 
-	 * @param rfidQueryMgr
-	 * @param batch
-	 * @return
-	 */
-	@SuppressWarnings("rawtypes")
-	private List<Map> searchRfidBoxResults(IQueryManager rfidQueryMgr, JobBatch batch) {
-		String sql = "SELECT * FROM RFID_IF.IF_PASDELIVERY_SEND	WHERE DS_BATCH_NO = :batchId AND TP_STATUS = '0'";
-		return rfidQueryMgr.selectListBySql(sql, ValueUtil.newMap("batchId", batch.getId()), Map.class, 0, 0);
-	}
-
-	/**
-	 * RFID로 부터 검수 실적을 수신
-	 * 
-	 * @param rfidQueryMgr
-	 * @param batch
-	 * @param rfidBoxResult
-	 */
-	@SuppressWarnings("rawtypes")
-	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public void receiveRfidBoxResult(IQueryManager rfidQueryMgr, Map rfidBox) {
-		
-		RfidBoxResult wcsBoxResult = new RfidBoxResult();
-		wcsBoxResult.setBatchId(ValueUtil.toString(rfidBox.get("ds_batch_no")));
-		wcsBoxResult.setBoxId(ValueUtil.toString(rfidBox.get("no_box")));
-		wcsBoxResult.setBrandCd(ValueUtil.toString(rfidBox.get("cd_brand")));
-		wcsBoxResult.setCreatedAt(new Date());
-		// 1 : PAS, 2 : DAS, 3 : DAS 반품 
-		wcsBoxResult.setEquipType("2");
-		wcsBoxResult.setInspResult(ValueUtil.toString(rfidBox.get("result_st")));
-		wcsBoxResult.setInvoiceId(ValueUtil.toString(rfidBox.get("no_waybill")));
-		wcsBoxResult.setOutDate(ValueUtil.toString(rfidBox.get("dt_delivery")));
-		wcsBoxResult.setWhCd(FnFConstants.WH_CD_ICF);
-		this.queryManager.insert(wcsBoxResult);
 	}
 
 }

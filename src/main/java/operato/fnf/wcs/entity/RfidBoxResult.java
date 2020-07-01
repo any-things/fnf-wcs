@@ -47,11 +47,11 @@ public class RfidBoxResult extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "tp_status", length = 1)
 	private String tpStatus;
 	
-	@Column (name = "dm_bf_send", length = 14)
-	private String dmBfSend;
+	@Column (name = "dm_bf_recv", length = 14)
+	private String dmBfRecv;
 	
-	@Column (name = "dm_af_send", length = 14)
-	private String dmAfSend;
+	@Column (name = "dm_af_recv", length = 14)
+	private String dmAfRecv;
 	
 	@Column (name = "ds_errmsg", length = 4000)
 	private String dsErrmsg;
@@ -119,21 +119,21 @@ public class RfidBoxResult extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	public void setTpStatus(String tpStatus) {
 		this.tpStatus = tpStatus;
 	}
-
-	public String getDmBfSend() {
-		return dmBfSend;
+	
+	public String getDmBfRecv() {
+		return dmBfRecv;
 	}
 
-	public void setDmBfSend(String dmBfSend) {
-		this.dmBfSend = dmBfSend;
+	public void setDmBfRecv(String dmBfRecv) {
+		this.dmBfRecv = dmBfRecv;
 	}
 
-	public String getDmAfSend() {
-		return dmAfSend;
+	public String getDmAfRecv() {
+		return dmAfRecv;
 	}
 
-	public void setDmAfSend(String dmAfSend) {
-		this.dmAfSend = dmAfSend;
+	public void setDmAfRecv(String dmAfRecv) {
+		this.dmAfRecv = dmAfRecv;
 	}
 
 	public String getDsErrmsg() {

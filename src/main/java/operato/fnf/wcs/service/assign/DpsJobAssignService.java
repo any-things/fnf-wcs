@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import operato.fnf.wcs.entity.WmsMheHr;
 import operato.fnf.wcs.query.store.FnFDpsQueryStore;
 import operato.fnf.wcs.service.model.DpsJobAssign;
 import xyz.anythings.base.entity.JobBatch;
@@ -21,7 +20,6 @@ import xyz.anythings.sys.event.model.ErrorEvent;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.anythings.sys.util.AnyEntityUtil;
 import xyz.elidom.dbist.util.StringJoiner;
-import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.SysConstants;
 import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.util.BeanUtil;
@@ -155,25 +153,19 @@ public class DpsJobAssignService extends AbstractQueryService {
 	}
 	
 	/**
-	 * 브랜드 믹스 주문 조회 
+	 * 부분 할당 주문 조회 
 	 * 
 	 * @param batch
 	 * @return
 	 */
 	private List<String> searchSkipOrders(JobBatch batch) {
-		// 1. 브랜드 합포 주문 번호 조회
-		String sql = "SELECT REF_NO FROM MPS_BRAND_MIX_REF_NO WHERE WH_CD = :whCd";
-		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
 		Map<String, Object> params = ValueUtil.newMap("whCd,batchId", "ICF", batch.getId());
-		List<String> orderNoList = wmsQueryMgr.selectListBySql(sql, params, String.class, 0, 0);
-
+		String sql = "select distinct ref_no from dps_partial_orders where wh_cd=:whCd and ref_no not in (select distinct ref_no from mhe_dr where wh_cd = :whCd and work_unit = :batchId and dps_partial_assign_yn = 'Y'))";
+		List<String> skipOrders = this.queryManager.selectListBySql(sql, params, String.class, 0, 0);
+		
 		// 2. 브랜드 합포 주문 중에 MLB, MLB Kids 두 개의 주문이 병합이 되었는지 체크
-		if(ValueUtil.isNotEmpty(orderNoList)) {
-			params.put("orderNoList", orderNoList);
-			// 브랜드 합포(MLB, MLB Kids 두 개의 브랜드)이면서 현재 두 브랜드의 배치 정보가 모두 진행 중인지 체크하여 둘 중 하나라도 없으면 스킵
-			sql = "select order_no from (select ref_no as order_no, count(distinct(strr_id)) as cnt from mhe_dr where wh_cd = :whCd and work_unit = :batchId and dps_assign_yn = 'N' and ref_no in (:orderNoList) group by ref_no) a where a.cnt = 1";
-			return this.queryManager.selectListBySql(sql, params, String.class, 0, 0);
-			
+		if(ValueUtil.isNotEmpty(skipOrders)) {
+			return skipOrders;
 		} else {
 			return new ArrayList<String>();
 		}

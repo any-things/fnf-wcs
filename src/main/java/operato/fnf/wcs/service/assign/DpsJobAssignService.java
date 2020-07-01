@@ -159,11 +159,12 @@ public class DpsJobAssignService extends AbstractQueryService {
 	 * @return
 	 */
 	private List<String> searchSkipOrders(JobBatch batch) {
+		// 1. WMS 부분할당 테이블에서 WCS 주문 상세에 강제 할당이 설정된 내용 제외 하고 조회 
 		Map<String, Object> params = ValueUtil.newMap("whCd,batchId", "ICF", batch.getId());
-		String sql = "select distinct ref_no from dps_partial_orders where wh_cd=:whCd and ref_no not in (select distinct ref_no from mhe_dr where wh_cd = :whCd and work_unit = :batchId and dps_partial_assign_yn = 'Y'))";
+		String sql = "select distinct ref_no from dps_partial_orders where wh_cd=:whCd and ref_no not in (select distinct ref_no from mhe_dr where wh_cd = :whCd and work_unit = :batchId and dps_partial_assign_yn = 'Y')";
 		List<String> skipOrders = this.queryManager.selectListBySql(sql, params, String.class, 0, 0);
 		
-		// 2. 브랜드 합포 주문 중에 MLB, MLB Kids 두 개의 주문이 병합이 되었는지 체크
+		// 2. skip 대상 리스트 return 
 		if(ValueUtil.isNotEmpty(skipOrders)) {
 			return skipOrders;
 		} else {

@@ -43,12 +43,12 @@ public class ResultSendJob extends AbstractFnFJob {
 	@Transactional
 	@Scheduled(initialDelay=100000, fixedDelay=60000)
 	public void summaryJob() {
-		// 1. 스케줄링 활성화 여부
+		// 스케줄링 활성화 여부 체크
 		if(!this.isJobEnabeld()) {
 			return;
 		}
 		
-		// 2. 모든 도메인 조회
+		// 모든 도메인 조회
 		List<Domain> domainList = this.domainCtrl.domainList();
 		
 		for(Domain domain : domainList) {
@@ -61,10 +61,9 @@ public class ResultSendJob extends AbstractFnFJob {
 				
 				if(ValueUtil.isNotEmpty(batches)) {
 					for(JobBatch batch : batches) {
-						// DAS에서 올려 준 피킹 실적을 WMS에 피킹 실적 전송
+						// 1. DAS에서 올려 준 피킹 실적을 WMS에 피킹 실적 전송 - 별도 트랜잭션
 						this.sendPickResults(domain, batch);
-						
-						// RFID에 박스 실적 전송 - 박스 실적 전송 & 박스 취소까지 처리
+						// 2. RFID에 박스 실적 전송 - 박스 실적 전송 & 박스 취소까지 처리 - 별도 트랜잭션
 						this.sendBoxResults(domain, batch);
 					}
 				}

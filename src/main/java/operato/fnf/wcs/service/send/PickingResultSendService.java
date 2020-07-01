@@ -1,9 +1,12 @@
 package operato.fnf.wcs.service.send;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import operato.fnf.wcs.FnFConstants;
 import operato.fnf.wcs.entity.WcsMheDr;
@@ -15,6 +18,7 @@ import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.sys.util.ValueUtil;
+import xyz.elidom.util.BeanUtil;
 
 /**
  * 피킹 실적 전송 서비스
@@ -41,19 +45,30 @@ public class PickingResultSendService extends AbstractQueryService {
 		
 		if(ValueUtil.isNotEmpty(pickList)) {
 			IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
+			PickingResultSendService pickResultSendSvc = BeanUtil.get(PickingResultSendService.class);
+			Date currentTime = new Date();
 			
 			// 2. WMS에 전송
 			for(WcsMheDr pickResult : pickList) {
-				// WCS 주문별 실적 정보 I/F
-				Map<String, Object> params = ValueUtil.newMap("whCd,batchId,orderNo,outbNo,shiptoId,skuCd,locationCd,pickedQty,pickedAt,mheNo", FnFConstants.WH_CD_ICF, batch.getId(), pickResult.getRefNo(), pickResult.getOutbNo(), pickResult.getShiptoId(), pickResult.getItemCd(), pickResult.getLocationCd(), pickResult.getCmptQty(), pickResult.getMheDatetime(), batch.getEquipGroupCd());
-				wmsQueryMgr.executeBySql(this.wmsResultUpdateQuery, params);
-				
-				// WCS 주문 정보에 실적 전송 플래그 설정
-				pickResult.setPickResultIfAt(pickResult.getMheDatetime());
+				// 개별 피킹 결과 전송 - 개별 트랜잭션
+				pickResultSendSvc.sendPickingResult(wmsQueryMgr, pickResult, batch.getId(), batch.getEquipGroupCd(), currentTime);
 			}
+		}
+	}
+	
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public void sendPickingResult(IQueryManager wmsQueryMgr, WcsMheDr pickResult, String batchId, String equipGroupCd, Date currentTime) {
+		try {
+			// WMS에 피킹 실적 정보 전송 
+			Map<String, Object> params = ValueUtil.newMap("whCd,batchId,orderNo,outbNo,shiptoId,skuCd,locationCd,pickedQty,pickedAt,mheNo", FnFConstants.WH_CD_ICF, batchId, pickResult.getRefNo(), pickResult.getOutbNo(), pickResult.getShiptoId(), pickResult.getItemCd(), pickResult.getLocationCd(), pickResult.getCmptQty(), pickResult.getMheDatetime(), equipGroupCd);
+			wmsQueryMgr.executeBySql(this.wmsResultUpdateQuery, params);
 			
-			// 3. 피킹 실적 전송 시간 업데이트
-			this.queryManager.updateBatch(pickList, "pickResultIfAt");
+			// 전송 결과 저장
+			pickResult.setPickResultIfAt(currentTime);
+			this.queryManager.update(pickResult, "pickResultIfAt");
+			
+		} catch (Throwable th) {
+			this.logger.error(th.getCause() != null ? th.getCause().getMessage() : th.getMessage(), th);
 		}
 	}
 	

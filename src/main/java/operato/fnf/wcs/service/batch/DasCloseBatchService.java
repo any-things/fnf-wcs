@@ -227,7 +227,7 @@ public class DasCloseBatchService extends AbstractQueryService {
 	private int sendAllPickingToWms(JobBatch batch) {
 		// WCS 배치 주문 정보 모두 조회
 		Query condition = new Query();
-		condition.addSelect("whCd,workUnit,shiptoId,outbNo,locationCd,itemCd,cmptQty");
+		condition.addSelect("wh_cd", "work_unit", "shipto_id", "outb_no", "location_cd", "item_cd", "cmpt_qty");
 		condition.addFilter("workUnit", batch.getId());
 		List<WcsMheDr> wcsOrders = this.queryManager.selectList(WcsMheDr.class, condition);
 		
@@ -260,7 +260,7 @@ public class DasCloseBatchService extends AbstractQueryService {
 		
 		if(wmsWave != null) {
 			wmsWave.setCmptQty(batch.getResultPcs());
-			wmsWave.setStatus("F");
+			wmsWave.setStatus("C");
 			wmsWave.setCnfDatetime(new Date());
 			wmsQueryMgr.update(wmsWave, "cmptQty", "status", "cnfDatetime");
 		}		

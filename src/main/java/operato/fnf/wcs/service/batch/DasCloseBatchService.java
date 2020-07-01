@@ -14,6 +14,7 @@ import operato.fnf.wcs.entity.WcsMheBox;
 import operato.fnf.wcs.entity.WcsMheDr;
 import operato.fnf.wcs.entity.WcsMheHr;
 import operato.fnf.wcs.entity.WmsMheBox;
+import operato.fnf.wcs.entity.WmsMheDr;
 import operato.fnf.wcs.entity.WmsMheHr;
 import operato.fnf.wcs.query.store.FnFDasQueryStore;
 import xyz.anythings.base.LogisConstants;
@@ -104,7 +105,7 @@ public class DasCloseBatchService extends AbstractQueryService {
 	 * @return
 	 */
 	private int calcBatchResultBoxQty(JobBatch batch) {
-		String sql = "select COALESCE(count(distinct(box_no)), 0) as result from mhe_box where work_unit = :batchId";
+		String sql = "select COALESCE(count(distinct(box_no)), 0) as result from mhe_box where work_unit = :batchId and del_yn != 'Y'";
 		Map<String, Object> params = ValueUtil.newMap("batchId", batch.getId());
 		return this.queryManager.selectBySql(sql, params, Integer.class);
 	}
@@ -116,7 +117,7 @@ public class DasCloseBatchService extends AbstractQueryService {
 	 * @return
 	 */
 	private int calcBatchResultOrderQty(JobBatch batch) {
-		String sql = "select COALESCE(count(distinct(shipto_id)), 0) as result from mhe_box where work_unit = :batchId";
+		String sql = "select COALESCE(count(distinct(shipto_id)), 0) as result from mhe_box where work_unit = :batchId and del_yn != 'Y'";
 		Map<String, Object> params = ValueUtil.newMap("batchId", batch.getId());
 		return this.queryManager.selectBySql(sql, params, Integer.class);
 	}
@@ -128,7 +129,7 @@ public class DasCloseBatchService extends AbstractQueryService {
 	 * @return
 	 */
 	private int calcBatchResultPcs(JobBatch batch) {
-		String sql = "select COALESCE(sum(cmpt_qty), 0) as result from mhe_box where work_unit = :batchId";
+		String sql = "select COALESCE(sum(cmpt_qty), 0) as result from mhe_box where work_unit = :batchId and del_yn != 'Y'";
 		Map<String, Object> params = ValueUtil.newMap("batchId", batch.getId());
 		return this.queryManager.selectBySql(sql, params, Integer.class);
 	}
@@ -211,7 +212,7 @@ public class DasCloseBatchService extends AbstractQueryService {
 		}
 		
 		// 박스 전송 플래그 및 시간 업데이트
-		String sql = "update mhe_box set cnf_datetime = sysdate where work_unit = :batchId";
+		String sql = "update mhe_box set cnf_datetime = sysdate where work_unit = :batchId and del_yn != 'Y'";
 		this.queryManager.executeBySql(sql, ValueUtil.newMap("batchId", batch.getId()));
 		
 		// 박스 리스트 사이즈 리턴
@@ -232,7 +233,7 @@ public class DasCloseBatchService extends AbstractQueryService {
 		List<WcsMheDr> wcsOrders = this.queryManager.selectList(WcsMheDr.class, condition);
 		
 		// WMS 배치 주문 정보에 업데이트
-		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheBox.class);
+		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheDr.class);
 		String sql = "update mhe_dr set cmpt_qty = :cmptQty where wh_cd = :whCd and work_unit = :workUnit and shipto_id = :shiptoId and outb_no = :outbNo and location_cd = :locationCd and item_cd = :itemCd";
 		int updatedCount = 0;
 		

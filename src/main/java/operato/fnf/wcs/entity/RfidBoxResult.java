@@ -31,6 +31,14 @@ public class RfidBoxResult extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	private String cdBrand;
 
 	@PrimaryKey
+	@Column (name = "tp_delivery", length = 8)
+	private String dtDelivery;
+	
+	@PrimaryKey
+	@Column (name = "ds_batch_no", length = 20)
+	private String dsBatchNo;
+	
+	@PrimaryKey
 	@Column (name = "tp_machine", length = 2)
 	private String tpMachine;
 

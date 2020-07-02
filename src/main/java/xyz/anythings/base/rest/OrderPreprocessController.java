@@ -249,7 +249,7 @@ public class OrderPreprocessController extends AbstractRestService {
 			@PathVariable("id") String batchId,
 			@RequestBody Map<String, Object> items) {
 		
-		JobBatch batch = this.checkBatchStatus(batchId);
+		this.checkBatchStatus(batchId);
 		
 		if(ValueUtil.isEmpty(items.get("prev_id"))) {
 			throw ThrowUtil.newNotAllowedEmptyInfo("terms.label.id");

@@ -23,4 +23,9 @@ public class FnFConstants {
 	 * 송장 발행 코드 - 주문 전체 취소 
 	 */
 	public static final String INVOICE_RES_CODE_ORDER_CANCEL_ALL = "MSG_FNF159_1";
+	
+	/**
+	 * 박스 투입 시 박스 분할해서 투입해야 할 주문 수량
+	 */
+	public static final String BOX_INPUT_SPLIT_BOX_PCS = "fnf.box.input.split.pcs";
 }

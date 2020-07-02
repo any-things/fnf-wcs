@@ -20,7 +20,6 @@ import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.orm.OrmConstants;
 import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.sys.system.context.DomainContext;
-import xyz.elidom.sys.util.SettingUtil;
 import xyz.elidom.util.ValueUtil;
 
 /**
@@ -213,7 +212,7 @@ public class TowerLampJob extends AbstractFnFJob {
 	 * @param lamp
 	 * @param fillCellPercent
 	 */
-	private void setLampOnSetting(Long domainId, TowerLamp lamp, float fillCellPercent) {
+	/*private void setLampOnSetting(Long domainId, TowerLamp lamp, float fillCellPercent) {
 		
 		float healthRate = this.getStockHealthRate(domainId);
 		float normalRate = this.getStockNormalRate(domainId);
@@ -235,7 +234,7 @@ public class TowerLampJob extends AbstractFnFJob {
 		}
 		
 		lamp.setCudFlag_(OrmConstants.CUD_FLAG_UPDATE);
-	}
+	}*/
 	
 	/**
 	 * Health 등급 재고 보충율
@@ -243,10 +242,10 @@ public class TowerLampJob extends AbstractFnFJob {
 	 * @param domainId
 	 * @return
 	 */
-	private float getStockHealthRate(Long domainId) {
+	/*private float getStockHealthRate(Long domainId) {
 		String healthRate = SettingUtil.getValue(domainId, "fnf.stock.health.rate", "80");
 		return ValueUtil.toFloat(healthRate);
-	}
+	}*/
 
 	/**
 	 * Normal 등급 재고 보충율
@@ -254,9 +253,9 @@ public class TowerLampJob extends AbstractFnFJob {
 	 * @param domainId
 	 * @return
 	 */
-	private float getStockNormalRate(Long domainId) {
+	/*private float getStockNormalRate(Long domainId) {
 		String healthRate = SettingUtil.getValue(domainId, "fnf.stock.normal.rate", "40");
 		return ValueUtil.toFloat(healthRate);
-	}
+	}*/
 	
 }

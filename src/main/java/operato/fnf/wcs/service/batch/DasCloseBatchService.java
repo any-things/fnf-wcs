@@ -212,7 +212,7 @@ public class DasCloseBatchService extends AbstractQueryService {
 		}
 		
 		// 박스 전송 플래그 및 시간 업데이트
-		String sql = "update mhe_box set cnf_datetime = sysdate where work_unit = :batchId and del_yn != 'Y'";
+		String sql = "update mhe_box set cnf_datetime = now() where work_unit = :batchId and del_yn != 'Y'";
 		this.queryManager.executeBySql(sql, ValueUtil.newMap("batchId", batch.getId()));
 		
 		// 박스 리스트 사이즈 리턴

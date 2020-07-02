@@ -243,7 +243,7 @@ public class DasBoxSendService extends AbstractQueryService {
 			String successYn = ValueUtil.toString(result.get("OUT_YN_ERROR"));
 			
 			if(ValueUtil.isEqualIgnoreCase(successYn, LogisConstants.N_CAP_STRING)) {
-				String errorMsg = ValueUtil.isNotEmpty(result.get("OUT_ERRMSG")) ? result.get("OUT_ERRMSG").toString() : "Failed to DPS RFID Delete Confirm Procedure!";
+				String errorMsg = ValueUtil.isNotEmpty(result.get("OUT_ERRMSG")) ? result.get("OUT_ERRMSG").toString() : "Failed to DAS RFID Delete Confirm Procedure!";
 				throw new ElidomRuntimeException(errorMsg);
 			}
 			
@@ -263,37 +263,4 @@ public class DasBoxSendService extends AbstractQueryService {
 		}
 	}
 
-	
-	/**
-	 * WCS 박스 실적으로 부터 WMS 박스 실적 전송
-	 * 
-	 * @param domainId
-	 * @param wmsQueryMgr
-	 * @param boxedOrders
-	 * @return
-	 */
-	/*@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public void sendPackingsToWms(Long domainId, IQueryManager wmsQueryMgr, List<WcsMheBox> boxedOrders) {
-		
-		if(ValueUtil.isNotEmpty(boxedOrders)) {
-			List<WmsMheBox> toBoxList = new ArrayList<WmsMheBox>(boxedOrders.size());
-			Date currentTime = new Date();
-			
-			for(WcsMheBox boxedOrder : boxedOrders) {
-				// WMS 전송 데이터 생성 
-				WmsMheBox toBox = ValueUtil.populate(boxedOrder, new WmsMheBox());
-				toBoxList.add(toBox);
-				
-				// WCS From Box 상태 업데이트
-				boxedOrder.setIfYn(LogisConstants.Y_CAP_STRING);
-				boxedOrder.setIfDatetime(currentTime);
-			}
-			
-			// WMS 박스 실적 전송
-			wmsQueryMgr.insertBatch(toBoxList);
-			
-			// WCS 박스 실적 상태 변경
-			this.queryManager.updateBatch(boxedOrders);
-		}
-	}*/
 }

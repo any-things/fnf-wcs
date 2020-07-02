@@ -1,6 +1,7 @@
 package operato.fnf.wcs.service.batch;
 
 import java.util.Date;
+import java.util.List;
 
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -11,6 +12,7 @@ import operato.fnf.wcs.entity.WmsMheHr;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.EquipGroup;
 import xyz.anythings.base.entity.JobBatch;
+import xyz.anythings.base.entity.Rack;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.anythings.sys.util.AnyOrmUtil;
 import xyz.elidom.dbist.dml.Query;
@@ -84,6 +86,7 @@ public class DasStartBatchService extends AbstractQueryService {
 		batch.setUph(0.0f);
 		
 		if(ValueUtil.isNotEmpty(wcsMheHr.getMheNo())) {
+			// 설비 그룹 (장비 식별 번호) 조회
 			Query condition = AnyOrmUtil.newConditionForExecution(batch.getDomainId());
 			condition.addFilter("equipGroupCd", wcsMheHr.getMheNo());
 			EquipGroup eg = this.queryManager.selectByCondition(EquipGroup.class, condition);
@@ -94,9 +97,18 @@ public class DasStartBatchService extends AbstractQueryService {
 				batch.setInputWorkers(eg.getInputWorkers());
 				batch.setTotalWorkers(eg.getTotalWorkers());
 			}
+			
+			// 설비 코드 조회
+			List<Rack> rackList = this.queryManager.selectList(Rack.class, condition);
+			if(ValueUtil.isNotEmpty(rackList)) {
+				Rack rack = rackList.get(0);
+				batch.setEquipType(LogisConstants.EQUIP_TYPE_RACK);
+				batch.setEquipCd(rack.getRackCd());
+				batch.setEquipNm(rack.getRackNm());
+			}
 		}
 		
-		this.queryManager.update(batch, "areaCd", "stageCd", "equipGroupCd", "status", "inputWorkers", "totalWorkers", "resultBoxQty", "resultOrderQty", "resultPcs", "progressRate", "equipRuntime", "uph", "instructedAt", "updatedAt");
+		this.queryManager.update(batch, "areaCd", "stageCd", "equipGroupCd", "equipType", "equipCd", "equipNm", "status", "inputWorkers", "totalWorkers", "resultBoxQty", "resultOrderQty", "resultPcs", "progressRate", "equipRuntime", "uph", "instructedAt", "updatedAt");
 	}
 
 }

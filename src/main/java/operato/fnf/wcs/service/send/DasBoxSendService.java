@@ -253,9 +253,11 @@ public class DasBoxSendService extends AbstractQueryService {
 			this.queryManager.executeBySql(sql, boxParams);
 			
 			// 7. 박스 취소 정보 실행 플래그 업데이트
+			cancelBox.setSortDate(DateUtil.todayStr());
+			cancelBox.setSortSeq(batch.getJobSeq());
 			cancelBox.setPrcsYn(LogisConstants.Y_CAP_STRING);
 			cancelBox.setPrcsAt(currentTime);
-			this.queryManager.update(cancelBox, "prcsYn", "prcsAt");
+			this.queryManager.update(cancelBox, "sortDate", "sortSeq", "prcsYn", "prcsAt");
 			
 		} catch (Exception e) {
 			ErrorEvent errorEvent = new ErrorEvent(batch.getDomainId(), "ERROR - DAS Send Cancel Packing", e, LogisConstants.EMPTY_STRING, true, true);

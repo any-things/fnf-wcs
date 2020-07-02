@@ -81,13 +81,31 @@ public class TowerLampJob extends AbstractFnFJob {
 				// 진행 중인 배치 리스트 조회
 				List<JobBatch> batches = this.searchRunningBatches(domain.getId());
 				
+				// 진행 중인 배치가 있으면 
 				if(ValueUtil.isNotEmpty(batches)) {
 					for(JobBatch batch : batches) {
 						// 3.1 경광등 상태 리스트 조회
 						List<TowerLamp> towerLampList = this.searchTowerLampAndStatus(batch);
+						// 3.2 경광등 상태 업데이트 
+						this.requestTowerLampLight(domain, towerLampList);
+					}
+				} else {
+					// 진행 중인 배치가 없으면
+					// 전체 소등 
+					Query condition = AnyOrmUtil.newConditionForExecution(domain.getId());
+					List<TowerLamp> towerLampList = this.queryManager.selectList(TowerLamp.class, condition);
+					
+					if(ValueUtil.isNotEmpty(towerLampList)) {
+						for(TowerLamp lamp : towerLampList) {
+							lamp.setLampR(this.lampOffStatus);
+							lamp.setLampG(this.lampOffStatus);
+							lamp.setLampA(this.lampOffStatus);
+							
+							lamp.setCudFlag_(OrmConstants.CUD_FLAG_UPDATE);
+						}
 						
-						// 3.2 경광등 상태 업데이트
-						this.requestTowerLampLight(domain, batch, towerLampList);
+						// 경광등 상태 업데이트 
+						this.requestTowerLampLight(domain, towerLampList);
 					}
 				}
 				
@@ -139,11 +157,21 @@ public class TowerLampJob extends AbstractFnFJob {
 		for(TowerLamp lamp : lampList) {
 			LampCellStatus lampStatus = this.findLampCellStatus(lampStatusList, lamp);
 			
+			// 존에 하나라도 빈 셀이 있는 경우에 전체 점등 
+			if(lampStatus.getEmptyCellCnt() > 0 ) {
+				lamp.setLampR(this.lampOnStatus);
+				lamp.setLampG(this.lampOnStatus);
+				lamp.setLampA(this.lampOnStatus);
+				lamp.setCudFlag_(OrmConstants.CUD_FLAG_UPDATE);
+			}
+
+			/* 비율별 경광등 켜기 백업 
 			int fillCellCnt = ValueUtil.toInteger(lampStatus.getFillCellCnt(), 0);
 			int totalCellCnt = ValueUtil.toInteger(lampStatus.getTotCellCnt(), 0);
 			
 			float fillCellPercent = (totalCellCnt == 0 || fillCellCnt == 0) ? 0 : ValueUtil.toFloat(fillCellCnt) / ValueUtil.toFloat(totalCellCnt) * 100.0f;
 			this.setLampOnSetting(domainId, lamp, fillCellPercent);
+			*/
 		}
 				
 		return lampList;
@@ -174,7 +202,7 @@ public class TowerLampJob extends AbstractFnFJob {
 	 * @param batch
 	 * @param towerList
 	 */
-	private void requestTowerLampLight(Domain domain, JobBatch batch, List<TowerLamp> towerList) {
+	private void requestTowerLampLight(Domain domain, List<TowerLamp> towerList) {
 		this.towerLampCtrl.multipleUpdate(towerList);
 	}
 	

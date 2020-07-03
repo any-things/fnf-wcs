@@ -1,10 +1,9 @@
-package operato.logis.sms.service.impl.srtn;
+package operato.logis.sms.service.impl.sdas;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -27,13 +26,11 @@ import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.exception.server.ElidomRuntimeException;
 import xyz.elidom.orm.OrmConstants;
 import xyz.elidom.sys.SysConstants;
-import xyz.elidom.sys.util.MessageUtil;
 import xyz.elidom.sys.util.ThrowUtil;
 import xyz.elidom.util.ValueUtil;
 
-@Component("srtnPreprocessService")
-public class SrtnPreprocessService extends AbstractExecutionService implements IPreprocessService {
-
+@Component("sdasPreprocessService")
+public class SdasPreprocessService extends AbstractExecutionService implements IPreprocessService {
 	/**
 	 * Sms 쿼리 스토어
 	 */
@@ -52,20 +49,33 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 
 	@Override
 	public Map<String, ?> buildPreprocessSet(JobBatch batch, Query query) {
-		List<Map> batchInfo = this.preprocessSummaryByBatch(batch);
+		// 1. 가공할 주문 정보 조회
+		List<OrderPreprocess> preprocesses = this.queryManager.selectList(OrderPreprocess.class, query);
 		
-		List<Map> summaryByChutes = this.preprocessSummaryByChutes(batch);
+		// 2. 주문 가공 정보가 존재하지 않는다면 주문 정보로 생성
+		if(ValueUtil.isEmpty(preprocesses)) {
+			this.generatePreprocess(batch);
+			preprocesses = this.queryManager.selectList(OrderPreprocess.class, query);
+		}
+		// 4. 호기 정보 조회 - 주문 가공 화면의 우측 호기 리스트
+//		List<ChuteStatus> shopChutes = this.chuteAssignmentStatus(batch);
+		// 5. 호기별 물량 요약 정보 - 주문 가공 화면의 우측 상단 호기별 물량 요약 정보
+		List<SdasPreprocessSummary> summaryByChutes = this.preprocessSummaryByChutes(batch);
 		// 7. 리턴 데이터 셋
 		
-		return ValueUtil.newMap("batch-info,chute-info", batchInfo, summaryByChutes);
+		return ValueUtil.newMap("regions,preprocesses,summary", preprocesses, preprocesses, summaryByChutes);
 	}
 
 	@SuppressWarnings({ "unchecked", "null" })
 	@Override
 	public int generatePreprocess(JobBatch batch, Object... params) {
+		// 1. 주문 가공 데이터 삭제  
+		this.deletePreprocess(batch);
+		
 		/**
 		 * 1. 가공 버튼 클릭시 preprocess에 들어간다.
 		 * 2. 주문 가공 데이터를 생성하기 위해 주문 데이터를 조회
+		 * 3. 주문 가공 데이터 자동 설정
 		 */
 		
 		// 자동으로 생성할때 소터를 선택 해야 하는건지? 상위 시스템에서 소터 코드를 지정해서 내려 주는 것인지?
@@ -86,11 +96,11 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 		}
 		
 		// 2. 주문 가공 데이터를 생성하기 위해 주문 데이터를 조회
-		String sql = queryStore.getSrtnGeneratePreprocessQuery();
+		String sql = queryStore.getSdasGeneratePreprocessQuery();
 		Map<String, Object> condition = ValueUtil.newMap("equipCd,domainId,batchId", sorterCd, batch.getDomainId(), batch.getId());
 		List<OrderPreprocess> preprocessList = this.queryManager.selectListBySql(sql, condition, OrderPreprocess.class, 0, 0);
-
-		// 3. 주문 가공 데이터를 추가
+//
+//		// 3. 주문 가공 데이터 자동 설정
 		int generatedCount = ValueUtil.isNotEmpty(preprocessList) ? preprocessList.size() : 0;
 		if(generatedCount > 0) {
 			this.assignChuteByAuto(batch, sorterCd, preprocessList, false, chuteStatus);
@@ -133,13 +143,13 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 
 	@Override
 	public void resetPreprocess(JobBatch batch, boolean isRackReset, List<String> equipCdList) {
-		// TODO Auto-generated method stub
-		
+		// TODO 초기화 버튼 클릭시
 	}
 
-	@SuppressWarnings("null")
 	@Override
 	public int assignEquipLevel(JobBatch batch, String equipCds, List<OrderPreprocess> items, boolean automatically) {
+		// 자동할당 버튼 클릭시
+		
 		// 1. 상품 정보가 존재하는지 체크
 		if(ValueUtil.isEmpty(items)) {
 			throw new ElidomRuntimeException("There is no OrderPreprocess!");
@@ -153,6 +163,8 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 			chuteStatus.put("chute-" + chute.getChuteNo(), SysConstants.CAP_Y_STRING);
 		}
 		
+		// 소터 코드 우선 고정으로...
+//		equipCds = "94";
 		// 2. 슈트 지정
 		if(automatically) {
 			assignChuteByAuto(batch, equipCds, items, true, chuteStatus);
@@ -171,7 +183,6 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 	
 	@SuppressWarnings("rawtypes")
 	public void assignChuteByAuto(JobBatch batch, String equipCds, List<OrderPreprocess> items, boolean isUpdate, Map<String, Object> chuteStatus) {
-		// 0. SKU 수량과 사용 가능한 슈트수량을 비교한다.
 		// 1. 오더타입 조회 (반품, 출고)
 		// 2. 슈트별 작업자 그룹이 있는지 확인
 		// 3. 1번이 있다면 작업자별 생산성으로 우선순위를 조회한다.
@@ -179,32 +190,78 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 		// 5. 3번과 2번의 조합으로 슈트별 오더를 지정 (루프)
 		// 6. 주문 가공 정보 업데이트
 		
-		this.resetOrderList(batch);
+		// 작업자별 시작 슈트번호 ex) [002, 011, 021, 031....]
+		ArrayList<String> chuteArr = new ArrayList<>();
+		// 작업자별 역순 시작 슈트번호 ex) [031, 021, 011, 002....]
+		List<String> reverseChuteArr = new ArrayList<>();
+		// 작업자별 작업 범위  ex) [9, 10, 10, 11, ....]
+		ArrayList<Integer> chuteSizeArr = new ArrayList<>();
+		// 작업자별 작업 범위  ex) [11, 10, 10, 9, ....]
+		List<Integer> reverseChuteSizeArr = new ArrayList<>();
 		
-		List<String> enableChute = new ArrayList<String>();
-		for(Entry<String, Object> entry : chuteStatus.entrySet()) {
-			if(ValueUtil.isEqual(entry.getValue(), SysConstants.CAP_Y_STRING)) {
-				enableChute.add(entry.getKey().replaceAll("chute-check-", ""));
+		String sql = queryStore.getSdasStationQuery();
+		Map<String, Object> params = ValueUtil.newMap("domainId,sorterCd,activeFlag", batch.getDomainId(), equipCds, 1);
+		List<Map> stationGroup = this.queryManager.selectListBySql(sql, params, Map.class, 0, 0);
+		
+		for (Map station : stationGroup) {
+			chuteArr.add(ValueUtil.toString(station.get("chute")));
+			chuteSizeArr.add(ValueUtil.toInteger(station.get("cnt")));
+		}
+		
+		int groupCnt = 0;
+		int maxCnt = 0;
+		// 매장 갯수 대비 사용하는 작업자 존 수량을 구한다.
+		// 존에 해당하는 슈트 수량이 다를수 있으므로 최대 슈트 갯수를 구한다.
+		for(int i = 0 ; i < chuteSizeArr.size() ; i++) {
+			groupCnt += chuteSizeArr.get(i);
+			if(maxCnt < chuteSizeArr.get(i)) {
+				maxCnt = chuteSizeArr.get(i);
+			}
+			if(items.size() <= groupCnt + chuteSizeArr.get(i)) {
+				if(maxCnt < chuteSizeArr.get(i)) {
+					maxCnt = chuteSizeArr.get(i);
+				}
+				groupCnt = i + 1;
+				break;
+			} 
+		}
+		
+		reverseChuteArr.addAll(chuteArr.subList(0, groupCnt));
+		Collections.reverse(reverseChuteArr);
+		reverseChuteSizeArr.addAll(chuteSizeArr.subList(0, groupCnt));
+		Collections.reverse(reverseChuteSizeArr);
+		
+		int listIdx = 0;
+		// 작업 존별로 수량이 많은 매장부터 할당 
+		for(int i = 0 ; i < maxCnt ; i++) {
+			for(int j = 0 ; j <groupCnt ; j++) {
+//				ArrayList<String> idList = new ArrayList<>();
+				// 순차적으로 할당
+				if(i % 2 == 0) {
+					if(i < chuteSizeArr.get(j) && i < items.size()) {
+						int chuteNo = Integer.parseInt(chuteArr.get(j)) + i;
+						String chuteName = String.format("%03d", chuteNo);
+						items.get(listIdx).setSubEquipCd(chuteName);
+						listIdx++;
+					}
+				// 역순으로 할당
+				} else {
+					if(i < reverseChuteSizeArr.get(j) && i < items.size()) {
+						int chuteNo = Integer.parseInt(reverseChuteArr.get(j)) + i;
+						String chuteName = String.format("%03d", chuteNo);
+						items.get(listIdx).setSubEquipCd(chuteName);
+						listIdx++;
+					}
+				}
 			}
 		}
 		
-//		int availableChute = this.availableChuteCount(batch.getDomainId(), equipCds, true, enableChute);
-		
-//		if(items.size() > availableChute) {
-//			throw ThrowUtil.newValidationErrorWithNoLog(MessageUtil.getTerm("terms.text.skus_must_less_than_cells", "AvailableChute Count : " + availableChute + " SKU COUNT : " + items.size()));
-//		}
-		
-		String sql = queryStore.getSrtnCellStatusQuery();
-		Map<String, Object> paramMap = ValueUtil.newMap("chuteNo,activeFlag", enableChute, true);
-		List<Map> cellList = this.queryManager.selectListBySql(sql, paramMap, Map.class, 0, 0);
-		
-		if(items.size() > cellList.size()) {
-			throw ThrowUtil.newValidationErrorWithNoLog(MessageUtil.getTerm("terms.text.skus_must_less_than_cells", "AvailableChute Count : " + cellList.size() + " SKU COUNT : " + items.size()));
-		}
-		
-		for(int i = 0 ; i < items.size() ; i++) {
-			items.get(i).setSubEquipCd(ValueUtil.toString(cellList.get(i).get("chute_no")));
-			items.get(i).setClassCd(ValueUtil.toString(cellList.get(i).get("cell_cd")));
+		// 매장 수량 대비 작업 존을 계산 했을 떄 나머지 수량에 대한 매장 할당
+		for(int i = listIdx ; i < items.size() ; i++) {
+			//ArrayList<String> idList = new ArrayList<>();
+			int chuteNo = Integer.parseInt(chuteArr.get(groupCnt)) + (i - listIdx);
+			String chuteName = String.format("%03d", chuteNo);
+			items.get(i).setSubEquipCd(chuteName);
 		}
 		
 		if(isUpdate) {
@@ -214,36 +271,20 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 		}
 	}
 	
-	public void selectChuteGeneratePreprocess(JobBatch batch, Map<String, Object> chuteStatus) {
-		
-	}
-	
 	public void assignChuteByManual(JobBatch batch, String equipCds, List<OrderPreprocess> items) {
 		// 1. 오더타입 조회 (반품, 출고)
 		// 2. 화면에서 지정한 매장 or 상품을 슈트에 지정한다.
 		// 3. 주문 가공 정보 업데이트
 	}
 	
-	@SuppressWarnings("unchecked")
-	private int availableChuteCount(Long domainId, String sorterCd, boolean activeFlag, List<String> enableChute) {
-		String sql = "SELECT SUM(EXT_CELL_CNT) AS CELL_CNT FROM CHUTES WHERE SORTER_CD = :sorterCd AND ACTIVE_FLAG = :activeFlag AND STATUS = :status AND CHUTE_NO IN ( :chuteNo )";
-		
-		Map<String, Object> paramMap = ValueUtil.newMap("sorterCd,activeFlag,status,chuteNo", 
-				sorterCd, activeFlag, Order.STATUS_WAIT, enableChute);
-		
-		Map<String, Object> chuteCell = this.queryManager.selectBySql(sql, paramMap, Map.class);
-		
-		return ValueUtil.toInteger(chuteCell.get("cell_cnt"));
-	}
-	
 	/**
-	 * 작업 배치 별 주문 가공 정보에서 호기별로 SKU 할당 상태를 조회하여 리턴
+	 * 작업 배치 별 주문 가공 정보에서 호기별로 상품 할당 상태를 조회하여 리턴
 	 *
 	 * @param batch
 	 * @return
 	 */
 	public List<ChuteStatus> chuteAssignmentStatus(JobBatch batch) {
-		String sql = queryStore.getSrtnChuteStatusQuery();
+		String sql = queryStore.getSdasChuteStatusQuery();
 		Map<String, Object> params = ValueUtil.newMap("domainId,batchId", batch.getDomainId(), batch.getId());
 		return this.queryManager.selectListBySql(sql, params, ChuteStatus.class, 0, 0); 
 	}
@@ -254,22 +295,10 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 	 * @param batch 
 	 * @return
 	 */
-	public List<Map> preprocessSummaryByChutes(JobBatch batch) {
-		String sql = queryStore.getSrtnChuteInfo();
+	public List<SdasPreprocessSummary> preprocessSummaryByChutes(JobBatch batch) {
+		String sql = queryStore.getSdasPreprocessSummaryQuery();
 		Map<String, Object> params = ValueUtil.newMap("batchId", batch.getId());
-		return this.queryManager.selectListBySql(sql, params,Map.class, 0, 0);
-	}
-	
-	/**
-	 * 작업 배치 요약 정보를 조회하여 리턴
-	 *
-	 * @param batch 
-	 * @return
-	 */
-	public List<Map> preprocessSummaryByBatch(JobBatch batch) {
-		String sql = queryStore.getSrtnBatchInfo();
-		Map<String, Object> params = ValueUtil.newMap("batchId", batch.getId());
-		return this.queryManager.selectListBySql(sql, params,Map.class, 0, 0);
+		return this.queryManager.selectListBySql(sql, params,SdasPreprocessSummary.class, 0, 0);
 	}
 	
 	/**
@@ -292,13 +321,13 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 			throw new ElidomRuntimeException("No preprocess data.");
 		}
 		
-		// 4. 슈트 지정이 안 된 sku_cd 가 존재하는지 체크
+		// 4. 슈트 지정이 안 된 Shop_cd 가 존재하는지 체크
 		if(checkRackAssigned) {
 			int notAssignedCount = this.preprocessCount(batch, "sub_equip_cd", "is_blank", OrmConstants.EMPTY_STRING);
 			
 			if(notAssignedCount > 0) {
 				// 랙 지정이 안된 상품이 (notAssignedCount)개 있습니다.
-				throw ThrowUtil.newValidationErrorWithNoLog(true, "CHUTE_EXIST_NOT_ASSIGNED_SKU", ValueUtil.toList("" + notAssignedCount));
+				throw ThrowUtil.newValidationErrorWithNoLog(true, "CHUTE_EXIST_NOT_ASSIGNED_SHOP", ValueUtil.toList("" + notAssignedCount));
 			}
 		}
 	}
@@ -337,44 +366,5 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 	private void completePreprocessing(JobBatch batch) {
 		batch.setStatus(JobBatch.STATUS_READY);
 		this.queryManager.update(batch, "status");
-		/**
-		 * 1. chute -> status : R, batch_id : 'batch_id'
-		 * 2. cells -> class_cd : 'sku_cd'
-		 * 3. racks -> batch_id : 'batch_id', status : 'READY'
-		 * 작업시작시 실행한다.
-		 */
-//		String chuteSql = "update chutes set status = :status, batch_id = orders.batch_id from (select * from order_preprocesses where batch_id = :batchId) as orders where chutes.chute_no = orders.sub_equip_cd;";
-//		Map<String, Object> chuteParamMap = ValueUtil.newMap("status,batchId", Order.STATUS_RUNNING, batch.getId());
-//		this.queryManager.executeBySql(chuteSql, chuteParamMap);
-//		
-//		String cellSql = "update cells set class_cd = orders.cell_assgn_cd from (select * from order_preprocesses where batch_id = :batchId) as orders where cells.cell_cd = orders.class_cd";
-//		Map<String, Object> cellParamMap = ValueUtil.newMap("batchId", batch.getId());
-//		this.queryManager.executeBySql(cellSql, cellParamMap);
-//		
-//		String rackSql = "update racks set status = :status, batch_id = orders.batch_id from (select * from order_preprocesses where batch_id = :batchId) as orders where racks.chute_no = orders.sub_equip_cd";
-//		Map<String, Object> rackParamMap = ValueUtil.newMap("status,batchId", JobBatch.STATUS_READY, batch.getId());
-//		this.queryManager.executeBySql(rackSql, rackParamMap);
 	}
-	
-	@SuppressWarnings("rawtypes")
-	private void resetOrderList(JobBatch batch) {
-		String selectSql = "SELECT BATCH_ID FROM ORDER_PREPROCESSES GROUP BY BATCH_ID";
-		List<Map> batchIdList = this.queryManager.selectListBySql(selectSql, new HashMap<String, Object>(), Map.class, 0, 0);
-		
-		if(ValueUtil.isNotEmpty(batchIdList)) {
-			List<String> batchIds = new ArrayList<String>();
-			for (Map batchId : batchIdList) {
-				batchIds.add(ValueUtil.toString(batchId.get("batch_id")));
-			}
-			
-			String updateSql = "UPDATE JOB_BATCHES SET STATUS = :status, UPDATED_AT = NOW() WHERE ID IN ( :id )";
-			Map<String, Object> updateParamMap = ValueUtil.newMap("status,id", JobBatch.STATUS_WAIT, batchIds);
-			this.queryManager.executeBySql(updateSql, updateParamMap);
-			
-			String deleteSql = "DELETE FROM ORDER_PREPROCESSES WHERE JOB_TYPE = :jobType";
-			Map<String, Object> deleteParamMap = ValueUtil.newMap("jobType", batch.getJobType());
-			this.queryManager.executeBySql(deleteSql, deleteParamMap);
-		}
-	}
-	
 }

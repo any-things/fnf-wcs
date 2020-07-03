@@ -42,11 +42,11 @@ import xyz.elidom.util.ValueUtil;
 public class SmsReceiveBatchService extends AbstractQueryService {
 	
 	String whCd = "ICF";
-	String bizType = "SHIPBYPAS";
+	String bizType = "SHIPBYDAS";
 	String createStatus = "A";
 	String receiveStatus = "B";
 	String equipType = "SORTER";
-	String mheNo = "EXPAS1";
+	String mheNo = "94";
 	
 	/**
 	 * SMS 관련 쿼리 스토어
@@ -104,13 +104,6 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 			this.queryManager.insert(item);
 			receipt.addItem(item);
 		}
-		
-		/*BatchReceiptItem items = new BatchReceiptItem();
-		items.setBatchReceiptId(receipt.getId());
-		receiptItems = this.queryManager.selectList(BatchReceiptItem.class, items);*/
-		
-		// 4. 수신 아이템 설정 및 리턴
-		//receipt.setItems(receiptItems);
 		return receipt;
 	}
 	
@@ -144,8 +137,7 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 	 * @return
 	 */
 	private List<BatchReceiptItem> getWmfIfToSdasReceiptItems(BatchReceipt receipt, String jobType) {
-		Map<String,Object> sqlParams = ValueUtil.newMap("domainId,comCd,areaCd,stageCd,jobType,equipType,whCd,jobDate,bizType,status",
-				receipt.getDomainId(), receipt.getComCd(), receipt.getAreaCd(), receipt.getStageCd(), jobType, this.equipType, this.whCd, receipt.getJobDate().replaceAll("-", ""), this.bizType, this.createStatus);
+		Map<String,Object> sqlParams = ValueUtil.newMap("equipCd,whCd,jobDate,bizType,status", this.mheNo, this.whCd, receipt.getJobDate().replaceAll("-", ""), this.bizType, this.createStatus);
 		return this.getFnfQueryManager().selectListBySql(this.batchQueryStore.getWmsIfToSdasReceiptDataQuery(), sqlParams, BatchReceiptItem.class, 0, 0);
 	}
 	
@@ -169,8 +161,7 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 		}
 		
 		
-		Map<String,Object> params = ValueUtil.newMap("jobDate,batchId", jobDate, batchList);
-//		List<BatchReceiptItem> wmsOrderList = this.getFnfQueryManager().selectListBySql(this.batchQueryStore.getWmsIfToSrtnReceiptDataQuery(), params, BatchReceiptItem.class, 0, 0);
+		Map<String,Object> params = ValueUtil.newMap("equipCd,jobDate,batchId", this.mheNo, jobDate, batchList);
 		
 		return this.getFnfQueryManager().selectListBySql(this.batchQueryStore.getWmsIfToSrtnReceiptDataQuery(), params, BatchReceiptItem.class, 0, 0);
 	}
@@ -207,12 +198,12 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 		try {
 			// 2. skip 이면 pass
 			if(item.getSkipFlag()) {
-				item.updateStatusImmediately(LogisConstants.COMMON_STATUS_SKIPPED, null);
+				item.updateStatusImmediately(LogisConstants.COMMON_STATUS_SKIPPED, item.getMessage());
 				return receipt;
 			}
 						
 			// 3. BatchReceiptItem 상태 업데이트  - 진행 중 
-			item.updateStatusImmediately(LogisConstants.COMMON_STATUS_RUNNING, null);
+			item.updateStatusImmediately(LogisConstants.COMMON_STATUS_RUNNING, item.getMessage());
 			
 			// 4. JobBatch 생성 
 			JobBatch batch = JobBatch.createJobBatch(item.getBatchId(), ValueUtil.toString(item.getJobSeq()), receipt, item);

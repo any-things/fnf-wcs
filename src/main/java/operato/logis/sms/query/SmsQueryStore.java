@@ -191,4 +191,28 @@ public class SmsQueryStore extends AbstractQueryStore {
 	public String getSrtnCnfmQuery() {
 		return this.getQueryByPath("srtn/srtnCnfm");
 	}
+	
+	/**
+	 * 반품 가공화면 batch 정보
+	 * 
+	 */
+	public String getSrtnBatchInfo() {
+		return this.getQueryByPath("srtn/srtnBatchInfo");
+	}
+	
+	/**
+	 * 반품 가공화면 Chute 정보
+	 * 
+	 */
+	public String getSrtnChuteInfo() {
+		return this.getQueryByPath("srtn/srtnChuteInfo");
+	}
+	
+	/**
+	 * 가공화면 Cell 정보
+	 * 
+	 */
+	public String getSrtnCellInfo() {
+		return this.getQueryByPath("srtn/srtnCellInfo");
+	}
 }

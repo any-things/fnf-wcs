@@ -197,6 +197,7 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 			wcsMhePasOrder.setSkuCd(cnfmTrg.getRefDetlNo());
 			wcsMhePasOrder.setOrderQty(cnfmTrg.getInbCmptQty());
 			wcsMhePasOrder.setInsDatetime(DateUtil.getDate());
+			wcsMhePasOrder.setIfYn("N");
 			
 			for (Map skuInfo : skuInfoList) {
 				if(ValueUtil.isEqual(skuInfo.get("sku_cd"), cnfmTrg.getRefDetlNo())) {

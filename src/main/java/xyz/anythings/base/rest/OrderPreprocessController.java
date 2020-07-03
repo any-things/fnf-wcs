@@ -15,10 +15,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import operato.logis.sms.query.SmsQueryStore;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.entity.OrderPreprocess;
 import xyz.anythings.base.entity.Rack;
+import xyz.anythings.base.entity.SKU;
+import xyz.anythings.base.entity.Stock;
 import xyz.anythings.base.service.impl.PreprocessService;
 import xyz.anythings.sys.util.AnyEntityUtil;
 import xyz.anythings.sys.util.AnyValueUtil;
@@ -28,6 +31,7 @@ import xyz.elidom.exception.server.ElidomValidationException;
 import xyz.elidom.orm.system.annotation.service.ApiDesc;
 import xyz.elidom.orm.system.annotation.service.ServiceDesc;
 import xyz.elidom.sys.SysConstants;
+import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.sys.system.service.AbstractRestService;
 import xyz.elidom.sys.util.MessageUtil;
 import xyz.elidom.sys.util.ThrowUtil;
@@ -44,6 +48,9 @@ public class OrderPreprocessController extends AbstractRestService {
 	 */
 	@Autowired
 	private PreprocessService preprocessService;
+	
+	@Autowired
+	private SmsQueryStore queryStore;
 
 	@Override
 	protected Class<?> entityClass() {
@@ -236,6 +243,14 @@ public class OrderPreprocessController extends AbstractRestService {
 		return ValueUtil.newMap("result", SysConstants.OK_STRING);
 	}
 	
+	@RequestMapping(value = "/{batch_id}/{chute_no}/cell_info", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ApiDesc(description = "Cell Info")
+	public List<Map> findOrderStock(@PathVariable("chute_no") String chuteNo, @PathVariable("batch_id") String batchId) {
+		String sql = queryStore.getSrtnCellInfo();
+		Map<String, Object> params = ValueUtil.newMap("chuteNo,batchId", chuteNo, batchId);
+		return this.queryManager.selectListBySql(sql, params,Map.class, 0, 0);
+	}
+	
 	/**
 	 * 주문 가공 Cell 바꾸기
 	 * 
@@ -251,28 +266,42 @@ public class OrderPreprocessController extends AbstractRestService {
 		
 		this.checkBatchStatus(batchId);
 		
-		if(ValueUtil.isEmpty(items.get("prev_id"))) {
-			throw ThrowUtil.newNotAllowedEmptyInfo("terms.label.id");
-		} else if(ValueUtil.isEmpty(items.get("current_id"))) {
-			throw ThrowUtil.newNotAllowedEmptyInfo("terms.label.id");
+		if(ValueUtil.isEmpty(items.get("prev_cell_cd"))) {
+			throw ThrowUtil.newNotAllowedEmptyInfo("terms.label.cell_cd");
+		} else if(ValueUtil.isEmpty(items.get("current_cell_cd"))) {
+			throw ThrowUtil.newNotAllowedEmptyInfo("terms.label.cell_cd");
 		}
 		
-		String prev_id = ValueUtil.toString(items.get("prev_id"));
-		String current_id = ValueUtil.toString(items.get("current_id"));
+		String prevCellCd = ValueUtil.toString(items.get("prev_cell_cd"));
+		String currentCellCd = ValueUtil.toString(items.get("current_cell_cd"));
 		
-		OrderPreprocess prevPreProcess = AnyEntityUtil.findEntityById(true, OrderPreprocess.class, prev_id);
-		OrderPreprocess currentPreProcess = AnyEntityUtil.findEntityById(true, OrderPreprocess.class, current_id);
+		String filterNames = "batchId,classCd";
+		List<Object> prevFilterValues = ValueUtil.newList(batch.getId(), prevCellCd);
+		List<Object> currentFilterValues = ValueUtil.newList(batch.getId(), currentCellCd);
 		
-		prevPreProcess.setSubEquipCd(ValueUtil.toString(items.get("current_chute_no")));
-		prevPreProcess.setClassCd(ValueUtil.toString(items.get("current_cell_cd")));
+		OrderPreprocess prevPreProcess = AnyEntityUtil.findEntityBy(batch.getDomainId(), false, OrderPreprocess.class, filterNames, prevFilterValues.toArray());
+		OrderPreprocess currentPreProcess = AnyEntityUtil.findEntityBy(batch.getDomainId(), false, OrderPreprocess.class, filterNames, currentFilterValues.toArray());
 		
-		currentPreProcess.setSubEquipCd(ValueUtil.toString(items.get("prev_chute_no")));
-		currentPreProcess.setClassCd(ValueUtil.toString(items.get("prev_cell_cd")));
+		String prevChuteNo = prevPreProcess.getSubEquipCd();
+		String currentChuteNo = currentPreProcess.getSubEquipCd();
 		
-		this.update(prev_id, prevPreProcess);
-		this.update(current_id, currentPreProcess);
+		prevPreProcess.setSubEquipCd(currentChuteNo);
+		prevPreProcess.setClassCd(currentCellCd);
 		
-		return ValueUtil.newMap("result", SysConstants.OK_STRING);
+		currentPreProcess.setSubEquipCd(prevChuteNo);
+		currentPreProcess.setClassCd(prevCellCd);
+		
+		this.queryManager.update(prevPreProcess);
+		this.queryManager.update(currentPreProcess);
+		
+		String sql = queryStore.getSrtnCellInfo();
+		Map<String, Object> fromParams = ValueUtil.newMap("chuteNo,batchId", currentPreProcess.getSubEquipCd(), batchId);
+		List<Map> fromCellInfo = this.queryManager.selectListBySql(sql, fromParams, Map.class, 0, 0);
+		
+		Map<String, Object> toParams = ValueUtil.newMap("chuteNo,batchId", prevPreProcess.getSubEquipCd(), batchId);
+		List<Map> toCellInfo = this.queryManager.selectListBySql(sql, toParams, Map.class, 0, 0);
+		
+		return ValueUtil.newMap("fromChuteCellInfo,toChuteCellInfo", fromCellInfo, toCellInfo);
 	}
 	
 	/**

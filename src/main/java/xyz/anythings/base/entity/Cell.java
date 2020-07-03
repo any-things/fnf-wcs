@@ -75,6 +75,9 @@ public class Cell extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	
 	@Column (name = "class_cd", length = 30)
 	private String classCd;
+	
+	@Column (name = "category_flag", length = 1)
+	private Boolean categoryFlag;
 
 	public String getId() {
 		return id;
@@ -210,6 +213,14 @@ public class Cell extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 
 	public void setClassCd(String classCd) {
 		this.classCd = classCd;
+	}
+
+	public Boolean getCategoryFlag() {
+		return categoryFlag;
+	}
+
+	public void setCategoryFlag(Boolean categoryFlag) {
+		this.categoryFlag = categoryFlag;
 	}
 
 	@Override

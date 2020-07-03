@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 import operato.logis.sms.entity.Chute;
 import operato.logis.sms.query.SmsQueryStore;
 import operato.logis.sms.service.model.ChuteStatus;
-import operato.logis.sms.service.model.SdasPreprocessSummary;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.entity.Order;
 import xyz.anythings.base.entity.OrderPreprocess;
@@ -195,7 +194,7 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 //		}
 		
 		String sql = queryStore.getSrtnCellStatusQuery();
-		Map<String, Object> paramMap = ValueUtil.newMap("chuteNo,activeFlag", enableChute, true);
+		Map<String, Object> paramMap = ValueUtil.newMap("chuteNo,activeFlag,categoryFlag", enableChute, true, false);
 		List<Map> cellList = this.queryManager.selectListBySql(sql, paramMap, Map.class, 0, 0);
 		
 		if(items.size() > cellList.size()) {
@@ -206,6 +205,17 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 			items.get(i).setSubEquipCd(ValueUtil.toString(cellList.get(i).get("chute_no")));
 			items.get(i).setClassCd(ValueUtil.toString(cellList.get(i).get("cell_cd")));
 		}
+		
+//		int cellIdx;
+//		for(cellIdx = 0 ; cellIdx < cellList.size() ; cellIdx++) {
+//			items.get(cellIdx).setSubEquipCd(ValueUtil.toString(cellList.get(cellIdx).get("chute_no")));
+//			items.get(cellIdx).setClassCd(ValueUtil.toString(cellList.get(cellIdx).get("cell_cd")));
+//		}
+//		
+//		if(cellIdx < items.size()) {
+//			
+//		}
+		
 		
 		if(isUpdate) {
 			this.queryManager.updateBatch(items);

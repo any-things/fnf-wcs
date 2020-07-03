@@ -158,9 +158,9 @@ public class TowerLampJob extends AbstractFnFJob {
 			
 			// 존에 하나라도 빈 셀이 있는 경우에 전체 점등 
 			if(lampStatus.getEmptyCellCnt() > 0 ) {
-				lamp.setLampR(this.lampOnStatus);
+				lamp.setLampR(this.lampOffStatus);
 				lamp.setLampG(this.lampOnStatus);
-				lamp.setLampA(this.lampOnStatus);
+				lamp.setLampA(this.lampOffStatus);
 				lamp.setCudFlag_(OrmConstants.CUD_FLAG_UPDATE);
 			}
 

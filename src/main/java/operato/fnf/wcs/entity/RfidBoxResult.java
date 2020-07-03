@@ -32,7 +32,7 @@ public class RfidBoxResult extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	@PrimaryKey
 	@Column (name = "tp_delivery", length = 8)
-	private String dtDelivery;
+	private String tpDelivery;
 	
 	@PrimaryKey
 	@Column (name = "ds_batch_no", length = 20)
@@ -86,6 +86,22 @@ public class RfidBoxResult extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setCdBrand(String cdBrand) {
 		this.cdBrand = cdBrand;
+	}
+
+	public String getTpDelivery() {
+		return tpDelivery;
+	}
+
+	public void setTpDelivery(String tpDelivery) {
+		this.tpDelivery = tpDelivery;
+	}
+
+	public String getDsBatchNo() {
+		return dsBatchNo;
+	}
+
+	public void setDsBatchNo(String dsBatchNo) {
+		this.dsBatchNo = dsBatchNo;
 	}
 
 	public String getTpMachine() {

@@ -45,13 +45,18 @@ public class TowerLampJob extends AbstractFnFJob {
 	@Autowired
 	private TowerLampController towerLampCtrl;
 	/**
-	 * 경광등 ON 상태
+	 * 경광등 ON 상태 - 깜빡임
 	 */
 	private String lampOnStatus = "ON";
 	/**
-	 * 경광등 ON 상태
+	 * 경광등 OFF 상태  
 	 */
 	private String lampOffStatus = "OFF";
+	
+	/**
+	 * 경광등 ON 점등 
+	 */
+	private String lampBlinkStatus = "BLINK";
 	
 	/**
 	 * 매 3분 마다 실행되어 DPS 재고 기반으로 경광등 표시기 동기화
@@ -159,10 +164,15 @@ public class TowerLampJob extends AbstractFnFJob {
 			// 존에 하나라도 빈 셀이 있는 경우에 전체 점등 
 			if(lampStatus.getEmptyCellCnt() > 0 ) {
 				lamp.setLampR(this.lampOffStatus);
-				lamp.setLampG(this.lampOnStatus);
+				lamp.setLampG(this.lampBlinkStatus);
 				lamp.setLampA(this.lampOffStatus);
-				lamp.setCudFlag_(OrmConstants.CUD_FLAG_UPDATE);
+			} else {
+				lamp.setLampR(this.lampOffStatus);
+				lamp.setLampG(this.lampOffStatus);
+				lamp.setLampA(this.lampOffStatus);
 			}
+			
+			lamp.setCudFlag_(OrmConstants.CUD_FLAG_UPDATE);
 
 			/* 비율별 경광등 켜기 백업 
 			int fillCellCnt = ValueUtil.toInteger(lampStatus.getFillCellCnt(), 0);

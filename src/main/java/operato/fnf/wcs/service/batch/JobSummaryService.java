@@ -170,7 +170,7 @@ public class JobSummaryService extends AbstractQueryService {
 		
 		int planQty = batch.getBatchPcs();
 		int resultQty = batch.getResultPcs();
-		float progressRate = (resultQty == 0 || planQty == 0) ? 0.0f : (resultQty * 1.0f / planQty * 10.f) * 100.0f;
+		float progressRate = (resultQty == 0 || planQty == 0) ? 0.0f : (ValueUtil.toFloat(resultQty) / ValueUtil.toFloat(planQty) * 1.0f) * 100.0f;
 		
 		dailySum.setResultQty(resultQty);
 		dailySum.setPlanQty(planQty);

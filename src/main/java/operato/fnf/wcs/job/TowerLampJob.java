@@ -47,7 +47,7 @@ public class TowerLampJob extends AbstractFnFJob {
 	/**
 	 * 경광등 ON 상태 - 깜빡임
 	 */
-	private String lampOnStatus = "ON";
+	//private String lampOnStatus = "ON";
 	/**
 	 * 경광등 OFF 상태  
 	 */

@@ -154,7 +154,7 @@ public class DasBoxSendService extends AbstractQueryService {
 			try {
 				for(WcsMheBox boxedOrder : boxedOrders) {
 					// WMS 전송 데이터 생성 
-					RfidBoxItem rfidBox = this.newDasRfidBoxItem(boxedOrder);
+					RfidBoxItem rfidBox = this.newDasRfidBoxItem(wmsQueryMgr, boxedOrder);
 					toRfidBoxList.add(rfidBox);
 					
 					boxedOrder.setIfYn(LogisConstants.Y_CAP_STRING);
@@ -174,11 +174,12 @@ public class DasBoxSendService extends AbstractQueryService {
 	/**
 	 * DAS RFID 박스 정보 생성
 	 * 
+	 * @param wmsQueryMgr
 	 * @param fromBox
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	private RfidBoxItem newDasRfidBoxItem(WcsMheBox fromBox) {
+	private RfidBoxItem newDasRfidBoxItem(IQueryManager wmsQueryMgr, WcsMheBox fromBox) {
 		
 		RfidBoxItem rfidBoxItem = new RfidBoxItem();
 		rfidBoxItem.setCdWarehouse(fromBox.getWhCd());
@@ -191,7 +192,8 @@ public class DasBoxSendService extends AbstractQueryService {
 		rfidBoxItem.setIfCdItem(fromBox.getItemCd());
 
 		// 아소트 여부 조회 후 설정 
-		int count = this.queryManager.selectSize(WmsAssortItem.class, ValueUtil.newMap("itemCd", fromBox.getItemCd()));
+		//int count = this.queryManager.selectSize(WmsAssortItem.class, ValueUtil.newMap("itemCd", fromBox.getItemCd()));
+		int count = wmsQueryMgr.selectSize(WmsAssortItem.class, ValueUtil.newMap("itemCd", fromBox.getItemCd()));
 		rfidBoxItem.setYnAssort(count > 0 ? LogisConstants.Y_CAP_STRING : LogisConstants.N_CAP_STRING);
 		
 		rfidBoxItem.setCdShop(fromBox.getShiptoId());

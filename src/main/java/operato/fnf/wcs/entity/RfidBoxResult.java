@@ -1,6 +1,7 @@
 package operato.fnf.wcs.entity;
 
 import xyz.elidom.dbist.annotation.Column;
+import xyz.elidom.dbist.annotation.DataSourceType;
 import xyz.elidom.dbist.annotation.GenerationRule;
 import xyz.elidom.dbist.annotation.Ignore;
 import xyz.elidom.dbist.annotation.PrimaryKey;
@@ -11,7 +12,7 @@ import xyz.elidom.dbist.annotation.Table;
  * 
  * @author shortstop
  */
-@Table(name = "if_pasdelivery_send", ignoreDdl = true, idStrategy = GenerationRule.NONE)
+@Table(name = "if_pasdelivery_send", ignoreDdl = true, dataSourceType=DataSourceType.DATASOURCE, idStrategy = GenerationRule.NONE)
 public class RfidBoxResult extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
 	/**

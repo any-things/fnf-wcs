@@ -23,11 +23,14 @@ import xyz.anythings.sys.util.AnyValueUtil;
 import xyz.elidom.dbist.dml.Page;
 import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.dbist.util.StringJoiner;
+import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.orm.OrmConstants;
+import xyz.elidom.orm.manager.DataSourceManager;
 import xyz.elidom.orm.system.annotation.service.ApiDesc;
 import xyz.elidom.orm.system.annotation.service.ServiceDesc;
 import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.sys.system.service.AbstractRestService;
+import xyz.elidom.util.BeanUtil;
 import xyz.elidom.util.ValueUtil;
 
 @RestController
@@ -35,7 +38,7 @@ import xyz.elidom.util.ValueUtil;
 @ResponseStatus(HttpStatus.OK)
 @RequestMapping("/rest/dps_partial_order")
 @ServiceDesc(description = "DpsPartialOrder Service API")
-public class DpsPartialOrderController extends AbstractRestService {
+public class DpsPartialOrderController extends AbstractRestService{
 
 	@Override
 	protected Class<?> entityClass() {
@@ -72,6 +75,9 @@ public class DpsPartialOrderController extends AbstractRestService {
 		}
 		
 		
+		IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager(WmsDpsPartialOrder.class);
+		
+		
 		// 3. WMS 부분 할당 테이블에서 데이터 조회 
 		StringJoiner dpsPartialSql = new StringJoiner("\n");
 		dpsPartialSql.add("")
@@ -85,9 +91,9 @@ public class DpsPartialOrderController extends AbstractRestService {
 		 .add(" #if($assignPartialOrderList)")
 		 .add("   AND REF_NO not in (:assignPartialOrderList) ")
 		 .add(" #end");
-		 
+				 
 		// 4. 조회 
-		return this.queryManager.selectPageBySql(dpsPartialSql.toString(), params, this.entityClass(), page, limit);
+		return wmsQueryMgr.selectPageBySql(dpsPartialSql.toString(), params, this.entityClass(), page, limit);
 	}
 
 	@RequestMapping(value = "/update_multiple", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)

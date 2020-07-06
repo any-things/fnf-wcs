@@ -1,6 +1,7 @@
 package operato.fnf.wcs.entity;
 
 import xyz.elidom.dbist.annotation.Column;
+import xyz.elidom.dbist.annotation.DataSourceType;
 import xyz.elidom.dbist.annotation.GenerationRule;
 import xyz.elidom.dbist.annotation.Ignore;
 import xyz.elidom.dbist.annotation.PrimaryKey;
@@ -11,6 +12,7 @@ import xyz.elidom.dbist.annotation.Table;
  */
 @Table(name = "dps_partial_orders"
     , ignoreDdl = true
+    , dataSourceType=DataSourceType.DATASOURCE
     , idStrategy = GenerationRule.UUID)
 public class WmsDpsPartialOrder extends xyz.elidom.orm.entity.basic.AbstractStamp {
 

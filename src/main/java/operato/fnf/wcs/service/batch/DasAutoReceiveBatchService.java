@@ -5,6 +5,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import operato.fnf.wcs.Utils;
 import xyz.anythings.base.entity.BatchReceipt;
 import xyz.anythings.base.model.ResponseObj;
 import xyz.anythings.base.service.impl.AbstractLogisService;
@@ -12,7 +13,6 @@ import xyz.anythings.base.service.impl.LogisServiceDispatcher;
 import xyz.anythings.sys.AnyConstants;
 import xyz.anythings.sys.event.EventPublisher;
 import xyz.elidom.sys.entity.Domain;
-import xyz.elidom.sys.util.DateUtil;
 import xyz.elidom.util.ValueUtil;
 
 @Service
@@ -32,13 +32,13 @@ public class DasAutoReceiveBatchService extends AbstractLogisService {
 		String stageCd = "_na_";
 		String jobType = "DAS,RTN";
 		
-		String jobDate = String.valueOf(params.get("jobDate"));
-		if (ValueUtil.isEmpty(jobDate)) {
-			jobDate = DateUtil.currentDate();
+		String workDate = String.valueOf(params.get("workDate"));
+		if (ValueUtil.isEmpty(workDate)) {
+			workDate = Utils.today();
 		}
 		
 		BatchReceipt receipt = this.serviceDispatcher.getReceiveBatchService()
-				.readyToReceive(Domain.currentDomainId(), areaCd, stageCd, comCd, jobDate, jobType);
+				.readyToReceive(Domain.currentDomainId(), areaCd, stageCd, comCd, workDate, jobType);
 		
 		if (AnyConstants.COMMON_STATUS_FINISHED.equalsIgnoreCase(receipt.getStatus())) {
 			ResponseObj resp = new ResponseObj();

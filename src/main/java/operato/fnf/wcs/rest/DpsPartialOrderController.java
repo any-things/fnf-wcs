@@ -55,11 +55,11 @@ public class DpsPartialOrderController extends AbstractRestService {
 		
 		// 2. 러닝 배치 리스트 
 		List<String> runningBatchs = this.getRunningBatchList();
+		params.put("whCd", "ICF");
 		
 		// 2.1. 러닝 배치가 있으면 기존 배치에 강제 할당 주문 ID 구하기 
 		if(AnyValueUtil.isNotEmpty(runningBatchs)) {
 			
-			params.put("whCd", "ICF");
 			params.put("batchIds", runningBatchs);
 			
 			// 2.2.기존에 강제 할당 설정한 주문 정보 조회 

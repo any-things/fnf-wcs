@@ -43,34 +43,6 @@ public class ComController extends AbstractRestService {
 	protected Class<?> entityClass() {
 		return null;
 	}
-
-//	@RequestMapping(value = "/search/{serviceUrl}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-//	@Transactional(propagation = Propagation.REQUIRES_NEW)
-//	public ResponseObj dispatchService(@PathVariable("serviceUrl") String serviceUrl,
-//			@RequestParam(name = "page", required = false) Integer page,
-//			@RequestParam(name = "limit", required = false) Integer limit,
-//			@RequestParam(name = "select", required = false) String select,
-//			@RequestParam(name = "sort", required = false) String sort,
-//			@RequestParam(name = "query", required = false) String query)
-//			throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, UnsupportedEncodingException, Exception {
-//
-//		Map<String, Object> params = this.parseQueryString(query);
-//
-//		String serviceName = ValueUtil.toCamelCase(serviceUrl, '_');
-//		Object service = BeanUtil.get(serviceName);
-//
-//		Method method = service.getClass().getMethod(serviceName, Map.class);
-//		ResponseObj response = null;
-//		try {
-//			response = (ResponseObj) method.invoke(service, params);
-//		} catch (InvocationTargetException e) {
-//			throw (Exception) e.getTargetException();
-//		} catch (Exception e) {
-//			throw e;
-//		}
-//
-//		return response;
-//	}
 	
 	@RequestMapping(value = "/{serviceUrl}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -118,38 +90,6 @@ public class ComController extends AbstractRestService {
 		}
 		return response;
 	}
-
-//	public <T> WsResponseObj invoke(String serviceUrl, T params) throws NoSuchMethodException, SecurityException,
-//			IllegalAccessException, IllegalArgumentException, Exception {
-//		String serviceName = ValueUtil.toCamelCase(serviceUrl, '_');
-//		Object service = BeanUtil.get(serviceName);
-//
-//		Method method = service.getClass().getMethod(serviceName, Map.class);
-//		WsResponseObj response = null;
-//		try {
-//			response = (WsResponseObj) method.invoke(service, params);
-//		} catch (InvocationTargetException e) {
-//			throw (Exception) e.getTargetException();
-//		} catch (Exception e) {
-//			throw e;
-//		}
-//		return response;
-//	}
-
-//	private Map<String, Object> parseQueryString(String query) {
-//		if (ValueUtil.isEmpty(query)) {
-//			return new HashMap<String, Object>();
-//		}
-//
-//		JSONArray jsonArray = JSON.parseArray(query);
-//		Map<String, Object> paramsMap = new HashMap<String, Object>();
-//		for (int i = 0; i < jsonArray.size(); i++) {
-//			JSONObject jsonObj = jsonArray.getJSONObject(i);
-//			paramsMap.put(String.valueOf(jsonObj.get("name")), jsonObj.get("value"));
-//		}
-//
-//		return paramsMap;
-//	}
 
 	private Map<String, Object> parseParams(String paramString) throws UnsupportedEncodingException {
 		if (ValueUtil.isEmpty(paramString)) {

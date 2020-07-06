@@ -5,18 +5,18 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import operato.fnf.wcs.entity.WmsMheItemBarcode;
-import xyz.anythings.base.LogisConstants;
-import xyz.anythings.base.entity.SKU;
 import xyz.anythings.sys.event.model.ErrorEvent;
 import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.sys.entity.Setting;
 import xyz.elidom.sys.rest.SettingController;
 import xyz.elidom.sys.system.context.DomainContext;
+import xyz.elidom.sys.util.SettingUtil;
 import xyz.elidom.util.ValueUtil;
 
 /**
@@ -45,7 +45,7 @@ public class SyncAllSkuJob extends AbstractFnFJob {
 	/**
 	 * 고객사 코드
 	 */
-	private String comCd = "FnF";
+	//private String comCd = "FnF";
 	/**
 	 * 상품 소스 조회 쿼리 
 	 */
@@ -61,7 +61,7 @@ public class SyncAllSkuJob extends AbstractFnFJob {
 	private SettingController settingCtrl;
 	
 	@Transactional
-	//@Scheduled(cron="0 0/1 * * * *")
+	@Scheduled(cron="0 0/1 * * * *")
 	public void syncJob() {
 		// 스케줄링 활성화 여부 && 이전 작업이 진행 중인 여부 체크
 		if(!this.isJobEnabeld() || this.syncJobRunning) {
@@ -119,7 +119,7 @@ public class SyncAllSkuJob extends AbstractFnFJob {
 	 * @param domainId
 	 * @param fromSkuList
 	 */
-	private void syncSkuList(Long domainId, List<WmsMheItemBarcode> fromSkuList) {
+	/*private void syncSkuList(Long domainId, List<WmsMheItemBarcode> fromSkuList) {
 		
 		Map<String, Object> condition = ValueUtil.newMap("domainId,comCd", domainId, this.comCd);
 		
@@ -147,6 +147,70 @@ public class SyncAllSkuJob extends AbstractFnFJob {
 			toSku.setSkuDesc(fromSku.getItemGcdNm());
 			this.queryManager.upsert(toSku);
 		}
+	}*/
+	
+	/**
+	 * 상품 수신 처리
+	 * 
+	 * @param domainId
+	 * @param fromSkuList
+	 */
+	private void syncSkuList(Long domainId, List<WmsMheItemBarcode> fromSkuList) {
+		
+		String skuMasterTable = this.getItemTable();
+		String selectSql = this.getSkuSelectSql(skuMasterTable);
+		String insertSql = this.getSkuInsertSql(skuMasterTable);
+		String updateSql = this.getSkuUpdateSql(skuMasterTable);
+		
+		for(WmsMheItemBarcode fromSku : fromSkuList) {
+			Map<String, Object> valueMap = ValueUtil.newMap("itemCd,brandCd,barcode,barcode2,itemSeason,itemStyle,itemColor,itemSize,itemGcd,floorCd,updDatetime", fromSku.getItemCd(), fromSku.getBrand(), fromSku.getBarcode(), fromSku.getBarcode2(), fromSku.getItemSeason(), fromSku.getItemStyle(), fromSku.getItemSize(), fromSku.getItemGcd(), fromSku.getFloorCd(), fromSku.getUpdDatetime());
+			int count = this.queryManager.selectSizeBySql(selectSql, ValueUtil.newMap("itemCd", fromSku.getItemCd()));
+			
+			if(count == 0) {
+				this.queryManager.executeBySql(insertSql, valueMap);
+			} else {
+				this.queryManager.executeBySql(updateSql, valueMap);
+			}
+		}
+	}
+	
+	/**
+	 * 상품 조회 SQL
+	 * 
+	 * @param skuMasterTable
+	 * @return
+	 */
+	private String getSkuSelectSql(String skuMasterTable) {
+		return "select item_cd from " + skuMasterTable + " where item_cd = :itemCd";
+	}
+	
+	/**
+	 * 상품 추가 SQL
+	 * 
+	 * @param skuMasterTable
+	 * @return
+	 */
+	private String getSkuInsertSql(String skuMasterTable) {
+		return "insert into " + skuMasterTable + " (brand, item_cd, barcode, barcode2, item_season, item_style, item_color, item_size, item_gcd, floor_cd, upd_datetime) values(:brandCd, :itemCd, :barcode, :barcode2, :itemSeason, :itemStyle, :itemColor, :itemSize, :itemGcd, :floorCd, :updDatetime)";
+	}
+	
+	/**
+	 * 상품 업데이트 SQL
+	 * 
+	 * @param skuMasterTable
+	 * @return
+	 */
+	private String getSkuUpdateSql(String skuMasterTable) {
+		return "update " + skuMasterTable + " set brand = :brandCd, barcode = :barcode, barcode2 = :barcode2, item_season = :itemSeason, item_style = :itemStyle, item_color = :itemColor, item_size = :itemSize, item_gcd = :itemGcd, floor_cd = :floorCd, upd_datetime = :updatedTime where item_cd = :itemCd";
+	}
+
+	/**
+	 * MHE_ITEM_BARCODE 테이블
+	 * 
+	 * @return
+	 */
+	private String getItemTable() {
+		return SettingUtil.getValue("fnf.sku.master.table.name", "mhe_item_barcode");
 	}
 
 }

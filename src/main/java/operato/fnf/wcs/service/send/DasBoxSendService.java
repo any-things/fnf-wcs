@@ -195,7 +195,6 @@ public class DasBoxSendService extends AbstractQueryService {
 		rfidBoxItem.setIfCdItem(fromBox.getItemCd());
 
 		// 아소트 여부 조회 후 설정 
-		//int count = this.queryManager.selectSize(WmsAssortItem.class, ValueUtil.newMap("itemCd", fromBox.getItemCd()));
 		int count = wmsQueryMgr.selectSize(WmsAssortItem.class, ValueUtil.newMap("itemCd", fromBox.getItemCd()));
 		rfidBoxItem.setYnAssort(count > 0 ? LogisConstants.Y_CAP_STRING : LogisConstants.N_CAP_STRING);
 		

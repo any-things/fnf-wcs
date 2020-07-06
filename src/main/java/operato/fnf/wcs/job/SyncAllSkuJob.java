@@ -157,13 +157,13 @@ public class SyncAllSkuJob extends AbstractFnFJob {
 	 */
 	private void syncSkuList(Long domainId, List<WmsMheItemBarcode> fromSkuList) {
 		
-		String skuMasterTable = this.getItemTable();
+		String skuMasterTable = this.getItemTable(domainId);
 		String selectSql = this.getSkuSelectSql(skuMasterTable);
 		String insertSql = this.getSkuInsertSql(skuMasterTable);
 		String updateSql = this.getSkuUpdateSql(skuMasterTable);
 		
 		for(WmsMheItemBarcode fromSku : fromSkuList) {
-			Map<String, Object> valueMap = ValueUtil.newMap("itemCd,brandCd,barcode,barcode2,itemSeason,itemStyle,itemColor,itemSize,itemGcd,floorCd,updDatetime", fromSku.getItemCd(), fromSku.getBrand(), fromSku.getBarcode(), fromSku.getBarcode2(), fromSku.getItemSeason(), fromSku.getItemStyle(), fromSku.getItemSize(), fromSku.getItemGcd(), fromSku.getFloorCd(), fromSku.getUpdDatetime());
+			Map<String, Object> valueMap = ValueUtil.newMap("itemCd,brandCd,barcode,barcode2,itemSeason,itemStyle,itemColor,itemSize,itemGcd,itemGcdNm,floorCd,updDatetime", fromSku.getItemCd(), fromSku.getBrand(), fromSku.getBarcode(), fromSku.getBarcode2(), fromSku.getItemSeason(), fromSku.getItemStyle(), fromSku.getItemColor(), fromSku.getItemSize(), fromSku.getItemGcd(), fromSku.getItemGcdNm(), fromSku.getFloorCd(), fromSku.getUpdDatetime());
 			int count = this.queryManager.selectSizeBySql(selectSql, ValueUtil.newMap("itemCd", fromSku.getItemCd()));
 			
 			if(count == 0) {
@@ -191,7 +191,7 @@ public class SyncAllSkuJob extends AbstractFnFJob {
 	 * @return
 	 */
 	private String getSkuInsertSql(String skuMasterTable) {
-		return "insert into " + skuMasterTable + " (brand, item_cd, barcode, barcode2, item_season, item_style, item_color, item_size, item_gcd, floor_cd, upd_datetime) values(:brandCd, :itemCd, :barcode, :barcode2, :itemSeason, :itemStyle, :itemColor, :itemSize, :itemGcd, :floorCd, :updDatetime)";
+		return "insert into " + skuMasterTable + " (brand, item_cd, barcode, barcode2, item_season, item_style, item_color, item_size, item_gcd, item_gcd_nm, floor_cd, upd_datetime) values(:brandCd, :itemCd, :barcode, :barcode2, :itemSeason, :itemStyle, :itemColor, :itemSize, :itemGcd, :itemGcdNm, :floorCd, :updDatetime)";
 	}
 	
 	/**
@@ -201,7 +201,7 @@ public class SyncAllSkuJob extends AbstractFnFJob {
 	 * @return
 	 */
 	private String getSkuUpdateSql(String skuMasterTable) {
-		return "update " + skuMasterTable + " set brand = :brandCd, barcode = :barcode, barcode2 = :barcode2, item_season = :itemSeason, item_style = :itemStyle, item_color = :itemColor, item_size = :itemSize, item_gcd = :itemGcd, floor_cd = :floorCd, upd_datetime = :updatedTime where item_cd = :itemCd";
+		return "update " + skuMasterTable + " set brand = :brandCd, barcode = :barcode, barcode2 = :barcode2, item_season = :itemSeason, item_style = :itemStyle, item_color = :itemColor, item_size = :itemSize, item_gcd = :itemGcd, item_gcd_nm = :itemGcdNm, floor_cd = :floorCd, upd_datetime = :updDatetime where item_cd = :itemCd";
 	}
 
 	/**
@@ -209,8 +209,8 @@ public class SyncAllSkuJob extends AbstractFnFJob {
 	 * 
 	 * @return
 	 */
-	private String getItemTable() {
-		return SettingUtil.getValue("fnf.sku.master.table.name", "mhe_item_barcode");
+	private String getItemTable(Long domainId) {
+		return SettingUtil.getValue(domainId, "fnf.item_barcode.table.name", "mhe_item_barcode_ope2");
 	}
 
 }

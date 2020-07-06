@@ -55,23 +55,24 @@ public class DpsPartialOrderController extends AbstractRestService {
 		
 		// 2. 러닝 배치 리스트 
 		List<String> runningBatchs = this.getRunningBatchList();
-		if(AnyValueUtil.isEmpty(runningBatchs)) {
-			// 2.1 진행중인 배치가 없으면 조회 하지 않음 
-			return new Page<WmsDpsPartialOrder>();
+		
+		// 2.1. 러닝 배치가 있으면 기존 배치에 강제 할당 주문 ID 구하기 
+		if(AnyValueUtil.isNotEmpty(runningBatchs)) {
+			
+			params.put("whCd", "ICF");
+			params.put("batchIds", runningBatchs);
+			
+			// 2.2.기존에 강제 할당 설정한 주문 정보 조회 
+			String mheDrAssignYSql = "select distinct ref_no from mhe_dr where wh_cd = :whCd and work_unit in (:batchIds) and dps_partial_assign_yn='Y' #if($ref_no) and ref_no =:ref_no #end ";
+			List<String> assignPartialOrderList = this.queryManager.selectListBySql(mheDrAssignYSql, params, String.class, 0, 0);
+			if(AnyValueUtil.isNotEmpty(assignPartialOrderList)) {
+				// 3.1 기존에 강제할당된 주문이 있을 경우에만 parameter 추가 
+				params.put("assignPartialOrderList", assignPartialOrderList);
+			}
 		}
 		
-		params.put("whCd", "ICF");
-		params.put("batchIds", runningBatchs);
 		
-		// 3.기존에 강제 할당 설정한 주문 정보 조회 
-		String mheDrAssignYSql = "select distinct ref_no from mhe_dr where wh_cd = :whCd and work_unit in (:batchIds) and dps_partial_assign_yn='Y' #if($ref_no) and ref_no =:ref_no #end ";
-		List<String> assignPartialOrderList = this.queryManager.selectListBySql(mheDrAssignYSql, params, String.class, 0, 0);
-		if(AnyValueUtil.isNotEmpty(assignPartialOrderList)) {
-			// 3.1 기존에 강제할당된 주문이 있을 경우에만 parameter 추가 
-			params.put("assignPartialOrderList", assignPartialOrderList);
-		}
-		
-		// 4. WMS 부분 할당 테이블에서 데이터 조회 
+		// 3. WMS 부분 할당 테이블에서 데이터 조회 
 		StringJoiner dpsPartialSql = new StringJoiner("\n");
 		dpsPartialSql.add("")
 		 .add("SELECT WH_CD, REF_NO, SHIPTO_NM, OUTB_ECT_QTY, TO_PICK_QTY, 'false' AS ASSIGN_YN")

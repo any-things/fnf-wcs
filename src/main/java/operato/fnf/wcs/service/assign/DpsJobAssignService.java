@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import operato.fnf.wcs.entity.WmsDpsPartialOrder;
 import operato.fnf.wcs.query.store.FnFDpsQueryStore;
 import operato.fnf.wcs.service.model.DpsJobAssign;
 import xyz.anythings.base.entity.JobBatch;
@@ -20,6 +21,8 @@ import xyz.anythings.sys.event.model.ErrorEvent;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.anythings.sys.util.AnyEntityUtil;
 import xyz.elidom.dbist.util.StringJoiner;
+import xyz.elidom.orm.IQueryManager;
+import xyz.elidom.orm.manager.DataSourceManager;
 import xyz.elidom.sys.SysConstants;
 import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.util.BeanUtil;
@@ -161,8 +164,18 @@ public class DpsJobAssignService extends AbstractQueryService {
 	private List<String> searchSkipOrders(JobBatch batch) {
 		// 1. WMS 부분할당 테이블에서 WCS 주문 상세에 강제 할당이 설정된 내용 제외 하고 조회 
 		Map<String, Object> params = ValueUtil.newMap("whCd,batchId", "ICF", batch.getId());
-		String sql = "select distinct ref_no from dps_partial_orders where wh_cd=:whCd and ref_no not in (select distinct ref_no from mhe_dr where wh_cd = :whCd and work_unit = :batchId and dps_partial_assign_yn = 'Y')";
-		List<String> skipOrders = this.queryManager.selectListBySql(sql, params, String.class, 0, 0);
+		
+		
+		String mheDrSql = "select distinct ref_no from mhe_dr where wh_cd = :whCd and work_unit = :batchId and dps_partial_assign_yn = 'Y'";
+		List<String> forcedAssign = this.queryManager.selectListBySql(mheDrSql, params, String.class, 0, 0);
+		
+		if(ValueUtil.isNotEmpty(forcedAssign)) {
+			params.put("forced_assign", forcedAssign);
+		}
+		
+		String sql = "select distinct ref_no from dps_partial_orders where wh_cd=:whCd #if($forced_assign) and ref_no not in (:forced_assign) #end ";
+		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsDpsPartialOrder.class);
+		List<String> skipOrders = wmsQueryMgr.selectListBySql(sql, params, String.class, 0, 0);
 		
 		// 2. skip 대상 리스트 return 
 		if(ValueUtil.isNotEmpty(skipOrders)) {

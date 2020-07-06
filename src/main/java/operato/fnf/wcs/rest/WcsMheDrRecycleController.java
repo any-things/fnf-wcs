@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import operato.fnf.wcs.entity.WcsMheDrRecycle;
+import operato.fnf.wcs.entity.WcsMheDrRecall;
 
 import xyz.elidom.orm.system.annotation.service.ApiDesc;
 import xyz.elidom.orm.system.annotation.service.ServiceDesc;
@@ -29,7 +29,7 @@ public class WcsMheDrRecycleController extends AbstractRestService {
 
 	@Override
 	protected Class<?> entityClass() {
-		return WcsMheDrRecycle.class;
+		return WcsMheDrRecall.class;
 	}
   
 	@RequestMapping(method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
@@ -45,7 +45,7 @@ public class WcsMheDrRecycleController extends AbstractRestService {
 
 	@RequestMapping(value="/{id}", method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
 	@ApiDesc(description="Find one by ID")
-	public WcsMheDrRecycle findOne(@PathVariable("id") String id) {
+	public WcsMheDrRecall findOne(@PathVariable("id") String id) {
 		return this.getOne(this.entityClass(), id);
 	}
 
@@ -58,13 +58,13 @@ public class WcsMheDrRecycleController extends AbstractRestService {
 	@RequestMapping(method=RequestMethod.POST, consumes=MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
 	@ResponseStatus(HttpStatus.CREATED)
 	@ApiDesc(description="Create")
-	public WcsMheDrRecycle create(@RequestBody WcsMheDrRecycle input) {
+	public WcsMheDrRecall create(@RequestBody WcsMheDrRecall input) {
 		return this.createOne(input);
 	}
 
 	@RequestMapping(value="/{id}", method=RequestMethod.PUT, consumes=MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
 	@ApiDesc(description="Update")
-	public WcsMheDrRecycle update(@PathVariable("id") String id, @RequestBody WcsMheDrRecycle input) {
+	public WcsMheDrRecall update(@PathVariable("id") String id, @RequestBody WcsMheDrRecall input) {
 		return this.updateOne(input);
 	}
   
@@ -76,7 +76,7 @@ public class WcsMheDrRecycleController extends AbstractRestService {
   
 	@RequestMapping(value="/update_multiple", method=RequestMethod.POST, consumes=MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
 	@ApiDesc(description="Create, Update or Delete multiple at one time")
-	public Boolean multipleUpdate(@RequestBody List<WcsMheDrRecycle> list) {
+	public Boolean multipleUpdate(@RequestBody List<WcsMheDrRecall> list) {
 		return this.cudMultipleData(this.entityClass(), list);
 	}
 

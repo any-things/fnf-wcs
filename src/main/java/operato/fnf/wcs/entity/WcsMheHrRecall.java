@@ -7,10 +7,10 @@ import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.GenerationRule;
 import xyz.elidom.dbist.annotation.Table;
 
-@Table(name = "mhe_hr_recycle", idStrategy = GenerationRule.UUID, uniqueFields="whCd,workUnit", indexes = {
+@Table(name = "mhe_hr_recall", idStrategy = GenerationRule.UUID, uniqueFields="whCd,workUnit", indexes = {
 	@Index(name = "ix_mhe_hr_recycle_0", columnList = "wh_cd,work_unit", unique = true)
 })
-public class WcsMheHrRecycle extends xyz.elidom.orm.entity.basic.ElidomStampHook {
+public class WcsMheHrRecall extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	/**
 	 * SerialVersion UID
 	 */

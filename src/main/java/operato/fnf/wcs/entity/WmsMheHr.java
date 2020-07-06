@@ -100,6 +100,9 @@ public class WmsMheHr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
 	@Column (name = "pas_chute_tcd", length = 10)
 	private String pasChuteTcd;
+	
+	@Column (name = "del_yn")
+	private String delYn;
 
 	public String getWhCd() {
 		return whCd;
@@ -261,4 +264,12 @@ public class WmsMheHr extends xyz.elidom.orm.entity.basic.AbstractStamp {
 		this.pasChuteTcd = pasChuteTcd;
 	}
 
+	public String getDelYn() {
+		return delYn;
+	}
+
+	public void setDelYn(String delYn) {
+		this.delYn = delYn;
+	}
+	
 }

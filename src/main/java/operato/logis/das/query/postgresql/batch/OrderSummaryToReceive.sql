@@ -22,3 +22,4 @@ WHERE
  	 AND HR.WORK_DATE = :jobDate
  	 AND HR.STATUS = :status
  	 AND HR.BIZ_TYPE = :jobType
+ 	 AND HR.DEL_YN = 'N'

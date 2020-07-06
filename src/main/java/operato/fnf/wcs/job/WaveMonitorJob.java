@@ -1,6 +1,7 @@
 package operato.fnf.wcs.job;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import operato.fnf.wcs.FnFConstants;
 import operato.fnf.wcs.entity.WcsMheHr;
 import operato.fnf.wcs.service.batch.DasCloseBatchService;
+import operato.fnf.wcs.service.batch.DasRecallBatchService;
 import operato.fnf.wcs.service.batch.DasStartBatchService;
 import operato.logis.wcs.service.impl.WcsBatchProgressService;
 import xyz.anythings.base.LogisConstants;
@@ -70,6 +72,15 @@ public class WaveMonitorJob extends AbstractFnFJob {
 			DomainContext.setCurrentDomain(domain);
 			
 			try {
+				// 회수처리
+				BeanUtil.get(DasRecallBatchService.class).dasRecallBatchService(new HashMap<>());
+			} catch(Exception e) {
+				// 2.4. 예외 처리
+				ErrorEvent errorEvent = new ErrorEvent(domain.getId(), "JOB_BATCH_RECALL_PROCESS_ERROR", e, null, true, true);
+				this.eventPublisher.publishEvent(errorEvent);
+			}
+			
+			try {
 				// 2.2 종료된 Wave 리스트를 조회한 후 존재한다면 처리
 				monitorJob.processFinishedWaveList(domain);
 				
@@ -83,7 +94,6 @@ public class WaveMonitorJob extends AbstractFnFJob {
 				// 2.4. 예외 처리
 				ErrorEvent errorEvent = new ErrorEvent(domain.getId(), "JOB_BATCH_MONITOR_ERROR", e, null, true, true);
 				this.eventPublisher.publishEvent(errorEvent);
-				
 			} finally {
 				// 2.5. 스레드 로컬 변수에서 currentDomain 리셋 
 				DomainContext.unsetAll();

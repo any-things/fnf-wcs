@@ -8,7 +8,7 @@ import xyz.elidom.dbist.annotation.GenerationRule;
 import xyz.elidom.dbist.annotation.Table;
 
 @Table(name = "mhe_dr_recall", idStrategy = GenerationRule.UUID, uniqueFields="whCd,workUnit,outbNo,shiptoId,locationCd,itemCd", indexes = {
-	@Index(name = "ix_mhe_dr_recycle_0", columnList = "wh_cd,work_unit,outb_no,shipto_id,location_cd,item_cd", unique = true)
+	@Index(name = "ix_mhe_dr_recall_0", columnList = "wh_cd,work_unit,outb_no,shipto_id,location_cd,item_cd", unique = true)
 })
 public class WcsMheDrRecall extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	/**

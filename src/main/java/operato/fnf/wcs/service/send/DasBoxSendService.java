@@ -67,6 +67,7 @@ public class DasBoxSendService extends AbstractQueryService {
 		
 		Long domainId = batch.getDomainId();
 		IQueryManager rfidQueryMgr = this.getDataSourceQueryManager(RfidBoxItem.class);
+		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsAssortItem.class);
 		DasBoxSendService boxSendSvc = BeanUtil.get(DasBoxSendService.class);
 		
 		// 1. 박스 완료 실적 조회
@@ -76,7 +77,7 @@ public class DasBoxSendService extends AbstractQueryService {
 			// 2.1 DAS로 부터 올라온 WCS 박스 실적 정보 조회 
 			List<WcsMheBox> packings = this.searchBoxResult(order.getWorkUnit(), order.getOutbNo());
 			// 2.2 WCS 주문별 실적 정보를 RFID 패킹 정보로 복사
-			boxSendSvc.sendPackingsToRfid(domainId, rfidQueryMgr, packings);
+			boxSendSvc.sendPackingsToRfid(domainId, rfidQueryMgr, wmsQueryMgr, packings);
 		}
 
 		// 3. 박스 취소 실적 조회
@@ -141,11 +142,12 @@ public class DasBoxSendService extends AbstractQueryService {
 	 * WCS 박스 실적으로 부터 RFID 실적 전송
 	 * 
 	 * @param domainId
+	 * @param rfidQueryMgr
 	 * @param wmsQueryMgr
 	 * @param boxedOrders
 	 */
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public void sendPackingsToRfid(Long domainId, IQueryManager wmsQueryMgr, List<WcsMheBox> boxedOrders) {
+	public void sendPackingsToRfid(Long domainId, IQueryManager rfidQueryMgr, IQueryManager wmsQueryMgr, List<WcsMheBox> boxedOrders) {
 		
 		if(ValueUtil.isNotEmpty(boxedOrders)) {
 			List<RfidBoxItem> toRfidBoxList = new ArrayList<RfidBoxItem>(boxedOrders.size());
@@ -154,14 +156,14 @@ public class DasBoxSendService extends AbstractQueryService {
 			try {
 				for(WcsMheBox boxedOrder : boxedOrders) {
 					// WMS 전송 데이터 생성 
-					RfidBoxItem rfidBox = this.newDasRfidBoxItem(wmsQueryMgr, boxedOrder);
+					RfidBoxItem rfidBox = this.newDasRfidBoxItem(rfidQueryMgr, wmsQueryMgr, boxedOrder);
 					toRfidBoxList.add(rfidBox);
 					
 					boxedOrder.setIfYn(LogisConstants.Y_CAP_STRING);
 					boxedOrder.setIfDatetime(currentTime);
 				}
 				
-				wmsQueryMgr.insertBatch(toRfidBoxList);
+				rfidQueryMgr.insertBatch(toRfidBoxList);
 				this.queryManager.updateBatch(boxedOrders);
 				
 			} catch(Exception e) {
@@ -174,12 +176,13 @@ public class DasBoxSendService extends AbstractQueryService {
 	/**
 	 * DAS RFID 박스 정보 생성
 	 * 
+	 * @param rfidQueryMgr
 	 * @param wmsQueryMgr
 	 * @param fromBox
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	private RfidBoxItem newDasRfidBoxItem(IQueryManager wmsQueryMgr, WcsMheBox fromBox) {
+	private RfidBoxItem newDasRfidBoxItem(IQueryManager rfidQueryMgr, IQueryManager wmsQueryMgr, WcsMheBox fromBox) {
 		
 		RfidBoxItem rfidBoxItem = new RfidBoxItem();
 		rfidBoxItem.setCdWarehouse(fromBox.getWhCd());

@@ -1,7 +1,6 @@
 package operato.fnf.wcs.job;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -47,10 +46,6 @@ public class SyncItemBarcodeJob extends AbstractFnFJob {
 	 */
 	private String skuSearchSql = "select * from mhe_item_barcode where upd_datetime > :lastUpdatedAt order by item_cd asc";
 	/**
-	 * 무 조건 
-	 */
-	private Map<String, Object> noCondition = new HashMap<String, Object>(1);
-	/**
 	 * 세팅 컨트롤러
 	 */
 	@Autowired
@@ -82,11 +77,11 @@ public class SyncItemBarcodeJob extends AbstractFnFJob {
 				Date lastUpdatedAt = DateUtil.parse(lastUpdatedAtStr, "yyyy-MM-dd HH:mm:ss.SSS");
 				
 				// 4.2 설정 상태가 end가 아니면 상품 수신 처리 
-				if(ValueUtil.isEmpty(lastUpdatedAt)) {
+				if(lastUpdatedAt != null) {
 					// 4.3 현재 수신 페이지 정보 업데이트 
 					int skuCurrentPage = 1;
 					IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheItemBarcode.class);
-					List<WmsMheItemBarcode> skuList = wmsQueryMgr.selectListBySql(this.skuSearchSql, this.noCondition, WmsMheItemBarcode.class, skuCurrentPage, this.skuPageLimit);
+					List<WmsMheItemBarcode> skuList = wmsQueryMgr.selectListBySql(this.skuSearchSql, ValueUtil.newMap("lastUpdatedAt", lastUpdatedAt), WmsMheItemBarcode.class, skuCurrentPage, this.skuPageLimit);
 					
 					while(xyz.elidom.sys.util.ValueUtil.isNotEmpty(skuList)) {
 						// 4.4 상품 수신 처리 
@@ -97,7 +92,7 @@ public class SyncItemBarcodeJob extends AbstractFnFJob {
 						
 						// 4.6 다시 조회 
 						skuCurrentPage += 1;
-						skuList = wmsQueryMgr.selectListBySql(this.skuSearchSql, this.noCondition, WmsMheItemBarcode.class, skuCurrentPage, this.skuPageLimit);
+						skuList = wmsQueryMgr.selectListBySql(this.skuSearchSql, ValueUtil.newMap("lastUpdatedAt", lastUpdatedAt), WmsMheItemBarcode.class, skuCurrentPage, this.skuPageLimit);
 					}
 					
 					// 4.7 상품 마지막 업데이트 시간 업데이트 ...

@@ -29,6 +29,7 @@ import xyz.elidom.orm.system.annotation.service.ServiceDesc;
 import xyz.elidom.sys.SysMessageConstants;
 import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.sys.system.service.AbstractRestService;
+import xyz.elidom.sys.util.MessageUtil;
 import xyz.elidom.sys.util.SettingUtil;
 import xyz.elidom.sys.util.ThrowUtil;
 import xyz.elidom.util.ValueUtil;
@@ -132,11 +133,10 @@ public class StockController extends AbstractRestService {
 		Long domainId = Domain.currentDomainId();
 		
 		// 1. 배치 진행 여부 확인 
-		String sql = "select id from job_batches where domain_id = :domainId and status = :status and equip_type = :equipType and equip_cd = :equipCd";
-		int runBatchCount = this.queryManager.selectSizeBySql(sql, ValueUtil.newMap("domainId,status,equipType,equipCd", domainId, JobBatch.STATUS_RUNNING, equipType, equipCd));
+		boolean runningBatchExist = this.isRunningBatchExist(domainId, equipType, equipCd);
 		
 		// 2. 배치 진행 상태에 따라 검색 가능한 대상 SKU 가 달라짐.
-		if(runBatchCount > 0) {
+		if(runningBatchExist) {
 			// 2.1. 작업 진행중일 때눈 배치에 포함된 상품 리스트 검색 
 			JobBatch batch = this.checkRunningBatch(domainId, equipType, equipCd);
 			return this.skuSearchService.searchList(batch, skuCd);
@@ -150,7 +150,8 @@ public class StockController extends AbstractRestService {
 			List<SKU> skuList = this.queryManager.selectListBySql(qry, ValueUtil.newMap("skuCd", skuCd), SKU.class, 0, 0);
 			
 			if(ValueUtil.isEmpty(skuList)) {
-				throw ThrowUtil.newValidationErrorWithNoLog(true, SysMessageConstants.NOT_FOUND, "terms.label.sku", skuCd);
+				List<String> terms = ValueUtil.toList(MessageUtil.getTerm("terms.label.sku", "SKU"), skuCd);
+				throw ThrowUtil.newValidationErrorWithNoLog(true, SysMessageConstants.NOT_FOUND, terms);
 			}
 			
 			// 2.2.2 상품별 고정 로케이션 상품인지 판별
@@ -164,7 +165,7 @@ public class StockController extends AbstractRestService {
 			
 			// 2.2.3. 고정 로케이션에 포함된 상품이 아닌 경우에는 error 
 			if(ValueUtil.isEmpty(retSkuList)) {
-				throw ThrowUtil.newValidationErrorWithNoLog("고정 로케이션 상품이 아닙니다.");
+				throw ThrowUtil.newValidationErrorWithNoLog("지금은 고정 셀 보충만 가능합니다.고정 셀 상품을 선택해주세요.");
 			}
 			
 			return retSkuList;
@@ -195,11 +196,10 @@ public class StockController extends AbstractRestService {
 		Long domainId = Domain.currentDomainId();
 		
 		// 1. 배치 진행 여부 확인 
-		JobBatch batch = this.checkRunningBatch(domainId, equipType, equipCd);
-		boolean isRunBatch = batch == null ? false : true;
+		boolean runningBatchExist = this.isRunningBatchExist(domainId, equipType, equipCd);
 		
 		// 2. 배치 진행 여부에 따라 추천셀 리스트 달라짐.
-		if(isRunBatch) {
+		if(runningBatchExist) {
 			// 2.1. 진행 중이면 고정/ 자유 모두 보임 
 			return this.stockService.searchRecommendCells(domainId, equipType, null, comCd, skuCd, null);
 		} else {
@@ -219,10 +219,10 @@ public class StockController extends AbstractRestService {
 		Long domainId = Domain.currentDomainId();
 		
 		// 1. 배치 진행 여부 확인 
-		JobBatch batch = this.checkRunningBatch(domainId, equipType, equipCd);
-		boolean isRunBatch = batch == null ? false : true;
+		boolean runningBatchExist = this.isRunningBatchExist(domainId, equipType, equipCd);
 		
-		if(isRunBatch) {
+		if(runningBatchExist) {
+			JobBatch batch = this.checkRunningBatch(domainId, equipType, equipCd);
 			Stock stock = this.stockService.calculateSkuOrderStock(domainId, batch.getId(), equipType, null, comCd, skuCd);
 			
 			if(stock != null && stock.getOrderQty() > 0) {
@@ -238,7 +238,7 @@ public class StockController extends AbstractRestService {
 			
 			return stock;
 		} else {
-			throw ThrowUtil.newValidationErrorWithNoLog("고정 로케이션 대상 상품을 선택해주세요.");
+			throw ThrowUtil.newValidationErrorWithNoLog("지금은 고정 셀 보충만 가능합니다.고정 셀 상품을 선택해주세요.");
 		}
 	}
 	
@@ -256,20 +256,19 @@ public class StockController extends AbstractRestService {
 		Long domainId = Domain.currentDomainId();
 		
 		// 1. 배치 진행 여부 확인 
-		JobBatch batch = this.checkRunningBatch(domainId, equipType, equipCd);
-		boolean isRunBatch = batch == null ? false : true;
+		boolean runningBatchExist = this.isRunningBatchExist(domainId, equipType, equipCd);
 		
 		// 2. WMS에서 상품 정보 조회
 		SKU sku = this.skuSearchService.findSku(domainId, comCd, skuCd, true);
 		
-		if(isRunBatch) {
+		if(runningBatchExist) {
 			// 3. 배치가 진행중일 때는 모든 셀을 자유식으로 계산 ....  
 			// 재고 조회 - 없으면 생성
 			Stock stock = this.stockService.findOrCreateStock(domainId, cellCd, sku);
 			stock.setFixedFlag(false);
-			
 			// 3.1. 주문 처리에 필요 수량 조회 
 			return this.stockService.calcuateOrderStock(stock);
+			
 		} else {
 			// 4. 배치가 진행중이 아닐때는 재고에 등록 된 고정 로케이션의 상품에 대한 적치 만 가능 
 			Stock stock = this.stockService.findStock(domainId, cellCd, comCd, skuCd, true);
@@ -291,28 +290,22 @@ public class StockController extends AbstractRestService {
 		Long domainId = Domain.currentDomainId();
 		
 		// 1. 배치 진행 여부 확인 
-		JobBatch batch = this.checkRunningBatch(domainId, "Rack", rackCd);
-		boolean isRunBatch = batch == null ? false : true;
+		boolean runningBatchExist = this.isRunningBatchExist(domainId, LogisConstants.EQUIP_TYPE_RACK, rackCd);
 		
 		// 2. SKU 조회
 		SKU sku = this.skuSearchService.findSku(domainId, comCd, skuCd, true);
 
-		// 3. 수량 단위가 박스 단위이면 박스 수량과 적치 수량을 곱해서 처리 
-		if(ValueUtil.isEqualIgnoreCase("B", qtyUnit)) {
-			loadQty = sku.getBoxInQty() * loadQty;
-		}
-
-		// 4. 재고 조회시 Lock을 걸고 조회
+		// 3. 재고 조회시 Lock을 걸고 조회
 		String sql = "select * from stocks where domain_id = :domainId and cell_cd = :cellCd for update";
 		Stock stock = this.queryManager.selectBySql(sql, ValueUtil.newMap("domainId,cellCd", domainId, cellCd), Stock.class);
 		
-		if(isRunBatch) {
-			// 5. 작업이 진행중이면 
-			// 5.1. 재고가 없다면 생성 
+		// 4. 작업이 진행중이면 
+		if(runningBatchExist) {
+			// 4.1. 재고가 없다면 생성 
 			if(stock == null) {
 				stock = this.stockService.createStock(domainId, cellCd, sku.getComCd(), sku.getSkuCd(), sku.getSkuNm());
 				
-			// 5.2. 재고가 있다면 
+			// 4.2. 재고가 있다면 
 			} else {
 				// 재고에 상품 정보가 없다면 sku의 정보를 설정 
 				if(ValueUtil.isEmpty(stock.getSkuCd())) {
@@ -333,18 +326,19 @@ public class StockController extends AbstractRestService {
 						throw ThrowUtil.newValidationErrorWithNoLog("해당 재고에 다른 상품 재고가 존재합니다.");
 					}
 				}
-			}			
+			}
+			
+		// 5. 작업이 진행중이 아니면 
 		} else {
-			// 6. 작업이 진행중이 아니면 
-			if(stock == null) {
-				// 6.1 재고가 없다면 에러 
-				throw ThrowUtil.newValidationErrorWithNoLog("선택한 상품이 적치 대상인 고정 로케이션을 선택해주세요.");
+			if(stock == null || stock.getFixedFlag() == null || !stock.getFixedFlag()) {
+				// 5.1 재고가 없다면 에러 
+				throw ThrowUtil.newValidationErrorWithNoLog("지금은 고정 셀 보충만 가능합니다.고정 셀을 선택해주세요.");
 			} else {
-				// 6.2. 상품 정보와 Stock 정보가 동일하지 않으면 에러 
+				// 5.2. 상품 정보와 Stock 정보가 동일하지 않으면 에러 
 				if(ValueUtil.isNotEqual(stock.getSkuCd(), sku.getSkuCd())) {
-					throw ThrowUtil.newValidationErrorWithNoLog("선택한 상품이 적치 대상인 고정 로케이션을 선택해주세요.");
+					throw ThrowUtil.newValidationErrorWithNoLog("해당 셀에 다른 상품 재고가 존재합니다.");
 				} else {
-					// 6.3. 최대 적치 수량을 초과 하면 에러 
+					// 5.3. 최대 적치 수량을 초과 하면 에러 
 					if((ValueUtil.toInteger(stock.getLoadQty(), 0) + loadQty) > stock.getMaxStockQty()) {
 						throw ThrowUtil.newValidationErrorWithNoLog("최대 적치 수량을 초과해서 적치 할 수 없습니다.");
 					} else {
@@ -356,18 +350,31 @@ public class StockController extends AbstractRestService {
 				}
 			}
 		}
-				
-		// 7. 재고 보충
+		
+		// 6. 재고 보충
 		this.stockService.addStock(stock, Stock.TRX_IN, loadQty);
 
-		// 8. 재고 리턴
+		// 7. 재고 리턴
 		return stock;
 	}
 	
-	
+	/**
+	 * 진행 중인 배치가 존재하는 지 판단만 한다. 존재하지 않아도 에러가 발생하지 않는다.
+	 * 
+	 * @param domainId
+	 * @param equipType
+	 * @param equipCd
+	 * @return
+	 */
+	private boolean isRunningBatchExist(Long domainId, String equipType, String equipCd) {
+		String sql = "select id from job_batches where domain_id = :domainId and status = :status and equip_type = :equipType and equip_cd = :equipCd";
+		int runBatchCount = this.queryManager.selectSizeBySql(sql, ValueUtil.newMap("domainId,status,equipType,equipCd", domainId, JobBatch.STATUS_RUNNING, equipType, equipCd));
+		return runBatchCount > 0;
+	}
 
 	/**
-	 * 현재 DPS 배치가 진행중인 여부를 판단 한다.
+	 * 현재 DPS 배치가 진행중인 여부를 판단 한다.존재하지 않아도 에러가 발생한다.
+	 * 
 	 * @param domainId
 	 * @param equipType
 	 * @param equipCd
@@ -383,16 +390,11 @@ public class StockController extends AbstractRestService {
 			} 
 			
 			return null;
+			
 		} else {
-			throw ThrowUtil.newValidationErrorWithNoLog(true, SysMessageConstants.INVALID_PARAM, "terms.label.equip_type", equipType);
-		}
-		
-//		Query condition = AnyOrmUtil.newConditionForExecution(domainId);
-//		condition.addFilter("status", JobBatch.STATUS_RUNNING);
-//		condition.addFilter("jobType", LogisConstants.JOB_TYPE_DPS);
-//		int runningBatchCnt = this.queryManager.selectSize(JobBatch.class, condition);
-//		
-//		return runningBatchCnt>0 ? true : false;
+			List<String> terms = ValueUtil.toList(MessageUtil.getTerm("terms.label.equip_type", "EquipType"), equipType);
+			throw ThrowUtil.newValidationErrorWithNoLog(true, SysMessageConstants.INVALID_PARAM, terms);
+		}		
 	}
 	
 }

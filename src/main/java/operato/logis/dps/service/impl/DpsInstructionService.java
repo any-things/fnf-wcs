@@ -144,7 +144,7 @@ public class DpsInstructionService extends AbstractInstructionService implements
 		
 		// 6. WMS Wave에 상태 전달
 		DpsInstructionService dpsInstructionSvc = BeanUtil.get(DpsInstructionService.class);
-		dpsInstructionSvc.updateWmsWaveStatus(newBatch.getId());
+		dpsInstructionSvc.updateWmsWaveStatus(newBatch.getId(), mainBatch.getEquipGroupCd());
 		
 		// 7. WMS 배치 확정
 		dpsInstructionSvc.callWmsBatchConfirm(newBatch.getId());
@@ -222,7 +222,7 @@ public class DpsInstructionService extends AbstractInstructionService implements
 		
 		// 5. WMS Wave에 상태 전달
 		DpsInstructionService dpsInstructionSvc = BeanUtil.get(DpsInstructionService.class);
-		dpsInstructionSvc.updateWmsWaveStatus(batch.getId());
+		dpsInstructionSvc.updateWmsWaveStatus(batch.getId(), batch.getEquipGroupCd());
 		
 		// 6. WMS 배치 확정
 		dpsInstructionSvc.callWmsBatchConfirm(batch.getId());
@@ -238,11 +238,12 @@ public class DpsInstructionService extends AbstractInstructionService implements
 	 * WMS Wave 상태를 수신 'B'로 변경
 	 *  
 	 * @param batchId
+	 * @param equipGroupCd
 	 */
 	@Transactional(propagation = Propagation.REQUIRES_NEW) 
-	public void updateWmsWaveStatus(String batchId) {
+	public void updateWmsWaveStatus(String batchId, String equipGroupCd) {
 		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
-		Map<String, Object> condition = ValueUtil.newMap("whCd,batchId", FnFConstants.WH_CD_ICF, batchId);
+		Map<String, Object> condition = ValueUtil.newMap("whCd,batchId,equipGroupCd", FnFConstants.WH_CD_ICF, batchId, equipGroupCd);
 		String sql = "update mhe_hr set mhe_no = :equipGroupCd, status = 'B', rcv_datetime = sysdate where wh_cd = :whCd and work_unit = :batchId";
 		wmsQueryMgr.executeBySql(sql, condition);
 	}

@@ -1,6 +1,7 @@
 package operato.logis.dps.service.impl;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -232,13 +233,10 @@ public class DpsInstructionService extends AbstractInstructionService implements
 	 *  
 	 * @param batch
 	 */
-	@SuppressWarnings("unchecked")
-	private Map<String, Object> callWmsBatchConfirm(JobBatch batch) {
+	private void callWmsBatchConfirm(JobBatch batch) {
 		// WMP_DPS_ACCEPT_MHE_HR
-		Map<String, Object> procParams = ValueUtil.newMap("I_WH_CD,I_WORK_UNIT", FnFConstants.WH_CD_ICF, batch.getId());
 		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
-		Map<String, Object> result = wmsQueryMgr.callReturnProcedure("WMP_DPS_ACCEPT_MHE_HR", procParams, Map.class);
-		return result;
+		wmsQueryMgr.executeBySql("CALL WMP_DPS_ACCEPT_MHE_HR('" + FnFConstants.WH_CD_ICF + "', '" + batch.getId() + "')", new HashMap<String, Object>());
 	}
 	/******************************************************************
 	 * 							이벤트 전송

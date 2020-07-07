@@ -22,7 +22,6 @@ import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.anythings.sys.util.AnyEntityUtil;
 import xyz.elidom.dbist.util.StringJoiner;
 import xyz.elidom.orm.IQueryManager;
-import xyz.elidom.orm.manager.DataSourceManager;
 import xyz.elidom.sys.SysConstants;
 import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.util.BeanUtil;

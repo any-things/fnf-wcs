@@ -9,6 +9,7 @@ public class ResponseObj {
 	private String status = "OK";	// FIXME to 200
 	private Boolean success = true;
 	private List<?> items;
+	private Integer total;
 	private Map<String, ?> values;
 	
 	public String getMsg() {
@@ -34,6 +35,12 @@ public class ResponseObj {
 	}
 	public void setItems(List<?> items) {
 		this.items = items;
+	}
+	public Integer getTotal() {
+		return total;
+	}
+	public void setTotal(Integer total) {
+		this.total = total;
 	}
 	public Map<String, ?> getValues() {
 		return values;

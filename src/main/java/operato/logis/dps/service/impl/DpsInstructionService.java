@@ -138,7 +138,10 @@ public class DpsInstructionService extends AbstractInstructionService implements
 		newBatch.setInstructedAt(new Date());
 		this.queryManager.update(newBatch);
 		
-		// 5. 병합 건수 리턴
+		// 6. WMS 배치 확정
+		this.callWmsBatchConfirm(newBatch);
+		
+		// 7. 병합 건수 리턴
 		return retCnt;
 	}
 
@@ -217,10 +220,26 @@ public class DpsInstructionService extends AbstractInstructionService implements
 		// 6. 후 처리 이벤트 
 		this.publishInstructionEvent(SysEvent.EVENT_STEP_AFTER, batch, equipList, params);
 		
-		// 7. 총 주문 건수 리턴
+		// 7. WMS 배치 확정
+		this.callWmsBatchConfirm(batch);
+		
+		// 8. 총 주문 건수 리턴
 		return batch.getBatchOrderQty();
 	}
-		
+	
+	/**
+	 * WMS 프로시져 배치 확정 프로시져 호출
+	 *  
+	 * @param batch
+	 */
+	@SuppressWarnings("unchecked")
+	private Map<String, Object> callWmsBatchConfirm(JobBatch batch) {
+		// WMP_DPS_ACCEPT_MHE_HR
+		Map<String, Object> procParams = ValueUtil.newMap("I_WH_CD,I_WORK_UNIT", FnFConstants.WH_CD_ICF, batch.getId());
+		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
+		Map<String, Object> result = wmsQueryMgr.callReturnProcedure("WMP_DPS_ACCEPT_MHE_HR", procParams, Map.class);
+		return result;
+	}
 	/******************************************************************
 	 * 							이벤트 전송
 	/******************************************************************/

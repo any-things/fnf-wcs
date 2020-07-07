@@ -213,7 +213,7 @@ public class StockService extends AbstractLogisService implements IStockService 
 	@Override
 	public List<Stock> searchStocksBySku(Long domainId, String equipType, String equipCd, Boolean fixedFlag, String comCd, String skuCd) {
 		String sql = this.stockQueryStore.getSearchStocksQuery();
-		return AnyEntityUtil.searchItems(domainId, false, Stock.class, sql, "domainId,equipType,equipCd,comCd,skuCd", domainId, equipType, equipCd, comCd, skuCd);
+		return AnyEntityUtil.searchItems(domainId, false, Stock.class, sql, "domainId,equipType,equipCd,comCd,skuCd,fixedFlag", domainId, equipType, equipCd, comCd, skuCd,fixedFlag);
 	}
 
 	@Override
@@ -233,6 +233,8 @@ public class StockService extends AbstractLogisService implements IStockService 
 			condition.addFilter("fixedFlag", fixedFlag);
 		}
 		
+		condition.addOrder("loadQty", true);
+		
 		return this.queryManager.selectList(Stock.class, condition);
 	}
 	
@@ -240,7 +242,9 @@ public class StockService extends AbstractLogisService implements IStockService 
 	public Stock calcuateOrderStock(Stock stock) {
 		// 1. 고정식인 경우 
 		if(stock.getFixedFlag() != null && stock.getFixedFlag()) {
-			stock.setStockQty(stock.getMaxStockQty() - stock.getLoadQty() - stock.getAllocQty());
+//			stock.setOrderQty(stock.getMaxStockQty() - stock.getLoadQty() - stock.getAllocQty());
+			stock.setOrderQty(stock.getMaxStockQty());
+			stock.setInputQty(stock.getMaxStockQty() - stock.getLoadQty() - stock.getAllocQty());
 			return stock;
 			
 		// 2. 자유식인 경우 

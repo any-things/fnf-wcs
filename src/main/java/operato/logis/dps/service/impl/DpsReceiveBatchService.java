@@ -211,11 +211,7 @@ public class DpsReceiveBatchService extends AbstractQueryService {
 			
 			if(ValueUtil.isNotEmpty(orderDestList)) {
 				AnyOrmUtil.insertBatch(orderDestList, 100);
-			}
-			
-			// 6. WMS 배치 정보 수신 플래그 업데이트
-			wmsBatch.setStatus("B");
-			dsQueryManager.update(wmsBatch);
+			}			
 		}
 	}
 	

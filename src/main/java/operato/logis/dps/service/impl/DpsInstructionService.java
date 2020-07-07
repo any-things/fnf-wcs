@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import operato.fnf.wcs.FnFConstants;
 import operato.fnf.wcs.entity.WmsMheHr;
@@ -23,6 +25,7 @@ import xyz.anythings.sys.util.AnyOrmUtil;
 import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.util.ThrowUtil;
+import xyz.elidom.util.BeanUtil;
 import xyz.elidom.util.ValueUtil;
 
 /**
@@ -139,10 +142,14 @@ public class DpsInstructionService extends AbstractInstructionService implements
 		newBatch.setInstructedAt(new Date());
 		this.queryManager.update(newBatch);
 		
-		// 6. WMS 배치 확정
-		this.callWmsBatchConfirm(newBatch);
+		// 6. WMS Wave에 상태 전달
+		DpsInstructionService dpsInstructionSvc = BeanUtil.get(DpsInstructionService.class);
+		dpsInstructionSvc.updateWmsWaveStatus(newBatch.getId());
 		
-		// 7. 병합 건수 리턴
+		// 7. WMS 배치 확정
+		dpsInstructionSvc.callWmsBatchConfirm(newBatch.getId());
+		
+		// 8. 병합 건수 리턴
 		return retCnt;
 	}
 
@@ -214,30 +221,43 @@ public class DpsInstructionService extends AbstractInstructionService implements
 		this.queryManager.executeBySql(sql, condition);
 		
 		// 5. WMS Wave에 상태 전달
-		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
-		sql = "update mhe_hr set mhe_no = :equipGroupCd, status = 'B', rcv_datetime = sysdate where wh_cd = :whCd and work_unit = :batchId";
-		wmsQueryMgr.executeBySql(sql, condition);
+		DpsInstructionService dpsInstructionSvc = BeanUtil.get(DpsInstructionService.class);
+		dpsInstructionSvc.updateWmsWaveStatus(batch.getId());
 		
-		// 6. 후 처리 이벤트 
+		// 6. WMS 배치 확정
+		dpsInstructionSvc.callWmsBatchConfirm(batch.getId());
+		
+		// 7. 후 처리 이벤트 
 		this.publishInstructionEvent(SysEvent.EVENT_STEP_AFTER, batch, equipList, params);
-		
-		// 7. WMS 배치 확정
-		this.callWmsBatchConfirm(batch);
 		
 		// 8. 총 주문 건수 리턴
 		return batch.getBatchOrderQty();
 	}
 	
 	/**
+	 * WMS Wave 상태를 수신 'B'로 변경
+	 *  
+	 * @param batchId
+	 */
+	@Transactional(propagation = Propagation.REQUIRES_NEW) 
+	public void updateWmsWaveStatus(String batchId) {
+		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
+		Map<String, Object> condition = ValueUtil.newMap("whCd,batchId", FnFConstants.WH_CD_ICF, batchId);
+		String sql = "update mhe_hr set mhe_no = :equipGroupCd, status = 'B', rcv_datetime = sysdate where wh_cd = :whCd and work_unit = :batchId";
+		wmsQueryMgr.executeBySql(sql, condition);
+	}
+	
+	/**
 	 * WMS 프로시져 배치 확정 프로시져 호출
 	 *  
-	 * @param batch
+	 * @param batchId
 	 */
-	private void callWmsBatchConfirm(JobBatch batch) {
-		// WMP_DPS_ACCEPT_MHE_HR
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public void callWmsBatchConfirm(String batchId) {
 		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
-		wmsQueryMgr.executeBySql("CALL WMP_DPS_ACCEPT_MHE_HR('" + FnFConstants.WH_CD_ICF + "', '" + batch.getId() + "')", new HashMap<String, Object>());
+		wmsQueryMgr.executeBySql("CALL WMP_DPS_ACCEPT_MHE_HR('" + FnFConstants.WH_CD_ICF + "', '" + batchId + "')", new HashMap<String, Object>());
 	}
+	
 	/******************************************************************
 	 * 							이벤트 전송
 	/******************************************************************/

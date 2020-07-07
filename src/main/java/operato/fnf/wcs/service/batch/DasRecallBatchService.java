@@ -24,8 +24,8 @@ import xyz.elidom.util.ValueUtil;
 public class DasRecallBatchService extends AbstractQueryService {
 	private final String WMS_JOB_TYPE = "SHIPBYDAS";
 	
-	public ResponseObj dasRecallBatchService(Map<String, String> map) {
-		String workDate = String.valueOf(map.get("workDate"));
+	public ResponseObj dasRecallBatchService(Map<String, String> params) {
+		String workDate = String.valueOf(params.get("workDate"));
 		if (ValueUtil.isEmpty(workDate)) {
 			workDate = DateUtil.getCurrentDay();
 		}

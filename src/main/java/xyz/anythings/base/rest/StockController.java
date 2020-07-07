@@ -130,14 +130,17 @@ public class StockController extends AbstractRestService {
 			@PathVariable("sku_cd") String skuCd) {
 		
 		Long domainId = Domain.currentDomainId();
+		
 		// 1. 배치 진행 여부 확인 
-		JobBatch batch = this.checkRunningBatch(domainId, equipType, equipCd);
-		boolean isRunBatch = batch == null ? false : true;
+		String sql = "select id from job_batches where domain_id = :domainId and status = :status and equip_type = :equipType and equip_cd = :equipCd";
+		int runBatchCount = this.queryManager.selectSizeBySql(sql, ValueUtil.newMap("domainId,status,equipType,equipCd", domainId, JobBatch.STATUS_RUNNING, equipType, equipCd));
 		
 		// 2. 배치 진행 상태에 따라 검색 가능한 대상 SKU 가 달라짐.
-		if(isRunBatch) {
+		if(runBatchCount > 0) {
 			// 2.1. 작업 진행중일 때눈 배치에 포함된 상품 리스트 검색 
+			JobBatch batch = this.checkRunningBatch(domainId, equipType, equipCd);
 			return this.skuSearchService.searchList(batch, skuCd);
+			
 		} else {
 			// 2.2. 작업 진행중이 아닐 때는, 고정식에 지정된 상품 리스트 에서 검색 	
 			String itemMasterTb = SettingUtil.getValue(domainId, "fnf.item_barcode.table.name", "mhe_item_barcode");
@@ -145,13 +148,13 @@ public class StockController extends AbstractRestService {
 			// 2.2.1 상품 마스터에서 상품 검색 
 			String qry = "select brand as brand_cd, item_color as color_cd, 'FnF' as com_cd, item_size as size_cd, barcode as sku_barcd , item_cd as sku_cd , '' as sku_nm, item_style as style_cd from " + itemMasterTb + " where (item_cd = :skuCd or barcode = :skuCd or barcode2 = :skuCd)";
 			List<SKU> skuList = this.queryManager.selectListBySql(qry, ValueUtil.newMap("skuCd", skuCd), SKU.class, 0, 0);
-			List<SKU> retSkuList = new ArrayList<SKU>();
 			
 			if(ValueUtil.isEmpty(skuList)) {
 				throw ThrowUtil.newValidationErrorWithNoLog(true, SysMessageConstants.NOT_FOUND, "terms.label.sku", skuCd);
 			}
 			
-			// 2.2.2 상품별 고정 로케이션 상품인지 판별 
+			// 2.2.2 상품별 고정 로케이션 상품인지 판별
+			List<SKU> retSkuList = new ArrayList<SKU>();
 			for(SKU sku : skuList) {
 				List<Stock> fixStocks = this.stockService.searchStocksBySku(domainId, equipType, null, true, sku.getComCd(), sku.getSkuCd());
 				if(ValueUtil.isNotEmpty(fixStocks)) {
@@ -161,7 +164,7 @@ public class StockController extends AbstractRestService {
 			
 			// 2.2.3. 고정 로케이션에 포함된 상품이 아닌 경우에는 error 
 			if(ValueUtil.isEmpty(retSkuList)) {
-				throw ThrowUtil.newValidationErrorWithNoLog(true, SysMessageConstants.NOT_FOUND, "terms.label.sku", skuCd);
+				throw ThrowUtil.newValidationErrorWithNoLog("고정 로케이션 상품이 아닙니다.");
 			}
 			
 			return retSkuList;

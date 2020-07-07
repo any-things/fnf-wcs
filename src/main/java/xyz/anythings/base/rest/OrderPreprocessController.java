@@ -20,8 +20,6 @@ import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.entity.OrderPreprocess;
 import xyz.anythings.base.entity.Rack;
-import xyz.anythings.base.entity.SKU;
-import xyz.anythings.base.entity.Stock;
 import xyz.anythings.base.service.impl.PreprocessService;
 import xyz.anythings.sys.util.AnyEntityUtil;
 import xyz.anythings.sys.util.AnyValueUtil;
@@ -31,7 +29,6 @@ import xyz.elidom.exception.server.ElidomValidationException;
 import xyz.elidom.orm.system.annotation.service.ApiDesc;
 import xyz.elidom.orm.system.annotation.service.ServiceDesc;
 import xyz.elidom.sys.SysConstants;
-import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.sys.system.service.AbstractRestService;
 import xyz.elidom.sys.util.MessageUtil;
 import xyz.elidom.sys.util.ThrowUtil;
@@ -243,6 +240,7 @@ public class OrderPreprocessController extends AbstractRestService {
 		return ValueUtil.newMap("result", SysConstants.OK_STRING);
 	}
 	
+	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "/{batch_id}/{chute_no}/cell_info", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiDesc(description = "Cell Info")
 	public List<Map> findOrderStock(@PathVariable("chute_no") String chuteNo, @PathVariable("batch_id") String batchId) {
@@ -258,6 +256,7 @@ public class OrderPreprocessController extends AbstractRestService {
 	 * @param items
 	 * @return
 	 */
+	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "/{id}/swap_cell", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiDesc(description = "Swap CellCd")
 	public Map<String, Object> swapCell(

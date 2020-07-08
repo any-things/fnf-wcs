@@ -21,12 +21,12 @@ import xyz.anythings.base.service.api.IPreprocessService;
 import xyz.anythings.sys.event.model.SysEvent;
 import xyz.anythings.sys.service.AbstractExecutionService;
 import xyz.anythings.sys.util.AnyOrmUtil;
+import xyz.anythings.sys.util.AnyValueUtil;
 import xyz.elidom.dbist.dml.Filter;
 import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.exception.server.ElidomRuntimeException;
 import xyz.elidom.orm.OrmConstants;
 import xyz.elidom.sys.SysConstants;
-import xyz.elidom.sys.util.MessageUtil;
 import xyz.elidom.sys.util.ThrowUtil;
 import xyz.elidom.util.ValueUtil;
 
@@ -169,17 +169,11 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 	}
 	
 	@SuppressWarnings("rawtypes")
-	public void assignChuteByAuto(JobBatch batch, String equipCds, List<OrderPreprocess> items, boolean isUpdate, Map<String, Object> chuteStatus) {
-		// 0. SKU 수량과 사용 가능한 슈트수량을 비교한다.
-		// 1. 오더타입 조회 (반품, 출고)
-		// 2. 슈트별 작업자 그룹이 있는지 확인
-		// 3. 1번이 있다면 작업자별 생산성으로 우선순위를 조회한다.
-		// 4. 작업할 오더의 우선순위를 조회한다.
-		// 5. 3번과 2번의 조합으로 슈트별 오더를 지정 (루프)
-		// 6. 주문 가공 정보 업데이트
-		
+	public void assignChuteByAuto(JobBatch batch, String equipCd, List<OrderPreprocess> items, boolean isUpdate, Map<String, Object> chuteStatus) {
+		// 1. 작업지시 대기 인 배치를 Wait 상태로 변경한다.
 		this.resetOrderList(batch);
 		
+		// 2. 사용자가 선택한 슈트번호로 데이터 가공
 		List<String> enableChute = new ArrayList<String>();
 		for(Entry<String, Object> entry : chuteStatus.entrySet()) {
 			if(ValueUtil.isEqual(entry.getValue(), SysConstants.CAP_Y_STRING)) {
@@ -187,40 +181,29 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 			}
 		}
 		
-//		int availableChute = this.availableChuteCount(batch.getDomainId(), equipCds, true, enableChute);
-		
-//		if(items.size() > availableChute) {
-//			throw ThrowUtil.newValidationErrorWithNoLog(MessageUtil.getTerm("terms.text.skus_must_less_than_cells", "AvailableChute Count : " + availableChute + " SKU COUNT : " + items.size()));
-//		}
-		
+		// 3. 사용가능한 Cell을 사용 순서순으로 조회한다.
 		String sql = queryStore.getSrtnCellStatusQuery();
 		Map<String, Object> paramMap = ValueUtil.newMap("chuteNo,activeFlag,categoryFlag", enableChute, true, false);
 		List<Map> cellList = this.queryManager.selectListBySql(sql, paramMap, Map.class, 0, 0);
 		
-		if(items.size() > cellList.size()) {
-			throw ThrowUtil.newValidationErrorWithNoLog(MessageUtil.getTerm("terms.text.skus_must_less_than_cells", "AvailableChute Count : " + cellList.size() + " SKU COUNT : " + items.size()));
+		// 4. 사용가능한 Cell에 주문정보를 매핑한다.
+		int cellIdx;
+		for(cellIdx = 0 ; cellIdx < cellList.size() ; cellIdx++) {
+			items.get(cellIdx).setSubEquipCd(ValueUtil.toString(cellList.get(cellIdx).get("chute_no")));
+			items.get(cellIdx).setClassCd(ValueUtil.toString(cellList.get(cellIdx).get("cell_cd")));
+			if(cellIdx >= items.size() - 1) break;
 		}
-		
-		for(int i = 0 ; i < items.size() ; i++) {
-			items.get(i).setSubEquipCd(ValueUtil.toString(cellList.get(i).get("chute_no")));
-			items.get(i).setClassCd(ValueUtil.toString(cellList.get(i).get("cell_cd")));
-		}
-		
-//		int cellIdx;
-//		for(cellIdx = 0 ; cellIdx < cellList.size() ; cellIdx++) {
-//			items.get(cellIdx).setSubEquipCd(ValueUtil.toString(cellList.get(cellIdx).get("chute_no")));
-//			items.get(cellIdx).setClassCd(ValueUtil.toString(cellList.get(cellIdx).get("cell_cd")));
-//		}
-//		
-//		if(cellIdx < items.size()) {
-//			
-//		}
-		
 		
 		if(isUpdate) {
 			this.queryManager.updateBatch(items);
 		} else {
 			this.queryManager.insertBatch(items);
+		}
+		
+		// 5. 사용가능한 Cell 수량보다 주문수량이 많을 경우 각 호기별 카테고리 매핑 Cell을 조회한다.
+		// 5-1. 카테고리 Cell에 남은 Sku에 해당하는 카테고리를 조회하여 매핑한다.
+		if(cellIdx < items.size() - 1) {
+			this.categoryCellAssign(batch, items, enableChute);
 		}
 	}
 	
@@ -232,18 +215,6 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 		// 1. 오더타입 조회 (반품, 출고)
 		// 2. 화면에서 지정한 매장 or 상품을 슈트에 지정한다.
 		// 3. 주문 가공 정보 업데이트
-	}
-	
-	@SuppressWarnings("unchecked")
-	private int availableChuteCount(Long domainId, String sorterCd, boolean activeFlag, List<String> enableChute) {
-		String sql = "SELECT SUM(EXT_CELL_CNT) AS CELL_CNT FROM CHUTES WHERE SORTER_CD = :sorterCd AND ACTIVE_FLAG = :activeFlag AND STATUS = :status AND CHUTE_NO IN ( :chuteNo )";
-		
-		Map<String, Object> paramMap = ValueUtil.newMap("sorterCd,activeFlag,status,chuteNo", 
-				sorterCd, activeFlag, Order.STATUS_WAIT, enableChute);
-		
-		Map<String, Object> chuteCell = this.queryManager.selectBySql(sql, paramMap, Map.class);
-		
-		return ValueUtil.toInteger(chuteCell.get("cell_cnt"));
 	}
 	
 	/**
@@ -264,6 +235,7 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 	 * @param batch 
 	 * @return
 	 */
+	@SuppressWarnings("rawtypes")
 	public List<Map> preprocessSummaryByChutes(JobBatch batch) {
 		String sql = queryStore.getSrtnChuteInfo();
 		Map<String, Object> params = ValueUtil.newMap("batchId", batch.getId());
@@ -276,6 +248,7 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 	 * @param batch 
 	 * @return
 	 */
+	@SuppressWarnings("rawtypes")
 	public List<Map> preprocessSummaryByBatch(JobBatch batch) {
 		String sql = queryStore.getSrtnBatchInfo();
 		Map<String, Object> params = ValueUtil.newMap("batchId", batch.getId());
@@ -347,44 +320,76 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 	private void completePreprocessing(JobBatch batch) {
 		batch.setStatus(JobBatch.STATUS_READY);
 		this.queryManager.update(batch, "status");
-		/**
-		 * 1. chute -> status : R, batch_id : 'batch_id'
-		 * 2. cells -> class_cd : 'sku_cd'
-		 * 3. racks -> batch_id : 'batch_id', status : 'READY'
-		 * 작업시작시 실행한다.
-		 */
-//		String chuteSql = "update chutes set status = :status, batch_id = orders.batch_id from (select * from order_preprocesses where batch_id = :batchId) as orders where chutes.chute_no = orders.sub_equip_cd;";
-//		Map<String, Object> chuteParamMap = ValueUtil.newMap("status,batchId", Order.STATUS_RUNNING, batch.getId());
-//		this.queryManager.executeBySql(chuteSql, chuteParamMap);
-//		
-//		String cellSql = "update cells set class_cd = orders.cell_assgn_cd from (select * from order_preprocesses where batch_id = :batchId) as orders where cells.cell_cd = orders.class_cd";
-//		Map<String, Object> cellParamMap = ValueUtil.newMap("batchId", batch.getId());
-//		this.queryManager.executeBySql(cellSql, cellParamMap);
-//		
-//		String rackSql = "update racks set status = :status, batch_id = orders.batch_id from (select * from order_preprocesses where batch_id = :batchId) as orders where racks.chute_no = orders.sub_equip_cd";
-//		Map<String, Object> rackParamMap = ValueUtil.newMap("status,batchId", JobBatch.STATUS_READY, batch.getId());
-//		this.queryManager.executeBySql(rackSql, rackParamMap);
 	}
 	
 	@SuppressWarnings("rawtypes")
 	private void resetOrderList(JobBatch batch) {
-		String selectSql = "SELECT BATCH_ID FROM ORDER_PREPROCESSES GROUP BY BATCH_ID";
+		String selectSql = "SELECT OP.BATCH_ID, JB.STATUS FROM ORDER_PREPROCESSES OP LEFT OUTER JOIN JOB_BATCHES JB ON OP.BATCH_ID = JB.ID GROUP BY BATCH_ID, JB.STATUS";
 		List<Map> batchIdList = this.queryManager.selectListBySql(selectSql, new HashMap<String, Object>(), Map.class, 0, 0);
 		
 		if(ValueUtil.isNotEmpty(batchIdList)) {
 			List<String> batchIds = new ArrayList<String>();
 			for (Map batchId : batchIdList) {
-				batchIds.add(ValueUtil.toString(batchId.get("batch_id")));
+				if(ValueUtil.isNotEqual(ValueUtil.toString(batchId.get("status")), JobBatch.STATUS_RUNNING)) {
+					batchIds.add(ValueUtil.toString(batchId.get("batch_id")));
+				}
+			}
+			if(ValueUtil.isNotEmpty(batchIds)) {
+				List<String> enableStatus = new ArrayList<String>();
+				enableStatus.add(JobBatch.STATUS_READY);
+				enableStatus.add(JobBatch.STATUS_RECEIVE);
+				String updateSql = "UPDATE JOB_BATCHES SET STATUS = :status, UPDATED_AT = NOW() WHERE ID IN ( :id ) AND STATUS IN ( :enableStatus )";
+				Map<String, Object> updateParamMap = ValueUtil.newMap("status,id,enableStatus", JobBatch.STATUS_WAIT, batchIds, enableStatus);
+				this.queryManager.executeBySql(updateSql, updateParamMap);
+				
+				String deleteSql = "DELETE FROM ORDER_PREPROCESSES WHERE BATCH_ID IN ( :batchId )";
+				Map<String, Object> deleteParamMap = ValueUtil.newMap("batchId", batchIds);
+				this.queryManager.executeBySql(deleteSql, deleteParamMap);
 			}
 			
-			String updateSql = "UPDATE JOB_BATCHES SET STATUS = :status, UPDATED_AT = NOW() WHERE ID IN ( :id )";
-			Map<String, Object> updateParamMap = ValueUtil.newMap("status,id", JobBatch.STATUS_WAIT, batchIds);
-			this.queryManager.executeBySql(updateSql, updateParamMap);
-			
-			String deleteSql = "DELETE FROM ORDER_PREPROCESSES WHERE JOB_TYPE = :jobType";
-			Map<String, Object> deleteParamMap = ValueUtil.newMap("jobType", batch.getJobType());
-			this.queryManager.executeBySql(deleteSql, deleteParamMap);
 		}
 	}
 	
+	@SuppressWarnings("rawtypes")
+	private void categoryCellAssign(JobBatch batch, List<OrderPreprocess> items, List<String> enableChute) {
+		String remainSql = queryStore.getSrtnGenerateCategoryPreprocessQuery();
+		Map<String, Object> remainParamMap = ValueUtil.newMap("batchId", batch.getId());
+		List<OrderPreprocess> preprocessList = this.queryManager.selectListBySql(remainSql, remainParamMap, OrderPreprocess.class, 0, 0);
+		
+		List<String> category = AnyValueUtil.filterValueListBy(preprocessList, "cellAssgnNm");
+		
+		
+		String categoryCellSql = queryStore.getSrtnCellStatusQuery();
+		Map<String, Object> categoryCellParamMap = ValueUtil.newMap("chuteNo,activeFlag,categoryFlag", enableChute, true, true);
+		List<Map> categoryCellList = this.queryManager.selectListBySql(categoryCellSql, categoryCellParamMap, Map.class, 0, 0);
+		
+		int categoryCnt = category.size() / categoryCellList.size();
+		int selectIdx = 0;
+		int categoryCellIdx = 0;
+		String skuType = "";
+		
+		
+		for(int i = 0 ; i < preprocessList.size() ; i++) {
+			if(ValueUtil.isEqual(preprocessList.get(i).getCellAssgnNm(), skuType)) {
+				preprocessList.get(i).setSubEquipCd(ValueUtil.toString(categoryCellList.get(categoryCellIdx).get("chute_no")));
+				preprocessList.get(i).setClassCd(ValueUtil.toString(categoryCellList.get(categoryCellIdx).get("cell_cd")));
+			} else {
+				skuType = preprocessList.get(i).getCellAssgnNm();
+				selectIdx++;
+				preprocessList.get(i).setSubEquipCd(ValueUtil.toString(categoryCellList.get(categoryCellIdx).get("chute_no")));
+				preprocessList.get(i).setClassCd(ValueUtil.toString(categoryCellList.get(categoryCellIdx).get("cell_cd")));
+			}
+			
+			if(categoryCnt <= selectIdx && i + 1 < preprocessList.size() && ValueUtil.isNotEqual(preprocessList.get(i + 1).getCellAssgnNm(), skuType)) {
+				categoryCellIdx++;
+				selectIdx = 0;
+			}
+			
+			if(categoryCellList.size() <= categoryCellIdx) {
+				categoryCellIdx = 0;
+			}
+		}
+		
+		this.queryManager.updateBatch(preprocessList);
+	}
 }

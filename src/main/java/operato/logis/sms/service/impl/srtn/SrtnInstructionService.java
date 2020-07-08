@@ -1,6 +1,7 @@
 package operato.logis.sms.service.impl.srtn;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -145,8 +146,6 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 	
 	private void generateJobInstances(JobBatch batch, Cell cell, List<OrderPreprocess> preprocesses) {
 		Map<String, Object> params = ValueUtil.newMap("domainId,batchId", batch.getDomainId(), batch.getId());
-//		String insertQuery = queryStore.getSrtnGenerateJobInstancesQuery();
-		
 		for (OrderPreprocess preprocess : preprocesses) {
 			params.put("equipCd", preprocess.getEquipCd());
 			params.put("equipNm", preprocess.getEquipNm());
@@ -169,6 +168,7 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 			wmsCondition.addFilter("REF_SEASON", batchInfo[1]);
 			wmsCondition.addFilter("SHOP_RTN_TYPE", batchInfo[2]);
 			wmsCondition.addFilter("SHOP_RTN_SEQ", batchInfo[3]);
+			wmsCondition.addFilter("WCS_IF_CHK", "N");
 		}
 		
 		IQueryManager dsQueryManager = this.getDataSourceQueryManager(WmsWmtUifImpInbRtnTrg.class);
@@ -186,6 +186,9 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		
 		
 		List<WcsMhePasOrder> pasOrderList = new ArrayList<WcsMhePasOrder>(rtnCnfmList.size());
+		
+		Date currentTime = new Date();
+		String currentTimeStr = DateUtil.dateTimeStr(currentTime, "yyyyMMddHHmmss");
 		
 		for (WmsWmtUifWcsInbRtnCnfm cnfmTrg : rtnCnfmList) {
 			WcsMhePasOrder wcsMhePasOrder = new WcsMhePasOrder();
@@ -206,11 +209,14 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 				}
 			}
 			pasOrderList.add(wcsMhePasOrder);
+			cnfmTrg.setWcsIfChk(SysConstants.CAP_Y_STRING);
+			cnfmTrg.setWcsIfChkDtm(currentTimeStr);
 		}
 		
 		if(ValueUtil.isNotEmpty(pasOrderList)) {
 			AnyOrmUtil.insertBatch(pasOrderList, 100);
 		}
+		dsQueryManager.updateBatch(rtnCnfmList);
 	}
 	
 	private void interfaceRack(JobBatch batch) {
@@ -241,6 +247,7 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 			wcsMheDasOrder.setItemSeason(batchInfo[1]);
 			wcsMheDasOrder.setOrderQty(preProcess.getTotalPcs());
 			wcsMheDasOrder.setInsDatetime(DateUtil.getDate());
+			wcsMheDasOrder.setIfYn("N");
 			
 			for (Order skuInfo : skuInfoList) {
 				if(ValueUtil.isEqual(skuInfo.getSkuCd(), preProcess.getCellAssgnCd())) {

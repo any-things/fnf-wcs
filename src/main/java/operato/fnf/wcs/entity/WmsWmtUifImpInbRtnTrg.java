@@ -95,6 +95,12 @@ public class WmsWmtUifImpInbRtnTrg extends xyz.elidom.orm.entity.basic.AbstractS
 
 	@Column (name = "ins_datetime", nullable = true, type = ColumnType.DATETIME)
 	private Date insDatetime;
+	
+	@Column (name = "wcs_if_chk", nullable = true, length = 1)
+	private String wcsIfChk;
+
+	@Column (name = "wcs_if_chk_dtm", nullable = true, length = 14)
+	private String wcsIfChkDtm;
 
 	public String getId() {
 		return id;
@@ -272,5 +278,19 @@ public class WmsWmtUifImpInbRtnTrg extends xyz.elidom.orm.entity.basic.AbstractS
 		this.insDatetime = insDatetime;
 	}
 
+	public String getWcsIfChk() {
+		return wcsIfChk;
+	}
 
+	public void setWcsIfChk(String wcsIfChk) {
+		this.wcsIfChk = wcsIfChk;
+	}
+
+	public String getWcsIfChkDtm() {
+		return wcsIfChkDtm;
+	}
+
+	public void setWcsIfChkDtm(String wcsIfChkDtm) {
+		this.wcsIfChkDtm = wcsIfChkDtm;
+	}
 }

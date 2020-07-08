@@ -67,15 +67,6 @@ public class SmsQueryStore extends AbstractQueryStore {
 	}
 	
 	/**
-	 *WMS I/F 테이블로 부터 SRTN 주문수신 완료된 데이터 변경('Y')
-	 * 
-	 * @return
-	 */
-	public String getWmsIfToSrtnReceiptUpdateQuery() {
-		return this.getQueryByPath("batch/WmsIfToSrtnReceiptUpdate");
-	}
-	
-	/**
 	 * 주문 데이터로 부터 출고 주문 가공 쿼리
 	 *
 	 * @return
@@ -121,21 +112,21 @@ public class SmsQueryStore extends AbstractQueryStore {
 	}
 	
 	/**
-	 * 반품 작업 생성
-	 *
-	 * @return
-	 */
-	public String getSrtnGenerateJobInstancesQuery() {
-		return this.getQueryByPath("srtn/srtnGenerateJobInstances");
-	}
-	
-	/**
 	 * 주문 데이터로 부터 반품 주문 가공 쿼리
 	 *
 	 * @return
 	 */
 	public String getSrtnGeneratePreprocessQuery(){
 		return this.getQueryByPath("srtn/srtnGeneratePreprocess");
+	}
+	
+	/**
+	 * 주문 데이터로 부터 반품 주문 카테고리 Cell 가공 쿼리
+	 *
+	 * @return
+	 */
+	public String getSrtnGenerateCategoryPreprocessQuery(){
+		return this.getQueryByPath("srtn/srtnGenerateCategoryPreprocess");
 	}
 	
 	/**

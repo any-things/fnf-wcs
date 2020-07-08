@@ -280,17 +280,6 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 	 
 			this.getFnfQueryManager().executeBySql(this.batchQueryStore.getWmsIfToSdasReceiptUpdateQuery(), params);
 		} else if(ValueUtil.isEqual(item.getJobType(), SmsConstants.JOB_TYPE_SRTN)) {
-
-//			String type = "";
-//			if(item.getBatchId().split("-").length > 3) {
-//				//type 을 저장하는 곳이 없음(필요한지 불필요한지 판단 필요)
-//				type = item.getBatchId().split("-")[2];
-//			}
-//			
-//			Map<String,Object> params = ValueUtil.newMap("status,strrId,season,type,seq",
-//					this.receiveStatus, jobBatch.getBrandCd(), jobBatch.getSeasonCd(), type, jobBatch.getJobSeq());
-//	 
-//			this.getFnfQueryManager().executeBySql(this.batchQueryStore.getWmsIfToSrtnReceiptUpdateQuery(), params);
 		}
 	}
 	
@@ -425,12 +414,23 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 	 * WMS 테이블에서 조회후 SRTN Orders 데이터 생성
 	 */
 	private List<Order> getWmsSrtnOrders(String batchId, BatchReceipt receipt, BatchReceiptItem item) {
-		Map<String,Object> sqlParams = ValueUtil.newMap("batchId,orderNo,wmsBatchNo,wcsBatchNo,jobDate,orderDate", item.getWcsBatchNo(), item.getWcsBatchNo(), item.getWmsBatchNo(), item.getWcsBatchNo(), receipt.getJobDate(), receipt.getJobDate());
-		
-		List<Order> wmsOrders = this.getFnfQueryManager().selectListBySql(this.batchQueryStore.getWmsIfToSrtnReceiptOrderDataQuery(), sqlParams, Order.class, 0, 0);
-		
-		if(ValueUtil.isNotEmpty(wmsOrders)) {
-			return wmsOrders;
+		String[] batchInfo = item.getWcsBatchNo().split("-");
+		if(batchInfo.length == 4) {
+			String strrId = batchInfo[0];
+			String season = batchInfo[1];
+			String rtnType = batchInfo[2];
+			String jobSeq = batchInfo[3];
+			
+			Map<String, Object> sqlParams = ValueUtil.newMap(
+					"batchId,orderNo,wmsBatchNo,wcsBatchNo,jobDate,orderDate,brandCd,season,type,jobSeq",
+					item.getWcsBatchNo(), item.getWcsBatchNo(), item.getWmsBatchNo(), item.getWcsBatchNo(),
+					receipt.getJobDate(), receipt.getJobDate(), strrId, season, rtnType, jobSeq);
+			
+			List<Order> wmsOrders = this.getFnfQueryManager().selectListBySql(this.batchQueryStore.getWmsIfToSrtnReceiptOrderDataQuery(), sqlParams, Order.class, 0, 0);
+			
+			if(ValueUtil.isNotEmpty(wmsOrders)) {
+				return wmsOrders;
+			}
 		}
 		return null;
 	}

@@ -95,6 +95,12 @@ public class WmsWmtUifWcsInbRtnCnfm extends xyz.elidom.orm.entity.basic.Abstract
 
 	@Column (name = "if_chk_dtm", nullable = true, length = 14)
 	private String ifChkDtm;
+	
+	@Column (name = "wcs_if_chk", nullable = true, length = 1)
+	private String wcsIfChk;
+
+	@Column (name = "wcs_if_chk_dtm", nullable = true, length = 14)
+	private String wcsIfChkDtm;
 
 	public String getId() {
 		return id;
@@ -278,5 +284,21 @@ public class WmsWmtUifWcsInbRtnCnfm extends xyz.elidom.orm.entity.basic.Abstract
 
 	public void setIfChkDtm(String ifChkDtm) {
 		this.ifChkDtm = ifChkDtm;
+	}
+
+	public String getWcsIfChk() {
+		return wcsIfChk;
+	}
+
+	public void setWcsIfChk(String wcsIfChk) {
+		this.wcsIfChk = wcsIfChk;
+	}
+
+	public String getWcsIfChkDtm() {
+		return wcsIfChkDtm;
+	}
+
+	public void setWcsIfChkDtm(String wcsIfChkDtm) {
+		this.wcsIfChkDtm = wcsIfChkDtm;
 	}
 }

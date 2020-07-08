@@ -14,39 +14,30 @@ import operato.fnf.wcs.entity.WcsMheHrRecall;
 import operato.fnf.wcs.entity.WmsMheHr;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.model.ResponseObj;
-import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.elidom.dbist.dml.Query;
-import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.util.DateUtil;
 import xyz.elidom.util.ValueUtil;
 
 @Component
-public class DasRecallBatchService extends AbstractQueryService {
+public class DasRecallBatchService extends RecallBatchService {
 	private final String WMS_JOB_TYPE = "SHIPBYDAS";
 	
-	public ResponseObj dasRecallBatchService(Map<String, String> params) {
+	public ResponseObj dasRecallBatchService(Map<String, String> params) throws Exception {
 		String workDate = String.valueOf(params.get("workDate"));
 		if (ValueUtil.isEmpty(workDate)) {
 			workDate = DateUtil.getCurrentDay();
 		}
 		
-		// 1. 회수주문 WmsMheHr를 조회
-		Query conds = new Query();
-		conds.addFilter("whCd", FnFConstants.WH_CD_ICF);
-		conds.addFilter("bizType", WMS_JOB_TYPE);
-		conds.addFilter("workDate", workDate);
-		conds.addFilter("delYn", "Y");
-		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
-		List<WmsMheHr> delWaveList = wmsQueryMgr.selectList(WmsMheHr.class, conds);
+		List<WmsMheHr> delWaveList = super.queryRecallBatch(workDate, WMS_JOB_TYPE);
 		
-		// 2. 회수주문 있는지 여부 판단
+		// 회수주문 있는지 여부 판단
 		if (delWaveList.size() == 0) {
 			ResponseObj resp = new ResponseObj();
 			resp.setMsg("There is no recall order~~");
 			return resp;
 		}
 		
-		// 3. 회수된 주문을 조회, 회수 가능한 상태인지를 판단
+		// 회수된 주문을 조회, 회수 가능한 상태인지를 판단
 		for (WmsMheHr delWave: delWaveList) {
 			Query wcsHrConds = new Query();
 			wcsHrConds.addFilter("whCd", FnFConstants.WH_CD_ICF);

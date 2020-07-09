@@ -78,6 +78,9 @@ public class Cell extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	
 	@Column (name = "category_flag", length = 1)
 	private Boolean categoryFlag;
+	
+	@Column (name = "batch_id", length = 40)
+	private String batchId;
 
 	public String getId() {
 		return id;
@@ -221,6 +224,14 @@ public class Cell extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 
 	public void setCategoryFlag(Boolean categoryFlag) {
 		this.categoryFlag = categoryFlag;
+	}
+
+	public String getBatchId() {
+		return batchId;
+	}
+
+	public void setBatchId(String batchId) {
+		this.batchId = batchId;
 	}
 
 	@Override

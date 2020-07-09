@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import operato.fnf.wcs.FnFConstants;
+import operato.logis.sms.SmsConstants;
 import operato.logis.wcs.query.WcsQueryStore;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
@@ -55,6 +56,7 @@ public class WcsBatchProgressService extends AbstractQueryService {
 	public int calcBatchResultBoxQty(JobBatch batch) {
 		String jobType = batch.getJobType();
 		String sql = null;
+		Map<String, Object> params = ValueUtil.newMap("whCd,batchId", FnFConstants.WH_CD_ICF, batch.getId());
 		
 		if(LogisConstants.isDasJobType(jobType)) {
 			sql = "select COALESCE(count(distinct(box_no)), 0) as result from mhe_box where wh_cd = :whCd and work_unit = :batchId";
@@ -62,12 +64,14 @@ public class WcsBatchProgressService extends AbstractQueryService {
 		} else if(LogisConstants.isDpsJobType(jobType)) {
 			sql = "select COALESCE(count(distinct(waybill_no)), 0) as result from mhe_dr where wh_cd = :whCd and work_unit = :batchId and trim(waybill_no) is not null";
 			
+		} else if (ValueUtil.isEqual(SmsConstants.JOB_TYPE_SRTN, jobType)) {
+			sql = "SELECT COALESCE(COUNT(DISTINCT(BOX_NO)), 0) AS RESULT FROM MHE_DAS_RTN_BOX_RSLT WHERE WH_CD = :whCd AND BATCH_NO = :batchId AND DEL_YN = :delYn";
+			params.put("delYn", LogisConstants.N_CAP_STRING);
 		} else {
 			// TODO Ex-PAS
 			return 0;
 		}
 		
-		Map<String, Object> params = ValueUtil.newMap("whCd,batchId", FnFConstants.WH_CD_ICF, batch.getId());
 		return this.queryManager.selectBySql(sql, params, Integer.class);
 	}
 	
@@ -80,6 +84,7 @@ public class WcsBatchProgressService extends AbstractQueryService {
 	public int calcBatchResultOrderQty(JobBatch batch) {
 		String jobType = batch.getJobType();
 		String sql = null;
+		Map<String, Object> params = ValueUtil.newMap("whCd,batchId", FnFConstants.WH_CD_ICF, batch.getId());
 		
 		if(LogisConstants.isDasJobType(jobType)) {
 			sql = "select COALESCE(count(distinct(shipto_id)), 0) as result from mhe_box where wh_cd = :whCd and work_unit = :batchId";
@@ -87,12 +92,14 @@ public class WcsBatchProgressService extends AbstractQueryService {
 		} else if(LogisConstants.isDpsJobType(jobType)) {
 			sql = "select COALESCE(count(distinct(ref_no)), 0) as result from mhe_dr where wh_cd = :whCd and work_unit = :batchId and trim(waybill_no) is not null";
 			
+		} else if (ValueUtil.isEqual(SmsConstants.JOB_TYPE_SRTN, jobType)) {
+			sql = "SELECT COALESCE(COUNT(DISTINCT(ITEM_CD)), 0) AS RESULT FROM MHE_DAS_RTN_BOX_RSLT WHERE WH_CD = :whCd AND BATCH_NO = :batchId AND DEL_YN = :delYn";
+			params.put("delYn", LogisConstants.N_CAP_STRING);
 		} else {
 			// TODO Ex-PAS
 			return 0;
 		}
 		
-		Map<String, Object> params = ValueUtil.newMap("whCd,batchId", FnFConstants.WH_CD_ICF, batch.getId());
 		return this.queryManager.selectBySql(sql, params, Integer.class);
 	}
 	
@@ -105,6 +112,7 @@ public class WcsBatchProgressService extends AbstractQueryService {
 	public int calcBatchResultPcs(JobBatch batch) {
 		String jobType = batch.getJobType();
 		String sql = null;
+		Map<String, Object> params = ValueUtil.newMap("whCd,batchId", FnFConstants.WH_CD_ICF, batch.getId());
 		
 		if(LogisConstants.isDasJobType(jobType)) {
 			sql = "select COALESCE(sum(cmpt_qty), 0) as result from mhe_box where wh_cd = :whCd and work_unit = :batchId";
@@ -112,12 +120,14 @@ public class WcsBatchProgressService extends AbstractQueryService {
 		} else if(LogisConstants.isDpsJobType(jobType)) {
 			sql = "select COALESCE(sum(cmpt_qty), 0) as result from mhe_dr where wh_cd = :whCd and work_unit = :batchId";
 			
-		} else {
+		} else if (ValueUtil.isEqual(SmsConstants.JOB_TYPE_SRTN, jobType)) {
+			sql = "SELECT COALESCE(SUM(CMPT_QTY), 0) AS RESULT FROM MHE_DAS_RTN_BOX_RSLT WHERE WH_CD = :whCd AND BATCH_NO = :batchId AND DEL_YN = :delYn";
+			params.put("delYn", LogisConstants.N_CAP_STRING);
+		}else {
 			// TODO Ex-PAS
 			return 0;
 		}
 		
-		Map<String, Object> params = ValueUtil.newMap("whCd,batchId", FnFConstants.WH_CD_ICF, batch.getId());
 		return this.queryManager.selectBySql(sql, params, Integer.class);
 	}
 	

@@ -12,8 +12,8 @@ import org.springframework.stereotype.Component;
 
 import operato.fnf.wcs.entity.WcsMhePasOrder;
 import operato.fnf.wcs.entity.WmsWmtUifImpInbRtnTrg;
-import operato.fnf.wcs.entity.WmsWmtUifWcsInbRtnCnfm;
 import operato.logis.sms.query.SmsQueryStore;
+import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.anythings.sys.util.AnyOrmUtil;
@@ -57,13 +57,13 @@ public class SmsInspSendService extends AbstractQueryService {
 			wmsCondition.addFilter("REF_SEASON", batchInfo[1]);
 			wmsCondition.addFilter("SHOP_RTN_TYPE", batchInfo[2]);
 			wmsCondition.addFilter("SHOP_RTN_SEQ", batchInfo[3]);
-			wmsCondition.addFilter("WCS_IF_CHK", "N");
+			wmsCondition.addFilter("WCS_IF_CHK", LogisConstants.N_CAP_STRING);
 		}
 		
 		IQueryManager dsQueryManager = this.getDataSourceQueryManager(WmsWmtUifImpInbRtnTrg.class);
-		List<WmsWmtUifWcsInbRtnCnfm> rtnCnfmList = dsQueryManager.selectList(WmsWmtUifWcsInbRtnCnfm.class, wmsCondition);
+		List<WmsWmtUifImpInbRtnTrg> rtnTrgList = dsQueryManager.selectList(WmsWmtUifImpInbRtnTrg.class, wmsCondition);
 		
-		List<String> skuCdList = AnyValueUtil.filterValueListBy(rtnCnfmList, "refDetlNo");
+		List<String> skuCdList = AnyValueUtil.filterValueListBy(rtnTrgList, "refDetlNo");
 		
 		if(ValueUtil.isEmpty(skuCdList)) {
 			skuCdList.add("1");
@@ -74,36 +74,37 @@ public class SmsInspSendService extends AbstractQueryService {
 		List<Map> skuInfoList = this.queryManager.selectListBySql(skuInfoQuery, sqlParams, Map.class, 0, 0);
 		
 		
-		List<WcsMhePasOrder> pasOrderList = new ArrayList<WcsMhePasOrder>(rtnCnfmList.size());
+		List<WcsMhePasOrder> pasOrderList = new ArrayList<WcsMhePasOrder>(rtnTrgList.size());
 		Date currentTime = new Date();
 		String currentTimeStr = DateUtil.dateTimeStr(currentTime, "yyyyMMddHHmmss");
+		String srtDate = DateUtil.dateStr(new Date(), "yyyyMMdd");
 		
-		for (WmsWmtUifWcsInbRtnCnfm cnfmTrg : rtnCnfmList) {
+		for (WmsWmtUifImpInbRtnTrg rtnTrg : rtnTrgList) {
 			WcsMhePasOrder wcsMhePasOrder = new WcsMhePasOrder();
 			wcsMhePasOrder.setId(UUID.randomUUID().toString());
 			wcsMhePasOrder.setBatchNo(batch.getId());
-			wcsMhePasOrder.setJobDate(cnfmTrg.getInbDate());
+			wcsMhePasOrder.setJobDate(srtDate);
 			wcsMhePasOrder.setJobType(WcsMhePasOrder.JOB_TYPE_RTN);
-			wcsMhePasOrder.setBoxId(cnfmTrg.getRefNo());
-			wcsMhePasOrder.setSkuCd(cnfmTrg.getRefDetlNo());
-			wcsMhePasOrder.setOrderQty(cnfmTrg.getInbCmptQty());
+			wcsMhePasOrder.setBoxId(rtnTrg.getRefNo());
+			wcsMhePasOrder.setSkuCd(rtnTrg.getRefDetlNo());
+			wcsMhePasOrder.setOrderQty(rtnTrg.getInbEctQty());
 			wcsMhePasOrder.setInsDatetime(DateUtil.getDate());
-			wcsMhePasOrder.setIfYn("N");
+			wcsMhePasOrder.setIfYn(LogisConstants.N_CAP_STRING);
 			
 			for (Map skuInfo : skuInfoList) {
-				if(ValueUtil.isEqual(skuInfo.get("sku_cd"), cnfmTrg.getRefDetlNo())) {
+				if(ValueUtil.isEqual(skuInfo.get("sku_cd"), rtnTrg.getRefDetlNo())) {
 					wcsMhePasOrder.setSkuBcd(ValueUtil.toString(skuInfo.get("sku_barcd")));
 					wcsMhePasOrder.setChuteNo(ValueUtil.toString(skuInfo.get("sub_equip_cd")));	
 				}
 			}
 			pasOrderList.add(wcsMhePasOrder);
-			cnfmTrg.setWcsIfChk(SysConstants.CAP_Y_STRING);
-			cnfmTrg.setWcsIfChkDtm(currentTimeStr);
+			rtnTrg.setWcsIfChk(SysConstants.CAP_Y_STRING);
+			rtnTrg.setWcsIfChkDtm(currentTimeStr);
 		}
 		
 		if(ValueUtil.isNotEmpty(pasOrderList)) {
 			AnyOrmUtil.insertBatch(pasOrderList, 100);
 		}
-		dsQueryManager.updateBatch(rtnCnfmList);
+		dsQueryManager.updateBatch(rtnTrgList);
 	}
 }

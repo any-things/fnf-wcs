@@ -15,6 +15,26 @@ public class WcsMhePasBatchStatus extends xyz.elidom.orm.entity.basic.AbstractSt
 	 * SerialVersion UID
 	 */
 	private static final long serialVersionUID = 304397296243144420L;
+	
+	/**
+	 * 가동준비완료 : 0
+	 */
+	public static final String STATUS_READY = "0";
+	
+	/**
+	 * 개시(작업중) : 1
+	 */
+	public static final String STATUS_RUNNING = "1";
+	
+	/**
+	 * 작업 종료 상태 : 2
+	 */
+	public static final String STATUS_STOP = "2";
+	/**
+	 * 일시정지 상태 :3
+	 */
+	public static final String STATUS_PAUSE = "3";
+	
 
 	@PrimaryKey
 	@Column (name = "id", nullable = false, length = 40)

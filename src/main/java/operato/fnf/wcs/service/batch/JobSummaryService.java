@@ -11,7 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import operato.fnf.wcs.query.store.FnFDasQueryStore;
 import operato.fnf.wcs.query.store.FnFDpsQueryStore;
+import operato.fnf.wcs.query.store.FnFSmsQueryStore;
 import operato.fnf.wcs.service.model.ResultSummary;
+import operato.logis.sms.SmsConstants;
 import operato.logis.wcs.entity.DailyProdSummary;
 import operato.logis.wcs.entity.Productivity;
 import xyz.anythings.base.LogisConstants;
@@ -40,6 +42,11 @@ public class JobSummaryService extends AbstractQueryService {
 	 */
 	@Autowired
 	private FnFDpsQueryStore fnfDpsQueryStore;
+	/**
+	 * FnF SMS용 쿼리 스토어
+	 */
+	@Autowired
+	private FnFSmsQueryStore fnfSmsQueryStore;
 	
 	/**
 	 * 작업 배치별 10분대별 실적 서머리 처리
@@ -80,6 +87,9 @@ public class JobSummaryService extends AbstractQueryService {
 		} else if(LogisConstants.isDpsJobType(jobType)) {
 			return this.fnfDpsQueryStore.getDpsBatchTotalResultSummary();
 			
+		} else if(ValueUtil.isEqual(SmsConstants.JOB_TYPE_SRTN, jobType)) {
+//			return this.fnfSmsQueryStore.getSrtnBatchTotalResultSummary();
+			return null;
 		} else {
 			return null;
 		}

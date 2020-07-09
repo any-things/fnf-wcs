@@ -105,13 +105,10 @@ public class DpsBoxSendService extends AbstractQueryService {
 	/**
 	 * WMS에 주문 상태(취소된 상태 여부)를 체크 
 	 *  
-	 * @param domainId
-	 * @param refNo
-	 * @param boxId
+	 * @param inspection
 	 */
 	public List<DpsInspItem> checkInpectionItemsToWms(DpsInspection inspection) {
 		
-		// sql = "select * from (select strr_id as brand_cd, item_cd as sku_cd, item_season as sku_season, item_color as sku_color, item_size as sku_size, outb_ect_qty as order_qty, (to_pick_qty - done_qty) as picked_qty, 0 as confirm_qty from dps_actual_order where wh_cd = :whCd and ref_no = :refNo and item_season != 'X') a where a.picked_qty > 0"; 
 		String sql = "select strr_id as brand_cd, item_cd as sku_cd, item_season as sku_season, item_color as sku_color, item_size as sku_size, outb_ect_qty as order_qty, to_pick_qty as picked_qty, done_qty as confirm_qty from dps_actual_order where wh_cd = :whCd and ref_no = :refNo and item_season != 'X'";
 		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsDpsActualOrder.class);
 		List<DpsInspItem> inspectionItems = wmsQueryMgr.selectListBySql(sql, ValueUtil.newMap("whCd,refNo", FnFConstants.WH_CD_ICF, inspection.getOrderNo()), DpsInspItem.class, 0, 0);

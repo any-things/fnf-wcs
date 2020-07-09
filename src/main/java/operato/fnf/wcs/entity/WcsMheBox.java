@@ -55,6 +55,9 @@ public class WcsMheBox extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "item_cd", nullable = false, length = 30)
 	private String itemCd;
 	
+	@Column (name = "waybill_no", nullable = false, length = 20)
+	private String waybillNo;
+	
 	@Column (name = "box_no", nullable = false, length = 30)
 	private String boxNo;
 	
@@ -172,6 +175,14 @@ public class WcsMheBox extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setItemCd(String itemCd) {
 		this.itemCd = itemCd;
+	}
+
+	public String getWaybillNo() {
+		return waybillNo;
+	}
+
+	public void setWaybillNo(String waybillNo) {
+		this.waybillNo = waybillNo;
 	}
 
 	public String getBoxNo() {

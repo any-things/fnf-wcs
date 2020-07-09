@@ -46,7 +46,7 @@ public class DasBoxCancel extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "strr_id", length = 20)
 	private String strrId;
 
-	@Column (name = "sort_date", length = 8)
+	@Column (name = "sort_date", length = 10)
 	private String sortDate;
 
 	@Column (name = "sort_seq", length = 5)

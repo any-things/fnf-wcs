@@ -57,6 +57,7 @@ public class WcsMhePasChuteStatusController extends AbstractRestService {
 			chute.setId(UUID.randomUUID().toString());
 			chute.setChuteNo(String.format("%03d", i));
 			chute.setStatus("0");
+			chute.setMheNo("94");
 			chute.setInsDatetime(DateUtil.getDate());
 			
 			chuteList.add(chute);

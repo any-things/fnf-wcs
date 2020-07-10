@@ -2,6 +2,7 @@ package operato.fnf.wcs.service.send;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -10,14 +11,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
+import operato.fnf.wcs.FnFConstants;
 import operato.fnf.wcs.entity.WcsMhePasOrder;
+import operato.fnf.wcs.entity.WcsMhePasRlst;
 import operato.fnf.wcs.entity.WmsWmtUifImpInbRtnTrg;
+import operato.fnf.wcs.entity.WmsWmtUifImpMheRtnScan;
+import operato.fnf.wcs.entity.WmsWmtUifWcsInbRtnCnfm;
 import operato.logis.sms.query.SmsQueryStore;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.anythings.sys.util.AnyOrmUtil;
 import xyz.anythings.sys.util.AnyValueUtil;
+import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.sys.util.DateUtil;
@@ -102,5 +108,74 @@ public class SmsInspSendService extends AbstractQueryService {
 			AnyOrmUtil.insertBatch(pasOrderList, 100);
 		}
 		dsQueryManager.executeBySql(queryStore.getSrtnInspBoxTrgUpdate(), inspParams);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void sendInspBoxScanResultToWms(Domain domain, JobBatch batch) {
+		String[] batchInfo = batch.getId().split("-");
+		if(batchInfo.length < 4) {
+			String msg = MessageUtil.getMessage("no_batch_id", "설비에서 운영중인 BatchId가 아닙니다.");
+			throw ThrowUtil.newValidationErrorWithNoLog(msg);
+		}
+		Date currentTime = new Date();
+		String srtDate = DateUtil.dateStr(currentTime, "yyyyMMdd");
+		String currentTimeStr = DateUtil.dateTimeStr(currentTime, "yyyyMMddHHmmss");
+
+		Query conds = new Query();
+		conds.addFilter("whCd", FnFConstants.WH_CD_ICF);
+		conds.addFilter("strrId", batchInfo[0]);
+		conds.addFilter("refSeason", batchInfo[1]);
+		conds.addFilter("shopRtnType", batchInfo[2]);
+		conds.addFilter("shopRtnSeq", batchInfo[3]);
+		conds.addFilter("wcsIfChk", LogisConstants.N_CAP_STRING);
+		IQueryManager dsQueryManager = this.getDataSourceQueryManager(WmsWmtUifWcsInbRtnCnfm.class);
+		List<WmsWmtUifWcsInbRtnCnfm> rtnCnfmList = dsQueryManager.selectList(WmsWmtUifWcsInbRtnCnfm.class, conds);
+		
+		Query condition = new Query();
+		condition.addFilter("batchNo", batch.getBatchGroupId());
+		condition.addFilter("ifYn", LogisConstants.N_CAP_STRING);
+		List<WcsMhePasRlst> pasResults = this.queryManager.selectList(WcsMhePasRlst.class, condition);
+		
+		List<WcsMhePasRlst> tempResults = new ArrayList<WcsMhePasRlst>(pasResults.size());
+		tempResults.addAll(pasResults);
+		
+		for (WcsMhePasRlst pasResult : pasResults) {
+			for (WmsWmtUifWcsInbRtnCnfm wmsResult : rtnCnfmList) {
+				if(ValueUtil.isEqual(pasResult.getBoxId(), wmsResult.getRefNo()) && ValueUtil.isEqual(pasResult.getSkuCd(), wmsResult.getItemCd())) {
+					tempResults.remove(pasResult);
+					wmsResult.setWcsIfChk(LogisConstants.CAP_Y_STRING);
+					wmsResult.setWcsIfChkDtm(currentTimeStr);
+				}
+			}
+			pasResult.setIfYn(LogisConstants.CAP_Y_STRING);
+		}
+		
+		IQueryManager wmsQueryManager = this.getDataSourceQueryManager(WmsWmtUifImpMheRtnScan.class);
+		String sql = "SELECT nvl(max(INTERFACE_NO), 0) + 1 AS seq FROM WMT_UIF_IMP_MHE_RTN_SCAN";
+		Map<String, Object> maxSeq = wmsQueryManager.selectBySql(sql, new HashMap<String, Object>(), Map.class);
+		int interfaceNo = ValueUtil.toInteger(maxSeq.get("seq"));
+		List<WmsWmtUifImpMheRtnScan> resultValue = new ArrayList<WmsWmtUifImpMheRtnScan>(tempResults.size());
+		for (WcsMhePasRlst result : tempResults) {
+			WmsWmtUifImpMheRtnScan scan = new WmsWmtUifImpMheRtnScan();
+			scan.setInterfaceCrtDt(srtDate);
+			scan.setInterfaceNo(ValueUtil.toString(interfaceNo));
+			scan.setWhCd(FnFConstants.WH_CD_ICF);
+			scan.setStrrId(batchInfo[0]);
+			scan.setInbNo(result.getBoxId());
+			scan.setInbDetlNo(result.getSkuCd());
+			scan.setItemCd(result.getSkuCd());
+			scan.setQty(result.getQty());
+			scan.setDmgQty(result.getDmgQty());
+			scan.setNewYn(result.getNewYn());
+			scan.setInsPersonId(result.getMheNo());
+			scan.setInsDatetime(result.getInsDatetime());
+			
+			resultValue.add(scan);
+			interfaceNo++;
+		}
+		
+		this.queryManager.updateBatch(pasResults);
+		dsQueryManager.updateBatch(rtnCnfmList);
+		wmsQueryManager.insert(resultValue);
 	}
 }

@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 import operato.logis.sms.entity.Chute;
 import operato.logis.sms.query.SmsQueryStore;
 import operato.logis.sms.service.model.ChuteStatus;
+import xyz.anythings.base.LogisConstants;
+import xyz.anythings.base.entity.Cell;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.entity.Order;
 import xyz.anythings.base.entity.OrderPreprocess;
@@ -181,6 +183,12 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 			}
 		}
 		
+		// 2-1. 현재 셀에 매핑되어 있는 sku를 조회하여 할당할 batch에서 미리 셀을 할당한다.
+		this.alreadyAssignSku(items);
+		// 2-2. 기본 로직대로 할당 후 카테고리에 할당해야 한다면 다시 기존에 카테고리 셀에 할당되어 있는 카테고리 목록을 조회하여 할당한다.
+		// 2-3. 기본 카테고리할당 로직을 수행한다.
+		
+		
 		// 3. 사용가능한 Cell을 사용 순서순으로 조회한다.
 		String sql = queryStore.getSrtnCellStatusQuery();
 		Map<String, Object> paramMap = ValueUtil.newMap("chuteNo,activeFlag,categoryFlag", enableChute, true, false);
@@ -189,8 +197,10 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 		// 4. 사용가능한 Cell에 주문정보를 매핑한다.
 		int cellIdx;
 		for(cellIdx = 0 ; cellIdx < cellList.size() ; cellIdx++) {
-			items.get(cellIdx).setSubEquipCd(ValueUtil.toString(cellList.get(cellIdx).get("chute_no")));
-			items.get(cellIdx).setClassCd(ValueUtil.toString(cellList.get(cellIdx).get("cell_cd")));
+			if(ValueUtil.isEmpty(items.get(cellIdx).getSubEquipCd()) && ValueUtil.isEmpty(items.get(cellIdx).getClassCd())) {
+				items.get(cellIdx).setSubEquipCd(ValueUtil.toString(cellList.get(cellIdx).get("chute_no")));
+				items.get(cellIdx).setClassCd(ValueUtil.toString(cellList.get(cellIdx).get("cell_cd")));
+			}
 			if(cellIdx >= items.size() - 1) break;
 		}
 		
@@ -330,7 +340,7 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 		if(ValueUtil.isNotEmpty(batchIdList)) {
 			List<String> batchIds = new ArrayList<String>();
 			for (Map batchId : batchIdList) {
-				if(ValueUtil.isNotEqual(ValueUtil.toString(batchId.get("status")), JobBatch.STATUS_RUNNING)) {
+				if(!(ValueUtil.isEqual(ValueUtil.toString(batchId.get("status")), JobBatch.STATUS_RUNNING) || ValueUtil.isEqual(ValueUtil.toString(batchId.get("status")), JobBatch.STATUS_MERGED))) {
 					batchIds.add(ValueUtil.toString(batchId.get("batch_id")));
 				}
 			}
@@ -391,5 +401,27 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 		}
 		
 		this.queryManager.updateBatch(preprocessList);
+	}
+	
+	private void alreadyAssignSku(List<OrderPreprocess> items) {
+		Query query = new Query();
+		query.addFilter("equipType", "Sorter");
+		query.addFilter("categoryFlag", false);
+		query.addFilter("batchId", LogisConstants.IS_NOT_NULL, LogisConstants.EMPTY_STRING);
+		List<Cell> cellList = this.queryManager.selectList(Cell.class, query);
+		for (Cell cell : cellList) {
+			for (OrderPreprocess item : items) {
+				if(ValueUtil.isEqual(cell.getClassCd(), item.getCellAssgnCd())) {
+					String chuteNo = cell.getEquipCd().split("-")[1];
+					int chuteCd = Integer.parseInt(chuteNo);
+					item.setSubEquipCd(String.format("%03d", chuteCd));
+					item.setClassCd(cell.getCellCd());
+				}
+			}
+		}
+	}
+	
+	private void alreadyAssignCategory() {
+		
 	}
 }

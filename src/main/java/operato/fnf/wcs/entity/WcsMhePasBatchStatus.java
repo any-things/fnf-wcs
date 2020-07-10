@@ -7,8 +7,8 @@ import xyz.elidom.dbist.annotation.GenerationRule;
 import xyz.elidom.dbist.annotation.Index;
 import xyz.elidom.dbist.annotation.Table;
 
-@Table(name = "mhe_pas_batch_status", idStrategy = GenerationRule.UUID, uniqueFields="wcs_batch_no,pas_batch_no", indexes = {
-		@Index(name = "ix_mhe_pas_batch_status_01", columnList = "wcs_batch_no,pas_batch_no", unique = true)
+@Table(name = "mhe_pas_batch_status", idStrategy = GenerationRule.UUID, uniqueFields="mheNo,wcsBatchNo,pasBatchNo", indexes = {
+		@Index(name = "ix_mhe_pas_batch_status_01", columnList = "mhe_no,wcs_batch_no,pas_batch_no", unique = true)
 	})
 public class WcsMhePasBatchStatus extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	/**
@@ -39,6 +39,9 @@ public class WcsMhePasBatchStatus extends xyz.elidom.orm.entity.basic.AbstractSt
 	@PrimaryKey
 	@Column (name = "id", nullable = false, length = 40)
 	private String id;
+	
+	@Column (name = "mhe_no", nullable = false, length = 10)
+	private String mheNo;
 
 	@Column (name = "wcs_batch_no", nullable = false, length = 20)
 	private String wcsBatchNo;
@@ -101,5 +104,13 @@ public class WcsMhePasBatchStatus extends xyz.elidom.orm.entity.basic.AbstractSt
 
 	public void setUpdDatetime(Date updDatetime) {
 		this.updDatetime = updDatetime;
+	}
+
+	public String getMheNo() {
+		return mheNo;
+	}
+
+	public void setMheNo(String mheNo) {
+		this.mheNo = mheNo;
 	}
 }

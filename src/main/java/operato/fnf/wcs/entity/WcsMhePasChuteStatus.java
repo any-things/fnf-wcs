@@ -7,8 +7,8 @@ import xyz.elidom.dbist.annotation.GenerationRule;
 import xyz.elidom.dbist.annotation.Index;
 import xyz.elidom.dbist.annotation.Table;
 
-@Table(name = "mhe_pas_chute_status", idStrategy = GenerationRule.UUID, uniqueFields="chuteNo", indexes = {
-		@Index(name = "ix_mhe_pas_chute_status_01", columnList = "chute_no", unique = true)
+@Table(name = "mhe_pas_chute_status", idStrategy = GenerationRule.UUID, uniqueFields="chuteNo,mheNo", indexes = {
+		@Index(name = "ix_mhe_pas_chute_status_01", columnList = "chute_no,mhe_no", unique = true)
 	})
 public class WcsMhePasChuteStatus extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	/**
@@ -19,6 +19,9 @@ public class WcsMhePasChuteStatus extends xyz.elidom.orm.entity.basic.AbstractSt
 	@PrimaryKey
 	@Column (name = "id", nullable = false, length = 40)
 	private String id;
+	
+	@Column (name = "mhe_no", nullable = false, length = 10)
+	private String mheNo;
 
 	@Column (name = "chute_no", nullable = false, length = 20)
 	private String chuteNo;
@@ -70,5 +73,13 @@ public class WcsMhePasChuteStatus extends xyz.elidom.orm.entity.basic.AbstractSt
 
 	public void setUpdDatetime(Date updDatetime) {
 		this.updDatetime = updDatetime;
+	}
+
+	public String getMheNo() {
+		return mheNo;
+	}
+
+	public void setMheNo(String mheNo) {
+		this.mheNo = mheNo;
 	}
 }

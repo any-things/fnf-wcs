@@ -7,8 +7,8 @@ import xyz.elidom.dbist.annotation.GenerationRule;
 import xyz.elidom.dbist.annotation.Index;
 import xyz.elidom.dbist.annotation.Table;
 
-@Table(name = "mhe_pas_order", idStrategy = GenerationRule.UUID, uniqueFields="batchNo,jobDate,jobType,boxId,chuteNo,sku_cd", indexes = {
-		@Index(name = "ix_mhe_pas_order_01", columnList = "batch_no,job_date,job_type,box_id,chute_no,sku_cd", unique = true)
+@Table(name = "mhe_pas_order", idStrategy = GenerationRule.UUID, uniqueFields="batchNo,jobDate,jobType,boxId,chuteNo,skuCd,mheNo", indexes = {
+		@Index(name = "ix_mhe_pas_order_01", columnList = "batch_no,job_date,job_type,box_id,chute_no,sku_cd,mhe_no", unique = true)
 	})
 public class WcsMhePasOrder extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	/**
@@ -50,6 +50,9 @@ public class WcsMhePasOrder extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	@Column (name = "sku_bcd", length = 20)
 	private String skuBcd;
+	
+	@Column (name = "mhe_no", nullable = false, length = 10)
+	private String mheNo;
 
 	@Column (name = "shop_cd", length = 20)
 	private String shopCd;
@@ -179,5 +182,13 @@ public class WcsMhePasOrder extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setUpdDatetime(Date updDatetime) {
 		this.updDatetime = updDatetime;
-	}	
+	}
+
+	public String getMheNo() {
+		return mheNo;
+	}
+
+	public void setMheNo(String mheNo) {
+		this.mheNo = mheNo;
+	}
 }

@@ -215,4 +215,20 @@ public class SmsQueryStore extends AbstractQueryStore {
 	public String getSrtnCellInfo() {
 		return this.getQueryByPath("srtn/srtnCellInfo");
 	}
+	
+	/**
+	 * 매장 반품 검수예정정보 조회
+	 * 
+	 */
+	public String getSrtnInspBoxTrg() {
+		return this.getQueryByPath("srtn/srtnInspBoxTrg");
+	}
+	
+	/**
+	 * 매장 반품 검수예정정보 수신 체크 업데이트
+	 * 
+	 */
+	public String getSrtnInspBoxTrgUpdate() {
+		return this.getQueryByPath("srtn/srtnInspBoxTrgUpdate");
+	}
 }

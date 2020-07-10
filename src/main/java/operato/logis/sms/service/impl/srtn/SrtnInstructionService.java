@@ -50,7 +50,7 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		int instructCount = 0;
 		if(this.beforeInstructBatch(batch, equipCdList)) {
 			// TODO 쿼리 수정 해야함 
-			instructCount += this.doInstructBatch(batch, equipCdList);
+			instructCount += this.doInstructBatch(batch, equipCdList, false);
 		}
 		
 		return instructCount;
@@ -62,13 +62,37 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		return 0;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public int mergeBatch(JobBatch mainBatch, JobBatch newBatch, Object... params) {
-		// 1. merge 대상 배치 상태 및 상품 or 거래처를 조회한다.
-		// 2. 새로운 배치에 대한 상품 or 거래처를 조회한다.
-		// 3. 기존 배치에 동일한 상품 or 거래처가 있으면 합치고(merge) 새로운 상품 or 거래처를 할당할 수 있는 chute가 있는지 조회한다.
-		// 4. 여유 chute가 부족하다면 실패 merge가능 하다면 배치 Update
-		return 0;
+		int retCnt = newBatch.getBatchOrderQty();
+		newBatch.setBatchGroupId(mainBatch.getId());
+		newBatch.setStageCd(mainBatch.getStageCd());
+		newBatch.setAreaCd(mainBatch.getAreaCd());
+		newBatch.setEquipGroupCd(mainBatch.getEquipGroupCd());
+		newBatch.setEquipType(mainBatch.getEquipType());
+		newBatch.setEquipCd(mainBatch.getEquipCd());
+		newBatch.setEquipNm(mainBatch.getEquipNm());
+		newBatch.setInputWorkers(mainBatch.getInputWorkers());
+		newBatch.setStatus(JobBatch.STATUS_MERGED);
+		newBatch.setInstructedAt(new Date());
+		this.queryManager.update(newBatch);
+		
+		Query query = AnyOrmUtil.newConditionForExecution(mainBatch.getDomainId());
+		query.addFilter("batchGroupId", mainBatch.getId());
+		List<JobBatch> jobBatches = this.queryManager.selectList(JobBatch.class, query);
+		List<String> batchIds = AnyValueUtil.filterValueListBy(jobBatches, "id");
+		Map<String, Object> condition = ValueUtil.newMap("batchIds", batchIds);
+		String sql = "SELECT COALESCE(SUM(TOTAL_PCS), 0) AS PCS_CNT, COUNT(DISTINCT(CELL_ASSGN_CD)) AS ORDER_CNT FROM ORDER_PREPROCESSES WHERE BATCH_ID IN (:batchIds )";
+		Map<String, Object> totalResult = this.queryManager.selectBySql(sql, condition, Map.class);
+		mainBatch.setParentOrderQty(ValueUtil.toInteger(totalResult.get("order_cnt")));
+		mainBatch.setParentPcs(ValueUtil.toInteger(totalResult.get("pcs_cnt")));
+		
+		this.queryManager.update(mainBatch, "parentOrderQty", "parentPcs");
+		
+		this.doInstructBatch(newBatch, null, true);
+		
+		return retCnt;
 	}
 
 	@Override
@@ -101,7 +125,7 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 	 * @param regionList
 	 * @return
 	 */
-	protected int doInstructBatch(JobBatch batch, List<String> regionList) {
+	protected int doInstructBatch(JobBatch batch, List<String> regionList, boolean isMerged) {
 		// 1. 배치의 주문 가공 정보 조회
 		Long domainId = batch.getDomainId();
 		Query query = AnyOrmUtil.newConditionForExecution(domainId);
@@ -111,19 +135,19 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		// 2. 주문 가공 정보로 부터 슈트 리스트 조회
 		List<String> cellNoList = AnyValueUtil.filterValueListBy(preprocesses, "classCd");
 		Query condition = AnyOrmUtil.newConditionForExecution(domainId);
-		condition.addSelect("id", "cellCd", "classCd");
+		condition.addSelect("id", "cellCd", "classCd", "categoryFlag");
 		condition.addFilter("cellCd", SysConstants.IN, cellNoList);
 		condition.addFilter("activeFlag", true);
 		condition.addOrder("cellCd", false);
 		List<Cell> cellList = this.queryManager.selectList(Cell.class, condition);
 		
 		// 3. cell 중에 현재 작업 중이거나 사용 불가한 슈트가 있는지 체크
-		for(Cell cell : cellList) {
-			if(ValueUtil.isNotEmpty(cell.getClassCd())) {
-				// 호기에 다른 작업 배치가 할당되어 있습니다
-				throw ThrowUtil.newValidationErrorWithNoLog(true, "ASSIGNED_ANOTHER_BATCH", ValueUtil.toList(cell.getClassCd()));
-			}
-		}
+//		for(Cell cell : cellList) {
+//			if(ValueUtil.isNotEmpty(cell.getClassCd())) {
+//				// 호기에 다른 작업 배치가 할당되어 있습니다
+//				throw ThrowUtil.newValidationErrorWithNoLog(true, "ASSIGNED_ANOTHER_BATCH", ValueUtil.toList(cell.getClassCd()));
+//			}
+//		}
 		
 		int cellCount = cellList.size();
 		for(int i = 0 ; i < cellCount ; i++) {
@@ -136,9 +160,12 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		
 		this.updateRackStatus(batch, preprocesses);
 		
-		AnyOrmUtil.updateBatch(cellList, 100, "classCd");
-		batch.setStatus(JobBatch.STATUS_RUNNING);
-		this.queryManager.update(batch, "status");
+		AnyOrmUtil.updateBatch(cellList, 100, "classCd", "batchId");
+		if(!isMerged) {
+			batch.setStatus(JobBatch.STATUS_RUNNING);
+			this.queryManager.update(batch, "status");
+		}
+		
 		// TODO agent에 정보 생성후 전달 해야한다.
 		
 		return preprocesses.size();
@@ -152,28 +179,36 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 			params.put("subEquipCd", preprocess.getSubEquipCd());
 			params.put("shopNm", preprocess.getCellAssgnNm());
 			params.put("shopCd", preprocess.getCellAssgnCd());
-//			this.queryManager.executeBySql(insertQuery, params);
 			
-			cell.setClassCd(preprocess.getCellAssgnCd());
+			if(cell.getCategoryFlag()) {
+				String value = "";
+				if(ValueUtil.isNotEmpty(cell.getClassCd()) && ValueUtil.isNotEqual(cell.getClassCd(), preprocess.getCellAssgnNm())) {
+					value = cell.getClassCd() + ", " + preprocess.getCellAssgnNm();
+					cell.setClassCd(value);
+				} else if(ValueUtil.isEmpty(cell.getClassCd())) {
+					value = preprocess.getCellAssgnNm();
+					cell.setClassCd(value);
+				}
+			} else {
+				cell.setClassCd(preprocess.getCellAssgnCd());
+			}
 			cell.setBatchId(batch.getBatchGroupId());
 		}
 	}
 	
 	@SuppressWarnings("rawtypes")
 	private void interfaceSorter(JobBatch batch) {
-		// TODO 연구소 테스트 DB로 검수결과 확정 테이블이 없어 임시로 매장예정정보로 테스트
-		Query wmsCondition = new Query();
 		String[] batchInfo = batch.getId().split("-");
-		if(batchInfo.length == 4) {
-			wmsCondition.addFilter("STRR_ID", batchInfo[0]);
-			wmsCondition.addFilter("REF_SEASON", batchInfo[1]);
-			wmsCondition.addFilter("SHOP_RTN_TYPE", batchInfo[2]);
-			wmsCondition.addFilter("SHOP_RTN_SEQ", batchInfo[3]);
-			wmsCondition.addFilter("WCS_IF_CHK", LogisConstants.N_CAP_STRING);
+		if(batchInfo.length < 4) {
+			String msg = MessageUtil.getMessage("no_batch_id", "설비에서 운영중인 BatchId가 아닙니다.");
+			throw ThrowUtil.newValidationErrorWithNoLog(msg);
 		}
+		Map<String, Object> inspParams = ValueUtil.newMap(
+				"strrId,season,rtnType,jobSeq,ifAction,wcsIfChk", batchInfo[0], batchInfo[1],
+				batchInfo[2], batchInfo[3], LogisConstants.COMMON_STATUS_SKIPPED, LogisConstants.N_CAP_STRING);
 		
 		IQueryManager dsQueryManager = this.getDataSourceQueryManager(WmsWmtUifImpInbRtnTrg.class);
-		List<WmsWmtUifImpInbRtnTrg> rtnTrgList = dsQueryManager.selectList(WmsWmtUifImpInbRtnTrg.class, wmsCondition);
+		List<WmsWmtUifImpInbRtnTrg> rtnTrgList = dsQueryManager.selectListBySql(queryStore.getSrtnInspBoxTrg(), inspParams, WmsWmtUifImpInbRtnTrg.class, 0, 0);
 		
 		List<String> skuCdList = AnyValueUtil.filterValueListBy(rtnTrgList, "refDetlNo");
 		
@@ -187,14 +222,13 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		
 		
 		List<WcsMhePasOrder> pasOrderList = new ArrayList<WcsMhePasOrder>(rtnTrgList.size());
-		Date currentTime = new Date();
-		String currentTimeStr = DateUtil.dateTimeStr(currentTime, "yyyyMMddHHmmss");
 		String srtDate = DateUtil.dateStr(new Date(), "yyyyMMdd");
 		
 		for (WmsWmtUifImpInbRtnTrg rtnTrg : rtnTrgList) {
 			WcsMhePasOrder wcsMhePasOrder = new WcsMhePasOrder();
 			wcsMhePasOrder.setId(UUID.randomUUID().toString());
-			wcsMhePasOrder.setBatchNo(batch.getId());
+			wcsMhePasOrder.setBatchNo(batch.getBatchGroupId());
+			wcsMhePasOrder.setMheNo(batch.getEquipCd());
 			wcsMhePasOrder.setJobDate(srtDate);
 			wcsMhePasOrder.setJobType(WcsMhePasOrder.JOB_TYPE_RTN);
 			wcsMhePasOrder.setBoxId(rtnTrg.getRefNo());
@@ -210,14 +244,12 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 				}
 			}
 			pasOrderList.add(wcsMhePasOrder);
-			rtnTrg.setWcsIfChk(SysConstants.CAP_Y_STRING);
-			rtnTrg.setWcsIfChkDtm(currentTimeStr);
 		}
 		
 		if(ValueUtil.isNotEmpty(pasOrderList)) {
 			AnyOrmUtil.insertBatch(pasOrderList, 100);
 		}
-		dsQueryManager.updateBatch(rtnTrgList);
+		dsQueryManager.executeBySql(queryStore.getSrtnInspBoxTrgUpdate(), inspParams);
 	}
 	
 	private void interfaceRack(JobBatch batch) {
@@ -241,6 +273,7 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 			WcsMheDasOrder wcsMheDasOrder = new WcsMheDasOrder();
 			wcsMheDasOrder.setId(UUID.randomUUID().toString());
 			wcsMheDasOrder.setBatchNo(batch.getId());
+			wcsMheDasOrder.setMheNo(batch.getEquipCd());
 			wcsMheDasOrder.setJobDate(batch.getJobDate().replaceAll("-", ""));
 			wcsMheDasOrder.setJobType(WcsMhePasOrder.JOB_TYPE_RTN);
 			wcsMheDasOrder.setItemCd(preProcess.getCellAssgnCd());

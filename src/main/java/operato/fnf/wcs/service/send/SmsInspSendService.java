@@ -18,17 +18,17 @@ import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.anythings.sys.util.AnyOrmUtil;
 import xyz.anythings.sys.util.AnyValueUtil;
-import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.orm.IQueryManager;
-import xyz.elidom.sys.SysConstants;
 import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.sys.util.DateUtil;
+import xyz.elidom.sys.util.MessageUtil;
+import xyz.elidom.sys.util.ThrowUtil;
 import xyz.elidom.sys.util.ValueUtil;
 
 /**
- * DAS 박스 실적 전송 서비스
+ * SMS 박스 실적 전송 서비스
  * 
- * @author shortstop
+ * 
  */
 @Component
 public class SmsInspSendService extends AbstractQueryService {
@@ -50,18 +50,17 @@ public class SmsInspSendService extends AbstractQueryService {
 	 */
 	@SuppressWarnings("rawtypes")
 	public void sendInspBoxResults(Domain domain, JobBatch batch) {
-		Query wmsCondition = new Query();
 		String[] batchInfo = batch.getId().split("-");
-		if(batchInfo.length == 4) {
-			wmsCondition.addFilter("STRR_ID", batchInfo[0]);
-			wmsCondition.addFilter("REF_SEASON", batchInfo[1]);
-			wmsCondition.addFilter("SHOP_RTN_TYPE", batchInfo[2]);
-			wmsCondition.addFilter("SHOP_RTN_SEQ", batchInfo[3]);
-			wmsCondition.addFilter("WCS_IF_CHK", LogisConstants.N_CAP_STRING);
+		if(batchInfo.length < 4) {
+			String msg = MessageUtil.getMessage("no_batch_id", "설비에서 운영중인 BatchId가 아닙니다.");
+			throw ThrowUtil.newValidationErrorWithNoLog(msg);
 		}
+		Map<String, Object> inspParams = ValueUtil.newMap(
+				"strrId,season,rtnType,jobSeq,ifAction,wcsIfChk", batchInfo[0], batchInfo[1],
+				batchInfo[2], batchInfo[3], LogisConstants.COMMON_STATUS_SKIPPED, LogisConstants.N_CAP_STRING);
 		
 		IQueryManager dsQueryManager = this.getDataSourceQueryManager(WmsWmtUifImpInbRtnTrg.class);
-		List<WmsWmtUifImpInbRtnTrg> rtnTrgList = dsQueryManager.selectList(WmsWmtUifImpInbRtnTrg.class, wmsCondition);
+		List<WmsWmtUifImpInbRtnTrg> rtnTrgList = dsQueryManager.selectListBySql(queryStore.getSrtnInspBoxTrg(), inspParams, WmsWmtUifImpInbRtnTrg.class, 0, 0);
 		
 		List<String> skuCdList = AnyValueUtil.filterValueListBy(rtnTrgList, "refDetlNo");
 		
@@ -75,14 +74,13 @@ public class SmsInspSendService extends AbstractQueryService {
 		
 		
 		List<WcsMhePasOrder> pasOrderList = new ArrayList<WcsMhePasOrder>(rtnTrgList.size());
-		Date currentTime = new Date();
-		String currentTimeStr = DateUtil.dateTimeStr(currentTime, "yyyyMMddHHmmss");
 		String srtDate = DateUtil.dateStr(new Date(), "yyyyMMdd");
 		
 		for (WmsWmtUifImpInbRtnTrg rtnTrg : rtnTrgList) {
 			WcsMhePasOrder wcsMhePasOrder = new WcsMhePasOrder();
 			wcsMhePasOrder.setId(UUID.randomUUID().toString());
-			wcsMhePasOrder.setBatchNo(batch.getId());
+			wcsMhePasOrder.setBatchNo(batch.getBatchGroupId());
+			wcsMhePasOrder.setMheNo(batch.getEquipCd());
 			wcsMhePasOrder.setJobDate(srtDate);
 			wcsMhePasOrder.setJobType(WcsMhePasOrder.JOB_TYPE_RTN);
 			wcsMhePasOrder.setBoxId(rtnTrg.getRefNo());
@@ -98,13 +96,11 @@ public class SmsInspSendService extends AbstractQueryService {
 				}
 			}
 			pasOrderList.add(wcsMhePasOrder);
-			rtnTrg.setWcsIfChk(SysConstants.CAP_Y_STRING);
-			rtnTrg.setWcsIfChkDtm(currentTimeStr);
 		}
 		
 		if(ValueUtil.isNotEmpty(pasOrderList)) {
 			AnyOrmUtil.insertBatch(pasOrderList, 100);
 		}
-		dsQueryManager.updateBatch(rtnTrgList);
+		dsQueryManager.executeBySql(queryStore.getSrtnInspBoxTrgUpdate(), inspParams);
 	}
 }

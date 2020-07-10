@@ -1,0 +1,16 @@
+UPDATE 
+	WMT_UIF_IMP_INB_RTN_TRG 
+SET 
+	WCS_IF_CHK = 'Y', WCS_IF_CHK_DTM = NOW() 
+WHERE 
+	STRR_ID = :strrId 
+AND 
+	REF_SEASON = :season 
+AND 
+	SHOP_RTN_TYPE = :rtnType 
+AND 
+	SHOP_RTN_SEQ = :jobSeq
+AND 
+	WCS_IF_CHK = :wcsIfChk 
+AND 
+	INTERFACE_ACTION = :ifAction

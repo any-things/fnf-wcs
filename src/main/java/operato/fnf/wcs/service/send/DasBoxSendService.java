@@ -96,7 +96,8 @@ public class DasBoxSendService extends AbstractQueryService {
 	 */
 	private List<WcsMheBox> searchBoxedOrderList(JobBatch batch) {
 		Query condition = new Query();
-		condition.addSelect("work_unit", "outb_no", "box_no", "waybill_no");
+		condition.addSelect("work_unit", "outb_no", "box_no");
+		//condition.addSelect("work_unit", "outb_no", "box_no", "waybill_no");
 		condition.addFilter("whCd", FnFConstants.WH_CD_ICF);
 		condition.addFilter("workUnit", batch.getId());
 		condition.addFilter("ifYn", LogisConstants.NOT_EQUAL, LogisConstants.Y_CAP_STRING);
@@ -190,8 +191,10 @@ public class DasBoxSendService extends AbstractQueryService {
 		rfidBoxItem.setTpMachine("2");
 		rfidBoxItem.setDtDelivery(fromBox.getWorkDate());
 		rfidBoxItem.setDsBatchNo(fromBox.getWorkUnit());
-		rfidBoxItem.setNoBox(fromBox.getBoxNo() != null ? fromBox.getBoxNo() : fromBox.getWaybillNo());
-		rfidBoxItem.setNoWaybill(fromBox.getWaybillNo() != null ? fromBox.getWaybillNo() : fromBox.getBoxNo());
+		rfidBoxItem.setNoBox(fromBox.getBoxNo());
+		rfidBoxItem.setNoWaybill(fromBox.getBoxNo());
+		//rfidBoxItem.setNoBox(fromBox.getBoxNo() != null ? fromBox.getBoxNo() : fromBox.getWaybillNo());
+		//rfidBoxItem.setNoWaybill(fromBox.getWaybillNo() != null ? fromBox.getWaybillNo() : fromBox.getBoxNo());
 		rfidBoxItem.setIfCdItem(fromBox.getItemCd());
 
 		// 아소트 여부 조회 후 설정 

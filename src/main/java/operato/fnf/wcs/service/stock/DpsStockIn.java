@@ -80,14 +80,14 @@ public class DpsStockIn extends StockInSearch {
 			}
 		} else {	// 작업종료상태: 고정랙에만 재고보충할수 있음.
 			if(ValueUtil.isEmpty(stock) || stock.getFixedFlag() == null || !stock.getFixedFlag()) {
-				throw ThrowUtil.newValidationErrorWithNoLog("지금은 고정 셀 보충만 가능합니다.고정 셀을 선택해주세요.");
+				throw ThrowUtil.newValidationErrorWithNoLog("고정셀 보충만 가능합니다. 고정셀을 입력하세요.");
 			}
 			
-			if(ValueUtil.isNotEqual(stock.getSkuCd(), sku.getSkuCd())) {
+			if(ValueUtil.isNotEmpty(stock.getSkuCd()) && ValueUtil.isNotEqual(stock.getSkuCd(), sku.getSkuCd())) {
 				throw ThrowUtil.newValidationErrorWithNoLog("해당 셀에 다른 상품 재고가 존재합니다.");
 			}
 			
-			if((ValueUtil.toInteger(stock.getLoadQty(), 0) + inputQty) > stock.getMaxStockQty()) {
+			if(ValueUtil.isNotEmpty(stock.getMaxStockQty()) && stock.getMaxStockQty() > 0 && (ValueUtil.toInteger(stock.getLoadQty(), 0) + inputQty) > stock.getMaxStockQty()) {
 				throw ThrowUtil.newValidationErrorWithNoLog("최대 적치 수량을 초과해서 적치 할 수 없습니다.");
 			}
 			

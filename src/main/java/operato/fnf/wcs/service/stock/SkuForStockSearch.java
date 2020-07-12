@@ -3,6 +3,7 @@ package operato.fnf.wcs.service.stock;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import org.springframework.stereotype.Component;
 
@@ -12,6 +13,7 @@ import xyz.anythings.base.entity.SKU;
 import xyz.anythings.base.model.ResponseObj;
 import xyz.anythings.base.service.impl.SkuSearchService;
 import xyz.anythings.sys.util.AnyEntityUtil;
+import xyz.elidom.sys.SysConstants;
 import xyz.elidom.sys.SysMessageConstants;
 import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.sys.util.MessageUtil;
@@ -60,8 +62,23 @@ public class SkuForStockSearch extends StockInSearch {
 			resp.setItems(skuList);
 		} else {
 			String itemMasterTb = SettingUtil.getValue(curDomainId, "fnf.item_barcode.table.name", "mhe_item_barcode");
-			String qry = "select brand as brand_cd, item_color as color_cd, 'FnF' as com_cd, item_size as size_cd, barcode as sku_barcd, item_cd as sku_cd, item_gcd_nm as sku_nm, item_style as style_cd from " + itemMasterTb + " where (item_cd = :skuCd or barcode = :skuCd or barcode2 = :skuCd)";
-			List<SKU> skuList = this.queryManager.selectListBySql(qry, ValueUtil.newMap("skuCd", skuCd), SKU.class, 0, 0);
+			StringJoiner query = new StringJoiner(SysConstants.LINE_SEPARATOR); 
+			query.add("SELECT");
+			query.add("	brand AS brand_cd,");
+			query.add("	item_color AS color_cd,");
+			query.add("	'FnF' AS com_cd,");
+			query.add("	item_size AS size_cd,");
+			query.add("	barcode AS sku_barcd,");
+			query.add("	item_cd AS sku_cd,");
+			query.add("	item_gcd_nm AS sku_nm,");
+			query.add("	item_style AS style_cd");
+			query.add("FROM");
+			query.add(	itemMasterTb);
+			query.add("WHERE");
+			query.add("	(item_cd = :skuCd");
+			query.add("	OR barcode = :skuCd");
+			query.add("	OR barcode2 = :skuCd");
+			List<SKU> skuList = this.queryManager.selectListBySql(query.toString(), ValueUtil.newMap("skuCd", skuCd), SKU.class, 0, 0);
 		
 			if(ValueUtil.isEmpty(skuList)) {
 				List<String> terms = ValueUtil.toList(MessageUtil.getTerm("terms.label.sku", "SKU"), skuCd);

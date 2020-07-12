@@ -52,7 +52,7 @@ public class SkuStockListSearch extends StockInSearch {
 		List<Stock> stocks = new ArrayList<>();
 		Stock stock = null;
 		if (hasRackBatch) {
-			stocks = this.stockService.searchRecommendCells(domainId, equipType, null, comCd, skuCd, null);
+			stocks = this.stockService.searchRecommendCells(domainId, equipType, null, comCd, skuCd, false);
 			
 			stock = this.stockService.calculateSkuOrderStock(domainId, rackBatch.getId(), equipType, null, comCd, skuCd);
 			if (ValueUtil.isNotEmpty(stock)) {
@@ -60,14 +60,14 @@ public class SkuStockListSearch extends StockInSearch {
 				
 				if(stock.getOrderQty() > 0) {
 					if (stock.getInputQty() == 0) {
-						throw ThrowUtil.newValidationErrorWithNoLog("해당 제품은 이미 주문의 필요수량만큼 보충되었습니다.");
+						throw ThrowUtil.newValidationErrorWithNoLog("이제품은 이미 필요수량만큼 보충되었습니다.");
 					}
 					
 					stock.setEquipType(equipType);
 					stock.setEquipCd(equipCd);
 					stock.setOrderQty(stock.getOrderQty() - stock.getAllocQty() - stock.getStockQty());
 					
-					values.put("orderQty", stock.getOrderQty() - stock.getAllocQty() - stock.getStockQty());
+					values.put("orderQty", stock.getOrderQty());
 					values.put("stockQty", stock.getStockQty());
 					values.put("inputQty", stock.getInputQty());
 					values.put("allocQty", stock.getAllocQty());
@@ -80,8 +80,9 @@ public class SkuStockListSearch extends StockInSearch {
 //			}
 			
 			stock = this.stockService.calculateSkuOrderStock(domainId, null, equipType, null, comCd, skuCd);
-			
-			values.put("stockQty", stock.getStockQty());
+			if (ValueUtil.isNotEmpty(stock)) {
+				values.put("stockQty", stock.getStockQty());
+			}
 		}
 		
 		resp.setItems(stocks);

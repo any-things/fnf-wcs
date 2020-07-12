@@ -73,7 +73,7 @@ public class ComController extends AbstractRestService {
 	public ResponseObj dispatchService(@RequestBody Map<String, Object> params,
 			@PathVariable("serviceUrl") String serviceUrl) throws Exception {
 		if (ValueUtil.isEmpty(params)) {
-			throw new ElidomInputException(""); // FIXME
+			throw new ElidomInputException("need params"); // FIXME
 		}
 
 		String serviceName = ValueUtil.toCamelCase(serviceUrl, '_');

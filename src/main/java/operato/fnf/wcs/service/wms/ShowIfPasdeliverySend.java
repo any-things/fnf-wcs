@@ -6,7 +6,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import xyz.anythings.base.entity.WmsIfPasdeliverySend;
+import operato.fnf.wcs.entity.RfidBoxResult;
 import xyz.anythings.base.model.ResponseObj;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.elidom.dbist.dml.Query;
@@ -20,11 +20,11 @@ public class ShowIfPasdeliverySend extends AbstractQueryService {
 	private DataSourceManager dataSourceMgr;
 	public ResponseObj showIfPasdeliverySend(Map<String, Object> params) {
 		
-		IQueryManager wmsQueryMgr = dataSourceMgr.getQueryManager(WmsIfPasdeliverySend.class);
+		IQueryManager wmsQueryMgr = dataSourceMgr.getQueryManager(RfidBoxResult.class);
 		
 		Query conds = new Query(0, 1000);
 		conds.addFilter("dtDelivery", String.valueOf(params.get("date")));
-		List<WmsIfPasdeliverySend> list = wmsQueryMgr.selectList(WmsIfPasdeliverySend.class, conds);
+		List<RfidBoxResult> list = wmsQueryMgr.selectList(RfidBoxResult.class, conds);
 		
 		ResponseObj resp = new ResponseObj();
 		resp.setItems(list);

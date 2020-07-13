@@ -41,9 +41,11 @@ public class DasRfidResult extends AbstractRestService {
 		
 		List<Filter> filters = queryObj.getFilter();
 		Map<String, Object> queryParams = new HashMap<>();
+		String workDateOrg = "";
 		if (ValueUtil.isNotEmpty(filters)) {
 			for (Filter filter: filters) {
 				if ("dt_delivery".equals(filter.getName())) {
+					workDateOrg = String.valueOf(filter.getValue());
 					queryParams.put(filter.getName(), String.valueOf(filter.getValue()).replaceAll("-", ""));
 				} else if ("no_box".equals(filter.getName()) || "no_waybill".equals(filter.getName())) {					
 					queryParams.put(filter.getName(), "%"+filter.getValue()+"%");
@@ -62,7 +64,7 @@ public class DasRfidResult extends AbstractRestService {
  		String stageCd = String.valueOf(queryParams.get("stage_cd"));
 		if (ValueUtil.isNotEmpty(stageCd)) {
 			Query conds = new Query();
-			conds.addFilter("jobDate", queryParams.get("dt_delivery"));
+			conds.addFilter("jobDate", workDateOrg);
 			conds.addFilter("stageCd", queryParams.get("stage_cd"));
 			
 			List<JobBatch> jobBatches = queryManager.selectList(JobBatch.class, conds);
@@ -70,6 +72,8 @@ public class DasRfidResult extends AbstractRestService {
 			for (JobBatch obj: jobBatches) {
 				jobBatchMap.put(obj.getWmsBatchNo(), obj);
 			}
+			
+			queryParams.put("batchNos", jobBatchMap.keySet());
 		}
 		
 		StringJoiner sqlJoiner = new StringJoiner(SysConstants.LINE_SEPARATOR);
@@ -81,14 +85,14 @@ public class DasRfidResult extends AbstractRestService {
 		sqlJoiner.add("  pr.tp_machine,");
 		sqlJoiner.add("  pr.cd_brand,");
 		sqlJoiner.add("  pr.no_box,");
-		sqlJoiner.add("  ps.no_waybill,");
+		//sqlJoiner.add("  ps.no_waybill,");
 		sqlJoiner.add("  ps.result_st,");
 		sqlJoiner.add("  ps.tp_status,");
-//		sqlJoiner.add("  ps.dm_bf_recv,");
-//		sqlJoiner.add("  ps.dm_af_recv,");
+		//sqlJoiner.add("  ps.dm_bf_recv,");
+		//sqlJoiner.add("  ps.dm_af_recv,");
 		sqlJoiner.add("  pr.dm_bf_recv,");
-		sqlJoiner.add("  ps.dm_bf_recv   AS dm_bf_send,");
-		sqlJoiner.add("  ps.dm_af_recv   AS dm_af_send,");
+		sqlJoiner.add("  TO_TIMESTAMP(ps.dm_bf_recv, 'YYYY-MM-DD HH24:MI:SS')   AS dm_bf_send,");
+		sqlJoiner.add("  TO_TIMESTAMP(ps.dm_af_recv, 'YYYY-MM-DD HH24:MI:SS')   AS dm_af_send,");
 		sqlJoiner.add("  ds_errmsg");
 		sqlJoiner.add("FROM");
 		sqlJoiner.add("  (SELECT DISTINCT");
@@ -103,11 +107,14 @@ public class DasRfidResult extends AbstractRestService {
 		sqlJoiner.add("      rfid_if.if_pasdelivery_recv recva,");
 		sqlJoiner.add("		 (SELECT");
 		sqlJoiner.add("		   no_box,");
-		sqlJoiner.add("		   MIN(ds_batch_no) AS ds_batch_no");
+		sqlJoiner.add("		   MAX(ds_batch_no) AS ds_batch_no");
 		sqlJoiner.add("		 FROM");
 		sqlJoiner.add("		   rfid_if.if_pasdelivery_recv");
 		sqlJoiner.add("		 WHERE");
 		sqlJoiner.add("		   dt_delivery = :dt_delivery");
+		if (ValueUtil.isNotEmpty(jobBatchMap.keySet()) && jobBatchMap.keySet().size() > 0) {
+			sqlJoiner.add("		   AND ds_batch_no IN (:batchNos)");
+		}
 		sqlJoiner.add("		 GROUP BY");
 		sqlJoiner.add("		   no_box) recvb");
 		sqlJoiner.add("    WHERE");
@@ -128,7 +135,31 @@ public class DasRfidResult extends AbstractRestService {
 		sqlJoiner.add("      AND recva.no_box = recvb.no_box");
 		sqlJoiner.add("  ) pr");
 		
-		sqlJoiner.add("    LEFT JOIN rfid_if.if_pasdelivery_send ps");
+		sqlJoiner.add("    LEFT JOIN (");
+		sqlJoiner.add("    SELECT");
+		sqlJoiner.add("    	  bs.*");
+		sqlJoiner.add("    FROM");
+		sqlJoiner.add("    	  (SELECT");
+		sqlJoiner.add("    	      ds_batch_no,");
+		sqlJoiner.add("    	      cd_brand,");
+		sqlJoiner.add("    	      no_box,");
+		sqlJoiner.add("    	      MAX(result_st) AS result_st");
+		sqlJoiner.add("    	    FROM");
+		sqlJoiner.add("    	      rfid_if.if_pasdelivery_send");
+		sqlJoiner.add("    	    WHERE");
+		sqlJoiner.add("    	      dt_delivery = :dt_delivery");
+		sqlJoiner.add("    	    GROUP BY");
+		sqlJoiner.add("    	      ds_batch_no,");
+		sqlJoiner.add("    	      cd_brand,");
+		sqlJoiner.add("    	      no_box");
+		sqlJoiner.add("    	  ) bb,");
+		sqlJoiner.add("    	  rfid_if.if_pasdelivery_send bs");
+		sqlJoiner.add("    	WHERE");
+		sqlJoiner.add("    	  bb.ds_batch_no = bs.ds_batch_no");
+		sqlJoiner.add("    	  AND bb.cd_brand = bs.cd_brand");
+		sqlJoiner.add("    	  AND bb.no_box = bs.no_box");
+		sqlJoiner.add("    	  AND bb.result_st = bs.result_st");
+		sqlJoiner.add("    ) ps");
 		sqlJoiner.add("    ON pr.cd_warehouse = ps.cd_warehouse");
 		sqlJoiner.add("     AND pr.ds_batch_no = ps.ds_batch_no");
 		sqlJoiner.add("     AND pr.no_box = ps.no_box");
@@ -164,7 +195,7 @@ public class DasRfidResult extends AbstractRestService {
 			
 			if (ValueUtil.isNotEmpty(batchNos)) {				
 				Query conds = new Query();
-				conds.addFilter("jobDate", queryParams.get("dt_delivery"));
+				conds.addFilter("jobDate", workDateOrg);
 				conds.addFilter("wmsBatchNo", "in", batchNos);
 				List<JobBatch> jobBatches = queryManager.selectList(JobBatch.class, conds);
 				

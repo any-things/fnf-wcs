@@ -43,7 +43,7 @@ public class Utils {
 			if (ValueUtil.isEmpty(value)) {
 				String fieldName = String.valueOf(values[i - 1]);
 				//throw new ElidomInputException("VALUE_IS_EMPTY", "Value of '{0}' is empty.", Arrays.asList(fieldName));
-				throw new ElidomInputException("값[" + fieldName + "]이(가) 빈 값입니다..");
+				throw new ElidomInputException("값[" + fieldName + "]이(가) 빈 값입니다.");
 			}
 		}
 	}

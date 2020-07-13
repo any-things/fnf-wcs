@@ -90,7 +90,6 @@ public class DasRfidResult extends AbstractRestService {
 		sqlJoiner.add("  ps.tp_status,");
 		//sqlJoiner.add("  ps.dm_bf_recv,");
 		//sqlJoiner.add("  ps.dm_af_recv,");
-		sqlJoiner.add("  pr.dm_bf_recv,");
 		sqlJoiner.add("  TO_TIMESTAMP(ps.dm_bf_recv, 'YYYY-MM-DD HH24:MI:SS')   AS dm_bf_send,");
 		sqlJoiner.add("  TO_TIMESTAMP(ps.dm_af_recv, 'YYYY-MM-DD HH24:MI:SS')   AS dm_af_send,");
 		sqlJoiner.add("  ds_errmsg");
@@ -101,8 +100,7 @@ public class DasRfidResult extends AbstractRestService {
 		sqlJoiner.add("      recvb.ds_batch_no,");
 		sqlJoiner.add("      recva.tp_machine,");
 		sqlJoiner.add("      recva.cd_brand,");
-		sqlJoiner.add("      recva.no_box,");
-		sqlJoiner.add("      recva.dm_bf_recv");
+		sqlJoiner.add("      recva.no_box");
 		sqlJoiner.add("    FROM");
 		sqlJoiner.add("      rfid_if.if_pasdelivery_recv recva,");
 		sqlJoiner.add("		 (SELECT");

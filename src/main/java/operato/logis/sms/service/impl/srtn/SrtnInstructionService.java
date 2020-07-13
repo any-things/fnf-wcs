@@ -267,6 +267,9 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		condition.addFilter("batchId", batch.getId());
 		List<Order> skuInfoList = this.queryManager.selectList(Order.class, condition);
 
+		
+		//동일한 batchId로 줘야한다.
+		//bathGroupId로 줘야함 그리고 동일 셀에 sku_cd인놈은 제외하고 insert 한다.
 		List<WcsMheDasOrder> dasOrderList = new ArrayList<WcsMheDasOrder>(preprocesses.size());
 		
 		for (OrderPreprocess preProcess : preprocesses) {

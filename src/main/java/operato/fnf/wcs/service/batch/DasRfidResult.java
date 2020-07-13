@@ -138,7 +138,7 @@ public class DasRfidResult extends AbstractRestService {
 		sqlJoiner.add("    	  bs.*");
 		sqlJoiner.add("    FROM");
 		sqlJoiner.add("    	  (SELECT");
-		sqlJoiner.add("    	      ds_batch_no,");
+		//sqlJoiner.add("    	      ds_batch_no,");
 		sqlJoiner.add("    	      cd_brand,");
 		sqlJoiner.add("    	      no_box,");
 		sqlJoiner.add("    	      MAX(result_st) AS result_st");
@@ -153,20 +153,20 @@ public class DasRfidResult extends AbstractRestService {
 		sqlJoiner.add("    	  ) bb,");
 		sqlJoiner.add("    	  rfid_if.if_pasdelivery_send bs");
 		sqlJoiner.add("    	WHERE");
-		sqlJoiner.add("    	  bb.ds_batch_no = bs.ds_batch_no");
-		sqlJoiner.add("    	  AND bb.cd_brand = bs.cd_brand");
+		//sqlJoiner.add("    	  bb.ds_batch_no = bs.ds_batch_no");
+		sqlJoiner.add("    	  bb.cd_brand = bs.cd_brand");
 		sqlJoiner.add("    	  AND bb.no_box = bs.no_box");
 		sqlJoiner.add("    	  AND bb.result_st = bs.result_st");
 		sqlJoiner.add("    ) ps");
 		sqlJoiner.add("    ON pr.cd_warehouse = ps.cd_warehouse");
-		sqlJoiner.add("     AND pr.ds_batch_no = ps.ds_batch_no");
+		//sqlJoiner.add("     AND pr.ds_batch_no = ps.ds_batch_no");
 		sqlJoiner.add("     AND pr.no_box = ps.no_box");
-		sqlJoiner.add("     AND pr.cd_brand = ps.cd_brand");
+		//sqlJoiner.add("     AND pr.cd_brand = ps.cd_brand");
 		sqlJoiner.add("     ) WHERE 1 = 1");
 		
-		if (ValueUtil.isNotEmpty(queryParams.get("no_waybill"))) {
-			sqlJoiner.add("     AND no_waybill like :no_waybill");
-		}
+		//if (ValueUtil.isNotEmpty(queryParams.get("no_waybill"))) {
+			//sqlJoiner.add("     AND no_waybill like :no_waybill");
+		//}
 		
 		String resultStatus = String.valueOf(queryParams.get("result_st"));
 		if (ValueUtil.isNotEmpty(resultStatus)) {
@@ -191,7 +191,7 @@ public class DasRfidResult extends AbstractRestService {
 				}
 			}
 			
-			if (ValueUtil.isNotEmpty(batchNos)) {				
+			if (ValueUtil.isNotEmpty(batchNos)) {
 				Query conds = new Query();
 				conds.addFilter("jobDate", workDateOrg);
 				conds.addFilter("wmsBatchNo", "in", batchNos);

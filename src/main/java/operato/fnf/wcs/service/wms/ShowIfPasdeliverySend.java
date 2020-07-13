@@ -24,6 +24,7 @@ public class ShowIfPasdeliverySend extends AbstractQueryService {
 		
 		Query conds = new Query(0, 1000);
 		conds.addFilter("dtDelivery", String.valueOf(params.get("date")));
+		conds.addFilter("tpMachine", 2);
 		List<RfidBoxResult> list = wmsQueryMgr.selectList(RfidBoxResult.class, conds);
 		
 		ResponseObj resp = new ResponseObj();

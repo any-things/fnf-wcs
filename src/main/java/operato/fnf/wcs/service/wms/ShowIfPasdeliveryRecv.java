@@ -12,6 +12,7 @@ import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.orm.manager.DataSourceManager;
+import xyz.elidom.util.ValueUtil;
 
 @Component
 public class ShowIfPasdeliveryRecv extends AbstractQueryService {
@@ -22,12 +23,20 @@ public class ShowIfPasdeliveryRecv extends AbstractQueryService {
 		
 		IQueryManager wmsQueryMgr = dataSourceMgr.getQueryManager(RfidBoxItem.class);
 		
+		
+		String date = String.valueOf(params.get("date"));
+		String sql = "select count(distinct no_box) from rfid_if.if_pasdelivery_recv where dt_delivery = :date and tp_machine = '2'";
+		Integer boxNoCount = wmsQueryMgr.selectBySql(sql, ValueUtil.newMap("date", date), Integer.class);
+		
+		List<RfidBoxItem> list = wmsQueryMgr.selectListBySqlPath("operato/fnf/wcs/service/wms/recv_test.sql", ValueUtil.newMap("date", date), RfidBoxItem.class, 0, 0);
+		
 		Query conds = new Query(0, 1000);
-		conds.addFilter("dtDelivery", String.valueOf(params.get("date")));
-		List<RfidBoxItem> list = wmsQueryMgr.selectList(RfidBoxItem.class, conds);
+		conds.addFilter("dtDelivery", date);
+		//List<RfidBoxItem> list = wmsQueryMgr.selectList(RfidBoxItem.class, conds);
 		
 		ResponseObj resp = new ResponseObj();
 		resp.setItems(list);
+		resp.setValues(ValueUtil.newMap("boxNoCount", boxNoCount));
 		return resp;
 	}
 }

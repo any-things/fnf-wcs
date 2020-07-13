@@ -115,7 +115,7 @@ public class WcsBatchProgressService extends AbstractQueryService {
 		Map<String, Object> params = ValueUtil.newMap("whCd,batchId", FnFConstants.WH_CD_ICF, batch.getId());
 		
 		if(LogisConstants.isDasJobType(jobType)) {
-			sql = "select COALESCE(sum(cmpt_qty), 0) as result from mhe_box where wh_cd = :whCd and work_unit = :batchId";
+			sql = "select COALESCE(sum(cmpt_qty), 0) as result from mhe_box where wh_cd = :whCd and work_unit = :batchId and del_yn != 'Y'";
 			
 		} else if(LogisConstants.isDpsJobType(jobType)) {
 			sql = "select COALESCE(sum(cmpt_qty), 0) as result from mhe_dr where wh_cd = :whCd and work_unit = :batchId";

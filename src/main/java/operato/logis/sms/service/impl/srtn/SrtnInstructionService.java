@@ -239,7 +239,7 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 			
 			for (Map skuInfo : skuInfoList) {
 				if(ValueUtil.isEqual(skuInfo.get("sku_cd"), rtnTrg.getRefDetlNo())) {
-					wcsMhePasOrder.setSkuBcd(ValueUtil.toString(skuInfo.get("sku_barcd")));
+					wcsMhePasOrder.setSkuBcd(ValueUtil.toString(skuInfo.get("sku_barcd2")));
 					wcsMhePasOrder.setChuteNo(ValueUtil.toString(skuInfo.get("sub_equip_cd")));	
 				}
 			}
@@ -267,34 +267,62 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		condition.addFilter("batchId", batch.getId());
 		List<Order> skuInfoList = this.queryManager.selectList(Order.class, condition);
 
-		
-		//동일한 batchId로 줘야한다.
-		//bathGroupId로 줘야함 그리고 동일 셀에 sku_cd인놈은 제외하고 insert 한다.
+		//동일한 batchId로 줘야한다. bathGroupId로 줘야함 그리고 동일 셀에 sku_cd인놈은 제외하고 insert 한다
 		List<WcsMheDasOrder> dasOrderList = new ArrayList<WcsMheDasOrder>(preprocesses.size());
 		
+		Query conds = new Query();
+		conds.addFilter("batchNo", batch.getBatchGroupId());
+		List<WcsMheDasOrder> dasList = this.queryManager.selectList(WcsMheDasOrder.class, conds);
+		List<String> dasSkuList = AnyValueUtil.filterValueListBy(dasList, "itemCd");
+		
+		skuCdList.removeAll(dasSkuList);
+		
 		for (OrderPreprocess preProcess : preprocesses) {
-			WcsMheDasOrder wcsMheDasOrder = new WcsMheDasOrder();
-			wcsMheDasOrder.setId(UUID.randomUUID().toString());
-			wcsMheDasOrder.setBatchNo(batch.getId());
-			wcsMheDasOrder.setMheNo(batch.getEquipCd());
-			wcsMheDasOrder.setJobDate(batch.getJobDate().replaceAll("-", ""));
-			wcsMheDasOrder.setJobType(WcsMhePasOrder.JOB_TYPE_RTN);
-			wcsMheDasOrder.setItemCd(preProcess.getCellAssgnCd());
-			wcsMheDasOrder.setStrrId(batchInfo[0]);
-			wcsMheDasOrder.setItemSeason(batchInfo[1]);
-			wcsMheDasOrder.setOrderQty(preProcess.getTotalPcs());
-			wcsMheDasOrder.setInsDatetime(DateUtil.getDate());
-			wcsMheDasOrder.setIfYn(LogisConstants.N_CAP_STRING);
-			
 			for (Order skuInfo : skuInfoList) {
 				if(ValueUtil.isEqual(skuInfo.getSkuCd(), preProcess.getCellAssgnCd())) {
+					WcsMheDasOrder wcsMheDasOrder = new WcsMheDasOrder();
+					wcsMheDasOrder.setId(UUID.randomUUID().toString());
+					wcsMheDasOrder.setBatchNo(batch.getBatchGroupId());
+					wcsMheDasOrder.setMheNo(batch.getEquipCd());
+					wcsMheDasOrder.setJobDate(batch.getJobDate().replaceAll("-", ""));
+					wcsMheDasOrder.setJobType(WcsMhePasOrder.JOB_TYPE_RTN);
+					wcsMheDasOrder.setItemCd(preProcess.getCellAssgnCd());
+					wcsMheDasOrder.setStrrId(batchInfo[0]);
+					wcsMheDasOrder.setItemSeason(batchInfo[1]);
+					wcsMheDasOrder.setOrderQty(preProcess.getTotalPcs());
+					wcsMheDasOrder.setInsDatetime(DateUtil.getDate());
+					wcsMheDasOrder.setIfYn(LogisConstants.N_CAP_STRING);
+					
 					wcsMheDasOrder.setCellNo(preProcess.getClassCd());
 					wcsMheDasOrder.setChuteNo(preProcess.getSubEquipCd());
 					wcsMheDasOrder.setBarcode(skuInfo.getSkuBarcd());
 					wcsMheDasOrder.setBarcode2(skuInfo.getSkuBarcd2());
+					
+					dasOrderList.add(wcsMheDasOrder);
 				}
 			}
-			dasOrderList.add(wcsMheDasOrder);
+//			WcsMheDasOrder wcsMheDasOrder = new WcsMheDasOrder();
+//			wcsMheDasOrder.setId(UUID.randomUUID().toString());
+//			wcsMheDasOrder.setBatchNo(batch.getBatchGroupId());
+//			wcsMheDasOrder.setMheNo(batch.getEquipCd());
+//			wcsMheDasOrder.setJobDate(batch.getJobDate().replaceAll("-", ""));
+//			wcsMheDasOrder.setJobType(WcsMhePasOrder.JOB_TYPE_RTN);
+//			wcsMheDasOrder.setItemCd(preProcess.getCellAssgnCd());
+//			wcsMheDasOrder.setStrrId(batchInfo[0]);
+//			wcsMheDasOrder.setItemSeason(batchInfo[1]);
+//			wcsMheDasOrder.setOrderQty(preProcess.getTotalPcs());
+//			wcsMheDasOrder.setInsDatetime(DateUtil.getDate());
+//			wcsMheDasOrder.setIfYn(LogisConstants.N_CAP_STRING);
+//			
+//			for (Order skuInfo : skuInfoList) {
+//				if(ValueUtil.isEqual(skuInfo.getSkuCd(), preProcess.getCellAssgnCd())) {
+//					wcsMheDasOrder.setCellNo(preProcess.getClassCd());
+//					wcsMheDasOrder.setChuteNo(preProcess.getSubEquipCd());
+//					wcsMheDasOrder.setBarcode(skuInfo.getSkuBarcd());
+//					wcsMheDasOrder.setBarcode2(skuInfo.getSkuBarcd2());
+//				}
+//			}
+//			dasOrderList.add(wcsMheDasOrder);
 		}
 		
 		if(ValueUtil.isNotEmpty(dasOrderList)) {

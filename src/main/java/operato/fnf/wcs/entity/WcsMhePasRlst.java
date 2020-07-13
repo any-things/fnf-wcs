@@ -7,7 +7,7 @@ import xyz.elidom.dbist.annotation.GenerationRule;
 import xyz.elidom.dbist.annotation.Table;
 
 @Table(name = "mhe_pas_rlst", idStrategy = GenerationRule.UUID)
-public class WcsMhePasRlst extends xyz.elidom.orm.entity.basic.ElidomStampHook {
+public class WcsMhePasRlst extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	/**
 	 * SerialVersion UID
 	 */

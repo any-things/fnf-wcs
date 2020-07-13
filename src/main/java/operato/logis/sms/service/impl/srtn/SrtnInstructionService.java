@@ -233,6 +233,8 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 			wcsMhePasOrder.setJobType(WcsMhePasOrder.JOB_TYPE_RTN);
 			wcsMhePasOrder.setBoxId(rtnTrg.getRefNo());
 			wcsMhePasOrder.setSkuCd(rtnTrg.getRefDetlNo());
+			wcsMhePasOrder.setShopCd(rtnTrg.getSupprId());
+			wcsMhePasOrder.setShopNm(rtnTrg.getSupprNm());
 			wcsMhePasOrder.setOrderQty(rtnTrg.getInbEctQty());
 			wcsMhePasOrder.setInsDatetime(DateUtil.getDate());
 			wcsMhePasOrder.setIfYn(LogisConstants.N_CAP_STRING);
@@ -274,6 +276,7 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		conds.addFilter("batchNo", batch.getBatchGroupId());
 		List<WcsMheDasOrder> dasList = this.queryManager.selectList(WcsMheDasOrder.class, conds);
 		List<String> dasSkuList = AnyValueUtil.filterValueListBy(dasList, "itemCd");
+		String srtDate = DateUtil.dateStr(new Date(), "yyyyMMdd");
 		
 		skuCdList.removeAll(dasSkuList);
 		
@@ -284,7 +287,7 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 					wcsMheDasOrder.setId(UUID.randomUUID().toString());
 					wcsMheDasOrder.setBatchNo(batch.getBatchGroupId());
 					wcsMheDasOrder.setMheNo(batch.getEquipCd());
-					wcsMheDasOrder.setJobDate(batch.getJobDate().replaceAll("-", ""));
+					wcsMheDasOrder.setJobDate(srtDate);
 					wcsMheDasOrder.setJobType(WcsMhePasOrder.JOB_TYPE_RTN);
 					wcsMheDasOrder.setItemCd(preProcess.getCellAssgnCd());
 					wcsMheDasOrder.setStrrId(batchInfo[0]);

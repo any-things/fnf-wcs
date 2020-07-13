@@ -61,7 +61,7 @@ public class SmsInspResultSendJob extends AbstractFnFJob {
 						this.sendInspBoxResults(domain, batch);
 						// 2. Sorter 실적을 가지고 검수실적을 올려준다.
 						// 소터 실적이 계속 변경되기 떄문에...
-//						this.sendInspBoxScanResultToWms(domain, batch);
+//						this.sendInspBoxScanResultToWms(batch);
 					}
 				}
 			} catch (Exception e) {
@@ -112,9 +112,9 @@ public class SmsInspResultSendJob extends AbstractFnFJob {
 	/**
 	 * 소터 실적으로 검수정보가 없는 정보들은 매장 반품예정 검수 스캔결과(WMT_UIF_IMP_MHE_RTN_SCAN) 테이블로 전송
 	 */
-	private void sendInspBoxScanResultToWms(Domain domain, JobBatch batch) {
+	private void sendInspBoxScanResultToWms(JobBatch batch) {
 		if(ValueUtil.isEqualIgnoreCase(SmsConstants.JOB_TYPE_SRTN, batch.getJobType())) {
-			this.smsInspSendSvc.sendInspBoxScanResultToWms(domain, batch);
+			this.smsInspSendSvc.sendInspBoxScanResultToWms(batch);
 		}
 	}
 

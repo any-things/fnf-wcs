@@ -91,6 +91,8 @@ public class SmsInspSendService extends AbstractQueryService {
 			wcsMhePasOrder.setJobType(WcsMhePasOrder.JOB_TYPE_RTN);
 			wcsMhePasOrder.setBoxId(rtnTrg.getRefNo());
 			wcsMhePasOrder.setSkuCd(rtnTrg.getRefDetlNo());
+			wcsMhePasOrder.setShopCd(rtnTrg.getSupprId());
+			wcsMhePasOrder.setShopNm(rtnTrg.getSupprNm());
 			wcsMhePasOrder.setOrderQty(rtnTrg.getInbEctQty());
 			wcsMhePasOrder.setInsDatetime(DateUtil.getDate());
 			wcsMhePasOrder.setIfYn(LogisConstants.N_CAP_STRING);
@@ -111,7 +113,7 @@ public class SmsInspSendService extends AbstractQueryService {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public void sendInspBoxScanResultToWms(Domain domain, JobBatch batch) {
+	public void sendInspBoxScanResultToWms(JobBatch batch) {
 		String[] batchInfo = batch.getId().split("-");
 		if(batchInfo.length < 4) {
 			String msg = MessageUtil.getMessage("no_batch_id", "설비에서 운영중인 BatchId가 아닙니다.");
@@ -151,7 +153,7 @@ public class SmsInspSendService extends AbstractQueryService {
 		}
 		
 		IQueryManager wmsQueryManager = this.getDataSourceQueryManager(WmsWmtUifImpMheRtnScan.class);
-		String sql = "SELECT nvl(max(INTERFACE_NO), 0) + 1 AS seq FROM WMT_UIF_IMP_MHE_RTN_SCAN";
+		String sql = "SELECT 'W' || LPAD(FNF_IF.WMS_UIF_IMP_MHE_RTN_SCAN.NEXTVAL,14,'0') AS seq FROM DUAL";
 		Map<String, Object> maxSeq = wmsQueryManager.selectBySql(sql, new HashMap<String, Object>(), Map.class);
 		int interfaceNo = ValueUtil.toInteger(maxSeq.get("seq"));
 		List<WmsWmtUifImpMheRtnScan> resultValue = new ArrayList<WmsWmtUifImpMheRtnScan>(tempResults.size());

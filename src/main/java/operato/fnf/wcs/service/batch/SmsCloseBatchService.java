@@ -11,12 +11,13 @@ import operato.fnf.wcs.FnFConstants;
 import operato.fnf.wcs.entity.WcsMheDasRtnBoxRslt;
 import operato.fnf.wcs.entity.WmsRtnSortDr;
 import operato.fnf.wcs.entity.WmsRtnSortHr;
+import operato.fnf.wcs.service.send.SmsInspSendService;
+import operato.logis.sms.SmsConstants;
 import operato.logis.wcs.service.impl.WcsBatchProgressService;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.elidom.dbist.dml.Query;
-import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.util.DateUtil;
 import xyz.elidom.util.ValueUtil;
 
@@ -32,6 +33,13 @@ public class SmsCloseBatchService extends AbstractQueryService {
 	 */
 	@Autowired
 	private JobSummaryService jobSummarySvc;
+	
+	/**
+	 * 반품 검수완료 Box 전송 서비스
+	 */
+	@Autowired
+	private SmsInspSendService smsInspSendSvc;
+	
 	/**
 	 * WCS 배치 생산성 정보 업데이트 서비스 
 	 */
@@ -39,7 +47,7 @@ public class SmsCloseBatchService extends AbstractQueryService {
 	private WcsBatchProgressService progressSvc;
 	
 	/**
-	 * DPS 작업 배치 종료
+	 * SMS 작업 배치 종료
 	 * 
 	 * @param batch
 	 */
@@ -50,6 +58,8 @@ public class SmsCloseBatchService extends AbstractQueryService {
 		
 		// 2. 배치에 반영
 		this.setBatchInfoOnClosing(batch);
+		
+		this.sendInspBoxScanResultToWms(batch);
 		
 		// 3. WMS MHE_HR 테이블에 마감 전송
 		WmsRtnSortHr rtnSortHr = new WmsRtnSortHr();
@@ -110,6 +120,15 @@ public class SmsCloseBatchService extends AbstractQueryService {
 		
 		// 작업 해야함.
 		this.jobSummarySvc.summaryTotalBatchJobs(batch);
+	}
+	
+	/**
+	 * 소터 실적으로 검수정보가 없는 정보들은 매장 반품예정 검수 스캔결과(WMT_UIF_IMP_MHE_RTN_SCAN) 테이블로 전송
+	 */
+	private void sendInspBoxScanResultToWms(JobBatch batch) {
+		if(ValueUtil.isEqualIgnoreCase(SmsConstants.JOB_TYPE_SRTN, batch.getJobType())) {
+			this.smsInspSendSvc.sendInspBoxScanResultToWms(batch);
+		}
 	}
 
 }

@@ -1,5 +1,7 @@
 package operato.fnf.wcs.service.model;
 
+import java.util.Date;
+
 import operato.fnf.wcs.entity.RfidBoxResult;
 import xyz.elidom.dbist.annotation.DataSourceType;
 import xyz.elidom.dbist.annotation.GenerationRule;
@@ -17,12 +19,17 @@ public class RfidResult extends RfidBoxResult {
 	private String tpStatus;
 	private String dmBfRecv;
 	private String dmAfRecv;
+	private String dmBfSend;
+	private String dmAfSend;
 	private String dsErrmsg;
 	private String stageCd;
 	private String equipType;
 	private String equipCd;
 	private String equipGroupCd;
-	private String equipNm;
+	private Date mheDateTime;	// DAS에서 받은 시간
+	private Date ifDateTime;
+	private String delYn;
+	private Date delDateTime;
 	
 	public String getNoWaybill() {
 		return noWaybill;
@@ -54,6 +61,18 @@ public class RfidResult extends RfidBoxResult {
 	public void setDmAfRecv(String dmAfRecv) {
 		this.dmAfRecv = dmAfRecv;
 	}
+	public String getDmBfSend() {
+		return dmBfSend;
+	}
+	public void setDmBfSend(String dmBfSend) {
+		this.dmBfSend = dmBfSend;
+	}
+	public String getDmAfSend() {
+		return dmAfSend;
+	}
+	public void setDmAfSend(String dmAfSend) {
+		this.dmAfSend = dmAfSend;
+	}
 	public String getDsErrmsg() {
 		return dsErrmsg;
 	}
@@ -84,10 +103,28 @@ public class RfidResult extends RfidBoxResult {
 	public void setEquipGroupCd(String equipGroupCd) {
 		this.equipGroupCd = equipGroupCd;
 	}
-	public String getEquipNm() {
-		return equipNm;
+	public Date getMheDateTime() {
+		return mheDateTime;
 	}
-	public void setEquipNm(String equipNm) {
-		this.equipNm = equipNm;
+	public void setMheDateTime(Date mheDateTime) {
+		this.mheDateTime = mheDateTime;
+	}
+	public Date getIfDateTime() {
+		return ifDateTime;
+	}
+	public void setIfDateTime(Date ifDateTime) {
+		this.ifDateTime = ifDateTime;
+	}
+	public String getDelYn() {
+		return delYn;
+	}
+	public void setDelYn(String delYn) {
+		this.delYn = delYn;
+	}
+	public Date getDelDateTime() {
+		return delDateTime;
+	}
+	public void setDelDateTime(Date delDateTime) {
+		this.delDateTime = delDateTime;
 	}
 }

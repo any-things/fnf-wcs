@@ -1,6 +1,5 @@
 package xyz.anythings.base.rest;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -155,20 +154,21 @@ public class StockController extends AbstractRestService {
 			}
 			
 			// 2.2.2 상품별 고정 로케이션 상품인지 판별
-			List<SKU> retSkuList = new ArrayList<SKU>();
-			for(SKU sku : skuList) {
-				List<Stock> fixStocks = this.stockService.searchStocksBySku(domainId, equipType, null, true, sku.getComCd(), sku.getSkuCd());
-				if(ValueUtil.isNotEmpty(fixStocks)) {
-					retSkuList.add(sku);
-				}
-			}
+			// 고정로케이션에 제품코드를 먼저 세팅하지 않아도 임의의 제품을 보충할수 있음. 
+//			List<SKU> retSkuList = new ArrayList<SKU>();
+//			for(SKU sku : skuList) {
+//				List<Stock> fixStocks = this.stockService.searchStocksBySku(domainId, equipType, null, true, sku.getComCd(), sku.getSkuCd());
+//				if(ValueUtil.isNotEmpty(fixStocks)) {
+//					retSkuList.add(sku);
+//				}
+//			}
+//			
+//			// 2.2.3. 고정 로케이션에 포함된 상품이 아닌 경우에는 error 
+//			if(ValueUtil.isEmpty(retSkuList)) {
+//				throw ThrowUtil.newValidationErrorWithNoLog("지금은 고정 셀 보충만 가능합니다.고정 셀 상품을 선택해주세요.");
+//			}
 			
-			// 2.2.3. 고정 로케이션에 포함된 상품이 아닌 경우에는 error 
-			if(ValueUtil.isEmpty(retSkuList)) {
-				throw ThrowUtil.newValidationErrorWithNoLog("지금은 고정 셀 보충만 가능합니다.고정 셀 상품을 선택해주세요.");
-			}
-			
-			return retSkuList;
+			return skuList;
 		}
 	}
 

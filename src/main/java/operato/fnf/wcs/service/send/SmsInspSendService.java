@@ -197,6 +197,7 @@ public class SmsInspSendService extends AbstractQueryService {
 			scan.setNewYn(result.getNewYn());
 			scan.setInsPersonId(result.getMheNo());
 			scan.setInsDatetime(result.getInsDatetime());
+			scan.setIfYn(LogisConstants.N_CAP_STRING);
 			
 			resultValue.add(scan);
 		}

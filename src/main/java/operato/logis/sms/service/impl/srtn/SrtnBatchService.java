@@ -1,6 +1,7 @@
 package operato.logis.sms.service.impl.srtn;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -108,7 +109,12 @@ public class SrtnBatchService extends AbstractLogisService implements IBatchServ
 		this.resetRacksAndCells(batch);
 
 //		// 5. OREDER_PREPROCESS 삭제
-		this.deletePreprocess(batch);
+		Query query = AnyOrmUtil.newConditionForExecution(batch.getDomainId());
+		query.addFilter("batchGroupId", batch.getBatchGroupId());
+		List<JobBatch> jobBatches = this.queryManager.selectList(JobBatch.class, query);
+		for (JobBatch jobBatch : jobBatches) {
+			this.deletePreprocess(jobBatch);
+		}
 
 //		// 6. JobBatch 상태 변경 
 		this.updateJobBatchFinished(batch, new Date());

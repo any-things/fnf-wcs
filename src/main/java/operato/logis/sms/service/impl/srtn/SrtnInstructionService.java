@@ -163,7 +163,8 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		AnyOrmUtil.updateBatch(cellList, 100, "classCd", "batchId");
 		if(!isMerged) {
 			batch.setStatus(JobBatch.STATUS_RUNNING);
-			this.queryManager.update(batch, "status");
+			batch.setInstructedAt(new Date());
+			this.queryManager.update(batch, "status", "instructedAt");
 		}
 		
 		// TODO agent에 정보 생성후 전달 해야한다.

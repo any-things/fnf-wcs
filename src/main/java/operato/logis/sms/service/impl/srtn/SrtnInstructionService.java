@@ -268,11 +268,6 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		List<OrderPreprocess> preprocesses = this.queryManager.selectList(OrderPreprocess.class, query);
 		
 		List<String> skuCdList = AnyValueUtil.filterValueListBy(preprocesses, "cellAssgnCd");
-		Query condition = AnyOrmUtil.newConditionForExecution(domainId);
-		condition.addSelect("skuCd", "skuBarcd", "skuBarcd2");
-		condition.addFilter("skuCd", SysConstants.IN, skuCdList);
-		condition.addFilter("batchId", batch.getId());
-		List<Order> skuInfoList = this.queryManager.selectList(Order.class, condition);
 
 		//동일한 batchId로 줘야한다. bathGroupId로 줘야함 그리고 동일 셀에 sku_cd인놈은 제외하고 insert 한다
 		List<WcsMheDasOrder> dasOrderList = new ArrayList<WcsMheDasOrder>(preprocesses.size());
@@ -284,6 +279,11 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		String srtDate = DateUtil.dateStr(new Date(), "yyyyMMdd");
 		
 		skuCdList.removeAll(dasSkuList);
+		Query condition = AnyOrmUtil.newConditionForExecution(domainId);
+		condition.addSelect("skuCd", "skuBarcd", "skuBarcd2");
+		condition.addFilter("skuCd", SysConstants.IN, skuCdList.size() == 0 ? '1' : skuCdList);
+		condition.addFilter("batchId", batch.getId());
+		List<Order> skuInfoList = this.queryManager.selectList(Order.class, condition);
 		
 		for (OrderPreprocess preProcess : preprocesses) {
 			for (Order skuInfo : skuInfoList) {

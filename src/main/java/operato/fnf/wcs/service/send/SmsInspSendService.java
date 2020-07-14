@@ -128,15 +128,34 @@ public class SmsInspSendService extends AbstractQueryService {
 		String srtDate = DateUtil.dateStr(currentTime, "yyyyMMdd");
 		String currentTimeStr = DateUtil.dateTimeStr(currentTime, "yyyyMMddHHmmss");
 
-		Query conds = new Query();
-		conds.addFilter("whCd", FnFConstants.WH_CD_ICF);
-		conds.addFilter("strrId", batchInfo[0]);
-		conds.addFilter("refSeason", batchInfo[1]);
-		conds.addFilter("shopRtnType", batchInfo[2]);
-		conds.addFilter("shopRtnSeq", batchInfo[3]);
-		conds.addFilter("wcsIfChk", LogisConstants.N_CAP_STRING);
+//		Query conds = new Query();
+//		conds.addFilter("whCd", FnFConstants.WH_CD_ICF);
+//		conds.addFilter("strrId", batchInfo[0]);
+//		conds.addFilter("refSeason", batchInfo[1]);
+//		conds.addFilter("shopRtnType", batchInfo[2]);
+//		conds.addFilter("shopRtnSeq", batchInfo[3]);
+//		conds.addFilter("wcsIfChk", LogisConstants.N_CAP_STRING);
+		
+//		List<WmsWmtUifWcsInbRtnCnfm> rtnCnfmList = dsQueryManager.selectList(WmsWmtUifWcsInbRtnCnfm.class, conds);
+		
+		Query batchConds = new Query();
+		batchConds.addFilter("batchGroupId", batch.getBatchGroupId());
+		List<JobBatch> batchGroupList = this.queryManager.selectList(JobBatch.class, batchConds);
+		
+		String rtnCnfmSql = "select * from WMT_UIF_WCS_INB_RTN_CNFM where WH_CD = :whCd and (strr_id = :strrId AND ref_season = :refSeason AND SHOP_RTN_TYPE = :shopRtnType AND SHOP_RTN_SEQ = :shopRtnSeq AND (WCS_IF_CHK = :wcsIfChk OR WCS_IF_CHK IS NULL))";
+		for (JobBatch jobBatch : batchGroupList) {
+			String[] jobBatchInfo = jobBatch.getId().split("-");
+			if(jobBatchInfo.length < 4) {
+				String msg = MessageUtil.getMessage("no_batch_id", "설비에서 운영중인 BatchId가 아닙니다.");
+				throw ThrowUtil.newValidationErrorWithNoLog(msg);
+			}
+			
+			rtnCnfmSql += " or (strr_id ='" + jobBatchInfo[0] + "' AND ref_season = '" + jobBatchInfo[1] + "' AND SHOP_RTN_TYPE ='" + jobBatchInfo[2] + "' AND SHOP_RTN_SEQ = " + jobBatchInfo[3] + "AND (WCS_IF_CHK = 'N' OR WCS_IF_CHK IS NULL))";
+		}
+		
 		IQueryManager dsQueryManager = this.getDataSourceQueryManager(WmsWmtUifWcsInbRtnCnfm.class);
-		List<WmsWmtUifWcsInbRtnCnfm> rtnCnfmList = dsQueryManager.selectList(WmsWmtUifWcsInbRtnCnfm.class, conds);
+		Map<String, Object> conds = ValueUtil.newMap("whCd,strrId,refSeason,shopRtnType,shopRtnSeq,wcsIfChk", FnFConstants.WH_CD_ICF, batchInfo[0], batchInfo[1], batchInfo[2], batchInfo[3], LogisConstants.N_CAP_STRING);
+		List<WmsWmtUifWcsInbRtnCnfm> rtnCnfmList = dsQueryManager.selectListBySql(rtnCnfmSql, conds, WmsWmtUifWcsInbRtnCnfm.class, 0, 0);
 		
 		Query condition = new Query();
 		condition.addFilter("batchNo", batch.getBatchGroupId());

@@ -177,11 +177,13 @@ public class SmsInspSendService extends AbstractQueryService {
 		}
 		
 		IQueryManager wmsQueryManager = this.getDataSourceQueryManager(WmsWmtUifImpMheRtnScan.class);
-		String sql = "SELECT 'W' || LPAD(FNF_IF.WMS_UIF_IMP_MHE_RTN_SCAN.NEXTVAL,14,'0') AS seq FROM DUAL";
-		Map<String, Object> maxSeq = wmsQueryManager.selectBySql(sql, new HashMap<String, Object>(), Map.class);
-		String interfaceNo = ValueUtil.toString(maxSeq.get("seq"));
+		
 		List<WmsWmtUifImpMheRtnScan> resultValue = new ArrayList<WmsWmtUifImpMheRtnScan>(tempResults.size());
 		for (WcsMhePasRlst result : tempResults) {
+			String sql = "SELECT 'W' || LPAD(FNF_IF.WMS_UIF_IMP_MHE_RTN_SCAN.NEXTVAL,14,'0') AS seq FROM DUAL";
+			Map<String, Object> maxSeq = wmsQueryManager.selectBySql(sql, new HashMap<String, Object>(), Map.class);
+			String interfaceNo = ValueUtil.toString(maxSeq.get("seq"));
+			
 			WmsWmtUifImpMheRtnScan scan = new WmsWmtUifImpMheRtnScan();
 			scan.setInterfaceCrtDt(srtDate);
 			scan.setInterfaceNo(ValueUtil.toString(interfaceNo));
@@ -201,6 +203,6 @@ public class SmsInspSendService extends AbstractQueryService {
 		
 		this.queryManager.updateBatch(pasResults);
 		dsQueryManager.updateBatch(rtnCnfmList);
-		wmsQueryManager.insert(resultValue);
+		wmsQueryManager.insertBatch(resultValue);
 	}
 }

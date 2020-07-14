@@ -101,7 +101,7 @@ public class SmsCloseBatchService extends AbstractQueryService {
 			
 			rtnSortDrList.add(sortDr);
 		}
-		this.getDataSourceQueryManager(WmsRtnSortDr.class).updateBatch(rtnSortDrList);
+		this.getDataSourceQueryManager(WmsRtnSortDr.class).insertBatch(rtnSortDrList);
 	}
 	
 	/**

@@ -71,6 +71,9 @@ public class WcsMhePasOrder extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	@Column (name = "upd_datetime", type = xyz.elidom.dbist.annotation.ColumnType.DATETIME)
 	private Date updDatetime;
+	
+	@Column (name = "input_date", nullable = false, length = 8)
+	private String inputDate;
   
 	public String getId() {
 		return id;
@@ -190,5 +193,13 @@ public class WcsMhePasOrder extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setMheNo(String mheNo) {
 		this.mheNo = mheNo;
+	}
+
+	public String getInputDate() {
+		return inputDate;
+	}
+
+	public void setInputDate(String inputDate) {
+		this.inputDate = inputDate;
 	}
 }

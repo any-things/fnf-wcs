@@ -220,16 +220,21 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		Map<String,Object> sqlParams = ValueUtil.newMap("batchId,skuCd", batch.getId(), skuCdList);
 		List<Map> skuInfoList = this.queryManager.selectListBySql(skuInfoQuery, sqlParams, Map.class, 0, 0);
 		
+		Query condition = new Query();
+		condition.addFilter("id", batch.getBatchGroupId());
+		JobBatch mainBatch = this.queryManager.select(JobBatch.class, condition);
+		
 		
 		List<WcsMhePasOrder> pasOrderList = new ArrayList<WcsMhePasOrder>(rtnTrgList.size());
-		String srtDate = DateUtil.dateStr(new Date(), "yyyyMMdd");
+//		String srtDate = DateUtil.dateStr(new Date(), "yyyyMMdd");
 		
 		for (WmsWmtUifImpInbRtnTrg rtnTrg : rtnTrgList) {
 			WcsMhePasOrder wcsMhePasOrder = new WcsMhePasOrder();
 			wcsMhePasOrder.setId(UUID.randomUUID().toString());
 			wcsMhePasOrder.setBatchNo(batch.getBatchGroupId());
 			wcsMhePasOrder.setMheNo(batch.getEquipCd());
-			wcsMhePasOrder.setJobDate(srtDate);
+			wcsMhePasOrder.setJobDate(mainBatch.getJobDate());
+			wcsMhePasOrder.setInputDate(rtnTrg.getInbEctDate());
 			wcsMhePasOrder.setJobType(WcsMhePasOrder.JOB_TYPE_RTN);
 			wcsMhePasOrder.setBoxId(rtnTrg.getRefNo());
 			wcsMhePasOrder.setSkuCd(rtnTrg.getRefDetlNo());

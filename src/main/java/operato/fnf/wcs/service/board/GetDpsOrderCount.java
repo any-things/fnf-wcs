@@ -17,7 +17,7 @@ import xyz.elidom.util.ValueUtil;
 
 @Component
 public class GetDpsOrderCount extends AbstractLogisService {
-	public ResponseObj getRackStock(Map<String, Object> params) throws Exception {
+	public ResponseObj getDpsOrderCount(Map<String, Object> params) throws Exception {
 		String date = String.valueOf(params.get("date"));
 		if (ValueUtil.isEmpty(date)) {
 			params.put("date", DateUtil.getCurrentDay());

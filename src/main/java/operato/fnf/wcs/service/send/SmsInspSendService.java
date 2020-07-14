@@ -91,7 +91,7 @@ public class SmsInspSendService extends AbstractQueryService {
 			wcsMhePasOrder.setId(UUID.randomUUID().toString());
 			wcsMhePasOrder.setBatchNo(batch.getBatchGroupId());
 			wcsMhePasOrder.setMheNo(batch.getEquipCd());
-			wcsMhePasOrder.setJobDate(mainBatch.getJobDate());
+			wcsMhePasOrder.setJobDate(mainBatch.getJobDate().replaceAll("-", ""));
 			wcsMhePasOrder.setInputDate(rtnTrg.getInbEctDate());
 			wcsMhePasOrder.setJobType(WcsMhePasOrder.JOB_TYPE_RTN);
 			wcsMhePasOrder.setBoxId(rtnTrg.getRefNo());

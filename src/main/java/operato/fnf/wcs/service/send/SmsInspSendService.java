@@ -179,7 +179,7 @@ public class SmsInspSendService extends AbstractQueryService {
 		IQueryManager wmsQueryManager = this.getDataSourceQueryManager(WmsWmtUifImpMheRtnScan.class);
 		String sql = "SELECT 'W' || LPAD(FNF_IF.WMS_UIF_IMP_MHE_RTN_SCAN.NEXTVAL,14,'0') AS seq FROM DUAL";
 		Map<String, Object> maxSeq = wmsQueryManager.selectBySql(sql, new HashMap<String, Object>(), Map.class);
-		int interfaceNo = ValueUtil.toInteger(maxSeq.get("seq"));
+		String interfaceNo = ValueUtil.toString(maxSeq.get("seq"));
 		List<WmsWmtUifImpMheRtnScan> resultValue = new ArrayList<WmsWmtUifImpMheRtnScan>(tempResults.size());
 		for (WcsMhePasRlst result : tempResults) {
 			WmsWmtUifImpMheRtnScan scan = new WmsWmtUifImpMheRtnScan();
@@ -197,7 +197,6 @@ public class SmsInspSendService extends AbstractQueryService {
 			scan.setInsDatetime(result.getInsDatetime());
 			
 			resultValue.add(scan);
-			interfaceNo++;
 		}
 		
 		this.queryManager.updateBatch(pasResults);

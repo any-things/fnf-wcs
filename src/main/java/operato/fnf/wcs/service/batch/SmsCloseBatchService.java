@@ -17,6 +17,7 @@ import operato.logis.wcs.service.impl.WcsBatchProgressService;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.sys.service.AbstractQueryService;
+import xyz.anythings.sys.util.AnyOrmUtil;
 import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.sys.util.DateUtil;
 import xyz.elidom.util.ValueUtil;
@@ -62,16 +63,22 @@ public class SmsCloseBatchService extends AbstractQueryService {
 		this.sendInspBoxScanResultToWms(batch);
 		
 		// 3. WMS MHE_HR 테이블에 마감 전송
-		WmsRtnSortHr rtnSortHr = new WmsRtnSortHr();
-		rtnSortHr.setWhCd(FnFConstants.WH_CD_ICF);
-		rtnSortHr.setMheNo(batch.getEquipCd());
-		rtnSortHr.setStrrId(batch.getBrandCd());
-		//분류일자 언제를 말하는건지???
-		rtnSortHr.setSortDate(DateUtil.dateStr(new Date(), "yyyyMMdd"));
-		rtnSortHr.setSortSeq(batch.getJobSeq());
-		rtnSortHr.setStatus("A");
-		rtnSortHr.setInsDatetime(new Date());
-		this.getDataSourceQueryManager(WmsRtnSortHr.class).insert(rtnSortHr);
+		Query query = AnyOrmUtil.newConditionForExecution(batch.getDomainId());
+		query.addFilter("batchGroupId", batch.getBatchGroupId());
+		List<JobBatch> jobBatches = this.queryManager.selectList(JobBatch.class, query);
+		
+		for (JobBatch jobBatch : jobBatches) {
+			WmsRtnSortHr rtnSortHr = new WmsRtnSortHr();
+			rtnSortHr.setWhCd(FnFConstants.WH_CD_ICF);
+			rtnSortHr.setMheNo(jobBatch.getEquipCd());
+			rtnSortHr.setStrrId(jobBatch.getBrandCd());
+			//분류일자 언제를 말하는건지???
+			rtnSortHr.setSortDate(DateUtil.dateStr(new Date(), "yyyyMMdd"));
+			rtnSortHr.setSortSeq(jobBatch.getJobSeq());
+			rtnSortHr.setStatus("A");
+			rtnSortHr.setInsDatetime(new Date());
+			this.getDataSourceQueryManager(WmsRtnSortHr.class).insert(rtnSortHr);
+		}
 		
 		Query wmsCondition = new Query();
 		wmsCondition.addFilter("WH_CD", FnFConstants.WH_CD_ICF);

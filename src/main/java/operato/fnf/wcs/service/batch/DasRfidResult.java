@@ -68,7 +68,13 @@ public class DasRfidResult extends AbstractRestService {
 			conds.addFilter("stageCd", queryParams.get("stage_cd"));
 			
 			List<JobBatch> jobBatches = queryManager.selectList(JobBatch.class, conds);
-
+			if (ValueUtil.isEmpty(jobBatches)) {
+				
+				ResponseObj resp = new ResponseObj();
+				resp.setItems(new ArrayList<>());
+				return resp;
+			}
+			
 			for (JobBatch obj: jobBatches) {
 				jobBatchMap.put(obj.getWmsBatchNo(), obj);
 			}

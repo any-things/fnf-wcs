@@ -12,10 +12,17 @@ import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.orm.manager.DataSourceManager;
 import xyz.elidom.sys.SysConstants;
 import xyz.elidom.util.BeanUtil;
+import xyz.elidom.util.DateUtil;
+import xyz.elidom.util.ValueUtil;
 
 @Component
 public class GetDpsOrderCount extends AbstractLogisService {
 	public ResponseObj getRackStock(Map<String, Object> params) throws Exception {
+		String date = String.valueOf(params.get("date"));
+		if (ValueUtil.isEmpty(date)) {
+			params.put("date", DateUtil.getCurrentDay());
+		}
+		
 		IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager("WMS");
 		
 		Integer orderCount = wmsQueryMgr.selectBySql(this.getOrderCntQuery(), params, Integer.class);
@@ -34,7 +41,7 @@ public class GetDpsOrderCount extends AbstractLogisService {
 		query.add("SELECT");
 		query.add("COUNT(DISTINCT ref_no) AS order_qty");
 		query.add("FROM");
-		query.add("  fnf_if.dps_today_performance");
+		query.add("  dps_today_performance");
 		query.add("WHERE");
 		query.add("  outb_ect_ymd = :date");
 		
@@ -47,7 +54,7 @@ public class GetDpsOrderCount extends AbstractLogisService {
 		query.add("SELECT");
 		query.add("  SUM(ORDER_QTY) AS pcs_qty");
 		query.add("FROM");
-		query.add("  fnf_if.dps_today_performance");
+		query.add("  dps_today_performance");
 		query.add("WHERE");
 		query.add("  outb_ect_ymd = :date");
 		

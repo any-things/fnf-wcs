@@ -32,6 +32,7 @@ public class GetDpsOrderCount extends AbstractLogisService {
 		values.put("order_qty", orderCount);
 		values.put("pcs_qty", pcsCount);
 		ResponseObj resp = new ResponseObj();
+		resp.setValues(values);
 		return resp;
 	}
 	

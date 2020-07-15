@@ -26,7 +26,7 @@ public class GetDpsOrderCount extends AbstractLogisService {
 		IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager("WMS");
 		
 		Integer orderCount = wmsQueryMgr.selectBySql(this.getOrderCntQuery(), params, Integer.class);
-		Integer pcsCount = wmsQueryMgr.selectByCondition(this.getOrderPcsQuery(), params, Integer.class);
+		Integer pcsCount = wmsQueryMgr.selectBySql(this.getOrderPcsQuery(), params, Integer.class);
 		
 		Map<String, Integer> values = new HashMap<>();
 		values.put("order_qty", orderCount);

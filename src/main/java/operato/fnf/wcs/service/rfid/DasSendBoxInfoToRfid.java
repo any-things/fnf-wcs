@@ -10,6 +10,7 @@ import javax.validation.ValidationException;
 
 import org.springframework.stereotype.Component;
 
+import operato.fnf.wcs.FnFConstants;
 import operato.fnf.wcs.FnfUtils;
 import operato.fnf.wcs.entity.RfidBoxItem;
 import operato.fnf.wcs.entity.WcsMheBox;
@@ -49,21 +50,17 @@ public class DasSendBoxInfoToRfid extends AbstractQueryService {
 		
 		StringJoiner sql = new StringJoiner(SysConstants.LINE_SEPARATOR);
 		sql.add("SELECT");
-		sql.add("	DISTINCT work_date");
+		sql.add("	DISTINCT job_date");
 		sql.add("FROM");
 		sql.add("	job_batches");
 		sql.add("WHERE");
 		sql.add("	status = :status");
-		sql.add("	AND job_type = :jobType");
-		sql.add("ORDER BY");
-		sql.add("	instructed_at ASC");
+		sql.add("	AND job_type in (:jobType)");
 		
 		Map<String, Object> params = new HashMap<>();
 		params.put(SysConstants.ENTITY_FIELD_DOMAIN_ID, domainId);
 		params.put("status", JobBatch.STATUS_RUNNING);
 		params.put("jobType", ValueUtil.toList(LogisConstants.JOB_TYPE_DAS, LogisConstants.JOB_TYPE_DPS));	// FIXME DAS, DPS?
-		params.put("jobType", false);
-		params.put("instructedAt", true);
 		List<String> runningBatchWorkDates = this.queryManager.selectListBySql(sql.toString(), params, String.class, 0, 0);
 		
 		ResponseObj resp = new ResponseObj();
@@ -72,13 +69,21 @@ public class DasSendBoxInfoToRfid extends AbstractQueryService {
 			return resp;
 		}
 		
+		List<String> dates = new ArrayList<>();
+		for (String date: runningBatchWorkDates) {
+			dates.add(date.replaceAll("-", ""));
+		}
+		
 		String serviceSql = FnfUtils.queryCustService("das_box_info_with_outb_date");
 		if (ValueUtil.isEmpty(sql)) {
 			throw new ValidationException("커스텀 서비스 [das_box_info_with_outb_date]가 존재하지 않습니다.");
 		}
 		
 		Map<String, Object> paramMap = new HashMap<>();
-		paramMap.put("workDates", runningBatchWorkDates);
+		paramMap.put("whCd", FnFConstants.WH_CD_ICF);
+		paramMap.put("workDates", dates);
+		paramMap.put("delYn", LogisConstants.Y_CAP_STRING);
+		paramMap.put("ifYn", LogisConstants.Y_CAP_STRING);
 		List<WcsMheBox> wcsMheBoxes = queryManager.selectListBySql(serviceSql, paramMap, WcsMheBox.class, 0, 30000);
 		if (ValueUtil.isEmpty(wcsMheBoxes) || wcsMheBoxes.size() == 0) {
 			resp.setMsg("No Data2");
@@ -91,11 +96,11 @@ public class DasSendBoxInfoToRfid extends AbstractQueryService {
 
 		int limit = 100;
 		int offset = 0;
-		int size = wcsMheBoxes.size();
+		float size = (float)wcsMheBoxes.size();
 		while(offset < Math.ceil(size/limit)) {
 			int fromIndex = (int) (offset * limit);
 			int toIndex = (int) (fromIndex + limit);
-			toIndex = toIndex > size ? size : toIndex;
+			toIndex = (int) (toIndex > size ? size : toIndex);
 			List<WcsMheBox> boxes = new ArrayList<>(wcsMheBoxes.subList(fromIndex, toIndex));
 			if (boxes.size() == 0) {
 				break;

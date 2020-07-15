@@ -10,7 +10,7 @@ FROM
     FROM
       rfid_if.if_pasdelivery_send
     WHERE
-      dt_delivery = '20200713'
+      dt_delivery = :date
     GROUP BY
       ds_batch_no,
       cd_brand,

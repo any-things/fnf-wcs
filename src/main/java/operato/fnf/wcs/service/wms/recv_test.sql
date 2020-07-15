@@ -14,12 +14,12 @@ FROM
     FROM
       rfid_if.if_pasdelivery_recv
     WHERE
-      dt_delivery = '20200713'
+      dt_delivery = :date
     GROUP BY
       no_box
   ) recvb
 WHERE
   1 = 1
-  AND recva.dt_delivery = '20200713'
+  AND recva.dt_delivery = :date
   AND recva.ds_batch_no = recvb.ds_batch_no
   AND recva.no_box = recvb.no_box

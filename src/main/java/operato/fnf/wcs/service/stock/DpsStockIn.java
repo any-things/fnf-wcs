@@ -6,7 +6,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import operato.fnf.wcs.Utils;
+import operato.fnf.wcs.FnfUtils;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.entity.SKU;
 import xyz.anythings.base.entity.Stock;
@@ -30,7 +30,7 @@ public class DpsStockIn extends StockInSearch {
 		String skuCd = String.valueOf(params.get("skuCd"));
 		Integer inputQty = Integer.valueOf(String.valueOf(params.get("inputQty")));
 		
-		Utils.checkValueEmpty("랙번호", rackCd, "셀번호", cellCd, "회사코드", comCd, "제품바코드", skuCd, "입력수량", inputQty);
+		FnfUtils.checkValueEmpty("랙번호", rackCd, "셀번호", cellCd, "회사코드", comCd, "제품바코드", skuCd, "입력수량", inputQty);
 		
 		Long curDomainId = Domain.currentDomainId();
 		JobBatch rackBatch = super.getRackBatch(rackCd);
@@ -100,7 +100,7 @@ public class DpsStockIn extends StockInSearch {
 		stock.addStock(inputQty);	// "comCd", "skuCd", "skuBarcd", "skuNm", "lastTranCd", "loadQty", "stockQty"
 		
 		Map<String, Object> values = new HashMap<>();
-		values = Utils.objectToMap(stock);
+		values = FnfUtils.objectToMap(stock);
 		values.put("hasRackBatch", hasRackBatch);
 		resp.setValues(values);
 		

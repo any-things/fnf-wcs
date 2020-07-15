@@ -5,7 +5,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import operato.fnf.wcs.Utils;
+import operato.fnf.wcs.FnfUtils;
 import xyz.anythings.base.entity.BatchReceipt;
 import xyz.anythings.base.model.ResponseObj;
 import xyz.anythings.base.service.impl.AbstractLogisService;
@@ -34,7 +34,7 @@ public class DasAutoReceiveBatchService extends AbstractLogisService {
 		
 		String workDate = String.valueOf(params.get("workDate"));
 		if (ValueUtil.isEmpty(workDate)) {
-			workDate = Utils.today();
+			workDate = FnfUtils.today();
 		}
 		
 		BatchReceipt receipt = this.serviceDispatcher.getReceiveBatchService()

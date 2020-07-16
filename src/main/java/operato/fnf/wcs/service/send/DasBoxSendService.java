@@ -178,6 +178,13 @@ public class DasBoxSendService extends AbstractQueryService {
 				
 			} catch(Exception e) {
 				ErrorEvent errorEvent = new ErrorEvent(domainId, "ERROR - DAS Send Packing To RFID", e, LogisConstants.EMPTY_STRING, true, true);
+				for(WcsMheBox boxedOrder : boxedOrders) {
+					
+					boxedOrder.setIfYn("E");
+					boxedOrder.setIfDatetime(currentTime);
+				}
+				this.queryManager.updateBatch(boxedOrders);
+				
 				this.eventPublisher.publishEvent(errorEvent);
 			}
 		}

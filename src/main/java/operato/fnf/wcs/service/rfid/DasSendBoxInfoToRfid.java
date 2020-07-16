@@ -81,7 +81,7 @@ public class DasSendBoxInfoToRfid extends AbstractQueryService {
 		paramMap.put("workDates", dates);
 		paramMap.put("delYn", LogisConstants.Y_CAP_STRING);
 		paramMap.put("ifYn", LogisConstants.Y_CAP_STRING);
-		List<WcsMheBox> wcsMheBoxes = queryManager.selectListBySql(serviceSql, paramMap, WcsMheBox.class, 0, 30000);
+		List<WcsMheBox> wcsMheBoxes = queryManager.selectListBySql(serviceSql, paramMap, WcsMheBox.class, 0, 1000);
 		if (ValueUtil.isEmpty(wcsMheBoxes) || wcsMheBoxes.size() == 0) {
 			resp.setMsg("No Data2");
 			return resp;

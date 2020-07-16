@@ -22,12 +22,15 @@ import xyz.anythings.base.model.ResponseObj;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.SysConstants;
+import xyz.elidom.sys.util.SettingUtil;
 import xyz.elidom.util.BeanUtil;
 import xyz.elidom.util.ValueUtil;
 
 @Component
 public class DasSendBoxInfoToRfid extends AbstractQueryService {
 
+	private final String KEY_RFID_PROCESS_LIMIT = "wcs.rfid.process.limit";
+	
 	public ResponseObj dasSendBoxInfo(Map<String, Object> params) throws Exception {
 		
 		String batchId = String.valueOf(params.get("batch_id"));
@@ -94,12 +97,21 @@ public class DasSendBoxInfoToRfid extends AbstractQueryService {
 		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsAssortItem.class);
 		DasBoxSendService boxSendSvc = BeanUtil.get(DasBoxSendService.class);
 
-		int limit = 100;
+		int DEFAULT_PROCESS_LIMIT = 100;
+		
+		int processLimit = 0;
+		try {
+			processLimit = Integer.parseInt(SettingUtil.getValue(KEY_RFID_PROCESS_LIMIT));
+		} catch(NumberFormatException e) {
+			//e.printStackTrace();
+			processLimit = DEFAULT_PROCESS_LIMIT;
+		}
+		
 		int offset = 0;
 		float size = (float)wcsMheBoxes.size();
-		while(offset < Math.ceil(size/limit)) {
-			int fromIndex = (int) (offset * limit);
-			int toIndex = (int) (fromIndex + limit);
+		while(offset < Math.ceil(size/processLimit)) {
+			int fromIndex = (int) (offset * processLimit);
+			int toIndex = (int) (fromIndex + processLimit);
 			toIndex = (int) (toIndex > size ? size : toIndex);
 			List<WcsMheBox> boxes = new ArrayList<>(wcsMheBoxes.subList(fromIndex, toIndex));
 			if (boxes.size() == 0) {

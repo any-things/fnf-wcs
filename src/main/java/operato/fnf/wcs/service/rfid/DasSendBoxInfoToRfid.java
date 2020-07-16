@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.StringJoiner;
 
 import javax.validation.ValidationException;
 
@@ -43,28 +42,23 @@ public class DasSendBoxInfoToRfid extends AbstractQueryService {
 			return new ResponseObj();
 		}
 		
-		
-		
 		ResponseObj resp = new ResponseObj();
 		return resp;
 	}
 	
 	public ResponseObj dasSendBoxInfoToRfid(Long domainId) throws Exception {
 		
-		StringJoiner sql = new StringJoiner(SysConstants.LINE_SEPARATOR);
-		sql.add("SELECT");
-		sql.add("	DISTINCT job_date");
-		sql.add("FROM");
-		sql.add("	job_batches");
-		sql.add("WHERE");
-		sql.add("	status = :status");
-		sql.add("	AND job_type in (:jobType)");
+
+		String scopeSql = FnfUtils.queryCustService("das_box_process_date");
+		if (ValueUtil.isEmpty(scopeSql)) {
+			throw new ValidationException("커스텀 서비스 [das_box_info_with_outb_date]가 존재하지 않습니다.");
+		}
 		
 		Map<String, Object> params = new HashMap<>();
 		params.put(SysConstants.ENTITY_FIELD_DOMAIN_ID, domainId);
 		params.put("status", JobBatch.STATUS_RUNNING);
 		params.put("jobType", ValueUtil.toList(LogisConstants.JOB_TYPE_DAS, LogisConstants.JOB_TYPE_DPS));	// FIXME DAS, DPS?
-		List<String> runningBatchWorkDates = this.queryManager.selectListBySql(sql.toString(), params, String.class, 0, 0);
+		List<String> runningBatchWorkDates = this.queryManager.selectListBySql(scopeSql, params, String.class, 0, 0);
 		
 		ResponseObj resp = new ResponseObj();
 		if (ValueUtil.isEmpty(runningBatchWorkDates) || runningBatchWorkDates.size() == 0) {
@@ -78,7 +72,7 @@ public class DasSendBoxInfoToRfid extends AbstractQueryService {
 		}
 		
 		String serviceSql = FnfUtils.queryCustService("das_box_info_with_outb_date");
-		if (ValueUtil.isEmpty(sql)) {
+		if (ValueUtil.isEmpty(serviceSql)) {
 			throw new ValidationException("커스텀 서비스 [das_box_info_with_outb_date]가 존재하지 않습니다.");
 		}
 		

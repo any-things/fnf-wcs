@@ -1,11 +1,13 @@
 package operato.fnf.wcs.service.rfid;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import operato.fnf.wcs.FnfUtils;
 import operato.fnf.wcs.entity.RfidBoxItem;
 import xyz.anythings.base.model.ResponseObj;
 import xyz.anythings.sys.service.AbstractQueryService;
@@ -19,7 +21,7 @@ public class ShowIfPasdeliveryRecv extends AbstractQueryService {
 
 	@Autowired
 	private DataSourceManager dataSourceMgr;
-	public ResponseObj showIfPasdeliveryRecv(Map<String, Object> params) {
+	public ResponseObj showIfPasdeliveryRecv(Map<String, Object> params) throws Exception {
 		
 		IQueryManager wmsQueryMgr = dataSourceMgr.getQueryManager(RfidBoxItem.class);
 		
@@ -28,11 +30,15 @@ public class ShowIfPasdeliveryRecv extends AbstractQueryService {
 		String sql = "select count(distinct no_box) from rfid_if.if_pasdelivery_recv where dt_delivery = :date and tp_machine = '2'";
 		Integer boxNoCount = wmsQueryMgr.selectBySql(sql, ValueUtil.newMap("date", date), Integer.class);
 		
-		List<RfidBoxItem> list = wmsQueryMgr.selectListBySqlPath("operato/fnf/wcs/service/rfid/recv_test.sql", ValueUtil.newMap("date", date), RfidBoxItem.class, 0, 0);
+		//List<RfidBoxItem> list = wmsQueryMgr.selectListBySqlPath("operato/fnf/wcs/service/rfid/recv_test.sql", ValueUtil.newMap("date", date), RfidBoxItem.class, 0, 0);
 		
-		Query conds = new Query(0, 1000);
-		conds.addFilter("dtDelivery", date);
-		//List<RfidBoxItem> list = wmsQueryMgr.selectList(RfidBoxItem.class, conds);
+		List<RfidBoxItem> list = new ArrayList<>();
+		String serviceSql = FnfUtils.queryCustService("das_if_pasdelivery_recv");
+		if (ValueUtil.isEmpty(serviceSql)) {
+			Query conds = new Query(0, 0);
+			conds.addFilter("dtDelivery", date);
+			list = wmsQueryMgr.selectList(RfidBoxItem.class, conds);
+		}
 		
 		ResponseObj resp = new ResponseObj();
 		resp.setItems(list);

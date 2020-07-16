@@ -3,6 +3,7 @@ package operato.fnf.wcs.service.model;
 public class BoardRackStock {
 	private String whCd;
 	private String zoneCd;
+	private String location;
 	private String skuCd;
 	private String skuNm;
 	private String itemGcd;
@@ -28,6 +29,12 @@ public class BoardRackStock {
 	}
 	public void setZoneCd(String zoneCd) {
 		this.zoneCd = zoneCd;
+	}
+	public String getLocation() {
+		return location;
+	}
+	public void setLocation(String location) {
+		this.location = location;
 	}
 	public String getSkuCd() {
 		return skuCd;

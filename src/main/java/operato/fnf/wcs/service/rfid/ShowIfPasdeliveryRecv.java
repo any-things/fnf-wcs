@@ -28,7 +28,7 @@ public class ShowIfPasdeliveryRecv extends AbstractQueryService {
 		String sql = "select count(distinct no_box) from rfid_if.if_pasdelivery_recv where dt_delivery = :date and tp_machine = '2'";
 		Integer boxNoCount = wmsQueryMgr.selectBySql(sql, ValueUtil.newMap("date", date), Integer.class);
 		
-		List<RfidBoxItem> list = wmsQueryMgr.selectListBySqlPath("operato/fnf/wcs/service/wms/recv_test.sql", ValueUtil.newMap("date", date), RfidBoxItem.class, 0, 0);
+		List<RfidBoxItem> list = wmsQueryMgr.selectListBySqlPath("operato/fnf/wcs/service/rfid/recv_test.sql", ValueUtil.newMap("date", date), RfidBoxItem.class, 0, 0);
 		
 		Query conds = new Query(0, 1000);
 		conds.addFilter("dtDelivery", date);

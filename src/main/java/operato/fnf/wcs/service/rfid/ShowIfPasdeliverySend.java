@@ -33,7 +33,7 @@ public class ShowIfPasdeliverySend extends AbstractQueryService {
 		String sql = "select count(distinct no_box) from rfid_if.if_pasdelivery_send where dt_delivery = :date and tp_machine = '2'";
 		Integer boxNoCount = wmsQueryMgr.selectBySql(sql, ValueUtil.newMap("date", date), Integer.class);
 		
-		//List<RfidBoxItem> list = wmsQueryMgr.selectListBySqlPath("operato/fnf/wcs/service/wms/send_test.sql", ValueUtil.newMap("date", date), RfidBoxItem.class, 0, 0);
+		//List<RfidBoxItem> list = wmsQueryMgr.selectListBySqlPath("operato/fnf/wcs/service/rfid/send_test.sql", ValueUtil.newMap("date", date), RfidBoxItem.class, 0, 0);
 		
 		int i = wmsQueryMgr.selectSizeBySql("SELECT\r\n" + 
 				"              ds_batch_no,\r\n" + 

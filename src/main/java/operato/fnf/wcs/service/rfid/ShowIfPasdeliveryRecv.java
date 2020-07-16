@@ -41,7 +41,7 @@ public class ShowIfPasdeliveryRecv extends AbstractQueryService {
 			conds.addFilter("dtDelivery", date);
 			list = wmsQueryMgr.selectList(RfidBoxItem.class, conds);
 		} else {
-			list = queryManager.selectListBySql(serviceSql, new HashMap<>(), RfidBoxItem.class, 0, 1000);
+			list = wmsQueryMgr.selectListBySql(serviceSql, new HashMap<>(), RfidBoxItem.class, 0, 1000);
 		}
 		
 		ResponseObj resp = new ResponseObj();

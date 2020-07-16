@@ -66,13 +66,13 @@ public class DasBoxSendService extends AbstractQueryService {
 	 */
 	public void sendBoxResults(Domain domain, JobBatch batch) {
 		
-		Long domainId = batch.getDomainId();
+//		Long domainId = batch.getDomainId();
 		IQueryManager rfidQueryMgr = this.getDataSourceQueryManager(RfidBoxItem.class);
-		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsAssortItem.class);
+//		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsAssortItem.class);
 		DasBoxSendService boxSendSvc = BeanUtil.get(DasBoxSendService.class);
 		
 		// 1. 박스 완료 실적 조회
-		List<WcsMheBox> boxOrderList = this.searchBoxedOrderList(batch);
+//		List<WcsMheBox> boxOrderList = this.searchBoxedOrderList(batch);
 
 		try {			
 			BeanUtil.get(DasSendBoxInfoToRfid.class).dasSendBoxInfoToRfid(domain.getId());
@@ -80,13 +80,13 @@ public class DasBoxSendService extends AbstractQueryService {
 			e.printStackTrace();
 			logger.error("BeanUtil.get(DasSendBoxInfoToRfid.class).dasSendBoxInfoToRfid(domain.getId()) error~~");
 			
-			// 2. FIXME backup로직임, 추후에 삭제: RFID에 전송
-			for(WcsMheBox order : boxOrderList) {
-				// 2.1 DAS로 부터 올라온 WCS 박스 실적 정보 조회 
-				List<WcsMheBox> packings = this.searchBoxResult(order.getWorkUnit(), order.getOutbNo());
-				// 2.2 WCS 주문별 실적 정보를 RFID 패킹 정보로 복사
-				boxSendSvc.sendPackingsToRfid(domainId, rfidQueryMgr, wmsQueryMgr, packings);
-			}
+//			// 2. FIXME backup로직임, 추후에 삭제: RFID에 전송
+//			for(WcsMheBox order : boxOrderList) {
+//				// 2.1 DAS로 부터 올라온 WCS 박스 실적 정보 조회 
+//				List<WcsMheBox> packings = this.searchBoxResult(order.getWorkUnit(), order.getOutbNo());
+//				// 2.2 WCS 주문별 실적 정보를 RFID 패킹 정보로 복사
+//				boxSendSvc.sendPackingsToRfid(domainId, rfidQueryMgr, wmsQueryMgr, packings);
+//			}
 		}
 		
 		// 3. 박스 취소 실적 조회
@@ -103,6 +103,7 @@ public class DasBoxSendService extends AbstractQueryService {
 	 * @param batch
 	 * @return
 	 */
+	@SuppressWarnings("unused")
 	private List<WcsMheBox> searchBoxedOrderList(JobBatch batch) {
 		Query condition = new Query();
 		condition.addSelect("work_unit", "outb_no", "box_no");

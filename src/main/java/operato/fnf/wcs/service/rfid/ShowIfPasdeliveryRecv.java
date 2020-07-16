@@ -1,6 +1,7 @@
 package operato.fnf.wcs.service.rfid;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import operato.fnf.wcs.FnfUtils;
 import operato.fnf.wcs.entity.RfidBoxItem;
+import operato.fnf.wcs.entity.WcsMheBox;
 import xyz.anythings.base.model.ResponseObj;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.elidom.dbist.dml.Query;
@@ -38,6 +40,8 @@ public class ShowIfPasdeliveryRecv extends AbstractQueryService {
 			Query conds = new Query(0, 0);
 			conds.addFilter("dtDelivery", date);
 			list = wmsQueryMgr.selectList(RfidBoxItem.class, conds);
+		} else {
+			list = queryManager.selectListBySql(serviceSql, new HashMap<>(), RfidBoxItem.class, 0, 1000);
 		}
 		
 		ResponseObj resp = new ResponseObj();

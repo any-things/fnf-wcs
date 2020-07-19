@@ -138,7 +138,7 @@ public class DasBoxSendService extends AbstractQueryService {
 	 * @param orderId
 	 * @return
 	 */
-	private List<WcsMheBox> searchBoxResult(String batchId, String orderId) {
+	/*private List<WcsMheBox> searchBoxResult(String batchId, String orderId) {
 		Query condition = new Query();
 		condition.addFilter("whCd", FnFConstants.WH_CD_ICF);
 		condition.addFilter("workUnit", batchId);
@@ -147,7 +147,7 @@ public class DasBoxSendService extends AbstractQueryService {
 		condition.addFilter("outbNo", orderId);
 		condition.addOrder("mheDatetime", true);
 		return this.queryManager.selectList(WcsMheBox.class, condition);
-	}
+	}*/
 	
 	/**
 	 * WCS 박스 실적으로 부터 RFID 실적 전송

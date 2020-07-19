@@ -9,20 +9,15 @@ import org.springframework.stereotype.Component;
 
 import operato.fnf.wcs.entity.WcsMhePasBatchStatus;
 import operato.fnf.wcs.service.batch.SmsCloseBatchService;
-import operato.logis.sms.query.SmsQueryStore;
-import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
-import xyz.anythings.base.entity.JobInstance;
 import xyz.anythings.base.entity.Order;
 import xyz.anythings.base.event.main.BatchCloseEvent;
-import xyz.anythings.base.model.BatchProgressRate;
 import xyz.anythings.base.service.api.IBatchService;
 import xyz.anythings.base.service.impl.AbstractLogisService;
 import xyz.anythings.sys.event.model.SysEvent;
 import xyz.anythings.sys.util.AnyOrmUtil;
 import xyz.elidom.dbist.dml.Filter;
 import xyz.elidom.dbist.dml.Query;
-import xyz.elidom.orm.OrmConstants;
 import xyz.elidom.sys.util.MessageUtil;
 import xyz.elidom.sys.util.ThrowUtil;
 import xyz.elidom.util.ValueUtil;
@@ -38,8 +33,8 @@ public class SrtnBatchService extends AbstractLogisService implements IBatchServ
 	/**
 	 * Sms 쿼리 스토어
 	 */
-	@Autowired
-	private SmsQueryStore smsQueryStore;
+	//@Autowired
+	//private SmsQueryStore smsQueryStore;
 	/**
 	 * Sms 배치 종료 서비스
 	 */

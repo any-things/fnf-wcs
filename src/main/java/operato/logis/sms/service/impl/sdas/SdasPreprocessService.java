@@ -2,6 +2,7 @@ package operato.logis.sms.service.impl.sdas;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -158,7 +159,7 @@ public class SdasPreprocessService extends AbstractExecutionService implements I
 		Map<String, Object> sqlParams = ValueUtil.newMap("status,active_flag", Order.STATUS_WAIT, true);
 		List<Chute> chuteList = this.queryManager.selectList(Chute.class, sqlParams);
 		
-		Map<String, Object> chuteStatus = null;
+		Map<String, Object> chuteStatus = new HashMap<String, Object>();
 		for (Chute chute : chuteList) {
 			chuteStatus.put("chute-" + chute.getChuteNo(), SysConstants.CAP_Y_STRING);
 		}

@@ -51,6 +51,7 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 		return this.queryManager.selectList(OrderPreprocess.class, condition);
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public Map<String, ?> buildPreprocessSet(JobBatch batch, Query query) {
 		List<Map> batchInfo = this.preprocessSummaryByBatch(batch);
@@ -421,7 +422,7 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 		}
 	}
 	
-	private void alreadyAssignCategory() {
+	/*private void alreadyAssignCategory() {
 		
-	}
+	}*/
 }

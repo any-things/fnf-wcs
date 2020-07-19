@@ -17,6 +17,8 @@ import xyz.elidom.util.ValueUtil;
 
 @Component
 public class QueryWmsData extends AbstractQueryService {
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public ResponseObj queryWmsData(Map<String, Object> params) throws Exception {
 		
 		String sql = FnfUtils.queryCustService("query_wms_data");
@@ -25,11 +27,11 @@ public class QueryWmsData extends AbstractQueryService {
 		}
 		
 		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheDr.class);
-		
-		Page<HashMap> page = wmsQueryMgr.selectPageBySql(sql, new HashMap<>(), HashMap.class, 0, 0);
+		Page<HashMap> page = wmsQueryMgr.selectPageBySql(sql, new HashMap(), HashMap.class, 0, 0);
 		
 		ResponseObj resp = new ResponseObj();
 		resp.setItems(page.getList());
 		return resp;
 	}
+
 }

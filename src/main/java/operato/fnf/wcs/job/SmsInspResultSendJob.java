@@ -112,10 +112,10 @@ public class SmsInspResultSendJob extends AbstractFnFJob {
 	/**
 	 * 소터 실적으로 검수정보가 없는 정보들은 매장 반품예정 검수 스캔결과(WMT_UIF_IMP_MHE_RTN_SCAN) 테이블로 전송
 	 */
-	private void sendInspBoxScanResultToWms(JobBatch batch) {
+	/*private void sendInspBoxScanResultToWms(JobBatch batch) {
 		if(ValueUtil.isEqualIgnoreCase(SmsConstants.JOB_TYPE_SRTN, batch.getJobType())) {
 			this.smsInspSendSvc.sendInspBoxScanResultToWms(batch);
 		}
-	}
+	}*/
 
 }

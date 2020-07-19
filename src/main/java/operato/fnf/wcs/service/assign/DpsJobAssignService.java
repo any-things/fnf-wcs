@@ -1,6 +1,7 @@
 package operato.fnf.wcs.service.assign;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -11,7 +12,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import operato.fnf.wcs.FnFConstants;
 import operato.fnf.wcs.entity.WmsDpsPartialOrder;
+import operato.fnf.wcs.entity.WmsMheHr;
 import operato.fnf.wcs.query.store.FnFDpsQueryStore;
 import operato.fnf.wcs.service.model.DpsJobAssign;
 import xyz.anythings.base.entity.JobBatch;
@@ -161,10 +164,13 @@ public class DpsJobAssignService extends AbstractQueryService {
 	 * @return
 	 */
 	private List<String> searchSkipOrders(JobBatch batch) {
-		// 1. WMS 부분할당 테이블에서 WCS 주문 상세에 강제 할당이 설정된 내용 제외 하고 조회 
+		
+		// 1. WMS 부분할당 주문 리프레쉬 프로시져 호출 
+		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
+		wmsQueryMgr.executeBySql("CALL WMP_DPS_ACCEPT_MHE_HR('" + FnFConstants.WH_CD_ICF + "', '" + batch.getId() + "')", new HashMap<String, Object>());		
+		
+		// 2. WMS 부분할당 테이블에서 WCS 주문 상세에 강제 할당이 설정된 내용 제외 하고 조회 
 		Map<String, Object> params = ValueUtil.newMap("whCd,batchId", "ICF", batch.getId());
-		
-		
 		String mheDrSql = "select distinct ref_no from mhe_dr where wh_cd = :whCd and work_unit = :batchId and dps_partial_assign_yn = 'Y'";
 		List<String> forcedAssign = this.queryManager.selectListBySql(mheDrSql, params, String.class, 0, 0);
 		
@@ -172,11 +178,11 @@ public class DpsJobAssignService extends AbstractQueryService {
 			params.put("forced_assign", forcedAssign);
 		}
 		
-		String sql = "select distinct ref_no from dps_partial_orders where wh_cd=:whCd #if($forced_assign) and ref_no not in (:forced_assign) #end ";
-		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsDpsPartialOrder.class);
-		List<String> skipOrders = wmsQueryMgr.selectListBySql(sql, params, String.class, 0, 0);
+		String sql = "select distinct ref_no from dps_partial_orders where wh_cd = :whCd #if($forced_assign) and ref_no not in (:forced_assign) #end ";
+		IQueryManager dpsPartialQueryMgr = this.getDataSourceQueryManager(WmsDpsPartialOrder.class);
+		List<String> skipOrders = dpsPartialQueryMgr.selectListBySql(sql, params, String.class, 0, 0);
 		
-		// 2. skip 대상 리스트 return 
+		// 3. skip 대상 주문 리스트 return 
 		if(ValueUtil.isNotEmpty(skipOrders)) {
 			return skipOrders;
 		} else {

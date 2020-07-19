@@ -1,5 +1,6 @@
 package operato.fnf.wcs.job;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,13 +92,16 @@ public class SmsInspResultSendJob extends AbstractFnFJob {
 		List<JobBatch> jobBatches = this.queryManager.selectList(JobBatch.class, condition);
 		List<String> mainBatchIds = AnyValueUtil.filterValueListBy(jobBatches, "batchGroupId");
 		
-		Query query = AnyOrmUtil.newConditionForExecution(domainId);
-		query.addFilter("status", LogisConstants.NOT_EQUAL, JobBatch.STATUS_END);
-		query.addFilter("batchGroupId", LogisConstants.IN, mainBatchIds);
-		query.addOrder("jobType", false);
-		query.addOrder("instructedAt", true);
-		
-		return this.queryManager.selectList(JobBatch.class, query);
+		if(ValueUtil.isNotEmpty(mainBatchIds)) {
+			Query query = AnyOrmUtil.newConditionForExecution(domainId);
+			query.addFilter("status", LogisConstants.NOT_EQUAL, JobBatch.STATUS_END);
+			query.addFilter("batchGroupId", LogisConstants.IN, mainBatchIds);
+			query.addOrder("jobType", false);
+			query.addOrder("instructedAt", true);
+			return this.queryManager.selectList(JobBatch.class, query);
+		} else {
+			return new ArrayList<JobBatch>();
+		}
 	}
 	
 	/**

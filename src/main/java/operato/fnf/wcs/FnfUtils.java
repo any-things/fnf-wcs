@@ -1,5 +1,6 @@
 package operato.fnf.wcs;
 
+import java.lang.reflect.Field;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -91,5 +92,47 @@ public class FnfUtils {
 		}
 		
 		return service.getServiceLogic();
+	}
+	
+	public static <T extends Object> T populate(Object from, T to, boolean replaceFlag)
+			throws NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
+		Class<? extends Object> fromClass = from.getClass();
+		Field[] fromFields = fromClass.getDeclaredFields();
+
+		Class<? extends Object> toClass = to.getClass();
+		Field[] toFields = toClass.getDeclaredFields();
+
+		for (Field fromField : fromFields) {
+			String fieldName = fromField.getName();
+			Class<?> type = fromField.getType();
+			if (type.getName().contains("xyz.")) {
+				continue;
+			}
+			if (fieldName.equals("serialVersionUID")) {
+				continue;
+			}
+			fromField.setAccessible(true);
+
+			for (Field toField : toFields) {
+				String toFieldName = toField.getName();
+				if (fieldName.equals("serialVersionUID")) {
+					continue;
+				}
+				toField.setAccessible(true);
+				if (replaceFlag) {
+					if (toFieldName.equals(fieldName)) {
+						toField.set(to, fromField.get(from));
+					}
+				} else {
+					if (ValueUtil.isEmpty(toField.get(to))) {					
+						if (toFieldName.equals(fieldName)) {
+							toField.set(to, fromField.get(from));
+						}
+					}
+				}
+			}
+		}
+
+		return to;
 	}
 }

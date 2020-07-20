@@ -5,12 +5,12 @@ import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.GenerationRule;
 import xyz.elidom.dbist.annotation.Table;
 
-@Table(name = "top_sku_trace", idStrategy = GenerationRule.UUID)
+@Table(name = "top_sku_traces", idStrategy = GenerationRule.UUID)
 public class TopSkuTrace extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	/**
 	 * SerialVersion UID
 	 */
-	private static final long serialVersionUID = 514587061719080963L;
+	private static final long serialVersionUID = 935141160511621898L;
 
 	@PrimaryKey
 	@Column (name = "id", nullable = false, length = 40)
@@ -19,8 +19,11 @@ public class TopSkuTrace extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	@Column (name = "work_type", length = 16)
 	private String workType;
 
-	@Column (name = "sum_date", length = 16)
+	@Column (name = "sum_date", nullable = false, length = 16)
 	private String sumDate;
+
+	@Column (name = "sku_cd", nullable = false, length = 64)
+	private String skuCd;
 
 	@Column (name = "scope_days")
 	private Integer scopeDays;
@@ -33,9 +36,6 @@ public class TopSkuTrace extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 
 	@Column (name = "duration_days")
 	private Integer durationDays;
-
-	@Column (name = "sku_cd", length = 64)
-	private String skuCd;
 
 	@Column (name = "scope_days_pcs_qty")
 	private Integer scopeDaysPcsQty;
@@ -76,6 +76,14 @@ public class TopSkuTrace extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 		this.sumDate = sumDate;
 	}
 
+	public String getSkuCd() {
+		return skuCd;
+	}
+
+	public void setSkuCd(String skuCd) {
+		this.skuCd = skuCd;
+	}
+
 	public Integer getScopeDays() {
 		return scopeDays;
 	}
@@ -106,14 +114,6 @@ public class TopSkuTrace extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 
 	public void setDurationDays(Integer durationDays) {
 		this.durationDays = durationDays;
-	}
-
-	public String getSkuCd() {
-		return skuCd;
-	}
-
-	public void setSkuCd(String skuCd) {
-		this.skuCd = skuCd;
 	}
 
 	public Integer getScopeDaysPcsQty() {

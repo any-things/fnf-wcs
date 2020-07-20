@@ -3,8 +3,9 @@ package operato.fnf.wcs.service.model;
 public class OnlineOutSkuSum {
 	private String workDate;
 	private String itemCd;
-	private Integer outQty;
-	private Integer outCnt;
+	private Integer outPcsQty;
+	private Integer outSkuTimes;
+	private Integer outOrdCnt;
 	
 	public String getWorkDate() {
 		return workDate;
@@ -18,16 +19,22 @@ public class OnlineOutSkuSum {
 	public void setItemCd(String itemCd) {
 		this.itemCd = itemCd;
 	}
-	public Integer getOutQty() {
-		return outQty;
+	public Integer getOutPcsQty() {
+		return outPcsQty;
 	}
-	public void setOutQty(Integer outQty) {
-		this.outQty = outQty;
+	public void setOutPcsQty(Integer outPcsQty) {
+		this.outPcsQty = outPcsQty;
 	}
-	public Integer getOutCnt() {
-		return outCnt;
+	public Integer getOutSkuTimes() {
+		return outSkuTimes;
 	}
-	public void setOutCnt(Integer outCnt) {
-		this.outCnt = outCnt;
+	public void setOutSkuTimes(Integer outSkuTimes) {
+		this.outSkuTimes = outSkuTimes;
+	}
+	public Integer getOutOrdCnt() {
+		return outOrdCnt;
+	}
+	public void setOutOrdCnt(Integer outOrdCnt) {
+		this.outOrdCnt = outOrdCnt;
 	}
 }

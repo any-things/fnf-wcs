@@ -7,6 +7,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
 
+import javax.validation.ValidationException;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import xyz.elidom.dbist.dml.Query;
@@ -69,6 +71,23 @@ public class FnfUtils {
 		DiyService service = BeanUtil.get(IQueryManager.class).selectByCondition(DiyService.class, conds);
 		if (ValueUtil.isEmpty(service)) {
 			return null;
+		}
+		
+		return service.getServiceLogic();
+	}
+	
+	public static String queryCustServiceWithError(String serviceName) throws Exception {
+		Query conds = new Query();
+		conds.addFilter("name", serviceName);
+		conds.addFilter("category", "SERVICE");
+		conds.addFilter("scriptType", "SQL");
+		DiyService service = BeanUtil.get(IQueryManager.class).selectByCondition(DiyService.class, conds);
+		if (ValueUtil.isEmpty(service)) {
+			throw new ValidationException("커스텀 서비스 [" + serviceName + "]가 존재하지 않습니다.");
+		}
+		
+		if (ValueUtil.isEmpty(service.getServiceLogic())) {
+			throw new ValidationException("커스텀 서비스 [" + serviceName + "]는 서비스로직이 없습니다.");
 		}
 		
 		return service.getServiceLogic();

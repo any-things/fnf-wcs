@@ -7,6 +7,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import operato.fnf.wcs.FnFConstants;
 import operato.fnf.wcs.entity.WcsMhePasBatchStatus;
 import operato.fnf.wcs.service.batch.SmsCloseBatchService;
 import xyz.anythings.base.entity.JobBatch;
@@ -43,6 +44,17 @@ public class SrtnBatchService extends AbstractLogisService implements IBatchServ
 		
 	@Override
 	public void isPossibleCloseBatch(JobBatch batch, boolean closeForcibly) {
+		//0. 설비 배치가 종료 되었는지 확인
+		WcsMhePasBatchStatus pasBatchStatus = new WcsMhePasBatchStatus();
+		Query batchConds = new Query();
+		batchConds.addFilter("mheNo", batch.getEquipCd());
+		batchConds.addFilter("wcsBatchNo", batch.getBatchGroupId());
+		pasBatchStatus = this.queryManager.selectByCondition(WcsMhePasBatchStatus.class, batchConds);
+		
+		if(ValueUtil.isNotEqual(pasBatchStatus.getStatus(), FnFConstants.PAS_BATCH_STOP)) {
+			throw ThrowUtil.newInvalidStatus(batch.getStatus(), batch.getId(), JobBatch.STATUS_END);
+		}
+		
 		// 1. 배치 마감 전 처리 이벤트 전송
 		BatchCloseEvent event = new BatchCloseEvent(batch, SysEvent.EVENT_STEP_BEFORE);
 		event = (BatchCloseEvent)this.eventPublisher.publishEvent(event);

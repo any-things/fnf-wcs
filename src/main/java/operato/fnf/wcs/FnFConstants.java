@@ -28,4 +28,24 @@ public class FnFConstants {
 	 * 박스 투입 시 박스 분할해서 투입해야 할 주문 수량
 	 */
 	public static final String BOX_INPUT_SPLIT_BOX_PCS = "fnf.box.input.split.pcs";
+	
+	/**
+	 * PAS 배치 가동준비완료 상태
+	 */
+	public static final String PAS_BATCH_READY = "0";
+	
+	/**
+	 * PAS 배치 개시 상태
+	 */
+	public static final String PAS_BATCH_RUNNING = "1";
+	
+	/**
+	 * PAS 배치 종료 상태
+	 */
+	public static final String PAS_BATCH_STOP = "2";
+	
+	/**
+	 * PAS 배치 일시정지 상태
+	 */
+	public static final String PAS_BATCH_PAUSE = "3";
 }

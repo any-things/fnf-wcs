@@ -2,7 +2,9 @@ package operato.fnf.wcs.service.batch;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -63,21 +65,24 @@ public class SmsCloseBatchService extends AbstractQueryService {
 		this.sendInspBoxScanResultToWms(batch);
 		
 		// 3. WMS MHE_HR 테이블에 마감 전송
-		Query query = AnyOrmUtil.newConditionForExecution(batch.getDomainId());
-		query.addFilter("batchGroupId", batch.getBatchGroupId());
-		List<JobBatch> jobBatches = this.queryManager.selectList(JobBatch.class, query);
+		String jobBatchSql = "select brand_cd, equip_cd from job_batches where batch_group_id = :batchGroupId group by brand_cd, equip_cd";
+		Map<String, Object> query = ValueUtil.newMap("batchGroupId", batch.getBatchGroupId());
+		List<JobBatch> jobBatches = this.queryManager.selectListBySql(jobBatchSql, query, JobBatch.class, 0, 0);
 		
+		int jobSeq = 1;
+		Map<String, Object> brandList = new HashMap<String, Object>();
 		for (JobBatch jobBatch : jobBatches) {
+			brandList.put(jobBatch.getBrandCd(), jobSeq);
 			WmsRtnSortHr rtnSortHr = new WmsRtnSortHr();
 			rtnSortHr.setWhCd(FnFConstants.WH_CD_ICF);
 			rtnSortHr.setMheNo(jobBatch.getEquipCd());
 			rtnSortHr.setStrrId(jobBatch.getBrandCd());
-			//분류일자 언제를 말하는건지???
 			rtnSortHr.setSortDate(DateUtil.dateStr(new Date(), "yyyyMMdd"));
 			rtnSortHr.setSortSeq(jobBatch.getJobSeq());
 			rtnSortHr.setStatus("A");
 			rtnSortHr.setInsDatetime(new Date());
 			this.getDataSourceQueryManager(WmsRtnSortHr.class).insert(rtnSortHr);
+			jobSeq++;
 		}
 		
 		Query wmsCondition = new Query();
@@ -93,7 +98,7 @@ public class SmsCloseBatchService extends AbstractQueryService {
 			sortDr.setMheNo(rtnBox.getMheNo());
 			sortDr.setStrrId(rtnBox.getStrrId());
 			sortDr.setSortDate(rtnBox.getSortDate());
-			sortDr.setSortSeq(batch.getJobSeq());
+			sortDr.setSortSeq(ValueUtil.toString(brandList.get(rtnBox.getStrrId())) == null ? "1" : ValueUtil.toString(brandList.get(rtnBox.getStrrId())));
 			sortDr.setItemCd(rtnBox.getItemCd());
 			sortDr.setBoxNo(rtnBox.getBoxNo());
 			sortDr.setCmptQty(rtnBox.getCmptQty());

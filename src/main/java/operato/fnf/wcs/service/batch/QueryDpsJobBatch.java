@@ -59,8 +59,6 @@ public class QueryDpsJobBatch extends AbstractRestService {
 				wmsOrdCntParams.put("workUnit", obj.getWmsBatchNo());
 				IQueryManager wmsQueryManager = BeanUtil.get(DataSourceManager.class).getQueryManager(WmsMheDr.class);
 				Integer wmsOrderCnt = wmsQueryManager.selectBySql(orderQtySql, wmsOrdCntParams, Integer.class);
-				mainJob.setParentOrderQty(wmsOrderCnt);
-				mainJob.setBatchOrderQty(wmsOrderCnt);
 				
 				JobBatch sumJb = new JobBatch();
 				sumJb.setId("SUM");
@@ -72,6 +70,9 @@ public class QueryDpsJobBatch extends AbstractRestService {
 				sumJb.setBatchPcs(obj.getBatchPcs());
 				sumJb.setResultPcs(obj.getResultPcs());
 				sumJb.setResultBoxQty(obj.getResultBoxQty());
+				
+				mainJob.setParentOrderQty(wmsOrderCnt);
+				mainJob.setBatchOrderQty(wmsOrderCnt);
 				
 				totalJb.add(sumJb);
 				totalJb.add(obj);

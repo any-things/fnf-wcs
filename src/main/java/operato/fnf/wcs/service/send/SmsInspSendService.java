@@ -127,16 +127,6 @@ public class SmsInspSendService extends AbstractQueryService {
 		Date currentTime = new Date();
 		String srtDate = DateUtil.dateStr(currentTime, "yyyyMMdd");
 		String currentTimeStr = DateUtil.dateTimeStr(currentTime, "yyyyMMddHHmmss");
-
-//		Query conds = new Query();
-//		conds.addFilter("whCd", FnFConstants.WH_CD_ICF);
-//		conds.addFilter("strrId", batchInfo[0]);
-//		conds.addFilter("refSeason", batchInfo[1]);
-//		conds.addFilter("shopRtnType", batchInfo[2]);
-//		conds.addFilter("shopRtnSeq", batchInfo[3]);
-//		conds.addFilter("wcsIfChk", LogisConstants.N_CAP_STRING);
-		
-//		List<WmsWmtUifWcsInbRtnCnfm> rtnCnfmList = dsQueryManager.selectList(WmsWmtUifWcsInbRtnCnfm.class, conds);
 		
 		Query batchConds = new Query();
 		batchConds.addFilter("batchGroupId", batch.getBatchGroupId());

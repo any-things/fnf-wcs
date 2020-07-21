@@ -78,7 +78,7 @@ public class SmsCloseBatchService extends AbstractQueryService {
 			rtnSortHr.setMheNo(jobBatch.getEquipCd());
 			rtnSortHr.setStrrId(jobBatch.getBrandCd());
 			rtnSortHr.setSortDate(DateUtil.dateStr(new Date(), "yyyyMMdd"));
-			rtnSortHr.setSortSeq(jobBatch.getJobSeq());
+			rtnSortHr.setSortSeq(ValueUtil.toString(jobSeq));
 			rtnSortHr.setStatus("A");
 			rtnSortHr.setInsDatetime(new Date());
 			this.getDataSourceQueryManager(WmsRtnSortHr.class).insert(rtnSortHr);

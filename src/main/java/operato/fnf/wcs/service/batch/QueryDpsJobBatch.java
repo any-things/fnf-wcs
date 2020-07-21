@@ -5,14 +5,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.validation.ValidationException;
-
 import org.springframework.stereotype.Component;
 
 import operato.fnf.wcs.FnfUtils;
 import operato.fnf.wcs.entity.RfidBoxResult;
 import operato.fnf.wcs.entity.WmsMheDr;
-import operato.fnf.wcs.entity.WmsMheHr;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.model.ResponseObj;
 import xyz.elidom.dbist.dml.Filter;

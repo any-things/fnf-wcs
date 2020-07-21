@@ -92,6 +92,7 @@ public class QueryDpsJobBatch extends AbstractRestService {
 		
 		ResponseObj resp = new ResponseObj();
 		resp.setItems(totalJb);
+		resp.setTotal(jbPage.getTotalSize());
 		return resp;
 	}
 

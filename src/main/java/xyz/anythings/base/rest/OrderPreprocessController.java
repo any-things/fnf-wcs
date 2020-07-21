@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import operato.logis.sms.SmsConstants;
 import operato.logis.sms.query.SmsQueryStore;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
@@ -244,7 +245,15 @@ public class OrderPreprocessController extends AbstractRestService {
 	@RequestMapping(value = "/{batch_id}/{chute_no}/cell_info", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiDesc(description = "Cell Info")
 	public List<Map> findOrderStock(@PathVariable("chute_no") String chuteNo, @PathVariable("batch_id") String batchId) {
-		String sql = queryStore.getSrtnCellInfo();
+		JobBatch batch = AnyEntityUtil.findEntityById(true, JobBatch.class, batchId);
+		String sql = "";
+		
+		if(ValueUtil.isEqual(batch.getJobType(), SmsConstants.JOB_TYPE_SRTN)) {
+			sql = queryStore.getSrtnCellInfo();
+		} else {
+			sql = queryStore.getSdasCellInfo();
+		}
+		
 		Map<String, Object> params = ValueUtil.newMap("chuteNo,batchId", chuteNo, batchId);
 		return this.queryManager.selectListBySql(sql, params,Map.class, 0, 0);
 	}
@@ -314,7 +323,8 @@ public class OrderPreprocessController extends AbstractRestService {
 		jobBatch = this.queryManager.select(jobBatch);
 		@SuppressWarnings("unchecked")
 		Map<String, Object> chuteStatus = (Map<String, Object>) input.get("chuteStatus");
-		return this.preprocessService.generatePreprocess(jobBatch, chuteStatus);
+		String equipCd = "94"; // ValueUtil.toString(input.get("equipCd"))
+		return this.preprocessService.generatePreprocess(jobBatch, chuteStatus, equipCd);
 	}
 	
 	/**

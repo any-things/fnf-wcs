@@ -105,8 +105,12 @@ public class SmsCloseBatchService extends AbstractQueryService {
 			sortDr.setInsDatetime(new Date());
 			
 			rtnSortDrList.add(sortDr);
+			
+			rtnBox.setIfYn(LogisConstants.CAP_Y_STRING);
+			rtnBox.setCnfDatetime(new Date());
 		}
 		this.getDataSourceQueryManager(WmsRtnSortDr.class).insertBatch(rtnSortDrList);
+		this.queryManager.updateBatch(boxList);
 	}
 	
 	/**

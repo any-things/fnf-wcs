@@ -1,21 +1,28 @@
 package operato.logis.sms.service.impl.sdas;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import operato.logis.sms.entity.Chute;
+import operato.fnf.wcs.entity.WcsMhePasOrder;
 import operato.logis.sms.query.SmsQueryStore;
+import xyz.anythings.base.LogisConstants;
+import xyz.anythings.base.entity.Cell;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.entity.OrderPreprocess;
+import xyz.anythings.base.entity.Rack;
 import xyz.anythings.base.service.api.IInstructionService;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.anythings.sys.util.AnyOrmUtil;
 import xyz.anythings.sys.util.AnyValueUtil;
 import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.sys.SysConstants;
+import xyz.elidom.sys.util.DateUtil;
 import xyz.elidom.sys.util.MessageUtil;
 import xyz.elidom.sys.util.ThrowUtil;
 import xyz.elidom.util.ValueUtil;
@@ -40,7 +47,7 @@ public class SdasInstructionService extends AbstractQueryService implements IIns
 		// 3. OrderPreprocess 데이터 삭제
 		int instructCount = 0;
 		if(this.beforeInstructBatch(batch, equipCdList)) {
-			instructCount += this.doInstructBatch(batch, equipCdList);
+			instructCount += this.doInstructBatch(batch, equipCdList, false);
 		}
 		
 		return instructCount;
@@ -91,7 +98,7 @@ public class SdasInstructionService extends AbstractQueryService implements IIns
 	 * @param regionList
 	 * @return
 	 */
-	protected int doInstructBatch(JobBatch batch, List<String> regionList) {
+	protected int doInstructBatch(JobBatch batch, List<String> regionList, boolean isMerged) {
 		// 1. 배치의 주문 가공 정보 조회
 		Long domainId = batch.getDomainId();
 		Query query = AnyOrmUtil.newConditionForExecution(domainId);
@@ -99,54 +106,104 @@ public class SdasInstructionService extends AbstractQueryService implements IIns
 		List<OrderPreprocess> preprocesses = this.queryManager.selectList(OrderPreprocess.class, query);
 		
 		// 2. 주문 가공 정보로 부터 슈트 리스트 조회
-		List<String> chuteNoList = AnyValueUtil.filterValueListBy(preprocesses, "subEquipCd");
+		List<String> cellNoList = AnyValueUtil.filterValueListBy(preprocesses, "classCd");
 		Query condition = AnyOrmUtil.newConditionForExecution(domainId);
-		condition.addSelect("id", "chuteNo", "batchId", "status");
-		condition.addFilter("chuteNo", SysConstants.IN, chuteNoList);
-		condition.addFilter("activeFlag", 1);
-		condition.addOrder("chuteNo", false);
-		List<Chute> chuteList = this.queryManager.selectList(Chute.class, condition);
+		condition.addSelect("id", "cellCd", "classCd");
+		condition.addFilter("cellCd", SysConstants.IN, cellNoList);
+		condition.addFilter("activeFlag", true);
+		condition.addOrder("cellCd", false);
+		List<Cell> cellList = this.queryManager.selectList(Cell.class, condition);
 		
-		// 3. 슈트 중에 현재 작업 중이거나 사용 불가한 슈트가 있는지 체크
-		for(Chute chute : chuteList) {
-			if(ValueUtil.isEqualIgnoreCase(chute.getStatus(), JobBatch.STATUS_RUNNING)) {
-				// 호기에 다른 작업 배치가 할당되어 있습니다
-				throw ThrowUtil.newValidationErrorWithNoLog(true, "ASSIGNED_ANOTHER_BATCH", ValueUtil.toList(chute.getChuteNo()));
-			}
+		int cellCount = cellList.size();
+		for(int i = 0 ; i < cellCount ; i++) {
+			Cell cell = cellList.get(i);
+			List<OrderPreprocess> cellPreprocesses = AnyValueUtil.filterListBy(preprocesses, "classCd", cell.getCellCd());
+			this.generateJobInstances(batch, cell, cellPreprocesses);
 		}
+		this.interfaceSorter(batch);
+		this.interfaceRack(batch);
 		
-		int chuteCount = chuteList.size();
-		for(int i = 0 ; i < chuteCount ; i++) {
-			Chute chute = chuteList.get(i);
-			List<OrderPreprocess> chutePreprocesses = AnyValueUtil.filterListBy(preprocesses, "subEquipCd", chute.getChuteNo());
-			this.generateJobInstances(batch, chute, chutePreprocesses);
+		this.updateRackStatus(batch, preprocesses);
+		
+		AnyOrmUtil.updateBatch(cellList, 100, "classCd", "batchId");
+		if(!isMerged) {
+			batch.setStatus(JobBatch.STATUS_RUNNING);
+			batch.setInstructedAt(new Date());
+			this.queryManager.update(batch, "status", "instructedAt");
 		}
-				
-		
-		AnyOrmUtil.updateBatch(chuteList, 100, "status", "batchId", "jobType");
-		batch.setStatus(JobBatch.STATUS_RUNNING);
-		this.queryManager.update(batch, "status");
-		// TODO agent에 정보 생성후 전달 해야한다.
 		
 		return preprocesses.size();
 	}
 	
-	private void generateJobInstances(JobBatch batch, Chute chute, List<OrderPreprocess> preprocesses) {
-		Map<String, Object> params = ValueUtil.newMap("domainId,batchId", batch.getDomainId(), batch.getId());
-		String insertQuery = queryStore.getSdasGenerateJobInstancesQuery();
-		
+	private void generateJobInstances(JobBatch batch, Cell cell, List<OrderPreprocess> preprocesses) {
 		for (OrderPreprocess preprocess : preprocesses) {
-			params.put("equipCd", preprocess.getEquipCd());
-			params.put("equipNm", preprocess.getEquipNm());
-			params.put("subEquipCd", preprocess.getSubEquipCd());
-			params.put("shopNm", preprocess.getCellAssgnNm());
-			params.put("shopCd", preprocess.getCellAssgnCd());
-			this.queryManager.executeBySql(insertQuery, params);
+			cell.setClassCd(preprocess.getCellAssgnCd());
+			cell.setBatchId(batch.getBatchGroupId());
+		}
+	}
+	
+	private void updateRackStatus(JobBatch batch, List<OrderPreprocess> preprocesses) {
+		List<String> chuteList = AnyValueUtil.filterValueListBy(preprocesses, "subEquipCd");
+		
+		Query condition = AnyOrmUtil.newConditionForExecution(batch.getDomainId());
+		condition.addFilter("chuteNo", SysConstants.IN, chuteList);
+		List<Rack> rackList = this.queryManager.selectList(Rack.class, condition);
+		for (Rack rack : rackList) {
+			rack.setBatchId(batch.getBatchGroupId());
+			rack.setStatus(JobBatch.STATUS_RUNNING);
 		}
 		
-		chute.setStatus(JobBatch.STATUS_RUNNING);
-		chute.setBatchId(batch.getId());
-		chute.setJobType(batch.getJobType());
+		AnyOrmUtil.updateBatch(rackList, 100, "batchId", "status");
+	}
+	
+	@SuppressWarnings("rawtypes")
+	private void interfaceSorter(JobBatch batch) {
+		String[] batchInfo = batch.getId().split("-");
+		if(batchInfo.length < 4) {
+			String msg = MessageUtil.getMessage("no_batch_id", "설비에서 운영중인 BatchId가 아닙니다.");
+			throw ThrowUtil.newValidationErrorWithNoLog(msg);
+		}
+		
+		Map<String, Object> drParams = ValueUtil.newMap("batchId", batch.getId());
+		List<Map> mheDrList = this.queryManager.selectListBySql(queryStore.getSdasPasOrder(), drParams, Map.class, 0, 0);
+		
+		Query condition = new Query();
+		condition.addFilter("id", batch.getBatchGroupId());
+		JobBatch mainBatch = this.queryManager.select(JobBatch.class, condition);
+		
+		
+		List<WcsMhePasOrder> pasOrderList = new ArrayList<WcsMhePasOrder>(mheDrList.size());
+		String srtDate = DateUtil.dateStr(new Date(), "yyyyMMdd");
+		
+		for (Map detail : mheDrList) {
+			WcsMhePasOrder wcsMhePasOrder = new WcsMhePasOrder();
+			wcsMhePasOrder.setId(UUID.randomUUID().toString());
+			wcsMhePasOrder.setBatchNo(batch.getBatchGroupId());
+			wcsMhePasOrder.setJobDate(mainBatch.getJobDate().replaceAll("-", ""));
+			wcsMhePasOrder.setJobType(WcsMhePasOrder.JOB_TYPE_DAS);
+			wcsMhePasOrder.setBoxId(WcsMhePasOrder.DAS_BOX_ID);
+			wcsMhePasOrder.setChuteNo(ValueUtil.toString(detail.get("sub_equip_cd")));	
+			wcsMhePasOrder.setSkuCd(ValueUtil.toString(detail.get("item_cd")));
+			wcsMhePasOrder.setInputDate(srtDate);
+			wcsMhePasOrder.setSkuBcd(ValueUtil.toString(detail.get("barcode2")));
+			wcsMhePasOrder.setMheNo(batch.getEquipCd());
+			wcsMhePasOrder.setShopCd(ValueUtil.toString(detail.get("shipto_id")));
+			wcsMhePasOrder.setShopNm(ValueUtil.toString(detail.get("shipto_nm")));
+			wcsMhePasOrder.setOrderQty(ValueUtil.toInteger(detail.get("pick_qty")));
+			wcsMhePasOrder.setIfYn(LogisConstants.N_CAP_STRING);
+			wcsMhePasOrder.setInsDatetime(DateUtil.getDate());
+			pasOrderList.add(wcsMhePasOrder);
+		}
+		
+		if(ValueUtil.isNotEmpty(pasOrderList)) {
+			AnyOrmUtil.insertBatch(pasOrderList, 100);
+		}
+		
+		//우리쪽 MHE_HR / DR에 업데이트를 해줘야 한다???
+	}
+	
+	private void interfaceRack(JobBatch batch) {
+		
 	}
 	
 }

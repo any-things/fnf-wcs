@@ -17,14 +17,19 @@ public class WcsMhePasOrder extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	private static final long serialVersionUID = 304397296243144420L;
 	
 	/**
-	 * 상태 W : 대기 
+	 * JOB_TYPE : 출고
 	 */
 	public static final String JOB_TYPE_DAS = "1";	
 	
 	/**
-	 * 상태 C : 수신 취소  
+	 * JOB_TYPE : 반품
 	 */
 	public static final String JOB_TYPE_RTN = "0";
+	
+	/**
+	 * 출고인 경우 BOX_ID
+	 */
+	public static final String DAS_BOX_ID = "9";
 
 	@PrimaryKey
 	@Column (name = "id", nullable = false, length = 40)

@@ -1,18 +1,20 @@
 package operato.logis.sms.service.impl.sdas;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import operato.logis.sms.SmsConstants;
 import operato.logis.sms.entity.Chute;
 import operato.logis.sms.query.SmsQueryStore;
 import operato.logis.sms.service.model.ChuteStatus;
-import operato.logis.sms.service.model.SdasPreprocessSummary;
+import xyz.anythings.base.LogisConstants;
+import xyz.anythings.base.entity.Cell;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.entity.Order;
 import xyz.anythings.base.entity.OrderPreprocess;
@@ -22,16 +24,19 @@ import xyz.anythings.base.service.api.IPreprocessService;
 import xyz.anythings.sys.event.model.SysEvent;
 import xyz.anythings.sys.service.AbstractExecutionService;
 import xyz.anythings.sys.util.AnyOrmUtil;
+import xyz.anythings.sys.util.AnyValueUtil;
 import xyz.elidom.dbist.dml.Filter;
 import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.exception.server.ElidomRuntimeException;
 import xyz.elidom.orm.OrmConstants;
 import xyz.elidom.sys.SysConstants;
+import xyz.elidom.sys.util.MessageUtil;
 import xyz.elidom.sys.util.ThrowUtil;
 import xyz.elidom.util.ValueUtil;
 
 @Component("sdasPreprocessService")
 public class SdasPreprocessService extends AbstractExecutionService implements IPreprocessService {
+	
 	/**
 	 * Sms 쿼리 스토어
 	 */
@@ -48,45 +53,55 @@ public class SdasPreprocessService extends AbstractExecutionService implements I
 		return this.queryManager.selectList(OrderPreprocess.class, condition);
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public Map<String, ?> buildPreprocessSet(JobBatch batch, Query query) {
-		// 1. 가공할 주문 정보 조회
-		List<OrderPreprocess> preprocesses = this.queryManager.selectList(OrderPreprocess.class, query);
+		List<String> smsJobType = new ArrayList<>(3);
+		smsJobType.add(SmsConstants.JOB_TYPE_SDAS);
+		smsJobType.add(SmsConstants.JOB_TYPE_SDPS);
+		smsJobType.add(SmsConstants.JOB_TYPE_SRTN);
+		smsJobType.remove(batch.getJobType());
 		
-		// 2. 주문 가공 정보가 존재하지 않는다면 주문 정보로 생성
-		if(ValueUtil.isEmpty(preprocesses)) {
-			this.generatePreprocess(batch);
-			preprocesses = this.queryManager.selectList(OrderPreprocess.class, query);
+		String sql = "SELECT * FROM JOB_BATCHES WHERE JOB_TYPE <> :jobType AND JOB_TYPE IN ( :smsJobType ) and status = :status";
+		Map<String, Object> params = ValueUtil.newMap("jobType,smsJobType,status", batch.getJobType(), smsJobType, JobBatch.STATUS_RUNNING);
+		int cnt = this.queryManager.selectSizeBySql(sql, params);
+		
+		String errorType = "";
+		for (int i = 0 ; i < smsJobType.size() ; i++) {
+			errorType += smsJobType.get(i);
+			if(i +1 < smsJobType.size()) errorType += ", ";
 		}
-		// 4. 호기 정보 조회 - 주문 가공 화면의 우측 호기 리스트
-//		List<ChuteStatus> shopChutes = this.chuteAssignmentStatus(batch);
-		// 5. 호기별 물량 요약 정보 - 주문 가공 화면의 우측 상단 호기별 물량 요약 정보
-		List<SdasPreprocessSummary> summaryByChutes = this.preprocessSummaryByChutes(batch);
+		
+		if(cnt > 0) {
+			throw ThrowUtil.newAlreadyBstatus(errorType, JobBatch.STATUS_RUNNING);
+		}
+		
+		
+		List<Map> batchInfo = this.preprocessSummaryByBatch(batch);
+		
+		List<Map> summaryByChutes = this.preprocessSummaryByChutes(batch);
 		// 7. 리턴 데이터 셋
 		
-		return ValueUtil.newMap("regions,preprocesses,summary", preprocesses, preprocesses, summaryByChutes);
+		return ValueUtil.newMap("batch-info,chute-info", batchInfo, summaryByChutes);
 	}
 
 	@SuppressWarnings({ "unchecked", "null" })
 	@Override
 	public int generatePreprocess(JobBatch batch, Object... params) {
-		// 1. 주문 가공 데이터 삭제  
-		this.deletePreprocess(batch);
-		
 		/**
 		 * 1. 가공 버튼 클릭시 preprocess에 들어간다.
 		 * 2. 주문 가공 데이터를 생성하기 위해 주문 데이터를 조회
-		 * 3. 주문 가공 데이터 자동 설정
 		 */
 		
 		// 자동으로 생성할때 소터를 선택 해야 하는건지? 상위 시스템에서 소터 코드를 지정해서 내려 주는 것인지?
 		// TODO 현재는 고정
-		String sorterCd = "94";
+		String sorterCd = "";
 		
 		Map<String, Object> chuteStatus = null;
 		
 		if(ValueUtil.isNotEmpty(params)) {
 			chuteStatus = (Map<String, Object>) params[0];
+			sorterCd = ValueUtil.toString(params[1]);
 		} else {
 			Map<String, Object> sqlParams = ValueUtil.newMap("status,active_flag", Order.STATUS_WAIT, true);
 			List<Chute> chuteList = this.queryManager.selectList(Chute.class, sqlParams);
@@ -98,10 +113,10 @@ public class SdasPreprocessService extends AbstractExecutionService implements I
 		
 		// 2. 주문 가공 데이터를 생성하기 위해 주문 데이터를 조회
 		String sql = queryStore.getSdasGeneratePreprocessQuery();
-		Map<String, Object> condition = ValueUtil.newMap("equipCd,domainId,batchId", sorterCd, batch.getDomainId(), batch.getId());
+		Map<String, Object> condition = ValueUtil.newMap("domainId,batchId,jobType,equipCd", batch.getDomainId(), batch.getId(), batch.getJobType(), sorterCd);
 		List<OrderPreprocess> preprocessList = this.queryManager.selectListBySql(sql, condition, OrderPreprocess.class, 0, 0);
-//
-//		// 3. 주문 가공 데이터 자동 설정
+
+		// 3. 주문 가공 데이터를 추가
 		int generatedCount = ValueUtil.isNotEmpty(preprocessList) ? preprocessList.size() : 0;
 		if(generatedCount > 0) {
 			this.assignChuteByAuto(batch, sorterCd, preprocessList, false, chuteStatus);
@@ -144,13 +159,13 @@ public class SdasPreprocessService extends AbstractExecutionService implements I
 
 	@Override
 	public void resetPreprocess(JobBatch batch, boolean isRackReset, List<String> equipCdList) {
-		// TODO 초기화 버튼 클릭시
+		// TODO Auto-generated method stub
+		
 	}
 
+	@SuppressWarnings("null")
 	@Override
 	public int assignEquipLevel(JobBatch batch, String equipCds, List<OrderPreprocess> items, boolean automatically) {
-		// 자동할당 버튼 클릭시
-		
 		// 1. 상품 정보가 존재하는지 체크
 		if(ValueUtil.isEmpty(items)) {
 			throw new ElidomRuntimeException("There is no OrderPreprocess!");
@@ -159,13 +174,11 @@ public class SdasPreprocessService extends AbstractExecutionService implements I
 		Map<String, Object> sqlParams = ValueUtil.newMap("status,active_flag", Order.STATUS_WAIT, true);
 		List<Chute> chuteList = this.queryManager.selectList(Chute.class, sqlParams);
 		
-		Map<String, Object> chuteStatus = new HashMap<String, Object>();
+		Map<String, Object> chuteStatus = null;
 		for (Chute chute : chuteList) {
 			chuteStatus.put("chute-" + chute.getChuteNo(), SysConstants.CAP_Y_STRING);
 		}
 		
-		// 소터 코드 우선 고정으로...
-//		equipCds = "94";
 		// 2. 슈트 지정
 		if(automatically) {
 			assignChuteByAuto(batch, equipCds, items, true, chuteStatus);
@@ -183,86 +196,39 @@ public class SdasPreprocessService extends AbstractExecutionService implements I
 	}
 	
 	@SuppressWarnings("rawtypes")
-	public void assignChuteByAuto(JobBatch batch, String equipCds, List<OrderPreprocess> items, boolean isUpdate, Map<String, Object> chuteStatus) {
-		// 1. 오더타입 조회 (반품, 출고)
-		// 2. 슈트별 작업자 그룹이 있는지 확인
-		// 3. 1번이 있다면 작업자별 생산성으로 우선순위를 조회한다.
-		// 4. 작업할 오더의 우선순위를 조회한다.
-		// 5. 3번과 2번의 조합으로 슈트별 오더를 지정 (루프)
-		// 6. 주문 가공 정보 업데이트
+	public void assignChuteByAuto(JobBatch batch, String equipCd, List<OrderPreprocess> items, boolean isUpdate, Map<String, Object> chuteStatus) {
+		// 1. 작업지시 대기 인 배치를 Wait 상태로 변경한다.
+		this.resetOrderList(batch);
 		
-		// 작업자별 시작 슈트번호 ex) [002, 011, 021, 031....]
-		ArrayList<String> chuteArr = new ArrayList<>();
-		// 작업자별 역순 시작 슈트번호 ex) [031, 021, 011, 002....]
-		List<String> reverseChuteArr = new ArrayList<>();
-		// 작업자별 작업 범위  ex) [9, 10, 10, 11, ....]
-		ArrayList<Integer> chuteSizeArr = new ArrayList<>();
-		// 작업자별 작업 범위  ex) [11, 10, 10, 9, ....]
-		List<Integer> reverseChuteSizeArr = new ArrayList<>();
-		
-		String sql = queryStore.getSdasStationQuery();
-		Map<String, Object> params = ValueUtil.newMap("domainId,sorterCd,activeFlag", batch.getDomainId(), equipCds, 1);
-		List<Map> stationGroup = this.queryManager.selectListBySql(sql, params, Map.class, 0, 0);
-		
-		for (Map station : stationGroup) {
-			chuteArr.add(ValueUtil.toString(station.get("chute")));
-			chuteSizeArr.add(ValueUtil.toInteger(station.get("cnt")));
-		}
-		
-		int groupCnt = 0;
-		int maxCnt = 0;
-		// 매장 갯수 대비 사용하는 작업자 존 수량을 구한다.
-		// 존에 해당하는 슈트 수량이 다를수 있으므로 최대 슈트 갯수를 구한다.
-		for(int i = 0 ; i < chuteSizeArr.size() ; i++) {
-			groupCnt += chuteSizeArr.get(i);
-			if(maxCnt < chuteSizeArr.get(i)) {
-				maxCnt = chuteSizeArr.get(i);
-			}
-			if(items.size() <= groupCnt + chuteSizeArr.get(i)) {
-				if(maxCnt < chuteSizeArr.get(i)) {
-					maxCnt = chuteSizeArr.get(i);
-				}
-				groupCnt = i + 1;
-				break;
-			} 
-		}
-		
-		reverseChuteArr.addAll(chuteArr.subList(0, groupCnt));
-		Collections.reverse(reverseChuteArr);
-		reverseChuteSizeArr.addAll(chuteSizeArr.subList(0, groupCnt));
-		Collections.reverse(reverseChuteSizeArr);
-		
-		int listIdx = 0;
-		// 작업 존별로 수량이 많은 매장부터 할당 
-		for(int i = 0 ; i < maxCnt ; i++) {
-			for(int j = 0 ; j <groupCnt ; j++) {
-//				ArrayList<String> idList = new ArrayList<>();
-				// 순차적으로 할당
-				if(i % 2 == 0) {
-					if(i < chuteSizeArr.get(j) && i < items.size()) {
-						int chuteNo = Integer.parseInt(chuteArr.get(j)) + i;
-						String chuteName = String.format("%03d", chuteNo);
-						items.get(listIdx).setSubEquipCd(chuteName);
-						listIdx++;
-					}
-				// 역순으로 할당
-				} else {
-					if(i < reverseChuteSizeArr.get(j) && i < items.size()) {
-						int chuteNo = Integer.parseInt(reverseChuteArr.get(j)) + i;
-						String chuteName = String.format("%03d", chuteNo);
-						items.get(listIdx).setSubEquipCd(chuteName);
-						listIdx++;
-					}
-				}
+		// 2. 사용자가 선택한 슈트번호로 데이터 가공
+		List<String> enableChute = new ArrayList<String>();
+		for(Entry<String, Object> entry : chuteStatus.entrySet()) {
+			if(ValueUtil.isEqual(entry.getValue(), SysConstants.CAP_Y_STRING)) {
+				enableChute.add(entry.getKey().replaceAll("chute-check-", ""));
 			}
 		}
 		
-		// 매장 수량 대비 작업 존을 계산 했을 떄 나머지 수량에 대한 매장 할당
-		for(int i = listIdx ; i < items.size() ; i++) {
-			//ArrayList<String> idList = new ArrayList<>();
-			int chuteNo = Integer.parseInt(chuteArr.get(groupCnt)) + (i - listIdx);
-			String chuteName = String.format("%03d", chuteNo);
-			items.get(i).setSubEquipCd(chuteName);
+		// 2-1. 현재 셀에 매핑되어 있는 shop를 조회하여 할당할 batch에서 미리 셀을 할당한다.
+		this.alreadyAssignShop(items);
+		
+		
+		// 3. 사용가능한 Cell을 사용 순서순으로 조회한다.
+		String sql = queryStore.getSdasCellStatusQuery();
+		Map<String, Object> paramMap = ValueUtil.newMap("chuteNo,activeFlag", enableChute, true);
+		List<Map> cellList = this.queryManager.selectListBySql(sql, paramMap, Map.class, 0, 0);
+		
+		if(items.size() > cellList.size()) {
+			throw ThrowUtil.newValidationErrorWithNoLog(MessageUtil.getTerm("terms.text.custs_must_less_than_cells", "AvailableChute Count : " + cellList.size() + " SHOP COUNT : " + items.size()));
+		}
+		
+		// 4. 사용가능한 Cell에 주문정보를 매핑한다.
+		int cellIdx;
+		for(cellIdx = 0 ; cellIdx < cellList.size() ; cellIdx++) {
+			if(ValueUtil.isEmpty(items.get(cellIdx).getSubEquipCd()) && ValueUtil.isEmpty(items.get(cellIdx).getClassCd())) {
+				items.get(cellIdx).setSubEquipCd(ValueUtil.toString(cellList.get(cellIdx).get("chute_no")));
+				items.get(cellIdx).setClassCd(ValueUtil.toString(cellList.get(cellIdx).get("cell_cd")));
+			}
+			if(cellIdx >= items.size() - 1) break;
 		}
 		
 		if(isUpdate) {
@@ -272,6 +238,10 @@ public class SdasPreprocessService extends AbstractExecutionService implements I
 		}
 	}
 	
+	public void selectChuteGeneratePreprocess(JobBatch batch, Map<String, Object> chuteStatus) {
+		
+	}
+	
 	public void assignChuteByManual(JobBatch batch, String equipCds, List<OrderPreprocess> items) {
 		// 1. 오더타입 조회 (반품, 출고)
 		// 2. 화면에서 지정한 매장 or 상품을 슈트에 지정한다.
@@ -279,13 +249,13 @@ public class SdasPreprocessService extends AbstractExecutionService implements I
 	}
 	
 	/**
-	 * 작업 배치 별 주문 가공 정보에서 호기별로 상품 할당 상태를 조회하여 리턴
+	 * 작업 배치 별 주문 가공 정보에서 호기별로 SKU 할당 상태를 조회하여 리턴
 	 *
 	 * @param batch
 	 * @return
 	 */
 	public List<ChuteStatus> chuteAssignmentStatus(JobBatch batch) {
-		String sql = queryStore.getSdasChuteStatusQuery();
+		String sql = queryStore.getSrtnChuteStatusQuery();
 		Map<String, Object> params = ValueUtil.newMap("domainId,batchId", batch.getDomainId(), batch.getId());
 		return this.queryManager.selectListBySql(sql, params, ChuteStatus.class, 0, 0); 
 	}
@@ -296,10 +266,24 @@ public class SdasPreprocessService extends AbstractExecutionService implements I
 	 * @param batch 
 	 * @return
 	 */
-	public List<SdasPreprocessSummary> preprocessSummaryByChutes(JobBatch batch) {
-		String sql = queryStore.getSdasPreprocessSummaryQuery();
+	@SuppressWarnings("rawtypes")
+	public List<Map> preprocessSummaryByChutes(JobBatch batch) {
+		String sql = queryStore.getSdasChuteInfo();
 		Map<String, Object> params = ValueUtil.newMap("batchId", batch.getId());
-		return this.queryManager.selectListBySql(sql, params,SdasPreprocessSummary.class, 0, 0);
+		return this.queryManager.selectListBySql(sql, params,Map.class, 0, 0);
+	}
+	
+	/**
+	 * 작업 배치 요약 정보를 조회하여 리턴
+	 *
+	 * @param batch 
+	 * @return
+	 */
+	@SuppressWarnings("rawtypes")
+	public List<Map> preprocessSummaryByBatch(JobBatch batch) {
+		String sql = queryStore.getSdasBatchInfo();
+		Map<String, Object> params = ValueUtil.newMap("batchId", batch.getId());
+		return this.queryManager.selectListBySql(sql, params,Map.class, 0, 0);
 	}
 	
 	/**
@@ -322,13 +306,13 @@ public class SdasPreprocessService extends AbstractExecutionService implements I
 			throw new ElidomRuntimeException("No preprocess data.");
 		}
 		
-		// 4. 슈트 지정이 안 된 Shop_cd 가 존재하는지 체크
+		// 4. 슈트 지정이 안 된 sku_cd 가 존재하는지 체크
 		if(checkRackAssigned) {
 			int notAssignedCount = this.preprocessCount(batch, "sub_equip_cd", "is_blank", OrmConstants.EMPTY_STRING);
 			
 			if(notAssignedCount > 0) {
 				// 랙 지정이 안된 상품이 (notAssignedCount)개 있습니다.
-				throw ThrowUtil.newValidationErrorWithNoLog(true, "CHUTE_EXIST_NOT_ASSIGNED_SHOP", ValueUtil.toList("" + notAssignedCount));
+				throw ThrowUtil.newValidationErrorWithNoLog(true, "CHUTE_EXIST_NOT_ASSIGNED_SKU", ValueUtil.toList("" + notAssignedCount));
 			}
 		}
 	}
@@ -367,5 +351,51 @@ public class SdasPreprocessService extends AbstractExecutionService implements I
 	private void completePreprocessing(JobBatch batch) {
 		batch.setStatus(JobBatch.STATUS_READY);
 		this.queryManager.update(batch, "status");
+	}
+	
+	@SuppressWarnings("rawtypes")
+	private void resetOrderList(JobBatch batch) {
+		String selectSql = "SELECT OP.BATCH_ID, JB.STATUS FROM ORDER_PREPROCESSES OP LEFT OUTER JOIN JOB_BATCHES JB ON OP.BATCH_ID = JB.ID GROUP BY BATCH_ID, JB.STATUS";
+		List<Map> batchIdList = this.queryManager.selectListBySql(selectSql, new HashMap<String, Object>(), Map.class, 0, 0);
+		
+		if(ValueUtil.isNotEmpty(batchIdList)) {
+			List<String> batchIds = new ArrayList<String>();
+			for (Map batchId : batchIdList) {
+				if(!(ValueUtil.isEqual(ValueUtil.toString(batchId.get("status")), JobBatch.STATUS_RUNNING) || ValueUtil.isEqual(ValueUtil.toString(batchId.get("status")), JobBatch.STATUS_MERGED))) {
+					batchIds.add(ValueUtil.toString(batchId.get("batch_id")));
+				}
+			}
+			if(ValueUtil.isNotEmpty(batchIds)) {
+				List<String> enableStatus = new ArrayList<String>();
+				enableStatus.add(JobBatch.STATUS_READY);
+				enableStatus.add(JobBatch.STATUS_RECEIVE);
+				String updateSql = "UPDATE JOB_BATCHES SET STATUS = :status, UPDATED_AT = NOW() WHERE ID IN ( :id ) AND STATUS IN ( :enableStatus )";
+				Map<String, Object> updateParamMap = ValueUtil.newMap("status,id,enableStatus", JobBatch.STATUS_WAIT, batchIds, enableStatus);
+				this.queryManager.executeBySql(updateSql, updateParamMap);
+				
+				String deleteSql = "DELETE FROM ORDER_PREPROCESSES WHERE BATCH_ID IN ( :batchId )";
+				Map<String, Object> deleteParamMap = ValueUtil.newMap("batchId", batchIds);
+				this.queryManager.executeBySql(deleteSql, deleteParamMap);
+			}
+			
+		}
+	}
+	
+	private void alreadyAssignShop(List<OrderPreprocess> items) {
+		Query query = new Query();
+		query.addFilter("equipType", "Sorter");
+		query.addFilter("categoryFlag", false);
+		query.addFilter("batchId", LogisConstants.IS_NOT_NULL, LogisConstants.EMPTY_STRING);
+		List<Cell> cellList = this.queryManager.selectList(Cell.class, query);
+		for (Cell cell : cellList) {
+			for (OrderPreprocess item : items) {
+				if(ValueUtil.isEqual(cell.getClassCd(), item.getCellAssgnCd())) {
+					String chuteNo = cell.getEquipCd().split("-")[1];
+					int chuteCd = Integer.parseInt(chuteNo);
+					item.setSubEquipCd(String.format("%03d", chuteCd));
+					item.setClassCd(cell.getCellCd());
+				}
+			}
+		}
 	}
 }

@@ -11,12 +11,17 @@ import org.springframework.stereotype.Component;
 
 import operato.fnf.wcs.FnfUtils;
 import operato.fnf.wcs.entity.RfidBoxResult;
+import operato.fnf.wcs.entity.WmsMheDr;
+import operato.fnf.wcs.entity.WmsMheHr;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.model.ResponseObj;
 import xyz.elidom.dbist.dml.Filter;
 import xyz.elidom.dbist.dml.Page;
 import xyz.elidom.dbist.dml.Query;
+import xyz.elidom.orm.IQueryManager;
+import xyz.elidom.orm.manager.DataSourceManager;
 import xyz.elidom.sys.system.service.AbstractRestService;
+import xyz.elidom.util.BeanUtil;
 import xyz.elidom.util.ValueUtil;
 
 @Component
@@ -37,25 +42,25 @@ public class QueryDpsJobBatch extends AbstractRestService {
 			}
 		}
 		
-		String sql = FnfUtils.queryCustService("dps-job-batches");
-		if (ValueUtil.isEmpty(sql)) {
-			throw new ValidationException("커스텀 서비스 [dps-job-batches]가 존재하지 않습니다.");
-		}
+		String sql = FnfUtils.queryCustServiceWithError("dps-job-batches");
 		
 		Page<JobBatch> jbPage = queryManager.selectPageBySql(sql, queryParams, JobBatch.class, page, limit);
 		List<JobBatch> jbList = jbPage.getList();
-		JobBatch motherJb = null;
+		JobBatch mainJob = null;
 		List<JobBatch> totalJb = new ArrayList<>();
-		for (int i = jbList.size() - 1; i > 0; i--) {
+		for (int i = jbList.size() - 1; i >= 0; i--) {
 			JobBatch obj = jbList.get(i);
 			if (obj.getWmsBatchNo().equals(obj.getBatchGroupId())) {
-				motherJb = obj;
+				mainJob = obj;
+				
+				String orderQtySql = FnfUtils.queryCustServiceWithError("dps-main-job-wms-order-qty");
 				
 				Map<String, Object> wmsOrdCntParams = new HashMap<>();
 				wmsOrdCntParams.put("workUnit", obj.getWmsBatchNo());
-				Integer wmsOrderCnt = queryManager.selectBySql(sql, wmsOrdCntParams, Integer.class);
-				motherJb.setParentOrderQty(wmsOrderCnt);
-				motherJb.setBatchOrderQty(wmsOrderCnt);
+				IQueryManager wmsQueryManager = BeanUtil.get(DataSourceManager.class).getQueryManager(WmsMheDr.class);
+				Integer wmsOrderCnt = wmsQueryManager.selectBySql(orderQtySql, wmsOrdCntParams, Integer.class);
+				mainJob.setParentOrderQty(wmsOrderCnt);
+				mainJob.setBatchOrderQty(wmsOrderCnt);
 				
 				JobBatch sumJb = new JobBatch();
 				sumJb.setId("SUM");
@@ -73,14 +78,14 @@ public class QueryDpsJobBatch extends AbstractRestService {
 				continue;
 			}
 			
-			if (ValueUtil.isNotEmpty(motherJb)) {
+			if (ValueUtil.isNotEmpty(mainJob)) {
 				//motherJb.setParentOrderQty();
 				//motherJb.setBatchOrderQty();
 				//motherJb.setResultOrderQty();
-				motherJb.setParentPcs(motherJb.getParentPcs() - obj.getParentPcs());
-				motherJb.setBatchPcs(motherJb.getBatchPcs() - obj.getBatchPcs());
-				motherJb.setResultPcs(motherJb.getResultPcs() - obj.getResultPcs());
-				motherJb.setResultBoxQty(motherJb.getResultBoxQty() - obj.getResultBoxQty());
+				mainJob.setParentPcs(mainJob.getParentPcs() - obj.getParentPcs());
+				mainJob.setBatchPcs(mainJob.getBatchPcs() - obj.getBatchPcs());
+				mainJob.setResultPcs(mainJob.getResultPcs() - obj.getResultPcs());
+				mainJob.setResultBoxQty(mainJob.getResultBoxQty() - obj.getResultBoxQty());
 			}
 			
 			totalJb.add(obj);

@@ -32,7 +32,7 @@ public class QueryDpsJobBatch extends AbstractRestService {
 		List<Filter> filters = queryObj.getFilter();
 		Map<String, Object> queryParams = new HashMap<>();
 		if (ValueUtil.isNotEmpty(filters)) {
-			for (Filter filter: filters) {
+			for (Filter filter : filters) {
 				queryParams.put(filter.getName(), filter.getValue());
 			}
 		}
@@ -51,9 +51,15 @@ public class QueryDpsJobBatch extends AbstractRestService {
 			if (obj.getWmsBatchNo().equals(obj.getBatchGroupId())) {
 				motherJb = obj;
 				
+				Map<String, Object> wmsOrdCntParams = new HashMap<>();
+				wmsOrdCntParams.put("workUnit", obj.getWmsBatchNo());
+				Integer wmsOrderCnt = queryManager.selectBySql(sql, wmsOrdCntParams, Integer.class);
+				motherJb.setParentOrderQty(wmsOrderCnt);
+				motherJb.setBatchOrderQty(wmsOrderCnt);
+				
 				JobBatch sumJb = new JobBatch();
 				sumJb.setId("SUM");
-				sumJb.setWmsBatchNo("합계: " + obj.getBatchGroupId());
+				sumJb.setWmsBatchNo(obj.getBatchGroupId());
 				sumJb.setParentOrderQty(obj.getParentOrderQty());
 				sumJb.setBatchOrderQty(obj.getBatchOrderQty());
 				sumJb.setResultOrderQty(obj.getResultOrderQty());
@@ -67,13 +73,16 @@ public class QueryDpsJobBatch extends AbstractRestService {
 				continue;
 			}
 			
-			motherJb.setParentOrderQty(motherJb.getParentOrderQty() - obj.getParentOrderQty());
-			motherJb.setBatchOrderQty(motherJb.getBatchOrderQty() - obj.getBatchOrderQty());
-			motherJb.setResultOrderQty(motherJb.getResultOrderQty() - obj.getResultOrderQty());
-			motherJb.setParentPcs(motherJb.getParentPcs() - obj.getParentPcs());
-			motherJb.setBatchPcs(motherJb.getBatchPcs() - obj.getBatchPcs());
-			motherJb.setResultPcs(motherJb.getResultPcs() - obj.getResultPcs());
-			motherJb.setResultBoxQty(motherJb.getResultBoxQty() - obj.getResultBoxQty());
+			if (ValueUtil.isNotEmpty(motherJb)) {
+				//motherJb.setParentOrderQty();
+				//motherJb.setBatchOrderQty();
+				//motherJb.setResultOrderQty();
+				motherJb.setParentPcs(motherJb.getParentPcs() - obj.getParentPcs());
+				motherJb.setBatchPcs(motherJb.getBatchPcs() - obj.getBatchPcs());
+				motherJb.setResultPcs(motherJb.getResultPcs() - obj.getResultPcs());
+				motherJb.setResultBoxQty(motherJb.getResultBoxQty() - obj.getResultBoxQty());
+			}
+			
 			totalJb.add(obj);
 		}
 		

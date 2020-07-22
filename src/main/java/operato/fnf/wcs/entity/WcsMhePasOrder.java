@@ -79,6 +79,9 @@ public class WcsMhePasOrder extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	
 	@Column (name = "input_date", length = 8)
 	private String inputDate;
+	
+	@Column (name = "strr_id", length = 20)
+	private String strrId;
   
 	public String getId() {
 		return id;
@@ -206,5 +209,13 @@ public class WcsMhePasOrder extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setInputDate(String inputDate) {
 		this.inputDate = inputDate;
+	}
+
+	public String getStrrId() {
+		return strrId;
+	}
+
+	public void setStrrId(String strrId) {
+		this.strrId = strrId;
 	}
 }

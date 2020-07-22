@@ -244,6 +244,7 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 			wcsMhePasOrder.setOrderQty(rtnTrg.getInbEctQty());
 			wcsMhePasOrder.setInsDatetime(DateUtil.getDate());
 			wcsMhePasOrder.setIfYn(LogisConstants.N_CAP_STRING);
+			wcsMhePasOrder.setStrrId(rtnTrg.getStrrId());
 			
 			for (Map skuInfo : skuInfoList) {
 				if(ValueUtil.isEqual(skuInfo.get("sku_cd"), rtnTrg.getRefDetlNo())) {
@@ -277,7 +278,6 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		conds.addFilter("batchNo", batch.getBatchGroupId());
 		List<WcsMheDasOrder> dasList = this.queryManager.selectList(WcsMheDasOrder.class, conds);
 		List<String> dasSkuList = AnyValueUtil.filterValueListBy(dasList, "itemCd");
-		String srtDate = DateUtil.dateStr(new Date(), "yyyyMMdd");
 		
 		skuCdList.removeAll(dasSkuList);
 		Query condition = AnyOrmUtil.newConditionForExecution(domainId);
@@ -286,6 +286,10 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		condition.addFilter("batchId", batch.getId());
 		List<Order> skuInfoList = this.queryManager.selectList(Order.class, condition);
 		
+		Query mainConds = new Query();
+		mainConds.addFilter("id", batch.getBatchGroupId());
+		JobBatch mainBatch = this.queryManager.select(JobBatch.class, mainConds);
+		
 		for (OrderPreprocess preProcess : preprocesses) {
 			for (Order skuInfo : skuInfoList) {
 				if(ValueUtil.isEqual(skuInfo.getSkuCd(), preProcess.getCellAssgnCd())) {
@@ -293,7 +297,7 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 					wcsMheDasOrder.setId(UUID.randomUUID().toString());
 					wcsMheDasOrder.setBatchNo(batch.getBatchGroupId());
 					wcsMheDasOrder.setMheNo(batch.getEquipCd());
-					wcsMheDasOrder.setJobDate(srtDate);
+					wcsMheDasOrder.setJobDate(mainBatch.getJobDate().replaceAll("-", ""));
 					wcsMheDasOrder.setJobType(WcsMhePasOrder.JOB_TYPE_RTN);
 					wcsMheDasOrder.setItemCd(preProcess.getCellAssgnCd());
 					wcsMheDasOrder.setStrrId(batchInfo[0]);
@@ -310,28 +314,6 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 					dasOrderList.add(wcsMheDasOrder);
 				}
 			}
-//			WcsMheDasOrder wcsMheDasOrder = new WcsMheDasOrder();
-//			wcsMheDasOrder.setId(UUID.randomUUID().toString());
-//			wcsMheDasOrder.setBatchNo(batch.getBatchGroupId());
-//			wcsMheDasOrder.setMheNo(batch.getEquipCd());
-//			wcsMheDasOrder.setJobDate(batch.getJobDate().replaceAll("-", ""));
-//			wcsMheDasOrder.setJobType(WcsMhePasOrder.JOB_TYPE_RTN);
-//			wcsMheDasOrder.setItemCd(preProcess.getCellAssgnCd());
-//			wcsMheDasOrder.setStrrId(batchInfo[0]);
-//			wcsMheDasOrder.setItemSeason(batchInfo[1]);
-//			wcsMheDasOrder.setOrderQty(preProcess.getTotalPcs());
-//			wcsMheDasOrder.setInsDatetime(DateUtil.getDate());
-//			wcsMheDasOrder.setIfYn(LogisConstants.N_CAP_STRING);
-//			
-//			for (Order skuInfo : skuInfoList) {
-//				if(ValueUtil.isEqual(skuInfo.getSkuCd(), preProcess.getCellAssgnCd())) {
-//					wcsMheDasOrder.setCellNo(preProcess.getClassCd());
-//					wcsMheDasOrder.setChuteNo(preProcess.getSubEquipCd());
-//					wcsMheDasOrder.setBarcode(skuInfo.getSkuBarcd());
-//					wcsMheDasOrder.setBarcode2(skuInfo.getSkuBarcd2());
-//				}
-//			}
-//			dasOrderList.add(wcsMheDasOrder);
 		}
 		
 		if(ValueUtil.isNotEmpty(dasOrderList)) {

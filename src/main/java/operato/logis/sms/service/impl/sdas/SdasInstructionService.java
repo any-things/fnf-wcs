@@ -192,6 +192,7 @@ public class SdasInstructionService extends AbstractQueryService implements IIns
 			wcsMhePasOrder.setOrderQty(ValueUtil.toInteger(detail.get("pick_qty")));
 			wcsMhePasOrder.setIfYn(LogisConstants.N_CAP_STRING);
 			wcsMhePasOrder.setInsDatetime(DateUtil.getDate());
+			wcsMhePasOrder.setStrrId(ValueUtil.toString(detail.get("strr_id")));
 			pasOrderList.add(wcsMhePasOrder);
 		}
 		

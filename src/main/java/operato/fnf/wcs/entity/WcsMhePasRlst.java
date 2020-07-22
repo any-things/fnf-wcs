@@ -55,6 +55,9 @@ public class WcsMhePasRlst extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	@Column (name = "ins_datetime", type = xyz.elidom.dbist.annotation.ColumnType.DATETIME)
 	private Date insDatetime;
+	
+	@Column (name = "strr_id", length = 20)
+	private String strrId;
   
 	public String getId() {
 		return id;
@@ -166,5 +169,13 @@ public class WcsMhePasRlst extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setInsDatetime(Date insDatetime) {
 		this.insDatetime = insDatetime;
-	}	
+	}
+
+	public String getStrrId() {
+		return strrId;
+	}
+
+	public void setStrrId(String strrId) {
+		this.strrId = strrId;
+	}
 }

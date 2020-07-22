@@ -69,6 +69,10 @@ public class SmsCloseBatchService extends AbstractQueryService {
 		Map<String, Object> query = ValueUtil.newMap("batchGroupId", batch.getBatchGroupId());
 		List<JobBatch> jobBatches = this.queryManager.selectListBySql(jobBatchSql, query, JobBatch.class, 0, 0);
 		
+		Query mainConds = new Query();
+		mainConds.addFilter("id", batch.getBatchGroupId());
+		JobBatch mainBatch = this.queryManager.select(JobBatch.class, mainConds);
+		
 		int jobSeq = 1;
 		Map<String, Object> brandList = new HashMap<String, Object>();
 		for (JobBatch jobBatch : jobBatches) {
@@ -77,7 +81,7 @@ public class SmsCloseBatchService extends AbstractQueryService {
 			rtnSortHr.setWhCd(FnFConstants.WH_CD_ICF);
 			rtnSortHr.setMheNo(jobBatch.getEquipCd());
 			rtnSortHr.setStrrId(jobBatch.getBrandCd());
-			rtnSortHr.setSortDate(DateUtil.dateStr(new Date(), "yyyyMMdd"));
+			rtnSortHr.setSortDate(mainBatch.getJobDate().replaceAll("-", ""));
 			rtnSortHr.setSortSeq(ValueUtil.toString(jobSeq));
 			rtnSortHr.setStatus("A");
 			rtnSortHr.setInsDatetime(new Date());

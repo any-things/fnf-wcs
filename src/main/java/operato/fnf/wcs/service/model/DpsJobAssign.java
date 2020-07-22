@@ -36,6 +36,10 @@ public class DpsJobAssign {
 	 */
 	private String skuCd;
 	/**
+	 * 주문 수량
+	 */
+	private Integer orderQty;
+	/**
 	 * 재고 적치 수량 
 	 */
 	private Integer loadQty;
@@ -104,6 +108,14 @@ public class DpsJobAssign {
 		this.skuCd = skuCd;
 	}
 	
+	public Integer getOrderQty() {
+		return orderQty;
+	}
+
+	public void setOrderQty(Integer orderQty) {
+		this.orderQty = orderQty;
+	}
+
 	public Integer getLoadQty() {
 		return loadQty;
 	}

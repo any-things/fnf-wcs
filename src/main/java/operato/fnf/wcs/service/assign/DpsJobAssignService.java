@@ -213,7 +213,7 @@ public class DpsJobAssignService extends AbstractQueryService {
 	 * @return
 	 */
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	private int assignJobs(Stock stock, Order order, int stockQty, List<DpsJobAssign> candidates, List<String> skipOrderList) {
+	public int assignJobs(Stock stock, Order order, int stockQty, List<DpsJobAssign> candidates, List<String> skipOrderList) {
 		// 1. 주문별 주문 수량 초기화
 		int orderQty = 0;
 		
@@ -225,10 +225,9 @@ public class DpsJobAssignService extends AbstractQueryService {
 				break;
 			}
 			
-			// 2.2 주문 라인 내 첫 번째 순위인 경우에 
-			// - 주문 상품별 첫 번째 순위인 경우 ( 주문 수량 )
+			// 2.2 주문 라인 내 첫 번째 순위인 경우에 - 주문 상품별 첫 번째 순위인 경우 (주문 수량)
 			if(candidate.getRanking() == 1) {
-				orderQty = order.getOrderQty();
+				orderQty = candidate.getOrderQty();
 				
 				// 주문 내 상품 정보가 stock의 상품 정보와 같은 경우는 stockQty를 업데이트
 				if(ValueUtil.isEqual(candidate.getSkuCd(), stock.getSkuCd())) {
@@ -236,9 +235,8 @@ public class DpsJobAssignService extends AbstractQueryService {
 				}
 			}
 
-			// 2.3 최종 작업 할당 ...
-			//  - 할당 로케이션이 여러 개의 경우 에는 할당후 남은 orderQty Return 
-			if(orderQty > 0 ) {
+			// 2.3 최종 작업 할당 - 할당 로케이션이 여러 개의 경우에는 할당 후 남은 주문 수량 리턴  
+			if(orderQty > 0) {
 				// 2.3.1 주문 수량이 0 보다 큰 경우에만 할당 데이터 (DpsJobInstance) 생성 
 				orderQty = this.assignJob(candidate, stockQty, orderQty, skipOrderList);
 			}
@@ -261,9 +259,8 @@ public class DpsJobAssignService extends AbstractQueryService {
 		// 1. 할당 수량 초기화 
 		int assignQty = (orderQty > candidate.getLoadQty()) ? candidate.getLoadQty() : orderQty;
 		
-		// 2. DpsJobInstances 데이터 생성 
+		// 2. DpsJobInstance 데이터 생성 
 		StringJoiner dpsJobQry = new StringJoiner(SysConstants.LINE_SEPARATOR);
-		
 		dpsJobQry.add("insert into dps_job_instances(id, mhe_dr_id, dps_assign_at, cell_cd, status, wh_cd, strr_id, strr_nm, work_date, work_unit, wave_no, workseq_no, outb_tcd, outb_no, ref_no, shipto_id, shipto_nm, item_cd, item_nm, item_season, item_style, item_color, item_size, barcode, barcode2, pick_qty, cmpt_qty, mhe_no, pack_tcd, rfid_item_yn, box_input_seq, outb_ect_date)")
 		         .add("select :id, max(id), now(), :cellCd, 'A', max(wh_cd), max(strr_id), max(strr_nm), max(work_date), work_unit, max(wave_no), max(workseq_no), max(outb_tcd), max(outb_no), ref_no, max(shipto_id), max(shipto_nm), item_cd, max(item_nm), max(item_season), max(item_style), max(item_color), max(item_size), max(barcode), max(barcode2), :assignQty, 0, max(mhe_no), 'H', max(rfid_item_yn), 0, max(outb_ect_date)")
 		         .add("  from MHE_DR")
@@ -275,7 +272,6 @@ public class DpsJobAssignService extends AbstractQueryService {
 		
 		// 3. MHE_DR 데이터에 작업 할당 처리
 		String sql = "UPDATE MHE_DR SET STATUS = 'A', DPS_ASSIGN_YN = 'Y', DPS_ASSIGN_AT = now() WHERE WORK_UNIT = :batchId AND REF_NO = :orderNo AND ITEM_CD = :skuCd AND (DPS_ASSIGN_YN IS NULL OR DPS_ASSIGN_YN = 'N') AND (STATUS IS NULL OR STATUS = '')";
-		
 		this.queryManager.executeBySql(sql, params);
 		
 		// 4. 재고 업데이트

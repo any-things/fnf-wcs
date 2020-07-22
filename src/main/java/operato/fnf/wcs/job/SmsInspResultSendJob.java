@@ -21,7 +21,7 @@ import xyz.elidom.sys.system.context.DomainContext;
 import xyz.elidom.sys.util.ValueUtil;
 
 /**
- * SMS 박스 처리 실적 전송 Job
+ * SMS 반품 검수 박스 정보 소터 전송 Job
  * 
  * 
  */
@@ -86,7 +86,7 @@ public class SmsInspResultSendJob extends AbstractFnFJob {
 	private List<JobBatch> searchRunningBatches(Long domainId) {
 		Query condition = AnyOrmUtil.newConditionForExecution(domainId);
 		condition.addFilter("status", JobBatch.STATUS_RUNNING);
-		condition.addFilter("jobType", LogisConstants.IN, ValueUtil.toList(SmsConstants.JOB_TYPE_SRTN, SmsConstants.JOB_TYPE_SDAS));
+		condition.addFilter("jobType", LogisConstants.IN, ValueUtil.toList(SmsConstants.JOB_TYPE_SRTN));
 		condition.addOrder("jobType", false);
 		condition.addOrder("instructedAt", true);
 		List<JobBatch> jobBatches = this.queryManager.selectList(JobBatch.class, condition);

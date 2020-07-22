@@ -9,6 +9,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import operato.fnf.wcs.entity.WcsMheDasOrder;
 import operato.fnf.wcs.entity.WcsMhePasOrder;
 import operato.logis.sms.query.SmsQueryStore;
 import xyz.anythings.base.LogisConstants;
@@ -59,13 +60,38 @@ public class SdasInstructionService extends AbstractQueryService implements IIns
 		return 0;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public int mergeBatch(JobBatch mainBatch, JobBatch newBatch, Object... params) {
-		// 1. merge 대상 배치 상태 및 상품 or 거래처를 조회한다.
-		// 2. 새로운 배치에 대한 상품 or 거래처를 조회한다.
-		// 3. 기존 배치에 동일한 상품 or 거래처가 있으면 합치고(merge) 새로운 상품 or 거래처를 할당할 수 있는 chute가 있는지 조회한다.
-		// 4. 여유 chute가 부족하다면 실패 merge가능 하다면 배치 Update
-		return 0;
+		int retCnt = newBatch.getBatchOrderQty();
+		newBatch.setBatchGroupId(mainBatch.getId());
+		newBatch.setStageCd(mainBatch.getStageCd());
+		newBatch.setAreaCd(mainBatch.getAreaCd());
+		newBatch.setEquipGroupCd(mainBatch.getEquipGroupCd());
+		newBatch.setEquipType(mainBatch.getEquipType());
+		newBatch.setEquipCd(mainBatch.getEquipCd());
+		newBatch.setEquipNm(mainBatch.getEquipNm());
+		newBatch.setInputWorkers(mainBatch.getInputWorkers());
+		newBatch.setStatus(JobBatch.STATUS_MERGED);
+		newBatch.setInstructedAt(new Date());
+		this.queryManager.update(newBatch);
+		
+		Query query = AnyOrmUtil.newConditionForExecution(mainBatch.getDomainId());
+		query.addFilter("batchGroupId", mainBatch.getId());
+		List<JobBatch> jobBatches = this.queryManager.selectList(JobBatch.class, query);
+		List<String> batchIds = AnyValueUtil.filterValueListBy(jobBatches, "id");
+		Map<String, Object> condition = ValueUtil.newMap("batchIds", batchIds);
+		String sql = "SELECT COALESCE(SUM(TOTAL_PCS), 0) AS PCS_CNT, COUNT(DISTINCT(CELL_ASSGN_CD)) AS ORDER_CNT FROM ORDER_PREPROCESSES WHERE BATCH_ID IN (:batchIds )";
+		Map<String, Object> totalResult = this.queryManager.selectBySql(sql, condition, Map.class);
+		mainBatch.setParentOrderQty(ValueUtil.toInteger(totalResult.get("order_cnt")));
+		mainBatch.setParentPcs(ValueUtil.toInteger(totalResult.get("pcs_cnt")));
+		
+		this.queryManager.update(mainBatch, "parentOrderQty", "parentPcs");
+		
+		this.doInstructBatch(newBatch, null, true);
+		
+		
+		return retCnt;
 	}
 
 	@Override
@@ -129,7 +155,8 @@ public class SdasInstructionService extends AbstractQueryService implements IIns
 		if(!isMerged) {
 			batch.setStatus(JobBatch.STATUS_RUNNING);
 			batch.setInstructedAt(new Date());
-			this.queryManager.update(batch, "status", "instructedAt");
+			batch.setEquipGroupCd(batch.getEquipCd());
+			this.queryManager.update(batch, "status", "instructedAt", "equipGroupCd");
 		}
 		
 		return preprocesses.size();
@@ -158,19 +185,12 @@ public class SdasInstructionService extends AbstractQueryService implements IIns
 	
 	@SuppressWarnings("rawtypes")
 	private void interfaceSorter(JobBatch batch) {
-		String[] batchInfo = batch.getId().split("-");
-		if(batchInfo.length < 4) {
-			String msg = MessageUtil.getMessage("no_batch_id", "설비에서 운영중인 BatchId가 아닙니다.");
-			throw ThrowUtil.newValidationErrorWithNoLog(msg);
-		}
-		
 		Map<String, Object> drParams = ValueUtil.newMap("batchId", batch.getId());
 		List<Map> mheDrList = this.queryManager.selectListBySql(queryStore.getSdasPasOrder(), drParams, Map.class, 0, 0);
 		
 		Query condition = new Query();
 		condition.addFilter("id", batch.getBatchGroupId());
 		JobBatch mainBatch = this.queryManager.select(JobBatch.class, condition);
-		
 		
 		List<WcsMhePasOrder> pasOrderList = new ArrayList<WcsMhePasOrder>(mheDrList.size());
 		String srtDate = DateUtil.dateStr(new Date(), "yyyyMMdd");
@@ -187,8 +207,6 @@ public class SdasInstructionService extends AbstractQueryService implements IIns
 			wcsMhePasOrder.setInputDate(srtDate);
 			wcsMhePasOrder.setSkuBcd(ValueUtil.toString(detail.get("barcode2")));
 			wcsMhePasOrder.setMheNo(batch.getEquipCd());
-			wcsMhePasOrder.setShopCd(ValueUtil.toString(detail.get("shipto_id")));
-			wcsMhePasOrder.setShopNm(ValueUtil.toString(detail.get("shipto_nm")));
 			wcsMhePasOrder.setOrderQty(ValueUtil.toInteger(detail.get("pick_qty")));
 			wcsMhePasOrder.setIfYn(LogisConstants.N_CAP_STRING);
 			wcsMhePasOrder.setInsDatetime(DateUtil.getDate());
@@ -203,8 +221,45 @@ public class SdasInstructionService extends AbstractQueryService implements IIns
 		//우리쪽 MHE_HR / DR에 업데이트를 해줘야 한다???
 	}
 	
+	@SuppressWarnings("rawtypes")
 	private void interfaceRack(JobBatch batch) {
+		Map<String, Object> drParams = ValueUtil.newMap("batchId", batch.getId());
+		List<Map> mheDrList = this.queryManager.selectListBySql(queryStore.getSdasDasOrder(), drParams, Map.class, 0, 0);
 		
+		Query mainConds = new Query();
+		mainConds.addFilter("id", batch.getBatchGroupId());
+		JobBatch mainBatch = this.queryManager.select(JobBatch.class, mainConds);
+		
+		List<WcsMheDasOrder> dasOrderList = new ArrayList<WcsMheDasOrder>(mheDrList.size());
+		for (Map detail : mheDrList) {
+			WcsMheDasOrder wcsMheDasOrder = new WcsMheDasOrder();
+			wcsMheDasOrder.setId(UUID.randomUUID().toString());
+			wcsMheDasOrder.setBatchNo(batch.getBatchGroupId());
+			wcsMheDasOrder.setMheNo(batch.getEquipCd());
+			wcsMheDasOrder.setJobDate(mainBatch.getJobDate().replaceAll("-", ""));
+			wcsMheDasOrder.setJobType(WcsMhePasOrder.JOB_TYPE_DAS);
+			wcsMheDasOrder.setCellNo(ValueUtil.toString(detail.get("class_cd")));
+			wcsMheDasOrder.setChuteNo(ValueUtil.toString(detail.get("sub_equip_cd")));
+			wcsMheDasOrder.setShopCd(ValueUtil.toString(detail.get("shipto_id")));
+			wcsMheDasOrder.setShopNm(ValueUtil.toString(detail.get("shipto_nm")));
+			wcsMheDasOrder.setItemCd(ValueUtil.toString(detail.get("item_cd")));
+			wcsMheDasOrder.setBarcode(ValueUtil.toString(detail.get("barcode")));
+			wcsMheDasOrder.setBarcode2(ValueUtil.toString(detail.get("barcode2")));
+			wcsMheDasOrder.setStrrId(ValueUtil.toString(detail.get("strr_id")));
+			wcsMheDasOrder.setItemSeason(ValueUtil.toString(detail.get("item_season")));
+			wcsMheDasOrder.setItemStyle(ValueUtil.toString(detail.get("item_style")));
+			wcsMheDasOrder.setItemColor(ValueUtil.toString(detail.get("item_color")));
+			wcsMheDasOrder.setItemSize(ValueUtil.toString(detail.get("item_size")));
+			wcsMheDasOrder.setOrderQty(ValueUtil.toInteger(detail.get("pick_qty")));
+			wcsMheDasOrder.setIfYn(LogisConstants.N_CAP_STRING);
+			wcsMheDasOrder.setInsDatetime(DateUtil.getDate());
+			
+			dasOrderList.add(wcsMheDasOrder);
+		}
+		
+		if(ValueUtil.isNotEmpty(dasOrderList)) {
+			AnyOrmUtil.insertBatch(dasOrderList, 100);
+		}
 	}
 	
 }

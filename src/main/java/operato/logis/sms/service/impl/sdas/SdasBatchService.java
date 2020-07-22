@@ -1,4 +1,4 @@
-package operato.logis.sms.service.impl.srtn;
+package operato.logis.sms.service.impl.sdas;
 
 import java.util.Date;
 import java.util.List;
@@ -24,13 +24,12 @@ import xyz.elidom.sys.util.ThrowUtil;
 import xyz.elidom.util.ValueUtil;
 
 /**
- * 반품 작업 배치 서비스
+ * SDAS 작업 배치 서비스
  * 
- * 
+ *
  */
-@Component("srtnBatchService")
-public class SrtnBatchService extends AbstractLogisService implements IBatchService {
-
+@Component("sdasBatchService")
+public class SdasBatchService extends AbstractLogisService implements IBatchService {
 	/**
 	 * Sms 배치 종료 서비스
 	 */

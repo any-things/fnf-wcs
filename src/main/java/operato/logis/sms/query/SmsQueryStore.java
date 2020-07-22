@@ -120,6 +120,14 @@ public class SmsQueryStore extends AbstractQueryStore {
 	public String getSdasPasOrder() {
 		return this.getQueryByPath("sdas/sdasPasOrder");
 	}
+	
+	/**
+	 * SDAS DAS Order 전송
+	 * 
+	 */
+	public String getSdasDasOrder() {
+		return this.getQueryByPath("sdas/sdasDasOrder");
+	}
 
 	
 	/*** SRTN 관련 데이터 쿼리 ***/

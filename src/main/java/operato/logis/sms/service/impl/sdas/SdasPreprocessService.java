@@ -249,7 +249,7 @@ public class SdasPreprocessService extends AbstractExecutionService implements I
 	}
 	
 	/**
-	 * 작업 배치 별 주문 가공 정보에서 호기별로 SKU 할당 상태를 조회하여 리턴
+	 * 작업 배치 별 주문 가공 정보에서 호기별로 SHOP 할당 상태를 조회하여 리턴
 	 *
 	 * @param batch
 	 * @return
@@ -306,13 +306,13 @@ public class SdasPreprocessService extends AbstractExecutionService implements I
 			throw new ElidomRuntimeException("No preprocess data.");
 		}
 		
-		// 4. 슈트 지정이 안 된 sku_cd 가 존재하는지 체크
+		// 4. 슈트 지정이 안 된 shop_cd 가 존재하는지 체크
 		if(checkRackAssigned) {
 			int notAssignedCount = this.preprocessCount(batch, "sub_equip_cd", "is_blank", OrmConstants.EMPTY_STRING);
 			
 			if(notAssignedCount > 0) {
 				// 랙 지정이 안된 상품이 (notAssignedCount)개 있습니다.
-				throw ThrowUtil.newValidationErrorWithNoLog(true, "CHUTE_EXIST_NOT_ASSIGNED_SKU", ValueUtil.toList("" + notAssignedCount));
+				throw ThrowUtil.newValidationErrorWithNoLog(true, "CHUTE_EXIST_NOT_ASSIGNED_SHOP", ValueUtil.toList("" + notAssignedCount));
 			}
 		}
 	}

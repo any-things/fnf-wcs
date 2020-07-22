@@ -275,10 +275,10 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 	 */
 	private void updateWmfIfToReceiptItems(JobBatch jobBatch, BatchReceiptItem item) {
 		if(ValueUtil.isEqual(item.getJobType(), SmsConstants.JOB_TYPE_SDAS)) {
-			Map<String,Object> params = ValueUtil.newMap("mheNo,status,rcvDatetime,whCd,workUnit",
-					this.mheNo, this.receiveStatus, DateUtil.getDate(), this.whCd, item.getWmsBatchNo());
-	 
-			this.getFnfQueryManager().executeBySql(this.batchQueryStore.getWmsIfToSdasReceiptUpdateQuery(), params);
+//			Map<String,Object> params = ValueUtil.newMap("mheNo,status,rcvDatetime,whCd,workUnit",
+//					this.mheNo, this.receiveStatus, DateUtil.getDate(), this.whCd, item.getWmsBatchNo());
+//	 
+//			this.getFnfQueryManager().executeBySql(this.batchQueryStore.getWmsIfToSdasReceiptUpdateQuery(), params);
 		} else if(ValueUtil.isEqual(item.getJobType(), SmsConstants.JOB_TYPE_SRTN)) {
 		}
 	}

@@ -164,7 +164,8 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		if(!isMerged) {
 			batch.setStatus(JobBatch.STATUS_RUNNING);
 			batch.setInstructedAt(new Date());
-			this.queryManager.update(batch, "status", "instructedAt");
+			batch.setEquipGroupCd(batch.getEquipCd());
+			this.queryManager.update(batch, "status", "instructedAt", "equipGroupCd");
 		}
 		
 		// TODO agent에 정보 생성후 전달 해야한다.

@@ -20,6 +20,8 @@ import operato.fnf.wcs.entity.WmsWmtUifWcsInbRtnCnfm;
 import operato.logis.sms.query.SmsQueryStore;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
+import xyz.anythings.base.entity.SKU;
+import xyz.anythings.base.service.api.ISkuSearchService;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.anythings.sys.util.AnyOrmUtil;
 import xyz.anythings.sys.util.AnyValueUtil;
@@ -44,6 +46,12 @@ public class SmsInspSendService extends AbstractQueryService {
 	 */
 	@Autowired
 	protected ApplicationEventPublisher eventPublisher;
+	
+	/**
+	 * 상품 조회 서비스
+	 */
+	@Autowired
+	private ISkuSearchService skuSearchService;
 	
 	@Autowired
 	protected SmsQueryStore queryStore;
@@ -134,7 +142,7 @@ public class SmsInspSendService extends AbstractQueryService {
 		List<JobBatch> batchGroupList = this.queryManager.selectList(JobBatch.class, batchConds);
 		
 		String rtnCnfmSql = "select * from WMT_UIF_WCS_INB_RTN_CNFM where WH_CD = :whCd and (strr_id = :strrId AND ref_season = :refSeason AND SHOP_RTN_TYPE = :shopRtnType AND SHOP_RTN_SEQ = :shopRtnSeq AND (WCS_IF_CHK = :wcsIfChk OR WCS_IF_CHK IS NULL))";
-		String rtnTrgSql = "SELECT REF_NO, STRR_ID FROM WMT_UIF_IMP_INB_RTN_TRG WHERE WH_CD = :whCd and (strr_id = :strrId AND ref_season = :refSeason AND SHOP_RTN_TYPE = :shopRtnType AND SHOP_RTN_SEQ = :shopRtnSeq)";
+//		String rtnTrgSql = "SELECT REF_NO, STRR_ID FROM WMT_UIF_IMP_INB_RTN_TRG WHERE WH_CD = :whCd and (strr_id = :strrId AND ref_season = :refSeason AND SHOP_RTN_TYPE = :shopRtnType AND SHOP_RTN_SEQ = :shopRtnSeq)";
 		for (JobBatch jobBatch : batchGroupList) {
 			String[] jobBatchInfo = jobBatch.getId().split("-");
 			if(jobBatchInfo.length < 4) {
@@ -143,14 +151,14 @@ public class SmsInspSendService extends AbstractQueryService {
 			}
 			
 			rtnCnfmSql += " or (strr_id ='" + jobBatchInfo[0] + "' AND ref_season = '" + jobBatchInfo[1] + "' AND SHOP_RTN_TYPE ='" + jobBatchInfo[2] + "' AND SHOP_RTN_SEQ = " + jobBatchInfo[3] + "AND (WCS_IF_CHK = 'N' OR WCS_IF_CHK IS NULL))";
-			rtnTrgSql += " or (strr_id ='" + jobBatchInfo[0] + "' AND ref_season = '" + jobBatchInfo[1] + "' AND SHOP_RTN_TYPE ='" + jobBatchInfo[2] + "' AND SHOP_RTN_SEQ = " + jobBatchInfo[3] + ")";
+//			rtnTrgSql += " or (strr_id ='" + jobBatchInfo[0] + "' AND ref_season = '" + jobBatchInfo[1] + "' AND SHOP_RTN_TYPE ='" + jobBatchInfo[2] + "' AND SHOP_RTN_SEQ = " + jobBatchInfo[3] + ")";
 		}
-		rtnTrgSql += "GROUP BY REF_NO, STRR_ID";
+//		rtnTrgSql += "GROUP BY REF_NO, STRR_ID";
 		
 		IQueryManager dsQueryManager = this.getDataSourceQueryManager(WmsWmtUifWcsInbRtnCnfm.class);
 		Map<String, Object> conds = ValueUtil.newMap("whCd,strrId,refSeason,shopRtnType,shopRtnSeq,wcsIfChk", FnFConstants.WH_CD_ICF, batchInfo[0], batchInfo[1], batchInfo[2], batchInfo[3], LogisConstants.N_CAP_STRING);
 		List<WmsWmtUifWcsInbRtnCnfm> rtnCnfmList = dsQueryManager.selectListBySql(rtnCnfmSql, conds, WmsWmtUifWcsInbRtnCnfm.class, 0, 0);
-		List<WmsWmtUifImpInbRtnTrg> rtnTrgList = dsQueryManager.selectListBySql(rtnTrgSql, conds, WmsWmtUifImpInbRtnTrg.class, 0, 0);
+//		List<WmsWmtUifImpInbRtnTrg> rtnTrgList = dsQueryManager.selectListBySql(rtnTrgSql, conds, WmsWmtUifImpInbRtnTrg.class, 0, 0);
 		
 		Query condition = new Query();
 		condition.addFilter("batchNo", batch.getBatchGroupId());
@@ -173,13 +181,13 @@ public class SmsInspSendService extends AbstractQueryService {
 		
 		
 		// 임시 Start
-		for (WcsMhePasRlst wcsMhePasRlst : tempResults) {
-			for (WmsWmtUifImpInbRtnTrg rtnTrg : rtnTrgList) {
-				if(ValueUtil.isEqual(wcsMhePasRlst.getBoxId(), rtnTrg.getRefNo())) {
-					wcsMhePasRlst.setStrrId(rtnTrg.getStrrId());
-				}
-			}
-		}
+//		for (WcsMhePasRlst wcsMhePasRlst : tempResults) {
+//			for (WmsWmtUifImpInbRtnTrg rtnTrg : rtnTrgList) {
+//				if(ValueUtil.isEqual(wcsMhePasRlst.getBoxId(), rtnTrg.getRefNo())) {
+//					wcsMhePasRlst.setStrrId(rtnTrg.getStrrId());
+//				}
+//			}
+//		}
 		// 임시 End
 		
 		IQueryManager wmsQueryManager = this.getDataSourceQueryManager(WmsWmtUifImpMheRtnScan.class);
@@ -194,7 +202,13 @@ public class SmsInspSendService extends AbstractQueryService {
 			scan.setInterfaceCrtDt(srtDate);
 			scan.setInterfaceNo(ValueUtil.toString(interfaceNo));
 			scan.setWhCd(FnFConstants.WH_CD_ICF);
-			scan.setStrrId(result.getStrrId());
+			if(ValueUtil.isEmpty(result.getStrrId())) {
+				SKU sku = this.skuSearchService.findSku(batch.getDomainId(), batch.getComCd(), result.getSkuCd(), false);
+				if(ValueUtil.isEmpty(sku)) sku.setBrandCd("Empty");
+				scan.setStrrId(sku.getBrandCd());
+			} else {
+				scan.setStrrId(result.getStrrId());
+			}
 			scan.setInbNo(result.getBoxId());
 			scan.setInbDetlNo(result.getSkuCd());
 			scan.setItemCd(result.getSkuCd());

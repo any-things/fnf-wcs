@@ -152,6 +152,9 @@ public class RfidBoxItem extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "tp_send", length = 1)
 	private String tpSend;
 
+	@Column (name = "cd_equipment")
+	private String cdEquipment;
+	
 	public String getCdWarehouse() {
 		return cdWarehouse;
 	}
@@ -326,6 +329,14 @@ public class RfidBoxItem extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setTpSend(String tpSend) {
 		this.tpSend = tpSend;
+	}
+
+	public String getCdEquipment() {
+		return cdEquipment;
+	}
+
+	public void setCdEquipment(String cdEquipment) {
+		this.cdEquipment = cdEquipment;
 	}
 
 }

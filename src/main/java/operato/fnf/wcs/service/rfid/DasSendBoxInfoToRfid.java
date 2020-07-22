@@ -183,7 +183,7 @@ public class DasSendBoxInfoToRfid extends AbstractQueryService {
 		Map<String, Object> order = queryManager.selectBySql(extFieldsSql, params, Map.class);
 		rfidBoxItem.setRefNo(ValueUtil.toString(order.get("ref_no")));
 		rfidBoxItem.setOutbTcd(ValueUtil.toString(order.get("outb_tcd")));
-		rfidBoxItem.setCdEquipment(ValueUtil.toString(order.get("equip_cd")));
+		rfidBoxItem.setCdEquipment(ValueUtil.toString(order.get("equip_group_cd")));
 		rfidQueryMgr.insert(rfidBoxItem);
 	}
 }

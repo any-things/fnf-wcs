@@ -50,12 +50,18 @@ public class QueryDpsJobBatch extends AbstractRestService {
 			if (obj.getWmsBatchNo().equals(obj.getBatchGroupId())) {
 				mainJob = obj;
 				
-				String orderQtySql = FnfUtils.queryCustServiceWithError("dps-main-job-wms-order-qty");
+//				String orderQtySql = FnfUtils.queryCustServiceWithError("dps-main-job-wms-order-qty");				
+//				Map<String, Object> wmsOrdCntParams = new HashMap<>();
+//				wmsOrdCntParams.put("workUnit", obj.getWmsBatchNo());
+//				IQueryManager wmsQueryManager = BeanUtil.get(DataSourceManager.class).getQueryManager(WmsMheDr.class);
+//				Integer wmsOrderCnt = wmsQueryManager.selectBySql(orderQtySql, wmsOrdCntParams, Integer.class);
 				
+				String orderQtySql = FnfUtils.queryCustServiceWithError("dps-main-job-order-qty");				
 				Map<String, Object> wmsOrdCntParams = new HashMap<>();
-				wmsOrdCntParams.put("workUnit", obj.getWmsBatchNo());
+				wmsOrdCntParams.put("waveNo", obj.getWcsBatchNo());
+				wmsOrdCntParams.put("workseqNo", obj.getJobSeq());
 				IQueryManager wmsQueryManager = BeanUtil.get(DataSourceManager.class).getQueryManager(WmsMheDr.class);
-				Integer wmsOrderCnt = wmsQueryManager.selectBySql(orderQtySql, wmsOrdCntParams, Integer.class);
+				Integer orderCnt = wmsQueryManager.selectBySql(orderQtySql, wmsOrdCntParams, Integer.class);
 				
 				JobBatch sumJb = new JobBatch();
 				sumJb.setId("SUM");
@@ -68,8 +74,8 @@ public class QueryDpsJobBatch extends AbstractRestService {
 				sumJb.setResultPcs(obj.getResultPcs());
 				sumJb.setResultBoxQty(obj.getResultBoxQty());
 				
-				mainJob.setParentOrderQty(wmsOrderCnt);
-				mainJob.setBatchOrderQty(wmsOrderCnt);
+				mainJob.setParentOrderQty(orderCnt);
+				mainJob.setBatchOrderQty(orderCnt);
 				
 				totalJb.add(sumJb);
 				totalJb.add(obj);

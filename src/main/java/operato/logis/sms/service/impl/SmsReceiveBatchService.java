@@ -194,6 +194,9 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 	 * WMS IF 테이블에서 SDPS 수신 대상 데이터 확인
 	 * 
 	 * @param receipt
+	 * @param jobType
+	 * @param jobDate
+	 * @param stageCd
 	 * @return
 	 */
 	private List<BatchReceiptItem> getWmfIfToSdpsReceiptItems(BatchReceipt receipt, String jobType, String jobDate, String stageCd) {

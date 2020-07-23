@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import operato.fnf.wcs.entity.OdpsZoneInv;
+import operato.fnf.wcs.entity.WmsOdpsZoneInv;
 
 import xyz.elidom.orm.system.annotation.service.ApiDesc;
 import xyz.elidom.orm.system.annotation.service.ServiceDesc;
@@ -29,7 +29,7 @@ public class OdpsZoneInvController extends AbstractRestService {
 
 	@Override
 	protected Class<?> entityClass() {
-		return OdpsZoneInv.class;
+		return WmsOdpsZoneInv.class;
 	}
   
 	@RequestMapping(method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
@@ -45,7 +45,7 @@ public class OdpsZoneInvController extends AbstractRestService {
 
 	@RequestMapping(value="/{id}", method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
 	@ApiDesc(description="Find one by ID")
-	public OdpsZoneInv findOne(@PathVariable("id") String id) {
+	public WmsOdpsZoneInv findOne(@PathVariable("id") String id) {
 		return this.getOne(this.entityClass(), id);
 	}
 
@@ -58,13 +58,13 @@ public class OdpsZoneInvController extends AbstractRestService {
 	@RequestMapping(method=RequestMethod.POST, consumes=MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
 	@ResponseStatus(HttpStatus.CREATED)
 	@ApiDesc(description="Create")
-	public OdpsZoneInv create(@RequestBody OdpsZoneInv input) {
+	public WmsOdpsZoneInv create(@RequestBody WmsOdpsZoneInv input) {
 		return this.createOne(input);
 	}
 
 	@RequestMapping(value="/{id}", method=RequestMethod.PUT, consumes=MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
 	@ApiDesc(description="Update")
-	public OdpsZoneInv update(@PathVariable("id") String id, @RequestBody OdpsZoneInv input) {
+	public WmsOdpsZoneInv update(@PathVariable("id") String id, @RequestBody WmsOdpsZoneInv input) {
 		return this.updateOne(input);
 	}
   
@@ -76,7 +76,7 @@ public class OdpsZoneInvController extends AbstractRestService {
   
 	@RequestMapping(value="/update_multiple", method=RequestMethod.POST, consumes=MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
 	@ApiDesc(description="Create, Update or Delete multiple at one time")
-	public Boolean multipleUpdate(@RequestBody List<OdpsZoneInv> list) {
+	public Boolean multipleUpdate(@RequestBody List<WmsOdpsZoneInv> list) {
 		return this.cudMultipleData(this.entityClass(), list);
 	}
 

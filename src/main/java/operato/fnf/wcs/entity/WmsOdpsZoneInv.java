@@ -9,7 +9,7 @@ import xyz.elidom.dbist.annotation.Table;
 	, ignoreDdl = true
 	, idStrategy = GenerationRule.NONE
 	, dataSourceType=DataSourceType.DATASOURCE)
-public class OdpsZoneInv extends xyz.elidom.orm.entity.basic.ElidomStampHook {
+public class WmsOdpsZoneInv extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	/**
 	 * SerialVersion UID
 	 */

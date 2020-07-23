@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import operato.fnf.wcs.FnFConstants;
+import operato.fnf.wcs.FnfUtils;
 import operato.fnf.wcs.entity.WcsMheDr;
 import operato.fnf.wcs.entity.WcsMheHr;
 import operato.fnf.wcs.entity.WmsMheDr;
@@ -32,6 +33,8 @@ import xyz.anythings.sys.util.AnyOrmUtil;
 import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.exception.server.ElidomRuntimeException;
 import xyz.elidom.orm.IQueryManager;
+import xyz.elidom.sys.entity.Setting;
+import xyz.elidom.sys.util.ThrowUtil;
 import xyz.elidom.util.BeanUtil;
 import xyz.elidom.util.ValueUtil;
 
@@ -110,8 +113,18 @@ public class DpsReceiveBatchService extends AbstractQueryService {
 	 */
 	@EventListener(classes = BatchReceiveEvent.class, condition = "#event.isExecuted() == false and #event.eventType == 20 and #event.eventStep == 1 and (#event.jobType == 'DPS')")
 	public void handleStartToReceive(BatchReceiveEvent event) {
+		Setting setting = getSetting(FnfUtils.DPS_RECEIVE_MUTEX_LOCK);
+		String mutexStatus = setting.getValue();
+		
+		if (ValueUtil.isNotEmpty(mutexStatus) && mutexStatus.equalsIgnoreCase(FnfUtils.MUTEX_LOCK_ON)) {
+			throw ThrowUtil.newValidationErrorWithNoLog("현재 수신중인 작업배치가 존재합니다, 잠시후 다시 시도해주세요");
+		}
+
 		BatchReceipt receipt = event.getReceiptData();
 		List<BatchReceiptItem> items = receipt.getItems();
+		
+		DpsReceiveBatchService selfSvc = BeanUtil.get(DpsReceiveBatchService.class);
+		selfSvc.mutexLock(FnfUtils.DPS_RECEIVE_MUTEX_LOCK, FnfUtils.MUTEX_LOCK_ON);
 		
 		for(BatchReceiptItem item : items) {
 			if(ValueUtil.isEqualIgnoreCase(DpsConstants.JOB_TYPE_DPS, item.getJobType())) {
@@ -120,6 +133,28 @@ public class DpsReceiveBatchService extends AbstractQueryService {
 		}
 		
 		event.setExecuted(true);
+		selfSvc.mutexLock(FnfUtils.DPS_RECEIVE_MUTEX_LOCK, FnfUtils.MUTEX_LOCK_OFF);
+	}
+	
+	private Setting getSetting(String name) {
+		Query conds = new Query(0, 1);
+		conds.addFilter("name", name);
+		Setting setting = queryManager.selectByCondition(Setting.class, conds);
+		
+		return setting;
+	}
+	
+	@Transactional(propagation = Propagation.REQUIRES_NEW) 
+	public void mutexLock(String name, String value) {
+		Setting setting = this.getSetting(name);
+		
+		if (ValueUtil.isEmpty(setting)) {
+			setting = new Setting(name, value);
+			queryManager.insert(setting);
+		} else {
+			setting.setValue(value);
+			queryManager.update(setting);
+		}
 	}
 	
 	/**
@@ -148,7 +183,7 @@ public class DpsReceiveBatchService extends AbstractQueryService {
 			JobBatch batch = JobBatch.createJobBatch(item.getBatchId(), ValueUtil.toString(item.getJobSeq()), receipt, item);
 			
 			// 4. WMS의 주문 데이터를 WCS의 주문 I/F 테이블에 복사
-			selfSvc.cloneData(receipt, item);
+			selfSvc.cloneData(receipt, item);			
 			
 			// 5. JobBatch 상태 변경  
 			batch.updateStatusImmediately(LogisConstants.isB2CJobType(batch.getJobType())? JobBatch.STATUS_READY : JobBatch.STATUS_WAIT);
@@ -156,9 +191,11 @@ public class DpsReceiveBatchService extends AbstractQueryService {
 			// 6. batchReceiptItem 상태 업데이트 
 			item.updateStatusImmediately(LogisConstants.COMMON_STATUS_FINISHED, null);
 						
-		} catch(Throwable th) {
+		} catch(Exception e) {
 			// 7. 에러 처리
-			selfSvc.handleReceiveError(th, receipt, item);
+			logger.error("dps receive error~~", e);
+			
+			selfSvc.handleReceiveError(e, receipt, item);
 		}
 				
 		// 8. 배치 리턴

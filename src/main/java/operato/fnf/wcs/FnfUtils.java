@@ -20,6 +20,10 @@ import xyz.elidom.util.BeanUtil;
 import xyz.elidom.util.ValueUtil;
 
 public class FnfUtils {
+	public static final String DPS_RECEIVE_MUTEX_LOCK = "dps.batch.receive.mutex";
+	public static final String MUTEX_LOCK_ON = "ON";
+	public static final String MUTEX_LOCK_OFF = "OFF";
+	
 	public static String today() {
 		Date date = Calendar.getInstance().getTime();
 		DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd");

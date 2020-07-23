@@ -11,7 +11,6 @@ import operato.fnf.wcs.FnFConstants;
 import operato.fnf.wcs.entity.WcsMhePasBatchStatus;
 import operato.fnf.wcs.service.batch.SmsCloseBatchService;
 import xyz.anythings.base.entity.JobBatch;
-import xyz.anythings.base.entity.Order;
 import xyz.anythings.base.event.main.BatchCloseEvent;
 import xyz.anythings.base.service.api.IBatchService;
 import xyz.anythings.base.service.impl.AbstractLogisService;

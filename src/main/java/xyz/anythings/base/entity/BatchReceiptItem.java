@@ -1,8 +1,5 @@
 package xyz.anythings.base.entity;
 
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
-
 import xyz.elidom.dbist.annotation.Column;
 import xyz.elidom.dbist.annotation.GenerationRule;
 import xyz.elidom.dbist.annotation.Index;
@@ -258,7 +255,6 @@ public class BatchReceiptItem extends xyz.elidom.orm.entity.basic.ElidomStampHoo
 	 * @param status
 	 * @param errMsg
 	 */
-	@Transactional(propagation=Propagation.REQUIRES_NEW)
 	public void updateStatusImmediately(String status, String errMsg) {
 		this.setStatus(status);
 		this.setMessage(errMsg);

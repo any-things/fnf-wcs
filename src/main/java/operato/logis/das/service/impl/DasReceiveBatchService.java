@@ -25,6 +25,7 @@ import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.anythings.sys.util.AnyOrmUtil;
 import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.orm.IQueryManager;
+import xyz.elidom.util.BeanUtil;
 import xyz.elidom.util.ValueUtil;
 
 /**
@@ -126,7 +127,9 @@ public class DasReceiveBatchService extends AbstractQueryService {
 	 * @return
 	 */
 	private BatchReceipt startToReceiveData(BatchReceipt receipt, BatchReceiptItem item, Object ... params) {
-		boolean exceptionOccurred = false;
+		
+		// 별도 트랜잭션 처리를 위해 컴포넌트 자신의 레퍼런스 준비
+		DasReceiveBatchService selfSvc = BeanUtil.get(DasReceiveBatchService.class);
 		
 		try {
 			// 1. skip 이면 pass
@@ -142,7 +145,7 @@ public class DasReceiveBatchService extends AbstractQueryService {
 			JobBatch batch = JobBatch.createJobBatch(item.getBatchId(), ValueUtil.toString(item.getJobSeq()), receipt, item);
 			
 			// 4. WMS의 주문 데이터를 WCS의 주문 I/F 테이블에 복사  
-			this.cloneData(receipt, item);
+			selfSvc.cloneData(receipt, item);
 			
 			// 5. JobBatch 상태 변경  
 			batch.updateStatusImmediately(LogisConstants.isB2CJobType(batch.getJobType())? JobBatch.STATUS_READY : JobBatch.STATUS_WAIT);
@@ -150,16 +153,9 @@ public class DasReceiveBatchService extends AbstractQueryService {
 			// 6. batchReceiptItem 상태 업데이트 
 			item.updateStatusImmediately(LogisConstants.COMMON_STATUS_FINISHED, null);
 						
-		} catch(Exception e) {
-			exceptionOccurred = true;
-			String errMsg = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
-			errMsg = errMsg.length() > 400 ? errMsg.substring(0, 400) : errMsg;
-			item.updateStatusImmediately(LogisConstants.COMMON_STATUS_ERROR, errMsg);
-		}
-		
-		// 7. 에러 발생인 경우 수신 상태 에러로 업데이트
-		if(exceptionOccurred) {
-			receipt.updateStatusImmediately(LogisConstants.COMMON_STATUS_ERROR);
+		} catch(Throwable th) {
+			// 7. 수신 에러 처리
+			selfSvc.handleReceiveError(th, receipt, item);
 		}
 		
 		// 8. 배치 리턴
@@ -174,7 +170,7 @@ public class DasReceiveBatchService extends AbstractQueryService {
 	 * @throws Exception
 	 */
 	@Transactional(propagation = Propagation.REQUIRES_NEW) 
-	private void cloneData(BatchReceipt receipt, BatchReceiptItem item) throws Exception {
+	public void cloneData(BatchReceipt receipt, BatchReceiptItem item) throws Exception {
 		// 1. WMS 데이터소스 조회 
 		IQueryManager dsQueryManager = this.getDataSourceQueryManager(WmsMheHr.class);
 		Query condition = new Query();
@@ -220,6 +216,21 @@ public class DasReceiveBatchService extends AbstractQueryService {
 	@EventListener(classes = BatchReceiveEvent.class, condition = "#event.isExecuted() == false and #event.eventType == 30 and #event.eventStep == 1 and (#event.jobType == 'DAS')")
 	public void handleCancelReceived(BatchReceiveEvent event) {
 		event.setExecuted(true);
+	}
+
+	/**
+	 * 주문 수신시 에러 핸들링
+	 * 
+	 * @param th
+	 * @param receipt
+	 * @param item
+	 */
+	@Transactional(propagation = Propagation.REQUIRES_NEW) 
+	public void handleReceiveError(Throwable th, BatchReceipt receipt, BatchReceiptItem item) {
+		String errMsg = th.getCause() != null ? th.getCause().getMessage() : th.getMessage();
+		errMsg = errMsg.length() > 400 ? errMsg.substring(0,400) : errMsg;
+		item.updateStatusImmediately(LogisConstants.COMMON_STATUS_ERROR, errMsg);
+		receipt.updateStatusImmediately(LogisConstants.COMMON_STATUS_ERROR);
 	}
 
 }

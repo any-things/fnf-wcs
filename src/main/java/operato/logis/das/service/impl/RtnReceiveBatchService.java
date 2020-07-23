@@ -27,6 +27,8 @@ import xyz.anythings.sys.util.AnyOrmUtil;
 import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.exception.server.ElidomRuntimeException;
 import xyz.elidom.orm.IQueryManager;
+import xyz.elidom.sys.SysConstants;
+import xyz.elidom.util.BeanUtil;
 import xyz.elidom.util.ValueUtil;
 
 /**
@@ -128,10 +130,10 @@ public class RtnReceiveBatchService extends AbstractQueryService {
 	 * @param params
 	 * @return
 	 */
-	private BatchReceipt startToReceiveData(BatchReceipt receipt, BatchReceiptItem item, Object ... params) {		
-		// 1. jobSeq
-		//int jobSeq = JobBatch.getMaxJobSeq(receipt.getDomainId(), receipt.getComCd(), receipt.getAreaCd(), receipt.getStageCd(), receipt.getJobDate()) + 1;		
-		boolean exceptionOccurred = false;
+	private BatchReceipt startToReceiveData(BatchReceipt receipt, BatchReceiptItem item, Object ... params) {
+		
+		// 1. 별도 트랜잭션 처리를 위해 컴포넌트 자신의 레퍼런스 준비
+		RtnReceiveBatchService selfSvc = BeanUtil.get(RtnReceiveBatchService.class);
 		
 		try {
 			// 2. skip 이면 pass
@@ -147,7 +149,7 @@ public class RtnReceiveBatchService extends AbstractQueryService {
 			JobBatch batch = JobBatch.createJobBatch(item.getBatchId(), item.getJobSeq(), receipt, item);
 			
 			// 5. 데이터 복사  
-			this.cloneData(item.getBatchId(), receipt.getJobDate(), item.getJobSeq(), item);
+			selfSvc.cloneData(item.getBatchId(), receipt.getJobDate(), item.getJobSeq(), item);
 			
 			// 6. JobBatch 상태 변경  
 			batch.updateStatusImmediately(LogisConstants.isB2CJobType(batch.getJobType())? JobBatch.STATUS_READY : JobBatch.STATUS_WAIT);
@@ -158,18 +160,11 @@ public class RtnReceiveBatchService extends AbstractQueryService {
 			// 8.Wms_if_order 상태 업데이트
 			this.updateWmfIfToReceiptItems(item,receipt.getJobDate());
 			
-		} catch(Exception e) {
-			exceptionOccurred = true;
-			String errMsg = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
-			errMsg = errMsg.length() > 400 ? errMsg.substring(0,400) : errMsg;
-			item.updateStatusImmediately(LogisConstants.COMMON_STATUS_ERROR, errMsg);
+		} catch(Throwable th) {
+			// 9. 에러 처리
+			selfSvc.handleReceiveError(th, receipt, item);
 		}
-		
-		// 9. 에러 발생인 경우 수신 상태 에러로 업데이트
-		if(exceptionOccurred) {
-			receipt.updateStatusImmediately(LogisConstants.COMMON_STATUS_ERROR);
-		}
-		
+				
 		return receipt;
 	}
 	
@@ -179,7 +174,7 @@ public class RtnReceiveBatchService extends AbstractQueryService {
 	 * @return
 	 */
 	@Transactional(propagation=Propagation.REQUIRES_NEW) 
-	private void cloneData(String batchId, String jobDate, String jobSeq, BatchReceiptItem item) throws Exception {
+	public void cloneData(String batchId, String jobDate, String jobSeq, BatchReceiptItem item) throws Exception {
 		
 		List<Order> orderList = new ArrayList<Order>();
 		IQueryManager dsQueryManager = this.getDataSourceQueryManager(WmsMheRtnInvn.class);
@@ -203,8 +198,8 @@ public class RtnReceiveBatchService extends AbstractQueryService {
 				order.setComCd(item.getComCd());
 				order.setEquipType(item.getEquipType());
 				order.setStatus(Order.STATUS_WAIT);
-				order.setOrderNo(jobSeq + "-" + wmsOrder.getItemCd()); // TODO
-				order.setOrderLineNo(wmsOrder.getItemCd()); // TODO
+				order.setOrderNo(jobSeq + SysConstants.DASH + wmsOrder.getItemCd());
+				order.setOrderLineNo(wmsOrder.getItemCd());
 				orderList.add(order);
 			}
 		}
@@ -212,6 +207,21 @@ public class RtnReceiveBatchService extends AbstractQueryService {
 		if(ValueUtil.isNotEmpty(orderList)) {
 			AnyOrmUtil.insertBatch(orderList, 100);
 		}
+	}
+	
+	/**
+	 * 주문 수신시 에러 핸들링
+	 * 
+	 * @param th
+	 * @param receipt
+	 * @param item
+	 */
+	@Transactional(propagation = Propagation.REQUIRES_NEW) 
+	public void handleReceiveError(Throwable th, BatchReceipt receipt, BatchReceiptItem item) {
+		String errMsg = th.getCause() != null ? th.getCause().getMessage() : th.getMessage();
+		errMsg = errMsg.length() > 400 ? errMsg.substring(0,400) : errMsg;
+		item.updateStatusImmediately(LogisConstants.COMMON_STATUS_ERROR, errMsg);
+		receipt.updateStatusImmediately(LogisConstants.COMMON_STATUS_ERROR);
 	}
 	
 	/**

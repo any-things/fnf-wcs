@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import operato.fnf.wcs.FnFConstants;
 import operato.logis.sms.SmsConstants;
 import operato.logis.sms.query.SmsQueryStore;
 import xyz.anythings.base.LogisConstants;
@@ -35,13 +36,12 @@ import xyz.elidom.util.ValueUtil;
 
 /**
  * SMS(출고, 반품) 주문 수신용 서비스
+ * 
  * @author jyp
- *
  */
 @Component
 public class SmsReceiveBatchService extends AbstractQueryService {
 	
-	String whCd = "ICF";
 	String bizType = "SHIPBYDAS";
 	String createStatus = "A";
 	String receiveStatus = "B";
@@ -104,13 +104,14 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 			this.queryManager.insert(item);
 			receipt.addItem(item);
 		}
+		
 		return receipt;
 	}
 	
 	/**
 	 * 대기 상태 이거나 진행 중인 수신이 있는지 확인
 	 * 
-	 * @param domainId
+	 * @param receipt
 	 * @param jobType
 	 * @return
 	 */
@@ -134,10 +135,11 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 	 * WMS IF 테이블에서 SDAS 수신 대상 데이터 확인
 	 * 
 	 * @param receipt
+	 * @param jobType
 	 * @return
 	 */
 	private List<BatchReceiptItem> getWmfIfToSdasReceiptItems(BatchReceipt receipt, String jobType) {
-		Map<String,Object> sqlParams = ValueUtil.newMap("equipCd,whCd,jobDate,bizType,status", this.mheNo, this.whCd, receipt.getJobDate().replaceAll("-", ""), this.bizType, this.createStatus);
+		Map<String,Object> sqlParams = ValueUtil.newMap("equipCd,whCd,jobDate,bizType,status", this.mheNo, FnFConstants.WH_CD_ICF, receipt.getJobDate().replaceAll(SysConstants.DASH, SysConstants.EMPTY_STRING), this.bizType, this.createStatus);
 		return this.getFnfQueryManager().selectListBySql(this.batchQueryStore.getWmsIfToSdasReceiptDataQuery(), sqlParams, BatchReceiptItem.class, 0, 0);
 	}
 	
@@ -145,6 +147,8 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 	 * WMS IF 테이블에서 SRTN 수신 대상 데이터 확인
 	 * 
 	 * @param receipt
+	 * @param jobType
+	 * @param jobDate
 	 * @return
 	 */
 	private List<BatchReceiptItem> getWmfIfToSrtnReceiptItems(BatchReceipt receipt, String jobType, String jobDate) {
@@ -160,9 +164,7 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 			batchList.add("1");
 		}
 		
-		
-		Map<String,Object> params = ValueUtil.newMap("equipCd,jobDate,batchId", this.mheNo, jobDate, batchList);
-		
+		Map<String, Object> params = ValueUtil.newMap("equipCd,jobDate,batchId", this.mheNo, jobDate, batchList);
 		return this.getFnfQueryManager().selectListBySql(this.batchQueryStore.getWmsIfToSrtnReceiptDataQuery(), params, BatchReceiptItem.class, 0, 0);
 	}
 	
@@ -192,8 +194,8 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 	 * @return
 	 */
 	private BatchReceipt startToReceiveData(BatchReceipt receipt, BatchReceiptItem item, Object ... params) {		
-		// 1. TODO : 데이터 복사 방식 / 컬럼 설정에서 가져오기 
-		boolean exceptionOccurred = false;
+		// 1. 별도 트랜잭션 처리를 위해 컴포넌트 자신의 레퍼런스 준비
+		SmsReceiveBatchService selfSvc = BeanUtil.get(SmsReceiveBatchService.class);
 		
 		try {
 			// 2. skip 이면 pass
@@ -209,32 +211,20 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 			JobBatch batch = JobBatch.createJobBatch(item.getBatchId(), ValueUtil.toString(item.getJobSeq()), receipt, item);
 			
 			// 5. 데이터 복사  
-			this.cloneData(item.getBatchId(), receipt, item);
+			selfSvc.cloneData(item.getBatchId(), receipt, item);
 			
-			// 6. 셀과 매핑될 필드명을 스테이지 별 설정에서 조회 
-			/*String classCd = StageJobConfigUtil.getCellMappingTargetField(item.getStageCd(), item.getJobType());
-			String sql = "update orders set class_cd = :classCd where domain_id = :domainId and batch_id = :batchId";
-			this.queryManager.executeBySql(sql, ValueUtil.newMap("domainId,batchId,classCd", item.getDomainId(), item.getBatchId(), classCd));*/
-			
-			// 7. JobBatch 상태 변경  
+			// 6. JobBatch 상태 변경  
 			batch.updateStatusImmediately(LogisConstants.isB2CJobType(batch.getJobType())? JobBatch.STATUS_READY : JobBatch.STATUS_WAIT);
 			
-			// 8. batchReceiptItem 상태 업데이트 
+			// 7. batchReceiptItem 상태 업데이트 
 			item.updateStatusImmediately(LogisConstants.COMMON_STATUS_FINISHED, null);
 			
-			// 9.Wms_if_order 상태 업데이트
+			// 8.WMS 상태 업데이트
 			this.updateWmfIfToReceiptItems(batch, item);
 			
-		} catch(Exception e) {
-			exceptionOccurred = true;
-			String errMsg = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
-			errMsg = errMsg.length() > 400 ? errMsg.substring(0,400) : errMsg;
-			item.updateStatusImmediately(LogisConstants.COMMON_STATUS_ERROR, errMsg);
-		}
-		
-		// 10. 에러 발생인 경우 수신 상태 에러로 업데이트
-		if(exceptionOccurred) {
-			receipt.updateStatusImmediately(LogisConstants.COMMON_STATUS_ERROR);
+		} catch(Throwable th) {
+			// 9. 수신 에러 처리
+			selfSvc.handleReceiveError(th, receipt, item);
 		}
 		
 		return receipt;
@@ -243,16 +233,13 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 	/**
 	 * 데이터 복제
 	 * 
-	 * @param sourceTable
-	 * @param targetTable
-	 * @param sourceFields
-	 * @param targetFields
-	 * @param fieldNames
-	 * @param fieldValues
-	 * @return
+	 * @param batchId
+	 * @param receipt
+	 * @param item
+	 * @throws Exception
 	 */
 	@Transactional(propagation=Propagation.REQUIRES_NEW) 
-	private void cloneData(String batchId, BatchReceipt receipt, BatchReceiptItem item) throws Exception {		
+	public void cloneData(String batchId, BatchReceipt receipt, BatchReceiptItem item) throws Exception {		
 		// 1. 조회  
 		List<Order> targetList = null;
 		
@@ -270,17 +257,32 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 	/**
 	 * WMS IF 테이블의 수신완료 데이터 상태 변경
 	 * 
-	 * @param receipt
-	 * @return
+	 * @param jobBatch
+	 * @param item
 	 */
 	private void updateWmfIfToReceiptItems(JobBatch jobBatch, BatchReceiptItem item) {
 		if(ValueUtil.isEqual(item.getJobType(), SmsConstants.JOB_TYPE_SDAS)) {
 //			Map<String,Object> params = ValueUtil.newMap("mheNo,status,rcvDatetime,whCd,workUnit",
 //					this.mheNo, this.receiveStatus, DateUtil.getDate(), this.whCd, item.getWmsBatchNo());
-//	 
 //			this.getFnfQueryManager().executeBySql(this.batchQueryStore.getWmsIfToSdasReceiptUpdateQuery(), params);
+			
 		} else if(ValueUtil.isEqual(item.getJobType(), SmsConstants.JOB_TYPE_SRTN)) {
 		}
+	}
+	
+	/**
+	 * 주문 수신시 에러 핸들링
+	 * 
+	 * @param th
+	 * @param receipt
+	 * @param item
+	 */
+	@Transactional(propagation = Propagation.REQUIRES_NEW) 
+	public void handleReceiveError(Throwable th, BatchReceipt receipt, BatchReceiptItem item) {
+		String errMsg = th.getCause() != null ? th.getCause().getMessage() : th.getMessage();
+		errMsg = errMsg.length() > 400 ? errMsg.substring(0,400) : errMsg;
+		item.updateStatusImmediately(LogisConstants.COMMON_STATUS_ERROR, errMsg);
+		receipt.updateStatusImmediately(LogisConstants.COMMON_STATUS_ERROR);
 	}
 	
 	/**
@@ -395,11 +397,16 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 	
 	/**
 	 * WMS 테이블에서 조회후 SDAS Orders 데이터 생성
+	 * 
+	 * @param batchId
+	 * @param receipt
+	 * @param item
+	 * @return
 	 */
 	private List<Order> getWmsSdasOrders(String batchId, BatchReceipt receipt, BatchReceiptItem item) {
 		Map<String, Object> sqlParams = ValueUtil.newMap(
 				"batchId,jobType,orderLineNo,comCd,areaCd,stageCd,equipType,wh_cd,work_unit", batchId, item.getJobType(), 0,
-				item.getComCd(), item.getAreaCd(), item.getStageCd(), item.getEquipType(), this.whCd,
+				item.getComCd(), item.getAreaCd(), item.getStageCd(), item.getEquipType(), FnFConstants.WH_CD_ICF,
 				item.getWmsBatchNo());
 		
 		List<Order> wmsOrders = this.getFnfQueryManager().selectListBySql(this.batchQueryStore.getWmsIfToSdasReceiptOrderDataQuery(), sqlParams, Order.class, 0, 0);
@@ -407,14 +414,20 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 		if(ValueUtil.isNotEmpty(wmsOrders)) {
 			return wmsOrders;
 		}
+		
 		return null;
 	}
 	
 	/**
 	 * WMS 테이블에서 조회후 SRTN Orders 데이터 생성
+	 * 
+	 * @param batchId
+	 * @param receipt
+	 * @param item
+	 * @return
 	 */
 	private List<Order> getWmsSrtnOrders(String batchId, BatchReceipt receipt, BatchReceiptItem item) {
-		String[] batchInfo = item.getWcsBatchNo().split("-");
+		String[] batchInfo = item.getWcsBatchNo().split(SysConstants.DASH);
 		if(batchInfo.length == 4) {
 			String strrId = batchInfo[0];
 			String season = batchInfo[1];
@@ -432,6 +445,8 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 				return wmsOrders;
 			}
 		}
+		
 		return null;
 	}
+
 }

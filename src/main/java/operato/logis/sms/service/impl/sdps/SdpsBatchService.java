@@ -1,4 +1,4 @@
-package operato.logis.sms.service.impl.sdas;
+package operato.logis.sms.service.impl.sdps;
 
 import java.util.Date;
 import java.util.List;
@@ -28,8 +28,8 @@ import xyz.elidom.util.ValueUtil;
  * 
  *
  */
-@Component("sdasBatchService")
-public class SdasBatchService extends AbstractLogisService implements IBatchService {
+@Component("sdpsBatchService")
+public class SdpsBatchService extends AbstractLogisService implements IBatchService {
 	/**
 	 * Sms 배치 종료 서비스
 	 */

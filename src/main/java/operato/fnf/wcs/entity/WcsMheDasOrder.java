@@ -15,6 +15,21 @@ public class WcsMheDasOrder extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	 * SerialVersion UID
 	 */
 	private static final long serialVersionUID = 294115493292621393L;
+	
+	/**
+	 * JOB_TYPE : 출고
+	 */
+	public static final String JOB_TYPE_DAS = "1";	
+	
+	/**
+	 * JOB_TYPE : 반품
+	 */
+	public static final String JOB_TYPE_RTN = "0";
+	
+	/**
+	 * JOB_TYPE : 반품
+	 */
+	public static final String JOB_TYPE_DPS = "2";
 
 	@PrimaryKey
 	@Column (name = "id", nullable = false, length = 40)

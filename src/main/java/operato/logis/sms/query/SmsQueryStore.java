@@ -70,6 +70,15 @@ public class SmsQueryStore extends AbstractQueryStore {
 		return this.getQueryByPath("batch/WmsIfToSdasReceiptUpdate");
 	}
 	
+	/**
+	 * WMS I/F 테이블로 부터 Sorter SDPS BatchReceipt 데이터를 조회 한다.
+	 * 
+	 * @return
+	 */
+	public String getWmsIfToSdpsReceiptDataQuery() {
+		return this.getQueryByPath("batch/WmsIfToSdpsReceiptData");
+	}
+	
 	/*** SDAS 관련 데이터 쿼리 ***/
 	/**
 	 * SDAS 가공화면 batch 정보
@@ -128,6 +137,54 @@ public class SmsQueryStore extends AbstractQueryStore {
 	public String getSdasDasOrder() {
 		return this.getQueryByPath("sdas/sdasDasOrder");
 	}
+	
+	
+	/*** SDPS 관련 데이터 쿼리 ***/
+	/**
+	 * SDPS 가공화면 batch 정보
+	 * 
+	 */
+	public String getSdpsBatchInfo() {
+		return this.getQueryByPath("sdps/sdpsBatchInfo");
+	}
+	/**
+	 * SDPS 가공화면 Chute 정보
+	 * 
+	 */
+	public String getSdpsChuteInfo() {
+		return this.getQueryByPath("sdps/sdpsChuteInfo");
+	}
+	/**
+	 * 주문 데이터로 부터 SDPS 주문 가공 쿼리
+	 *
+	 * @return
+	 */
+	public String getSdpsGeneratePreprocessQuery() {
+		return this.getQueryByPath("sdps/sdpsGeneratePreprocess");
+	}
+	/**
+	 * 작업 배치 별 주문 가공 정보에서 CELL로 REF_NO(Order No) 할당 상태를 조회 쿼리
+	 *
+	 * @return
+	 */
+	public String getSdpsCellStatusQuery() {
+		return this.getQueryByPath("sdps/sdpsCellStatus");
+	}
+	/**
+	 * SDPS SORTER Order 전송
+	 * 
+	 */
+	public String getSdpsPasOrder() {
+		return this.getQueryByPath("sdps/sdpsPasOrder");
+	}
+	/**
+	 * SDPS DAS Order 전송
+	 * 
+	 */
+	public String getSdpsDasOrder() {
+		return this.getQueryByPath("sdps/sdpsDasOrder");
+	}
+	
 
 	
 	/*** SRTN 관련 데이터 쿼리 ***/

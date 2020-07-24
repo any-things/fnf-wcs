@@ -23,6 +23,7 @@ public class FnfUtils {
 	public static final String DPS_RECEIVE_MUTEX_LOCK = "dps.batch.receive.mutex";
 	public static final String MUTEX_LOCK_ON = "ON";
 	public static final String MUTEX_LOCK_OFF = "OFF";
+	public static final String BIZ_TYPE_PKG = "PKG";
 	
 	public static String today() {
 		Date date = Calendar.getInstance().getTime();
@@ -138,5 +139,15 @@ public class FnfUtils {
 		}
 
 		return to;
+	}
+	
+	public static String bizTypeProcess(String bizType) {
+		String workType = BIZ_TYPE_PKG.equalsIgnoreCase(bizType) ? "SHIPBYDAS" : bizType;
+		return workType;
+	}
+	
+	public static String bizTypeTitleProcess(String bizType, String title) {
+		String desc = BIZ_TYPE_PKG.equalsIgnoreCase(bizType) ? title + " :" + bizType : title;
+		return desc;
 	}
 }

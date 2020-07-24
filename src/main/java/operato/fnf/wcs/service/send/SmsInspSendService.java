@@ -204,8 +204,11 @@ public class SmsInspSendService extends AbstractQueryService {
 			scan.setWhCd(FnFConstants.WH_CD_ICF);
 			if(ValueUtil.isEmpty(result.getStrrId())) {
 				SKU sku = this.skuSearchService.findSku(batch.getDomainId(), batch.getComCd(), result.getSkuCd(), false);
-				if(ValueUtil.isEmpty(sku)) sku.setBrandCd("Empty");
-				scan.setStrrId(sku.getBrandCd());
+				if(ValueUtil.isEmpty(sku)) {
+					scan.setStrrId("EMPTY");					
+				} else {
+					scan.setStrrId(sku.getBrandCd());
+				}
 			} else {
 				scan.setStrrId(result.getStrrId());
 			}

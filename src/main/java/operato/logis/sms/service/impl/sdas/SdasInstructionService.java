@@ -239,7 +239,7 @@ public class SdasInstructionService extends AbstractQueryService implements IIns
 		for (Map detail : mheDrList) {
 			WcsMheDasOrder wcsMheDasOrder = new WcsMheDasOrder();
 			wcsMheDasOrder.setId(UUID.randomUUID().toString());
-			wcsMheDasOrder.setBatchNo(batch.getBatchGroupId());
+			wcsMheDasOrder.setBatchNo(batch.getId());
 			wcsMheDasOrder.setMheNo(batch.getEquipCd());
 			wcsMheDasOrder.setJobDate(mainBatch.getJobDate().replaceAll("-", ""));
 			wcsMheDasOrder.setJobType(WcsMhePasOrder.JOB_TYPE_DAS);

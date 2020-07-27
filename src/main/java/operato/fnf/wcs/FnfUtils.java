@@ -27,7 +27,7 @@ public class FnfUtils {
 	
 	public static String today() {
 		Date date = Calendar.getInstance().getTime();
-		DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd");
+		DateFormat dateFormat = new SimpleDateFormat("YYYY-MM-dd");
 		String today = dateFormat.format(date);
 		return today;
 	}

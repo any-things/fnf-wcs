@@ -2,7 +2,7 @@ SELECT
 	 'FnF' AS COM_CD,
 	 'A' AS AREA_CD,
 	 '' AS STAGE_CD,
-	 'DAS' AS JOB_TYPE,
+	 DECODE(BIZ_TYPE, 'SHIPBYDAS', 'DAS', BIZ_TYPE) AS JOB_TYPE,
 	 HR.work_unit AS WMS_BATCH_NO,
 	 HR.wave_no AS WCS_BATCH_NO,
 	 HR.workseq_no AS JOB_SEQ,
@@ -21,5 +21,6 @@ WHERE
  	 HR.WH_CD = :whCd
  	 AND HR.WORK_DATE = :jobDate
  	 AND HR.STATUS = :status
- 	 AND HR.BIZ_TYPE = :jobType
+ 	 AND HR.BIZ_TYPE IN (:jobType)
  	 AND HR.DEL_YN = 'N'
+ORDER BY JOB_TYPE

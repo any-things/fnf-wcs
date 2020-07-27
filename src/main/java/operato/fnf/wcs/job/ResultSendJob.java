@@ -41,7 +41,7 @@ public class ResultSendJob extends AbstractFnFJob {
 	 * 매 20초 마다  
 	 */
 	@Transactional
-	@Scheduled(initialDelay=20000, fixedDelay=3000)
+	@Scheduled(initialDelay=30000, fixedDelay=20000)
 	public void summaryJob() {
 		// 스케줄링 활성화 여부 체크
 		if(!this.isJobEnabeld()) {

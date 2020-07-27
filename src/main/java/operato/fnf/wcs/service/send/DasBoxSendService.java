@@ -75,7 +75,7 @@ public class DasBoxSendService extends AbstractQueryService {
 //		List<WcsMheBox> boxOrderList = this.searchBoxedOrderList(batch);
 
 		try {			
-			BeanUtil.get(DasSendBoxInfoToRfid.class).dasSendBoxInfoToRfid(domain.getId());
+			BeanUtil.get(DasSendBoxInfoToRfid.class).dasSendBoxInfoToRfid(domain.getId(), LogisConstants.JOB_TYPE_DAS);
 		} catch(Exception e) {
 			logger.error("dasSendBoxInfoToRfid error~~:", e);
 //			// 2. FIXME backup로직임, 추후에 삭제: RFID에 전송

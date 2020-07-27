@@ -53,17 +53,17 @@ public class DasSendBoxInfoToRfid extends AbstractQueryService {
 //			return new ResponseObj();
 //		}
 		
-		ResponseObj resp = this.dasSendBoxInfoToRfid(1l);
+		ResponseObj resp = this.dasSendBoxInfoToRfid(1l, "DAS");
 		return resp;
 	}
 	
-	public ResponseObj dasSendBoxInfoToRfid(Long domainId) throws Exception {
+	public ResponseObj dasSendBoxInfoToRfid(Long domainId, String jobType) throws Exception {
 		String scopeSql = FnfUtils.queryCustServiceWithError("das_box_process_date");
 		
 		Map<String, Object> params = new HashMap<>();
 		params.put(SysConstants.ENTITY_FIELD_DOMAIN_ID, domainId);
 		params.put("status", JobBatch.STATUS_RUNNING);
-		params.put("jobType", ValueUtil.toList(LogisConstants.JOB_TYPE_DAS, LogisConstants.JOB_TYPE_DPS));	// FIXME DAS, DPS?
+		params.put("jobType", ValueUtil.toList(jobType));
 		List<String> runningBatchWorkDates = this.queryManager.selectListBySql(scopeSql, params, String.class, 0, 0);
 		
 		ResponseObj resp = new ResponseObj();

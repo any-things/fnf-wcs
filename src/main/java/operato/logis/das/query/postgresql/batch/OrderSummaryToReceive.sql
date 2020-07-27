@@ -23,4 +23,5 @@ WHERE
  	 AND HR.STATUS = :status
  	 AND HR.BIZ_TYPE IN (:jobType)
  	 AND HR.DEL_YN = 'N'
+ 	 AND HR.STRR_ID != 'X'
 ORDER BY JOB_TYPE

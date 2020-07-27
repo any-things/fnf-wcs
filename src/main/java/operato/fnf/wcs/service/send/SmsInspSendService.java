@@ -21,7 +21,6 @@ import operato.logis.sms.query.SmsQueryStore;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.entity.SKU;
-import xyz.anythings.base.service.api.ISkuSearchService;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.anythings.sys.util.AnyOrmUtil;
 import xyz.anythings.sys.util.AnyValueUtil;
@@ -46,12 +45,6 @@ public class SmsInspSendService extends AbstractQueryService {
 	 */
 	@Autowired
 	protected ApplicationEventPublisher eventPublisher;
-	
-	/**
-	 * 상품 조회 서비스
-	 */
-	@Autowired
-	private ISkuSearchService skuSearchService;
 	
 	@Autowired
 	protected SmsQueryStore queryStore;
@@ -203,11 +196,14 @@ public class SmsInspSendService extends AbstractQueryService {
 			scan.setInterfaceNo(ValueUtil.toString(interfaceNo));
 			scan.setWhCd(FnFConstants.WH_CD_ICF);
 			if(ValueUtil.isEmpty(result.getStrrId())) {
-				SKU sku = this.skuSearchService.findSku(batch.getDomainId(), batch.getComCd(), result.getSkuCd(), false);
-				if(ValueUtil.isEmpty(sku)) {
-					scan.setStrrId("EMPTY");					
+				String skuSql = "select * from sku where domain_id = :domainId and com_cd = :comCd and (sku_cd = :skuCd or sku_barcd = :skuCd or sku_barcd2 = :skuCd)";
+				Map<String,Object> skuParams = ValueUtil.newMap("domainId,comCd,skuCd", batch.getDomainId(), batch.getComCd(), result.getSkuCd());
+				List<SKU> skuList = this.queryManager.selectListBySql(skuSql, skuParams, SKU.class, 0, 0);
+				if(ValueUtil.isEmpty(skuList)) {
+					scan.setStrrId("EMPTY");
 				} else {
-					scan.setStrrId(sku.getBrandCd());
+					scan.setStrrId(skuList.get(0).getBrandCd());
+					scan.setItemCd(skuList.get(0).getSkuCd());
 				}
 			} else {
 				scan.setStrrId(result.getStrrId());

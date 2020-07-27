@@ -43,6 +43,13 @@ public class DasSendBoxInfoToRfid extends AbstractQueryService {
 	
 	public ResponseObj dasSendBoxInfoToRfid(Map<String, Object> params) throws Exception {
 		
+		String jobType = String.valueOf(params.get("jobType"));
+		if (ValueUtil.isEmpty(jobType)) {
+			jobType = LogisConstants.JOB_TYPE_DAS;
+		}
+		
+		ResponseObj resp = this.dasSendBoxInfoToRfid(1l, jobType);
+		
 //		String batchId = String.valueOf(params.get("batch_id"));
 //		if (ValueUtil.isEmpty(batchId)) {
 //			return new ResponseObj();
@@ -53,7 +60,6 @@ public class DasSendBoxInfoToRfid extends AbstractQueryService {
 //			return new ResponseObj();
 //		}
 		
-		ResponseObj resp = this.dasSendBoxInfoToRfid(1l, "DAS");
 		return resp;
 	}
 	

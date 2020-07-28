@@ -84,7 +84,6 @@ public class SmsTrackingController extends AbstractRestService {
 					}
 					
 					Query condition = AnyOrmUtil.newConditionForExecution(Domain.currentDomainId());
-					condition.addFilter("status", LogisConstants.NOT_EQUAL, JobBatch.STATUS_END);
 					condition.addFilter("equipType", LogisConstants.EQUIP_TYPE_SORTER.toUpperCase());
 					condition.addFilter("batchGroupId", LogisConstants.IN, jobBatch.getBatchGroupId());
 					List<JobBatch> jobBatches = this.queryManager.selectList(JobBatch.class, condition);

@@ -121,31 +121,6 @@ public class DasSendBoxInfoToRfid extends AbstractQueryService {
 			}
 		}
 		
-//		int DEFAULT_PROCESS_LIMIT = 100;
-//		int processLimit = 0;
-//		try {
-//			processLimit = Integer.parseInt(SettingUtil.getValue(KEY_RFID_PROCESS_LIMIT));
-//		} catch(NumberFormatException e) {
-//			//e.printStackTrace();
-//			processLimit = DEFAULT_PROCESS_LIMIT;
-//		}
-//		
-//		int offset = 0;
-//		float size = (float)wcsMheBoxes.size();
-//		while(offset < Math.ceil(size/processLimit)) {
-//			int fromIndex = (int) (offset * processLimit);
-//			int toIndex = (int) (fromIndex + processLimit);
-//			toIndex = (int) (toIndex > size ? size : toIndex);
-//			List<WcsMheBox> boxes = new ArrayList<>(wcsMheBoxes.subList(fromIndex, toIndex));
-//			if (boxes.size() == 0) {
-//				break;
-//			}
-//			
-//			boxSendSvc.sendPackingsToRfid(domainId, rfidQueryMgr, wmsQueryMgr, boxes);
-//			
-//			offset++;
-//		}
-		
 		return new ResponseObj();
 	}
 	

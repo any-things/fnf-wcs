@@ -461,7 +461,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 		Map<String, Object> packinfoParams = ValueUtil.newMap("whCd,boxId", FnFConstants.WH_CD_ICF, boxId);
 		List<WmsExpressWaybillPackinfo> packItems = wmsQueryMgr.selectList(WmsExpressWaybillPackinfo.class, packinfoParams);
 		Map<String, Object> printParams = ValueUtil.newMap("box,items", waybillPrint, packItems);
-		return new PrintEvent(domainId, printerId, labelTemplate, printParams);
+		return new PrintEvent(domainId, LogisConstants.JOB_TYPE_DPS, printerId, labelTemplate, printParams);
 	}
 	
 	/**
@@ -470,7 +470,7 @@ public class DpsInspectionService extends AbstractInstructionService implements 
 	 * @param printEvent
 	 */
 	@Async
-	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, classes = PrintEvent.class)
+	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, classes = PrintEvent.class, condition = "#printEvent.jobType == 'DPS'")
 	public void printLabel(PrintEvent printEvent) {
 		
 		// 현재 도메인 조회

@@ -18,7 +18,6 @@ apply from : 'anythings.gradle'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'java-library'
 
-
 configurations {
 	provided.all*.exclude group: 'javax.servlet'
 }
@@ -67,6 +66,7 @@ if (!project.hasProperty('buildDep')) {
 		compile project(':anythings-gw')
 		compile project(':anythings-comm-rabbitmq')
 		compile project(':anythings-sys')
+		compile(group: 'org.postgresql', name: 'postgresql', version: '42.2.12')
 	}
 } else {
 	println 'build-deployment'
@@ -117,5 +117,6 @@ if (!project.hasProperty('buildDep')) {
 		compile("com.lowagie:itext:2.1.7")
 		compile("net.sourceforge.barbecue:barbecue:1.5-beta1")
 		compile("org.springframework.ws:spring-ws-core:2.3.1.RELEASE")
+		compile(group: 'org.postgresql', name: 'postgresql', version: '42.2.12')
 	}
 }

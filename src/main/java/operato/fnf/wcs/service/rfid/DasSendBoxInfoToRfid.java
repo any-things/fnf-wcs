@@ -93,7 +93,7 @@ public class DasSendBoxInfoToRfid extends AbstractQueryService {
 		paramMap.put("workDates", dates);
 		paramMap.put("delYn", LogisConstants.Y_CAP_STRING);
 		paramMap.put("ifYn", LogisConstants.N_CAP_STRING);
-		List<WcsMheBox> wcsMheBoxes = queryManager.selectListBySql(serviceSql, paramMap, WcsMheBox.class, 0, 10);
+		List<WcsMheBox> wcsMheBoxes = queryManager.selectListBySql(serviceSql, paramMap, WcsMheBox.class, 0, 1000);
 		if (ValueUtil.isEmpty(wcsMheBoxes) || wcsMheBoxes.size() == 0) {
 			resp.setMsg("No Data2");
 			return resp;
@@ -110,11 +110,11 @@ public class DasSendBoxInfoToRfid extends AbstractQueryService {
 				
 				box.setIfYn(LogisConstants.Y_CAP_STRING);
 				box.setIfDatetime(new Date());
-				queryManager.update(box);
+				queryManager.update(box, "ifYn", "ifDatetime");
 			} catch(Exception e) {
 				box.setIfYn("E");
 				box.setIfDatetime(new Date());
-				queryManager.update(box);
+				queryManager.update(box, "ifYn", "ifDatetime");
 				
 				ErrorEvent errorEvent = new ErrorEvent(1l, "ERROR - DAS Send Packing To RFID", e, LogisConstants.EMPTY_STRING, true, true);			
 				this.eventPublisher.publishEvent(errorEvent);

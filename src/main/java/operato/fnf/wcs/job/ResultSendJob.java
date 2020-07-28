@@ -45,9 +45,10 @@ public class ResultSendJob extends AbstractFnFJob {
 	public void summaryJob() {
 		// 스케줄링 활성화 여부 체크
 		if(!this.isJobEnabeld()) {
-			logger.error("ResultSendJob is RUNNING~~");
 			return;
 		}
+		
+		logger.error("ResultSendJob is RUNNING~~");
 		
 		// 모든 도메인 조회
 		List<Domain> domainList = this.domainCtrl.domainList();

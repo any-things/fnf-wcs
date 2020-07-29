@@ -72,7 +72,7 @@ public class SdasBatchService extends AbstractLogisService implements IBatchServ
 		if(!closeForcibly) {
 			Query params = new Query();
 			params.addFilter(new Filter("wcsBatchNo", batch.getId()));
-			batchConds.addFilter("status", LogisConstants.NOT_EQUAL, WcsMhePasBatchStatus.STATUS_RESET);
+			params.addFilter("status", LogisConstants.NOT_EQUAL, WcsMhePasBatchStatus.STATUS_RESET);
 			WcsMhePasBatchStatus batchStatus = this.queryManager.selectByCondition(WcsMhePasBatchStatus.class, params);
 			
 			if(ValueUtil.isEmpty(batchStatus)) {

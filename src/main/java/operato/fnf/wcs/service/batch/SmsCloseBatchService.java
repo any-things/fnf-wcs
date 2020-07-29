@@ -121,6 +121,9 @@ public class SmsCloseBatchService extends AbstractQueryService {
 	 * @param batch
 	 */
 	private void setBatchInfoOnClosing(JobBatch batch) {
+		if(ValueUtil.isEmpty(batch.getFinishedAt())) {
+			batch.setFinishedAt(new Date());
+		}
 		this.progressSvc.updateBatchProductionResult(batch, batch.getFinishedAt());
 		batch.setStatus(JobBatch.STATUS_END);		
 		this.queryManager.update(batch, "status", "finishedAt", "resultBoxQty", "resultOrderQty", "resultPcs", "progressRate", "equipRuntime", "uph", "updatedAt");

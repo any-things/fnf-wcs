@@ -1,10 +1,11 @@
 package operato.fnf.wcs.entity;
 
-import java.util.Date; 
+import java.util.Date;
+
 import xyz.elidom.dbist.annotation.Column;
-import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.GenerationRule;
 import xyz.elidom.dbist.annotation.Index;
+import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.Table;
 
 @Table(name = "mhe_pas_batch_status", idStrategy = GenerationRule.UUID, uniqueFields="mheNo,wcsBatchNo,pasBatchNo", indexes = {
@@ -34,6 +35,10 @@ public class WcsMhePasBatchStatus extends xyz.elidom.orm.entity.basic.AbstractSt
 	 * 일시정지 상태 :3
 	 */
 	public static final String STATUS_PAUSE = "3";
+	/**
+	 * 강제 초기화 상태 :9
+	 */
+	public static final String STATUS_RESET = "9";
 	
 
 	@PrimaryKey

@@ -65,10 +65,9 @@ public class SmsCloseBatchService extends AbstractQueryService {
 		// 작업해야함 실적을 가지고 쿼리 생성해야한다.
 		this.closeProductivity(batch);
 		
-		// 2. 배치에 반영
-		this.setBatchInfoOnClosing(batch);
-		
 		if(ValueUtil.isEqual(batch.getJobType(), SmsConstants.JOB_TYPE_SRTN)) {
+			// 2. 배치에 반영
+			this.setBatchInfoOnClosing(batch);
 			// 3. 반품검수결과 WMS 전송
 			this.sendInspBoxScanResultToWms(batch);
 			// 4. WMS MHE_HR 테이블에 마감 전송
@@ -78,6 +77,8 @@ public class SmsCloseBatchService extends AbstractQueryService {
 			batchConds.addFilter("batchGroupId", batch.getBatchGroupId());
 			List<JobBatch> batchGroupList = this.queryManager.selectList(JobBatch.class, batchConds);
 			for (JobBatch jobBatch : batchGroupList) {
+				// 2. 배치에 반영
+				this.setBatchInfoOnClosing(jobBatch);
 				// 3. WMS에 박스 실적 한 번에 전송
 				this.sendAllBoxToWms(jobBatch);
 				// 4. WMS에 최종 피킹 실적을 한 번에 전송

@@ -94,6 +94,7 @@ public class SmsTrackingController extends AbstractRestService {
 					
 					List<String> batchList = AnyValueUtil.filterValueListBy(jobBatches, "id");
 					params.put("batchList", batchList);
+					val = jobBatch.getBatchGroupId();
 				}
 
 				if(ValueUtil.isEmpty(op) || ValueUtil.isEqualIgnoreCase(op, "eq") || ValueUtil.isEqualIgnoreCase(op, "=")) {
@@ -108,6 +109,106 @@ public class SmsTrackingController extends AbstractRestService {
 			}
 		}
 		selectQuery += " order by c.chute_no";
+		page = (page == null) ? 1 : page;
+		limit = (limit == null) ? ValueUtil.toInteger(SettingUtil.getValue(SysConfigConstants.SCREEN_PAGE_LIMIT, "10000")) : limit;
+		return this.queryManager.selectPageBySql(selectQuery, params, HashMap.class, page, limit);
+	}
+	
+	@RequestMapping(value="/rtn_box_result", method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
+	@ApiDesc(description="Search (Pagination) By Chute Result")
+	public Page<?> rtnBoxResult(
+			@RequestParam(name="page", required=false) Integer page, 
+			@RequestParam(name="limit", required=false) Integer limit, 
+			@RequestParam(name="select", required=false) String select, 
+			@RequestParam(name="sort", required=false) String sort,
+			@RequestParam(name="query", required=false) String query) {
+		
+		Filter[] filters = ValueUtil.isEmpty(query) ? null : this.jsonParser.parse(query, Filter[].class);
+		String selectQuery = queryStore.getSmsRtnBoxResultQuery();
+		
+		Map<String, Object> params = ValueUtil.newMap("domainId", Domain.currentDomainId());
+		if(ValueUtil.isNotEmpty(filters)) {
+			for(Filter filter : filters) {
+				String name = filter.getName();
+				String op = filter.getOperator();
+				Object val = filter.getValue();
+
+				if(ValueUtil.isEqual(val, "true")) {
+					val = true;
+				} else if(ValueUtil.isEqual(val, "false")) {
+					val = false;
+				}
+				
+				if(ValueUtil.isEqual(name, "batch_id")) {
+					Query conds = AnyOrmUtil.newConditionForExecution(Domain.currentDomainId());
+					conds.addFilter("id", val);
+					JobBatch jobBatch = this.queryManager.select(JobBatch.class, conds);
+					
+					if(ValueUtil.isEmpty(jobBatch)) {
+						String msg = MessageUtil.getMessage("no_batch_id", "설비에서 운영중인 BatchId가 아닙니다.");
+						throw ThrowUtil.newValidationErrorWithNoLog(msg);
+					}
+					val = jobBatch.getBatchGroupId();
+				}
+
+				if(ValueUtil.isEmpty(op) || ValueUtil.isEqualIgnoreCase(op, "eq") || ValueUtil.isEqualIgnoreCase(op, "=")) {
+					if(ValueUtil.isEqual(name, "title")) {
+						selectQuery += " and jb.title = :title";
+					} else if(ValueUtil.isEqual(name, "box_no")) {
+						selectQuery += " and mdrr.box_no = :box_no";
+					} else if(ValueUtil.isEqual(name, "chute_no")) {
+						selectQuery += " and mdo.chute_no = :chute_no";
+					} else if(ValueUtil.isEqual(name, "cell_no")) {
+						selectQuery += " and mdo.cell_no = :cell_no";
+					} else if(ValueUtil.isEqual(name, "sku_cd")) {
+						selectQuery += " and mdrr.sku_cd = :sku_cd";
+					}
+					params.put(name, val);
+				} else if(ValueUtil.isEqualIgnoreCase(op, "contains") || ValueUtil.isEqualIgnoreCase(op, "like")) {
+					params.put(name, "%" + val + "%");
+				}
+			}
+		}
+		selectQuery += " order by mdo.chute_no, mdo.cell_no";
+		page = (page == null) ? 1 : page;
+		limit = (limit == null) ? ValueUtil.toInteger(SettingUtil.getValue(SysConfigConstants.SCREEN_PAGE_LIMIT, "10000")) : limit;
+		return this.queryManager.selectPageBySql(selectQuery, params, HashMap.class, page, limit);
+	}
+	
+	@RequestMapping(value="/das_result", method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
+	@ApiDesc(description="Search (Pagination) By Chute Result")
+	public Page<?> dasResult(
+			@RequestParam(name="page", required=false) Integer page, 
+			@RequestParam(name="limit", required=false) Integer limit, 
+			@RequestParam(name="select", required=false) String select, 
+			@RequestParam(name="sort", required=false) String sort,
+			@RequestParam(name="query", required=false) String query) {
+		
+		Filter[] filters = ValueUtil.isEmpty(query) ? null : this.jsonParser.parse(query, Filter[].class);
+		String selectQuery = queryStore.getSmsDasResultQuery();
+		
+		Map<String, Object> params = ValueUtil.newMap("domainId", Domain.currentDomainId());
+		if(ValueUtil.isNotEmpty(filters)) {
+			for(Filter filter : filters) {
+				String name = filter.getName();
+				String op = filter.getOperator();
+				Object val = filter.getValue();
+
+				if(ValueUtil.isEqual(val, "true")) {
+					val = true;
+				} else if(ValueUtil.isEqual(val, "false")) {
+					val = false;
+				}
+
+				if(ValueUtil.isEmpty(op) || ValueUtil.isEqualIgnoreCase(op, "eq") || ValueUtil.isEqualIgnoreCase(op, "=")) {
+					params.put(name, val);
+
+				} else if(ValueUtil.isEqualIgnoreCase(op, "contains") || ValueUtil.isEqualIgnoreCase(op, "like")) {
+					params.put(name, "%" + val + "%");
+				}
+			}
+		}
+		
 		page = (page == null) ? 1 : page;
 		limit = (limit == null) ? ValueUtil.toInteger(SettingUtil.getValue(SysConfigConstants.SCREEN_PAGE_LIMIT, "10000")) : limit;
 		return this.queryManager.selectPageBySql(selectQuery, params, HashMap.class, page, limit);

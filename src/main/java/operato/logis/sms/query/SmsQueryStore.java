@@ -243,15 +243,6 @@ public class SmsQueryStore extends AbstractQueryStore {
 	}
 
 	/**
-	 * SMS Chute 별 실적 조회 쿼리
-	 *
-	 * @return
-	 */
-	public String getSmsChuteSummaryQuery() {
-		return this.getQueryByPath("select/smsChuteSummary");
-	}
-
-	/**
 	 * 작업 마감을 위한 작업 데이터 요약 정보 조회
 	 *
 	 * @return
@@ -307,5 +298,33 @@ public class SmsQueryStore extends AbstractQueryStore {
 	 */
 	public String getSrtnInspBoxTrgUpdate() {
 		return this.getQueryByPath("srtn/srtnInspBoxTrgUpdate");
+	}
+	
+	
+	
+	/*** SMS 조회 관련 데이터 쿼리 ***/
+	/**
+	 * SMS Chute 별 실적 조회 쿼리
+	 *
+	 * @return
+	 */
+	public String getSmsChuteSummaryQuery() {
+		return this.getQueryByPath("select/smsChuteSummary");
+	}
+	/**
+	 * SMS RTN 실적 조회 쿼리
+	 *
+	 * @return
+	 */
+	public String getSmsRtnBoxResultQuery() {
+		return this.getQueryByPath("select/smsRtnBoxResult");
+	}
+	/**
+	 * SMS DAS 실적 조회 쿼리
+	 *
+	 * @return
+	 */
+	public String getSmsDasResultQuery() {
+		return this.getQueryByPath("select/smsDasResult");
 	}
 }

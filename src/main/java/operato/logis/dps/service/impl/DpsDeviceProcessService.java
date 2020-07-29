@@ -821,9 +821,19 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		boxPack.setOrderNo(orderNo);
 		boxPack.setBoxTypeCd(trayCd);
 		boxPack.setBoxId(boxId);
+		boxPack.setJobDate(batch.getJobDate());
+		boxPack.setComCd(batch.getComCd());
+		boxPack.setWcsBatchNo(batch.getWcsBatchNo());
+		boxPack.setWmsBatchNo(batch.getWmsBatchNo());
+		boxPack.setJobType(batch.getJobType());
+		boxPack.setOrderType(batch.getJobType());
+		boxPack.setInspectorId(User.currentUser().getId());
+		boxPack.setInspEndedAt(xyz.elidom.util.DateUtil.getCurrentSecond());
 		
 		// 5. 검수 완료 처리 
 		this.dpsInspectionService.finishInspection(batch, boxPack, null, printerId, itemObjs);
+		
+		queryManager.insert(boxPack);
 		
 		// 6. 사은품 조회
 		List<DpsInspItem> giftItems = this.dpsInspectionService.searchGiftItems(batch, boxId);

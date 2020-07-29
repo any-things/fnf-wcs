@@ -161,10 +161,21 @@ public class SmsTrackingController extends AbstractRestService {
 					} else if(ValueUtil.isEqual(name, "cell_no")) {
 						selectQuery += " and mdo.cell_no = :cell_no";
 					} else if(ValueUtil.isEqual(name, "sku_cd")) {
-						selectQuery += " and mdrr.sku_cd = :sku_cd";
+						selectQuery += " and mdrr.item_cd = :sku_cd";
 					}
 					params.put(name, val);
 				} else if(ValueUtil.isEqualIgnoreCase(op, "contains") || ValueUtil.isEqualIgnoreCase(op, "like")) {
+					if(ValueUtil.isEqual(name, "title")) {
+						selectQuery += " and jb.title like :title";
+					} else if(ValueUtil.isEqual(name, "box_no")) {
+						selectQuery += " and mdrr.box_no like :box_no";
+					} else if(ValueUtil.isEqual(name, "chute_no")) {
+						selectQuery += " and mdo.chute_no like :chute_no";
+					} else if(ValueUtil.isEqual(name, "cell_no")) {
+						selectQuery += " and mdo.cell_no like :cell_no";
+					} else if(ValueUtil.isEqual(name, "sku_cd")) {
+						selectQuery += " and mdrr.item_cd like :sku_cd";
+					}
 					params.put(name, "%" + val + "%");
 				}
 			}
@@ -175,9 +186,9 @@ public class SmsTrackingController extends AbstractRestService {
 		return this.queryManager.selectPageBySql(selectQuery, params, HashMap.class, page, limit);
 	}
 	
-	@RequestMapping(value="/das_result", method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(value="/das_box_result", method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
 	@ApiDesc(description="Search (Pagination) By Chute Result")
-	public Page<?> dasResult(
+	public Page<?> dasBoxResult(
 			@RequestParam(name="page", required=false) Integer page, 
 			@RequestParam(name="limit", required=false) Integer limit, 
 			@RequestParam(name="select", required=false) String select, 
@@ -201,9 +212,34 @@ public class SmsTrackingController extends AbstractRestService {
 				}
 
 				if(ValueUtil.isEmpty(op) || ValueUtil.isEqualIgnoreCase(op, "eq") || ValueUtil.isEqualIgnoreCase(op, "=")) {
+					if(ValueUtil.isEqual(name, "job_date")) {
+						selectQuery += " and mdo.job_date = :job_date";
+					} else if(ValueUtil.isEqual(name, "chute_no")) {
+						selectQuery += " and mdo.chute_no = :chute_no";
+					} else if(ValueUtil.isEqual(name, "shop_cd")) {
+						selectQuery += " and mdo.shop_cd = :shop_cd";
+					} else if(ValueUtil.isEqual(name, "cell_no")) {
+						selectQuery += " and mdo.cell_no = :cell_no";
+					} else if(ValueUtil.isEqual(name, "sku_cd")) {
+						selectQuery += " and mdo.item_cd = :sku_cd";
+					} else if(ValueUtil.isEqual(name, "box_no")) {
+						selectQuery += " and mb.box_no = :box_no";
+					}
 					params.put(name, val);
-
 				} else if(ValueUtil.isEqualIgnoreCase(op, "contains") || ValueUtil.isEqualIgnoreCase(op, "like")) {
+					if(ValueUtil.isEqual(name, "job_date")) {
+						selectQuery += " and mdo.job_date like :job_date";
+					} else if(ValueUtil.isEqual(name, "chute_no")) {
+						selectQuery += " and mdo.chute_no like :chute_no";
+					} else if(ValueUtil.isEqual(name, "shop_cd")) {
+						selectQuery += " and mdo.shop_cd like :shop_cd";
+					} else if(ValueUtil.isEqual(name, "cell_no")) {
+						selectQuery += " and mdo.cell_no like :cell_no";
+					} else if(ValueUtil.isEqual(name, "sku_cd")) {
+						selectQuery += " and mdo.item_cd like :sku_cd";
+					} else if(ValueUtil.isEqual(name, "box_no")) {
+						selectQuery += " and mb.box_no like :box_no";
+					}
 					params.put(name, "%" + val + "%");
 				}
 			}

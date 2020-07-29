@@ -75,29 +75,32 @@ public class WaveMonitorJob extends AbstractFnFJob {
 				// 회수처리
 				BeanUtil.get(DasRecallBatchService.class).dasRecallBatchService(new HashMap<>());
 			} catch(Exception e) {
-				// 2.4. 예외 처리
-				ErrorEvent errorEvent = new ErrorEvent(domain.getId(), "JOB_BATCH_RECALL_PROCESS_ERROR", e, null, true, true);
-				this.eventPublisher.publishEvent(errorEvent);
+				logger.error("monitorWave Error~~", e);
 			}
 			
 			try {
 				// 2.2 종료된 Wave 리스트를 조회한 후 존재한다면 처리
 				monitorJob.processFinishedWaveList(domain);
-				
-				// 2.4 진행 중인 Wave 작업 진행율 업데이트
-				monitorJob.updateWaveProgressRate(domain);
-				
-				// 2.3 시작된 Wave 리스트를 조회한 후 존재한다면 처리
-				monitorJob.processStartedWaveList(domain);
-				
 			} catch(Exception e) {
-				// 2.4. 예외 처리
-				ErrorEvent errorEvent = new ErrorEvent(domain.getId(), "JOB_BATCH_MONITOR_ERROR", e, null, true, true);
-				this.eventPublisher.publishEvent(errorEvent);
-			} finally {
-				// 2.5. 스레드 로컬 변수에서 currentDomain 리셋 
-				DomainContext.unsetAll();
+				logger.error("monitorWave Error~~", e);
 			}
+			
+			try {
+				// 2.3 진행 중인 Wave 작업 진행율 업데이트
+				monitorJob.updateWaveProgressRate(domain);				
+			} catch(Exception e) {
+				logger.error("monitorWave Error~~", e);
+			}
+			
+			try {
+				// 2.4 시작된 Wave 리스트를 조회한 후 존재한다면 처리
+				monitorJob.processStartedWaveList(domain);
+			} catch(Exception e) {
+				logger.error("monitorWave Error~~", e);
+			}
+			
+			// 2.5. 스레드 로컬 변수에서 currentDomain 리셋 
+			DomainContext.unsetAll();
 		}
 	}
 	

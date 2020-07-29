@@ -117,6 +117,7 @@ public class WaveMonitorJob extends AbstractFnFJob {
 				try {
 					this.startBatchSvc.startBatch(domain.getId(), wave);
 				} catch (Exception e) {
+					logger.error("monitorWave.processStartedWaveList Error~~", e);
 					ErrorEvent errorEvent = new ErrorEvent(domain.getId(), "JOB_BATCH_START_ERROR", e, null, true, true);
 					this.eventPublisher.publishEvent(errorEvent);
 				}
@@ -137,6 +138,7 @@ public class WaveMonitorJob extends AbstractFnFJob {
 				try {
 					this.closeBatchSvc.closeBatch(domain.getId(), wave);
 				} catch (Exception e) {
+					logger.error("monitorWave.processFinishedWaveList Error~~", e);
 					ErrorEvent errorEvent = new ErrorEvent(domain.getId(), "JOB_BATCH_CLOSE_ERROR", e, null, true, true);
 					this.eventPublisher.publishEvent(errorEvent);
 				}
@@ -160,6 +162,7 @@ public class WaveMonitorJob extends AbstractFnFJob {
 					// 2. 배치 정보 업데이트
 					this.queryManager.update(batch, "resultPcs", "resultOrderQty", "resultBoxQty", "progressRate", "uph", "equipRuntime");
 				} catch (Exception e) {
+					logger.error("monitorWave.updateWaveProgressRate Error~~", e);
 					ErrorEvent errorEvent = new ErrorEvent(domain.getId(), "JOB_BATCH_UPDATE_PROGRESS_ERROR", e, null, true, true);
 					this.eventPublisher.publishEvent(errorEvent);
 				}

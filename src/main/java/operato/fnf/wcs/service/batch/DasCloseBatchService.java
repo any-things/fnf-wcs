@@ -63,11 +63,19 @@ public class DasCloseBatchService extends AbstractQueryService {
 			return;
 		}
 
-		// 2. WMS에 박스 실적 한 번에 전송
-		this.sendAllBoxToWms(batch);
+		try {			
+			// 2. WMS에 박스 실적 한 번에 전송
+			this.sendAllBoxToWms(batch);
+		} catch(Exception e) {
+			logger.error("closeBatch Error~~", e);
+		}
 		
-		// 3. WMS에 최종 피킹 실적을 한 번에 전송
-		this.sendAllPickingToWms(batch);
+		try {
+			// 3. WMS에 최종 피킹 실적을 한 번에 전송
+			this.sendAllPickingToWms(batch);
+		} catch(Exception e) {
+			logger.error("closeBatch Error~~", e);
+		}
 		
 		// 4. 10분 생산성 최종 마감
 		this.closeProductivity(batch);

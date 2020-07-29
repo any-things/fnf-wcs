@@ -1,12 +1,8 @@
 package operato.fnf.wcs.service.rfid;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.validation.ValidationException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -14,7 +10,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import operato.fnf.wcs.FnFConstants;
 import operato.fnf.wcs.FnfUtils;
 import operato.fnf.wcs.entity.RfidBoxItem;
 import operato.fnf.wcs.entity.WcsMheBox;
@@ -22,10 +17,9 @@ import operato.fnf.wcs.entity.WmsAssortItem;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.model.ResponseObj;
-import xyz.anythings.sys.event.model.ErrorEvent;
 import xyz.anythings.sys.service.AbstractQueryService;
+import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.orm.IQueryManager;
-import xyz.elidom.sys.SysConstants;
 import xyz.elidom.sys.util.DateUtil;
 import xyz.elidom.util.BeanUtil;
 import xyz.elidom.util.ValueUtil;
@@ -48,57 +42,64 @@ public class DasSendBoxInfoToRfid extends AbstractQueryService {
 			jobType = LogisConstants.JOB_TYPE_DAS;
 		}
 		
-		ResponseObj resp = this.dasSendBoxInfoToRfid(1l, jobType);
+//		ResponseObj resp = this.dasSendBoxInfoToRfid(1l, jobType);
 		
-//		String batchId = String.valueOf(params.get("batch_id"));
-//		if (ValueUtil.isEmpty(batchId)) {
-//			return new ResponseObj();
-//		}
-//		
-//		JobBatch jobBatch = queryManager.select(JobBatch.class, batchId);
-//		if (ValueUtil.isEmpty(jobBatch)) {
-//			return new ResponseObj();
-//		}
+		String batchId = String.valueOf(params.get("batch_id"));
+		if (ValueUtil.isEmpty(batchId)) {
+			return new ResponseObj();
+		}
 		
-		return resp;
+		JobBatch jobBatch = queryManager.select(JobBatch.class, batchId);
+		if (ValueUtil.isEmpty(jobBatch)) {
+			return new ResponseObj();
+		}
+		
+		return new ResponseObj();
 	}
 	
-	public ResponseObj dasSendBoxInfoToRfid(Long domainId, String jobType) throws Exception {
-		String scopeSql = FnfUtils.queryCustServiceWithError("das_box_process_date");
+	public ResponseObj dasSendBoxInfoToRfid(Long domainId, JobBatch batch) throws Exception {
+//		String scopeSql = FnfUtils.queryCustServiceWithError("das_box_process_date");	
+//		Map<String, Object> params = new HashMap<>();
+//		params.put(SysConstants.ENTITY_FIELD_DOMAIN_ID, domainId);
+//		params.put("status", JobBatch.STATUS_RUNNING);
+//		params.put("jobType", ValueUtil.toList(jobType));
+//		List<String> runningBatchWorkDates = this.queryManager.selectListBySql(scopeSql, params, String.class, 0, 0);
 		
-		Map<String, Object> params = new HashMap<>();
-		params.put(SysConstants.ENTITY_FIELD_DOMAIN_ID, domainId);
-		params.put("status", JobBatch.STATUS_RUNNING);
-		params.put("jobType", ValueUtil.toList(jobType));
-		List<String> runningBatchWorkDates = this.queryManager.selectListBySql(scopeSql, params, String.class, 0, 0);
+//		ResponseObj resp = new ResponseObj();
+//		if (ValueUtil.isEmpty(runningBatchWorkDates) || runningBatchWorkDates.size() == 0) {
+//			resp.setMsg("No Data1");
+//			return resp;
+//		}
+//		
+//		List<String> dates = new ArrayList<>();
+//		for (String date: runningBatchWorkDates) {
+//			dates.add(date.replaceAll("-", ""));
+//		}
 		
-		ResponseObj resp = new ResponseObj();
-		if (ValueUtil.isEmpty(runningBatchWorkDates) || runningBatchWorkDates.size() == 0) {
-			resp.setMsg("No Data1");
-			return resp;
+//		String serviceSql = FnfUtils.queryCustService("das_box_info_with_outb_date");
+//		if (ValueUtil.isEmpty(serviceSql)) {
+//			throw new ValidationException("커스텀 서비스 [das_box_info_with_outb_date]가 존재하지 않습니다.");
+//		}
+		
+//		Map<String, Object> paramMap = new HashMap<>();
+//		paramMap.put("whCd", FnFConstants.WH_CD_ICF);
+//		paramMap.put("workDates", dates);
+//		paramMap.put("delYn", LogisConstants.Y_CAP_STRING);
+//		paramMap.put("ifYn", LogisConstants.N_CAP_STRING);
+//		List<WcsMheBox> wcsMheBoxes = queryManager.selectListBySql(serviceSql, paramMap, WcsMheBox.class, 0, 1000);
+//		if (ValueUtil.isEmpty(wcsMheBoxes) || wcsMheBoxes.size() == 0) {
+//			resp.setMsg("No Data2");
+//			return resp;
+//		}
+		
+		Query conds = new Query(0, 1000);
+		conds.addFilter("workUnit", batch.getWmsBatchNo());
+		conds.addFilter("ifYn", "N");
+		List<WcsMheBox> wcsMheBoxes = queryManager.selectList(WcsMheBox.class, conds);
+		if (ValueUtil.isEmpty(wcsMheBoxes)) {
+			return new ResponseObj();
 		}
 		
-		List<String> dates = new ArrayList<>();
-		for (String date: runningBatchWorkDates) {
-			dates.add(date.replaceAll("-", ""));
-		}
-		
-		String serviceSql = FnfUtils.queryCustService("das_box_info_with_outb_date");
-		if (ValueUtil.isEmpty(serviceSql)) {
-			throw new ValidationException("커스텀 서비스 [das_box_info_with_outb_date]가 존재하지 않습니다.");
-		}
-		
-		Map<String, Object> paramMap = new HashMap<>();
-		paramMap.put("whCd", FnFConstants.WH_CD_ICF);
-		paramMap.put("workDates", dates);
-		paramMap.put("delYn", LogisConstants.Y_CAP_STRING);
-		paramMap.put("ifYn", LogisConstants.N_CAP_STRING);
-		List<WcsMheBox> wcsMheBoxes = queryManager.selectListBySql(serviceSql, paramMap, WcsMheBox.class, 0, 1000);
-		if (ValueUtil.isEmpty(wcsMheBoxes) || wcsMheBoxes.size() == 0) {
-			resp.setMsg("No Data2");
-			return resp;
-		}
-
 		IQueryManager rfidQueryMgr = this.getDataSourceQueryManager(RfidBoxItem.class);
 		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsAssortItem.class);
 		
@@ -108,20 +109,25 @@ public class DasSendBoxInfoToRfid extends AbstractQueryService {
 			try {
 				BeanUtil.get(DasSendBoxInfoToRfid.class).sendPackingsToRfid(box, wmsQueryMgr, rfidQueryMgr, extFieldsSql);
 				
-				box.setIfYn(LogisConstants.Y_CAP_STRING);
-				box.setIfDatetime(new Date());
-				queryManager.update(box, "ifYn", "ifDatetime");
+				BeanUtil.get(DasSendBoxInfoToRfid.class).updateBoxFlag(box, "Y");
 			} catch(Exception e) {
-				box.setIfYn("E");
-				box.setIfDatetime(new Date());
-				queryManager.update(box, "ifYn", "ifDatetime");
-				
-				ErrorEvent errorEvent = new ErrorEvent(1l, "ERROR - DAS Send Packing To RFID", e, LogisConstants.EMPTY_STRING, true, true);			
-				this.eventPublisher.publishEvent(errorEvent);
+				logger.error("DasSendBoxInfoToRfid error~~", e);
+				BeanUtil.get(DasSendBoxInfoToRfid.class).updateBoxFlag(box, "E");
 			}
 		}
 		
 		return new ResponseObj();
+	}
+	
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public void updateBoxFlag(WcsMheBox box, String flag) {
+		try {
+			box.setIfYn(flag);
+			box.setIfDatetime(new Date());
+			queryManager.update(box, "ifYn", "ifDatetime");
+		} catch (Exception e) {
+			logger.error("DasSendBoxInfoToRfid.updateBoxFlag() error~~", e);
+		}
 	}
 	
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -164,7 +170,8 @@ public class DasSendBoxInfoToRfid extends AbstractQueryService {
 		Map<String, Object> order = queryManager.selectBySql(extFieldsSql, params, Map.class);
 		rfidBoxItem.setRefNo(ValueUtil.toString(order.get("ref_no")));
 		rfidBoxItem.setOutbTcd(ValueUtil.toString(order.get("outb_tcd")));
-		rfidBoxItem.setCdEquipment(ValueUtil.toString(order.get("equip_group_cd")));
+		//rfidBoxItem.setCdEquipment(ValueUtil.toString(order.get("equip_group_cd")));
+		rfidBoxItem.setCdEquipment(box.getMheNo());
 		rfidQueryMgr.insert(rfidBoxItem);
 	}
 }

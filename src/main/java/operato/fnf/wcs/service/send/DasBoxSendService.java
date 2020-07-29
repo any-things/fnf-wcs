@@ -74,17 +74,12 @@ public class DasBoxSendService extends AbstractQueryService {
 		// 1. 박스 완료 실적 조회
 //		List<WcsMheBox> boxOrderList = this.searchBoxedOrderList(batch);
 
-		try {			
-			BeanUtil.get(DasSendBoxInfoToRfid.class).dasSendBoxInfoToRfid(domain.getId(), batch.getJobType());
+		try {
+			if ("DAS".equals(batch.getJobType())) {
+				BeanUtil.get(DasSendBoxInfoToRfid.class).dasSendBoxInfoToRfid(domain.getId(), batch);
+			}
 		} catch(Exception e) {
 			logger.error("dasSendBoxInfoToRfid error~~:", e);
-//			// 2. FIXME backup로직임, 추후에 삭제: RFID에 전송
-//			for(WcsMheBox order : boxOrderList) {
-//				// 2.1 DAS로 부터 올라온 WCS 박스 실적 정보 조회 
-//				List<WcsMheBox> packings = this.searchBoxResult(order.getWorkUnit(), order.getOutbNo());
-//				// 2.2 WCS 주문별 실적 정보를 RFID 패킹 정보로 복사
-//				boxSendSvc.sendPackingsToRfid(domainId, rfidQueryMgr, wmsQueryMgr, packings);
-//			}
 		}
 		
 		// 3. 박스 취소 실적 조회

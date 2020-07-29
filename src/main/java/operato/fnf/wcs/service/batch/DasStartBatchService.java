@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import operato.fnf.wcs.entity.WcsMheHr;
 import operato.fnf.wcs.entity.WmsMheHr;
+import operato.logis.sms.SmsConstants;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.EquipGroup;
 import xyz.anythings.base.entity.JobBatch;
@@ -101,10 +102,12 @@ public class DasStartBatchService extends AbstractQueryService {
 			// 설비 코드 조회
 			List<Rack> rackList = this.queryManager.selectList(Rack.class, condition);
 			if(ValueUtil.isNotEmpty(rackList)) {
-				Rack rack = rackList.get(0);
-				batch.setEquipType(LogisConstants.EQUIP_TYPE_RACK);
-				batch.setEquipCd(rack.getRackCd());
-				batch.setEquipNm(rack.getRackNm());
+				if(ValueUtil.isNotEqual(rackList.get(0).getJobType(), SmsConstants.JOB_TYPE_SDAS)) {
+					Rack rack = rackList.get(0);
+					batch.setEquipType(LogisConstants.EQUIP_TYPE_RACK);
+					batch.setEquipCd(rack.getRackCd());
+					batch.setEquipNm(rack.getRackNm());
+				}
 			}
 		}
 		

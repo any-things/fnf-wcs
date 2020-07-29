@@ -25,11 +25,10 @@ import xyz.elidom.dbist.dml.Page;
 import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.orm.system.annotation.service.ApiDesc;
 import xyz.elidom.orm.system.annotation.service.ServiceDesc;
-import xyz.elidom.sys.SysConfigConstants;
+import xyz.elidom.sys.SysConstants;
 import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.sys.system.service.AbstractRestService;
 import xyz.elidom.sys.util.MessageUtil;
-import xyz.elidom.sys.util.SettingUtil;
 import xyz.elidom.sys.util.ThrowUtil;
 import xyz.elidom.sys.util.ValueUtil;
 
@@ -109,9 +108,7 @@ public class SmsTrackingController extends AbstractRestService {
 			}
 		}
 		selectQuery += " order by c.chute_no";
-		page = (page == null) ? 1 : page;
-		limit = (limit == null) ? ValueUtil.toInteger(SettingUtil.getValue(SysConfigConstants.SCREEN_PAGE_LIMIT, "10000")) : limit;
-		return this.queryManager.selectPageBySql(selectQuery, params, HashMap.class, page, limit);
+		return this.queryManager.selectPageBySql(selectQuery, params, HashMap.class, 0, 0);
 	}
 	
 	@RequestMapping(value="/rtn_box_result", method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
@@ -181,9 +178,7 @@ public class SmsTrackingController extends AbstractRestService {
 			}
 		}
 		selectQuery += " order by mdo.chute_no, mdo.cell_no";
-		page = (page == null) ? 1 : page;
-		limit = (limit == null) ? ValueUtil.toInteger(SettingUtil.getValue(SysConfigConstants.SCREEN_PAGE_LIMIT, "10000")) : limit;
-		return this.queryManager.selectPageBySql(selectQuery, params, HashMap.class, page, limit);
+		return this.queryManager.selectPageBySql(selectQuery, params, HashMap.class, 0, 0);
 	}
 	
 	@RequestMapping(value="/das_box_result", method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
@@ -229,6 +224,7 @@ public class SmsTrackingController extends AbstractRestService {
 				} else if(ValueUtil.isEqualIgnoreCase(op, "contains") || ValueUtil.isEqualIgnoreCase(op, "like")) {
 					if(ValueUtil.isEqual(name, "job_date")) {
 						selectQuery += " and mdo.job_date like :job_date";
+						val = ValueUtil.toString(val).replaceAll(SysConstants.DASH, SysConstants.EMPTY_STRING);
 					} else if(ValueUtil.isEqual(name, "chute_no")) {
 						selectQuery += " and mdo.chute_no like :chute_no";
 					} else if(ValueUtil.isEqual(name, "shop_cd")) {
@@ -244,9 +240,7 @@ public class SmsTrackingController extends AbstractRestService {
 				}
 			}
 		}
-		
-		page = (page == null) ? 1 : page;
-		limit = (limit == null) ? ValueUtil.toInteger(SettingUtil.getValue(SysConfigConstants.SCREEN_PAGE_LIMIT, "10000")) : limit;
-		return this.queryManager.selectPageBySql(selectQuery, params, HashMap.class, page, limit);
+		selectQuery += " order by mdo.chute_no, mdo.cell_no";
+		return this.queryManager.selectPageBySql(selectQuery, params, HashMap.class, 0, 0);
 	}
 }

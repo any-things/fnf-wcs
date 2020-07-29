@@ -209,6 +209,7 @@ public class SmsTrackingController extends AbstractRestService {
 				if(ValueUtil.isEmpty(op) || ValueUtil.isEqualIgnoreCase(op, "eq") || ValueUtil.isEqualIgnoreCase(op, "=")) {
 					if(ValueUtil.isEqual(name, "job_date")) {
 						selectQuery += " and mdo.job_date = :job_date";
+						val = ValueUtil.toString(val).replaceAll(SysConstants.DASH, SysConstants.EMPTY_STRING);
 					} else if(ValueUtil.isEqual(name, "chute_no")) {
 						selectQuery += " and mdo.chute_no = :chute_no";
 					} else if(ValueUtil.isEqual(name, "shop_cd")) {

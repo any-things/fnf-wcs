@@ -824,7 +824,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		
 		// SDPS 코드 작성
 		if(ValueUtil.isEqualIgnoreCase(LogisConstants.EQUIP_TYPE_SORTER, equipType)) {
-			batch = this.searchSdpsBatchId(boxId);
+			batch = this.searchSdpsBatchId(trayCd);
 		}
 		// SDPS 코드 작성
 		
@@ -1009,6 +1009,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		event.setExecuted(true);
 	}
 	
+	@SuppressWarnings("unchecked")
 	private JobBatch searchSdpsBatchId(String boxId) {
 		Map<String, Object> condition = ValueUtil.newMap("jobType,status", SmsConstants.JOB_TYPE_SDPS, JobBatch.STATUS_RUNNING);
 		String sql = "select * from job_batches where batch_group_id = (select id from job_batches where job_type = :jobType and status = :status)";

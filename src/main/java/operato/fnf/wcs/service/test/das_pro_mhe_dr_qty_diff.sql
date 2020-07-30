@@ -14,7 +14,7 @@ FROM
 		FROM
 			mhe_dr
 		WHERE
-			work_unit = '1001518795'
+			work_unit = '1001532793'
 		GROUP BY
 			shipto_id,
 			item_cd) DR,
@@ -26,12 +26,13 @@ FROM
 		FROM
 			mhe_box
 		WHERE
-			work_unit = '1001518795'
+			work_unit = '1001532793'
 			AND del_yn != 'Y'
 		GROUP BY
 			shipto_id,
 			item_cd) br
 	WHERE
-		dr.shipto_id = br.shipto_id) aa
+		dr.shipto_id = br.shipto_id
+		AND dr.item_cd = br.item_cd) aa
 WHERE
 	pick_qty != cmpt_qty

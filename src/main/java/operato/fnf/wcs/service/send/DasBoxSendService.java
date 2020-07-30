@@ -18,6 +18,7 @@ import operato.fnf.wcs.entity.RfidBoxItem;
 import operato.fnf.wcs.entity.WcsMheBox;
 import operato.fnf.wcs.entity.WmsAssortItem;
 import operato.fnf.wcs.service.rfid.DasSendBoxInfoToRfid;
+import operato.logis.sms.SmsConstants;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.sys.event.model.ErrorEvent;
@@ -75,7 +76,7 @@ public class DasBoxSendService extends AbstractQueryService {
 //		List<WcsMheBox> boxOrderList = this.searchBoxedOrderList(batch);
 
 		try {
-			if ("DAS".equals(batch.getJobType())) {
+			if (LogisConstants.JOB_TYPE_DAS.equals(batch.getJobType()) || ValueUtil.isEqual(batch.getJobType(), SmsConstants.JOB_TYPE_SDAS)) {
 				BeanUtil.get(DasSendBoxInfoToRfid.class).dasSendBoxInfoToRfid(domain.getId(), batch);
 			}
 		} catch(Exception e) {

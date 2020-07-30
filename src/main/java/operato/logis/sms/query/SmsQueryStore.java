@@ -184,6 +184,13 @@ public class SmsQueryStore extends AbstractQueryStore {
 	public String getSdpsDasOrder() {
 		return this.getQueryByPath("sdps/sdpsDasOrder");
 	}
+	/**
+	 * SDPS DPS_JOB_INSTANCES 전송
+	 * 
+	 */
+	public String getSdpsBoxResult() {
+		return this.getQueryByPath("sdps/sdpsBoxResult");
+	}
 	
 
 	

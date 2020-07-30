@@ -89,28 +89,17 @@ public class SmsCloseBatchService extends AbstractQueryService {
 				this.closeWcsWave(jobBatch);
 			}
 		} else if(ValueUtil.isEqual(batch.getJobType(), SmsConstants.JOB_TYPE_SDPS)) {
-//			// 3. WMS MHE_HR 테이블에 마감 전송
-//			String sql = "update mhe_hr set cmpt_qty = :pickedQty, status = :status, cnf_datetime = :finishedAt where wh_cd = :whCd and work_unit = :batchId";
-//			Map<String, Object> params = ValueUtil.newMap("whCd,batchId,status,pickedQty,finishedAt", FnFConstants.WH_CD_ICF, batch.getId(), "C", batch.getResultPcs(), batch.getFinishedAt());
-//			this.getDataSourceQueryManager(WmsMheHr.class).executeBySql(sql, params);
-//			
-//			// 4. WCS MHE_HR 테이블에 마감 전송
-//			sql = "update mhe_hr set status = :status, cmpt_qty = :pickedQty, cnf_datetime = :finishedAt, prcs_yn = 'Y', prcs_datetime = :finishedAt where wh_cd = :whCd and work_unit = :batchId";
-//			this.queryManager.executeBySql(sql, params);
-			
-			
-			
 			Query batchConds = new Query();
 			batchConds.addFilter("batchGroupId", batch.getBatchGroupId());
 			List<JobBatch> batchGroupList = this.queryManager.selectList(JobBatch.class, batchConds);
 			for (JobBatch jobBatch : batchGroupList) {
+				// 2. 배치에 반영
+				this.setBatchInfoOnClosing(jobBatch);
 				// 3. WMS MHE_HR 테이블에 반영
 				this.closeWmsWave(jobBatch);
 				// 4. WCS MHE_HR 테이블에 반영
 				this.closeWcsWave(jobBatch);
 			}
-			
-			
 		}
 		
 	}

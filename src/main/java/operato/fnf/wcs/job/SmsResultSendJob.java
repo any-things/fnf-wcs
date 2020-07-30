@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import operato.fnf.wcs.service.send.DasBoxSendService;
 import operato.fnf.wcs.service.send.PickingResultSendService;
+import operato.fnf.wcs.service.send.SmsInspSendService;
 import operato.logis.sms.SmsConstants;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
@@ -39,6 +40,11 @@ public class SmsResultSendJob extends AbstractFnFJob {
 	 */
 	@Autowired
 	private PickingResultSendService pickResultSendSvc;
+	/**
+	 * SMS Box 전송 서비스
+	 */
+	@Autowired
+	private SmsInspSendService smsInspSendSvc;
 	
 	/**
 	 * 매 20초 마다  
@@ -66,8 +72,10 @@ public class SmsResultSendJob extends AbstractFnFJob {
 					for(JobBatch batch : batches) {
 						// 1. DAS에서 올려 준 피킹 실적을 WMS에 피킹 실적 전송 - 별도 트랜잭션
 						this.sendPickResults(domain, batch);
-						// 2. RFID에 박스 실적 전송 - 박스 실적 전송 & 박스 취소까지 처리 - 별도 트랜잭션
+						// 2. SDAS인 경우 RFID에 박스 실적 전송 - 박스 실적 전송 & 박스 취소까지 처리 - 별도 트랜잭션
 						this.sendBoxResults(domain, batch);
+						// 3. SDPS인 경우 Job Instances 테이블에 박스 실적 전송
+						this.sendSdpsBoxResults(domain, batch);
 					}
 				}
 			} catch (Exception e) {
@@ -129,6 +137,21 @@ public class SmsResultSendJob extends AbstractFnFJob {
 	 * @return
 	 */
 	private void sendBoxResults(Domain domain, JobBatch batch) {
-		this.dasBoxSendSvc.sendBoxResults(domain, batch);
+		if(ValueUtil.isEqual(batch.getJobType(), SmsConstants.JOB_TYPE_SDAS)) {
+			this.dasBoxSendSvc.sendBoxResults(domain, batch);
+		}
+	}
+	
+	/**
+	 * 박스 실적을 Job Instances 로 전송
+	 * 
+	 * @param domain
+	 * @param batch
+	 * @return
+	 */
+	private void sendSdpsBoxResults(Domain domain, JobBatch batch) {
+		if(ValueUtil.isEqual(batch.getJobType(), SmsConstants.JOB_TYPE_SDPS)) {
+			this.smsInspSendSvc.sendSdpsBoxResults(domain, batch);
+		}
 	}
 }

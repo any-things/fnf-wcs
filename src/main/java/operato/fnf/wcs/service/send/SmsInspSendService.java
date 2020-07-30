@@ -12,6 +12,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import operato.fnf.wcs.FnFConstants;
+import operato.fnf.wcs.entity.DpsJobInstance;
 import operato.fnf.wcs.entity.WcsMhePasOrder;
 import operato.fnf.wcs.entity.WcsMhePasRlst;
 import operato.fnf.wcs.entity.WmsWmtUifImpInbRtnTrg;
@@ -19,6 +20,7 @@ import operato.fnf.wcs.entity.WmsWmtUifImpMheRtnScan;
 import operato.fnf.wcs.entity.WmsWmtUifWcsInbRtnCnfm;
 import operato.logis.sms.query.SmsQueryStore;
 import xyz.anythings.base.LogisConstants;
+import xyz.anythings.base.entity.BoxPack;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.entity.SKU;
 import xyz.anythings.sys.service.AbstractQueryService;
@@ -85,7 +87,7 @@ public class SmsInspSendService extends AbstractQueryService {
 		
 		
 		List<WcsMhePasOrder> pasOrderList = new ArrayList<WcsMhePasOrder>(rtnTrgList.size());
-//		String srtDate = DateUtil.dateStr(new Date(), "yyyyMMdd");
+		String srtDate = DateUtil.dateStr(new Date(), "yyyyMMddHHmmss");
 		
 		for (WmsWmtUifImpInbRtnTrg rtnTrg : rtnTrgList) {
 			WcsMhePasOrder wcsMhePasOrder = new WcsMhePasOrder();
@@ -111,12 +113,15 @@ public class SmsInspSendService extends AbstractQueryService {
 				}
 			}
 			pasOrderList.add(wcsMhePasOrder);
+			
+			rtnTrg.setWcsIfChk(LogisConstants.Y_CAP_STRING);
+			rtnTrg.setWcsIfChkDtm(srtDate);
 		}
 		
 		if(ValueUtil.isNotEmpty(pasOrderList)) {
 			AnyOrmUtil.insertBatch(pasOrderList, 100);
 		}
-		dsQueryManager.executeBySql(queryStore.getSrtnInspBoxTrgUpdate(), inspParams);
+		dsQueryManager.updateBatch(rtnTrgList);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -135,7 +140,6 @@ public class SmsInspSendService extends AbstractQueryService {
 		List<JobBatch> batchGroupList = this.queryManager.selectList(JobBatch.class, batchConds);
 		
 		String rtnCnfmSql = "select * from WMT_UIF_WCS_INB_RTN_CNFM where WH_CD = :whCd and (strr_id = :strrId AND ref_season = :refSeason AND SHOP_RTN_TYPE = :shopRtnType AND SHOP_RTN_SEQ = :shopRtnSeq AND (WCS_IF_CHK = :wcsIfChk OR WCS_IF_CHK IS NULL))";
-//		String rtnTrgSql = "SELECT REF_NO, STRR_ID FROM WMT_UIF_IMP_INB_RTN_TRG WHERE WH_CD = :whCd and (strr_id = :strrId AND ref_season = :refSeason AND SHOP_RTN_TYPE = :shopRtnType AND SHOP_RTN_SEQ = :shopRtnSeq)";
 		for (JobBatch jobBatch : batchGroupList) {
 			String[] jobBatchInfo = jobBatch.getId().split("-");
 			if(jobBatchInfo.length < 4) {
@@ -144,14 +148,11 @@ public class SmsInspSendService extends AbstractQueryService {
 			}
 			
 			rtnCnfmSql += " or (strr_id ='" + jobBatchInfo[0] + "' AND ref_season = '" + jobBatchInfo[1] + "' AND SHOP_RTN_TYPE ='" + jobBatchInfo[2] + "' AND SHOP_RTN_SEQ = " + jobBatchInfo[3] + "AND (WCS_IF_CHK = 'N' OR WCS_IF_CHK IS NULL))";
-//			rtnTrgSql += " or (strr_id ='" + jobBatchInfo[0] + "' AND ref_season = '" + jobBatchInfo[1] + "' AND SHOP_RTN_TYPE ='" + jobBatchInfo[2] + "' AND SHOP_RTN_SEQ = " + jobBatchInfo[3] + ")";
 		}
-//		rtnTrgSql += "GROUP BY REF_NO, STRR_ID";
 		
 		IQueryManager dsQueryManager = this.getDataSourceQueryManager(WmsWmtUifWcsInbRtnCnfm.class);
 		Map<String, Object> conds = ValueUtil.newMap("whCd,strrId,refSeason,shopRtnType,shopRtnSeq,wcsIfChk", FnFConstants.WH_CD_ICF, batchInfo[0], batchInfo[1], batchInfo[2], batchInfo[3], LogisConstants.N_CAP_STRING);
 		List<WmsWmtUifWcsInbRtnCnfm> rtnCnfmList = dsQueryManager.selectListBySql(rtnCnfmSql, conds, WmsWmtUifWcsInbRtnCnfm.class, 0, 0);
-//		List<WmsWmtUifImpInbRtnTrg> rtnTrgList = dsQueryManager.selectListBySql(rtnTrgSql, conds, WmsWmtUifImpInbRtnTrg.class, 0, 0);
 		
 		Query condition = new Query();
 		condition.addFilter("batchNo", batch.getBatchGroupId());
@@ -213,5 +214,26 @@ public class SmsInspSendService extends AbstractQueryService {
 		this.queryManager.updateBatch(pasResults);
 		dsQueryManager.updateBatch(rtnCnfmList);
 		wmsQueryManager.insertBatch(resultValue);
+	}
+	
+	public void sendSdpsBoxResults(Domain domain, JobBatch batch) {
+		Map<String, Object> condition = ValueUtil.newMap("domainId,boxStatus,batchId,delYn", batch.getDomainId(), BoxPack.BOX_STATUS_BOXED, batch.getId(), LogisConstants.Y_CAP_STRING);
+		List<DpsJobInstance> dpsBoxList = this.queryManager.selectListBySql(queryStore.getSdpsBoxResult(), condition, DpsJobInstance.class, 0, 0);
+		
+		for (DpsJobInstance dpsJobInstance : dpsBoxList) {
+			dpsJobInstance.setId(UUID.randomUUID().toString());
+		}
+		
+		if(ValueUtil.isNotEmpty(dpsBoxList)) {
+			AnyOrmUtil.insertBatch(dpsBoxList, 100);
+		}
+
+		List<String> refNoList = AnyValueUtil.filterValueListBy(dpsBoxList, "refNo");
+		
+		for (String ref : refNoList) {
+			String sql = "update mhe_box set if_yn = 'Y' if_datetime = now() where work_unit = :batchId and shipto_id = :refNo and del_yn != 'Y'";
+			this.queryManager.executeBySql(sql, ValueUtil.newMap("batchId,refNo", batch.getId(), ref));
+		}
+		
 	}
 }

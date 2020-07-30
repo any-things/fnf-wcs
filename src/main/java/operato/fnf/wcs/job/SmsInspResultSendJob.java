@@ -29,7 +29,7 @@ import xyz.elidom.sys.util.ValueUtil;
 public class SmsInspResultSendJob extends AbstractFnFJob {
 	
 	/**
-	 * 반품 검수완료 Box 전송 서비스
+	 * SMS Box 전송 서비스
 	 */
 	@Autowired
 	private SmsInspSendService smsInspSendSvc;

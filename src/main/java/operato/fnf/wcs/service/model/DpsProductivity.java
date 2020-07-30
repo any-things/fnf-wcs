@@ -8,6 +8,11 @@ public class DpsProductivity {
 	private Integer refNoCnt;
 	private Integer itemCdCnt;
 	private Integer doneQty;
+	private Integer workers;
+	private Integer workMinutes;
+	private Integer workHours;
+	private float ph;
+	private float php;
 	
 	public String getWorkDate() {
 		return workDate;
@@ -50,5 +55,35 @@ public class DpsProductivity {
 	}
 	public void setDoneQty(Integer doneQty) {
 		this.doneQty = doneQty;
+	}
+	public Integer getWorkers() {
+		return workers;
+	}
+	public void setWorkers(Integer workers) {
+		this.workers = workers;
+	}
+	public Integer getWorkMinutes() {
+		return workMinutes;
+	}
+	public void setWorkMinutes(Integer workMinutes) {
+		this.workMinutes = workMinutes;
+	}
+	public Integer getWorkHours() {
+		return workHours;
+	}
+	public void setWorkHours(Integer workHours) {
+		this.workHours = workHours;
+	}
+	public float getPh() {
+		return ph;
+	}
+	public void setPh(float ph) {
+		this.ph = ph;
+	}
+	public float getPhp() {
+		return php;
+	}
+	public void setPhp(float php) {
+		this.php = php;
 	}
 }

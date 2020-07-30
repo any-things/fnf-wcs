@@ -52,7 +52,7 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 	
 
 	String dasBizType = "SHIPBYDAS";
-	String dpsBizType = "SHIPBYDPS";
+	String dpsBizType = "SHIPBYXPS";
 	String createStatus = "A";
 	String receiveStatus = "B";
 	String equipType = "SORTER";
@@ -260,10 +260,6 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 			
 			// 7. batchReceiptItem 상태 업데이트 
 			item.updateStatusImmediately(LogisConstants.COMMON_STATUS_FINISHED, null);
-			
-			// 8.WMS 상태 업데이트
-			this.updateWmfIfToReceiptItems(batch, item);
-			
 		} catch(Throwable th) {
 			// 9. 수신 에러 처리
 			selfSvc.handleReceiveError(th, receipt, item);
@@ -289,24 +285,6 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 			this.getWmsSrtnOrders(batchId, receipt, item);
 		} else if(ValueUtil.isEqual(item.getJobType(), SmsConstants.JOB_TYPE_SDPS)) {
 			this.getWmsSdpsOrders(receipt, item);
-		}
-	}
-	
-	/**
-	 * WMS IF 테이블의 수신완료 데이터 상태 변경
-	 * 
-	 * @param jobBatch
-	 * @param item
-	 */
-	private void updateWmfIfToReceiptItems(JobBatch jobBatch, BatchReceiptItem item) {
-		if(ValueUtil.isEqual(item.getJobType(), SmsConstants.JOB_TYPE_SDAS)) {
-//			Map<String,Object> params = ValueUtil.newMap("mheNo,status,rcvDatetime,whCd,workUnit",
-//					this.mheNo, this.receiveStatus, DateUtil.getDate(), this.whCd, item.getWmsBatchNo());
-//			this.getFnfQueryManager().executeBySql(this.batchQueryStore.getWmsIfToSdasReceiptUpdateQuery(), params);
-			
-		} else if(ValueUtil.isEqual(item.getJobType(), SmsConstants.JOB_TYPE_SRTN)) {
-		} else if(ValueUtil.isEqual(item.getJobType(), SmsConstants.JOB_TYPE_SDPS)) {
-			
 		}
 	}
 	

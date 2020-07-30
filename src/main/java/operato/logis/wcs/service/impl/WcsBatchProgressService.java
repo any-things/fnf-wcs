@@ -67,8 +67,11 @@ public class WcsBatchProgressService extends AbstractQueryService {
 		} else if (ValueUtil.isEqual(SmsConstants.JOB_TYPE_SRTN, jobType)) {
 			sql = "SELECT COALESCE(COUNT(DISTINCT(BOX_NO)), 0) AS RESULT FROM MHE_DAS_RTN_BOX_RSLT WHERE WH_CD = :whCd AND BATCH_NO = :batchId AND DEL_YN = :delYn";
 			params.put("delYn", LogisConstants.N_CAP_STRING);
+		} else if (ValueUtil.isEqual(SmsConstants.JOB_TYPE_SDAS, jobType)) {
+			sql = "select COALESCE(count(distinct(box_no)), 0) as result from mhe_box where wh_cd = :whCd and work_unit = :batchId";
+		} else if (ValueUtil.isEqual(SmsConstants.JOB_TYPE_SDPS, jobType)) {
+			sql = "select COALESCE(count(distinct(box_no)), 0) as result from mhe_box where wh_cd = :whCd and work_unit = :batchId";
 		} else {
-			// TODO Ex-PAS
 			return 0;
 		}
 		
@@ -95,8 +98,11 @@ public class WcsBatchProgressService extends AbstractQueryService {
 		} else if (ValueUtil.isEqual(SmsConstants.JOB_TYPE_SRTN, jobType)) {
 			sql = "SELECT COALESCE(COUNT(DISTINCT(ITEM_CD)), 0) AS RESULT FROM MHE_DAS_RTN_BOX_RSLT WHERE WH_CD = :whCd AND BATCH_NO = :batchId AND DEL_YN = :delYn";
 			params.put("delYn", LogisConstants.N_CAP_STRING);
+		} else if (ValueUtil.isEqual(SmsConstants.JOB_TYPE_SDAS, jobType)) {
+			sql = "select COALESCE(count(distinct(shipto_id)), 0) as result from mhe_box where wh_cd = :whCd and work_unit = :batchId";
+		} else if (ValueUtil.isEqual(SmsConstants.JOB_TYPE_SDPS, jobType)) {
+			sql = "select COALESCE(count(distinct(shipto_id)), 0) as result from mhe_box where wh_cd = :whCd and work_unit = :batchId";
 		} else {
-			// TODO Ex-PAS
 			return 0;
 		}
 		
@@ -123,8 +129,11 @@ public class WcsBatchProgressService extends AbstractQueryService {
 		} else if (ValueUtil.isEqual(SmsConstants.JOB_TYPE_SRTN, jobType)) {
 			sql = "SELECT COALESCE(SUM(CMPT_QTY), 0) AS RESULT FROM MHE_DAS_RTN_BOX_RSLT WHERE WH_CD = :whCd AND BATCH_NO = :batchId AND DEL_YN = :delYn";
 			params.put("delYn", LogisConstants.N_CAP_STRING);
-		}else {
-			// TODO Ex-PAS
+		} else if (ValueUtil.isEqual(SmsConstants.JOB_TYPE_SDAS, jobType)) {
+			sql = "select COALESCE(sum(cmpt_qty), 0) as result from mhe_box where wh_cd = :whCd and work_unit = :batchId and del_yn != 'Y'";
+		} else if (ValueUtil.isEqual(SmsConstants.JOB_TYPE_SDPS, jobType)) {
+			sql = "select COALESCE(sum(cmpt_qty), 0) as result from mhe_box where wh_cd = :whCd and work_unit = :batchId and del_yn != 'Y'";
+		} else {
 			return 0;
 		}
 		

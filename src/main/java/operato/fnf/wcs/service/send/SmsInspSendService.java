@@ -172,17 +172,6 @@ public class SmsInspSendService extends AbstractQueryService {
 			pasResult.setIfYn(LogisConstants.CAP_Y_STRING);
 		}
 		
-		
-		// 임시 Start
-//		for (WcsMhePasRlst wcsMhePasRlst : tempResults) {
-//			for (WmsWmtUifImpInbRtnTrg rtnTrg : rtnTrgList) {
-//				if(ValueUtil.isEqual(wcsMhePasRlst.getBoxId(), rtnTrg.getRefNo())) {
-//					wcsMhePasRlst.setStrrId(rtnTrg.getStrrId());
-//				}
-//			}
-//		}
-		// 임시 End
-		
 		IQueryManager wmsQueryManager = this.getDataSourceQueryManager(WmsWmtUifImpMheRtnScan.class);
 		
 		List<WmsWmtUifImpMheRtnScan> resultValue = new ArrayList<WmsWmtUifImpMheRtnScan>(tempResults.size());

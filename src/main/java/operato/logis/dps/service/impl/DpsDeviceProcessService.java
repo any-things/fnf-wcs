@@ -662,7 +662,6 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 	 * 
 	 * @param event
 	 */
-	@SuppressWarnings("unchecked")
 	@EventListener(classes=DeviceProcessRestEvent.class, condition = "#event.checkCondition('/inspection/find_by_box', 'dps')")
 	@Order(Ordered.LOWEST_PRECEDENCE)
 	public void findByBox(DeviceProcessRestEvent event) {
@@ -681,26 +680,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		
 		// SDPS 코드 작성
 		if(ValueUtil.isEqualIgnoreCase(LogisConstants.EQUIP_TYPE_SORTER, equipType)) {
-			Map<String, Object> condition = ValueUtil.newMap("jobType,status", SmsConstants.JOB_TYPE_SDPS, JobBatch.STATUS_RUNNING);
-			String sql = "select * from job_batches where batch_group_id = (select id from job_batches where job_type = :jobType and status = :status)";
-			List<JobBatch> batchList = this.queryManager.selectListBySql(sql, condition, JobBatch.class, 0, 0);
-			List<String> batchIds = AnyValueUtil.filterValueListBy(batchList, "id");
-			
-			if(ValueUtil.isEmpty(batchIds)) {
-				throw ThrowUtil.newValidationErrorWithNoLog("해당 배치는 작업중이 아닙니다.");
-			}
-			
-			sql = "select work_unit from mhe_box where wh_cd = :whCd and box_no = :boxId and work_unit in ( :batchIds ) group by work_unit";
-			condition.put("whCd", FnFConstants.WH_CD_ICF);
-			condition.put("boxId", boxId);
-			condition.put("batchIds", batchIds);
-			Map<String, Object> batchId = this.queryManager.selectBySql(sql, condition, Map.class);
-			
-			if(ValueUtil.isEmpty(batchId)) {
-				throw ThrowUtil.newValidationErrorWithNoLog("해당 배치는 작업중이 아닙니다.");
-			}
-			
-			batch = this.queryManager.select(JobBatch.class, batchId.get("work_unit"));
+			batch = this.searchSdpsBatchId(boxId);
 		}
 		// SDPS 코드 작성
 
@@ -841,6 +821,12 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		// 3. 설비 코드로 현재 진행 중인 작업 배치 및 설비 정보 조회 
 		EquipBatchSet equipBatchSet = DpsServiceUtil.findBatchByEquip(event.getDomainId(), equipType, equipCd);
 		JobBatch batch = equipBatchSet.getBatch();
+		
+		// SDPS 코드 작성
+		if(ValueUtil.isEqualIgnoreCase(LogisConstants.EQUIP_TYPE_SORTER, equipType)) {
+			batch = this.searchSdpsBatchId(boxId);
+		}
+		// SDPS 코드 작성
 		
 		// 4. 박스 정보 생성
 		BoxPack boxPack = new BoxPack();
@@ -1021,6 +1007,29 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		// 5. 이벤트 처리 결과 셋팅  
 		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, printedCount));
 		event.setExecuted(true);
+	}
+	
+	private JobBatch searchSdpsBatchId(String boxId) {
+		Map<String, Object> condition = ValueUtil.newMap("jobType,status", SmsConstants.JOB_TYPE_SDPS, JobBatch.STATUS_RUNNING);
+		String sql = "select * from job_batches where batch_group_id = (select id from job_batches where job_type = :jobType and status = :status)";
+		List<JobBatch> batchList = this.queryManager.selectListBySql(sql, condition, JobBatch.class, 0, 0);
+		List<String> batchIds = AnyValueUtil.filterValueListBy(batchList, "id");
+		
+		if(ValueUtil.isEmpty(batchIds)) {
+			throw ThrowUtil.newValidationErrorWithNoLog("해당 배치는 작업중이 아닙니다.");
+		}
+		
+		sql = "select work_unit from mhe_box where wh_cd = :whCd and box_no = :boxId and work_unit in ( :batchIds ) group by work_unit";
+		condition.put("whCd", FnFConstants.WH_CD_ICF);
+		condition.put("boxId", boxId);
+		condition.put("batchIds", batchIds);
+		Map<String, Object> batchId = this.queryManager.selectBySql(sql, condition, Map.class);
+		
+		if(ValueUtil.isEmpty(batchId)) {
+			throw ThrowUtil.newValidationErrorWithNoLog("해당 배치는 작업중이 아닙니다.");
+		}
+		JobBatch batch = this.queryManager.select(JobBatch.class, batchId.get("work_unit"));
+		return batch;
 	}
 	
 }

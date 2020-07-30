@@ -94,6 +94,7 @@ public class DasSendBoxInfoToRfid extends AbstractQueryService {
 		
 		Query conds = new Query(0, 1000);
 		conds.addFilter("workUnit", batch.getWmsBatchNo());
+		conds.addFilter("delYn", "N");
 		conds.addFilter("ifYn", "N");
 		List<WcsMheBox> wcsMheBoxes = queryManager.selectList(WcsMheBox.class, conds);
 		if (ValueUtil.isEmpty(wcsMheBoxes)) {

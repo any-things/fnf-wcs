@@ -231,7 +231,7 @@ public class SmsInspSendService extends AbstractQueryService {
 		List<String> refNoList = AnyValueUtil.filterValueListBy(dpsBoxList, "refNo");
 		
 		for (String ref : refNoList) {
-			String sql = "update mhe_box set if_yn = 'Y' if_datetime = now() where work_unit = :batchId and shipto_id = :refNo and del_yn != 'Y'";
+			String sql = "update mhe_box set if_yn = 'Y', if_datetime = now() where work_unit = :batchId and shipto_id = :refNo and del_yn != 'Y'";
 			this.queryManager.executeBySql(sql, ValueUtil.newMap("batchId,refNo", batch.getId(), ref));
 		}
 		

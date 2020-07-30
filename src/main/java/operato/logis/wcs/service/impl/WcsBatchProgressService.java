@@ -1,6 +1,7 @@
 package operato.logis.wcs.service.impl;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,9 @@ import operato.logis.wcs.query.WcsQueryStore;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.sys.service.AbstractQueryService;
+import xyz.anythings.sys.util.AnyOrmUtil;
+import xyz.anythings.sys.util.AnyValueUtil;
+import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.util.ValueUtil;
 
 /**
@@ -65,12 +69,18 @@ public class WcsBatchProgressService extends AbstractQueryService {
 			sql = "select COALESCE(count(distinct(waybill_no)), 0) as result from mhe_dr where wh_cd = :whCd and work_unit = :batchId and trim(waybill_no) is not null";
 			
 		} else if (ValueUtil.isEqual(SmsConstants.JOB_TYPE_SRTN, jobType)) {
-			sql = "SELECT COALESCE(COUNT(DISTINCT(BOX_NO)), 0) AS RESULT FROM MHE_DAS_RTN_BOX_RSLT WHERE WH_CD = :whCd AND BATCH_NO = :batchId AND DEL_YN = :delYn";
+			List<String> batchList = this.searchBatchIds(batch);
+			
+			sql = "SELECT COALESCE(COUNT(DISTINCT(BOX_NO)), 0) AS RESULT FROM MHE_DAS_RTN_BOX_RSLT WHERE WH_CD = :whCd AND BATCH_NO IN ( :batchList ) AND DEL_YN = :delYn";
+			params.put("batchList", batchList);
 			params.put("delYn", LogisConstants.N_CAP_STRING);
 		} else if (ValueUtil.isEqual(SmsConstants.JOB_TYPE_SDAS, jobType)) {
 			sql = "select COALESCE(count(distinct(box_no)), 0) as result from mhe_box where wh_cd = :whCd and work_unit = :batchId";
 		} else if (ValueUtil.isEqual(SmsConstants.JOB_TYPE_SDPS, jobType)) {
-			sql = "select COALESCE(count(distinct(box_no)), 0) as result from mhe_box where wh_cd = :whCd and work_unit = :batchId";
+			List<String> batchList = this.searchBatchIds(batch);
+			
+			sql = "select COALESCE(count(distinct(box_no)), 0) as result from mhe_box where wh_cd = :whCd and work_unit IN ( :batchList )";
+			params.put("batchList", batchList);
 		} else {
 			return 0;
 		}
@@ -96,12 +106,18 @@ public class WcsBatchProgressService extends AbstractQueryService {
 			sql = "select COALESCE(count(distinct(ref_no)), 0) as result from mhe_dr where wh_cd = :whCd and work_unit = :batchId and trim(waybill_no) is not null";
 			
 		} else if (ValueUtil.isEqual(SmsConstants.JOB_TYPE_SRTN, jobType)) {
-			sql = "SELECT COALESCE(COUNT(DISTINCT(ITEM_CD)), 0) AS RESULT FROM MHE_DAS_RTN_BOX_RSLT WHERE WH_CD = :whCd AND BATCH_NO = :batchId AND DEL_YN = :delYn";
+			List<String> batchList = this.searchBatchIds(batch);
+			sql = "SELECT COALESCE(COUNT(DISTINCT(ITEM_CD)), 0) AS RESULT FROM MHE_DAS_RTN_BOX_RSLT WHERE WH_CD = :whCd AND BATCH_NO IN ( :batchList ) AND DEL_YN = :delYn";
+			
+			params.put("batchList", batchList);
 			params.put("delYn", LogisConstants.N_CAP_STRING);
 		} else if (ValueUtil.isEqual(SmsConstants.JOB_TYPE_SDAS, jobType)) {
 			sql = "select COALESCE(count(distinct(shipto_id)), 0) as result from mhe_box where wh_cd = :whCd and work_unit = :batchId";
 		} else if (ValueUtil.isEqual(SmsConstants.JOB_TYPE_SDPS, jobType)) {
-			sql = "select COALESCE(count(distinct(shipto_id)), 0) as result from mhe_box where wh_cd = :whCd and work_unit = :batchId";
+			List<String> batchList = this.searchBatchIds(batch);
+			sql = "select COALESCE(count(distinct(shipto_id)), 0) as result from mhe_box where wh_cd = :whCd and work_unit IN ( :batchList )";
+			
+			params.put("batchList", batchList);
 		} else {
 			return 0;
 		}
@@ -127,12 +143,18 @@ public class WcsBatchProgressService extends AbstractQueryService {
 			sql = "select COALESCE(sum(cmpt_qty), 0) as result from mhe_dr where wh_cd = :whCd and work_unit = :batchId";
 			
 		} else if (ValueUtil.isEqual(SmsConstants.JOB_TYPE_SRTN, jobType)) {
-			sql = "SELECT COALESCE(SUM(CMPT_QTY), 0) AS RESULT FROM MHE_DAS_RTN_BOX_RSLT WHERE WH_CD = :whCd AND BATCH_NO = :batchId AND DEL_YN = :delYn";
+			List<String> batchList = this.searchBatchIds(batch);
+			sql = "SELECT COALESCE(SUM(CMPT_QTY), 0) AS RESULT FROM MHE_DAS_RTN_BOX_RSLT WHERE WH_CD = :whCd AND BATCH_NO IN ( :batchList ) AND DEL_YN = :delYn";
+			
+			params.put("batchList", batchList);
 			params.put("delYn", LogisConstants.N_CAP_STRING);
 		} else if (ValueUtil.isEqual(SmsConstants.JOB_TYPE_SDAS, jobType)) {
 			sql = "select COALESCE(sum(cmpt_qty), 0) as result from mhe_box where wh_cd = :whCd and work_unit = :batchId and del_yn != 'Y'";
 		} else if (ValueUtil.isEqual(SmsConstants.JOB_TYPE_SDPS, jobType)) {
-			sql = "select COALESCE(sum(cmpt_qty), 0) as result from mhe_box where wh_cd = :whCd and work_unit = :batchId and del_yn != 'Y'";
+			List<String> batchList = this.searchBatchIds(batch);
+			sql = "select COALESCE(sum(cmpt_qty), 0) as result from mhe_box where wh_cd = :whCd and work_unit IN ( :batchList ) and del_yn != 'Y'";
+			
+			params.put("batchList", batchList);
 		} else {
 			return 0;
 		}
@@ -176,6 +198,16 @@ public class WcsBatchProgressService extends AbstractQueryService {
 		} else {
 			return 0.0f;
 		}
+	}
+	
+	/**
+	 * 배치 그룹 ID에 해당하는 ID를 찾는다.
+	 */
+	private List<String> searchBatchIds(JobBatch batch) {
+		Query query = AnyOrmUtil.newConditionForExecution(batch.getDomainId());
+		query.addFilter("batchGroupId", batch.getBatchGroupId());
+		List<JobBatch> jobBatches = this.queryManager.selectList(JobBatch.class, query);
+		return AnyValueUtil.filterValueListBy(jobBatches, "id");
 	}
 
 }

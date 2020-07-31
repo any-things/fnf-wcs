@@ -1,18 +1,19 @@
 package operato.fnf.wcs.service.model;
 
-public class DpsProductivity {
+public class DpsProductivity implements Comparable<DpsProductivity> {
 	private String workDate;
 	private String strrId;
 	private String packTcd;
+	private String workType;
 	private String hourMin;
 	private Integer refNoCnt;
 	private Integer itemCdCnt;
 	private Integer doneQty;
-	private Integer workers;
-	private Integer workMinutes;
-	private Integer workHours;
+	private float workers;
+	private float workMinutes;
+	private float workHours;
 	private float ph;
-	private float php;
+	private float php
 	
 	public String getWorkDate() {
 		return workDate;
@@ -31,6 +32,12 @@ public class DpsProductivity {
 	}
 	public void setPackTcd(String packTcd) {
 		this.packTcd = packTcd;
+	}
+	public String getWorkType() {
+		return workType;
+	}
+	public void setWorkType(String workType) {
+		this.workType = workType;
 	}
 	public String getHourMin() {
 		return hourMin;
@@ -56,20 +63,23 @@ public class DpsProductivity {
 	public void setDoneQty(Integer doneQty) {
 		this.doneQty = doneQty;
 	}
-	public Integer getWorkers() {
+	public float getWorkers() {
 		return workers;
 	}
-	public void setWorkers(Integer workers) {
+	public void setWorkers(float workers) {
 		this.workers = workers;
 	}
-	public Integer getWorkMinutes() {
+	public float getWorkMinutes() {
 		return workMinutes;
 	}
-	public void setWorkMinutes(Integer workMinutes) {
+	public void setWorkMinutes(float workMinutes) {
 		this.workMinutes = workMinutes;
 	}
-	public Integer getWorkHours() {
+	public float getWorkHours() {
 		return workHours;
+	}
+	public void setWorkHours(float workHours) {
+		this.workHours = workHours;
 	}
 	public void setWorkHours(Integer workHours) {
 		this.workHours = workHours;
@@ -85,5 +95,10 @@ public class DpsProductivity {
 	}
 	public void setPhp(float php) {
 		this.php = php;
+	}
+	@Override
+	public int compareTo(DpsProductivity o) {
+		int i = (this.getWorkDate() + this.getWorkType()).compareTo(o.getWorkDate() + o.getWorkType());
+		return i;
 	}
 }

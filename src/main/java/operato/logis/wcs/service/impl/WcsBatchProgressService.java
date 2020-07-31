@@ -43,8 +43,16 @@ public class WcsBatchProgressService extends AbstractQueryService {
 		batch.setResultBoxQty(this.calcBatchResultBoxQty(batch));
 		batch.setResultOrderQty(this.calcBatchResultOrderQty(batch));
 		batch.setResultPcs(this.calcBatchResultPcs(batch));
-		float progressRate = (batch.getBatchOrderQty() == 0) ? 0.0f : ((float)batch.getResultOrderQty() / (float)batch.getBatchOrderQty()) * 100.0f;
-		progressRate = (progressRate == 0.0f) ? 0.0f : Math.round(progressRate * 100) / 100.0f;
+		
+		float progressRate = 0.0f;
+		if (LogisConstants.JOB_TYPE_DPS.equals(batch.getJobType()) || SmsConstants.JOB_TYPE_SDPS.equals(batch.getJobType())) {
+			progressRate = (batch.getBatchOrderQty() == 0) ? 0.0f : ((float)batch.getResultOrderQty() / (float)batch.getBatchOrderQty()) * 100.0f;
+			progressRate = (progressRate == 0.0f) ? 0.0f : Math.round(progressRate * 100) / 100.0f;
+		} else {
+			progressRate = (batch.getBatchPcs() == 0) ? 0.0f : ((float)batch.getResultPcs() / (float)batch.getBatchPcs()) * 100.0f;
+			progressRate = (progressRate == 0.0f) ? 0.0f : Math.round(progressRate * 100) / 100.0f;
+		}
+		
 		batch.setProgressRate(progressRate);
 		batch.setUph(this.calcBatchUph(batch, toTime));
 		float equipRt = this.calcBatchEquipRuntime(batch, toTime);

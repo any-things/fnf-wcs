@@ -13,7 +13,7 @@ public class DpsProductivity implements Comparable<DpsProductivity> {
 	private float workMinutes;
 	private float workHours;
 	private float ph;
-	private float php
+	private float php;
 	
 	public String getWorkDate() {
 		return workDate;

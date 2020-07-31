@@ -73,7 +73,7 @@ public class CalcPopularProduct extends AbstractQueryService {
 			if (ValueUtil.isEmpty(ordCnt)) {
 				ordCnt = 0;
 			}
-			ordCnt += obj.getOutSkuTimes();
+			ordCnt += obj.getOutOrdCnt();
 			
 			trace.setScopeDaysPcsQty(pcsQty);
 			trace.setScopeDaysSkuCnt(skuCnt);

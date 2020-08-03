@@ -64,23 +64,23 @@ public class CalcDpsProductivity extends AbstractQueryService {
 		List<DpsProductivity> dpsProductivities = new ArrayList<>();
 		List<DpsProductivity> tpSum = this.getDpsWcsSum(WORK_TYPE_TOTAL_PICKING, fromDate, toDate);
 		if (ValueUtil.isNotEmpty(tpSum)) {
-			tpSum = this.calcByDay(tpSum);
-			dpsProductivities.addAll(tpSum);
+			DpsProductivity sum = this.calcByDay(tpSum);
+			dpsProductivities.add(sum);
 		}
 		List<DpsProductivity> loadSum = this.getDpsWcsSum(WORK_TYPE_TOTAL_PICKING, fromDate, toDate);
 		if (ValueUtil.isNotEmpty(loadSum)) {
-			tpSum = this.calcByDay(loadSum);
-			dpsProductivities.addAll(loadSum);
+			DpsProductivity sum = this.calcByDay(loadSum);
+			dpsProductivities.add(sum);
 		}
 		List<DpsProductivity> pickingSum = this.getDpsWcsSum(WORK_TYPE_TOTAL_PICKING, fromDate, toDate);
 		if (ValueUtil.isNotEmpty(pickingSum)) {
-			tpSum = this.calcByDay(pickingSum);
-			dpsProductivities.addAll(pickingSum);
+			DpsProductivity sum = this.calcByDay(pickingSum);
+			dpsProductivities.add(sum);
 		}
 		List<DpsProductivity> inspSum = this.getDpsWcsSum(WORK_TYPE_TOTAL_PICKING, fromDate, toDate);
 		if (ValueUtil.isNotEmpty(inspSum)) {
-			tpSum = this.calcByDay(inspSum);
-			dpsProductivities.addAll(inspSum);
+			DpsProductivity sum = this.calcByDay(inspSum);
+			dpsProductivities.add(sum);
 		}
 		
 		
@@ -121,14 +121,15 @@ public class CalcDpsProductivity extends AbstractQueryService {
 		return dpsPrdSum;
 	}
 	
-	private List<DpsProductivity> calcByDay(List<DpsProductivity> dpsPrdSum) throws Exception {
-		Map<String, DpsProductivity> map = new HashMap<>();
+	private DpsProductivity calcByDay(List<DpsProductivity> dpsPrdSum) throws Exception {
+		//Map<String, DpsProductivity> map = new HashMap<>();
+		DpsProductivity dpsSum = null;
 		for (DpsProductivity obj: dpsPrdSum) {
-			String key = obj.getWorkDate() + obj.getWorkType();
-			DpsProductivity dpsSum = map.get(key);
+			//String key = obj.getWorkDate() + obj.getWorkType();
+			//DpsProductivity dpsSum = map.get(key);
 			if (ValueUtil.isEmpty(dpsSum)) {
 				dpsSum = ValueUtil.populate(obj, new DpsProductivity());
-				map.put(key, dpsSum);
+				//map.put(key, dpsSum);
 			}
 			
 			dpsSum.setDoneQty(dpsSum.getDoneQty() + obj.getDoneQty());
@@ -140,8 +141,8 @@ public class CalcDpsProductivity extends AbstractQueryService {
 			dpsSum.setPhp(dpsSum.getPh()/(dpsSum.getWorkers()/dpsPrdSum.size()));
 		}
 		
-		if (ValueUtil.isNotEmpty(map.values())) {
-			return (List<DpsProductivity>)map.values();
+		if (ValueUtil.isNotEmpty(dpsSum)) {
+			return dpsSum;
 		}
 		
 		return null;

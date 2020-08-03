@@ -254,7 +254,7 @@ public class SmsTrackingController extends AbstractRestService {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@RequestMapping(value="/rtn_insp_result", method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
 	@ApiDesc(description="Search (Pagination) By Chute Result")
-	public Page<?> rtnInspResult(
+	public Map<String, Object> rtnInspResult(
 			@RequestParam(name="page", required=false) Integer page, 
 			@RequestParam(name="limit", required=false) Integer limit, 
 			@RequestParam(name="select", required=false) String select, 
@@ -300,8 +300,9 @@ public class SmsTrackingController extends AbstractRestService {
 			throw ThrowUtil.newValidationErrorWithNoLog(msg);
 		}
 		
-		Map<String, Object> conds = ValueUtil.newMap("domainId,batchId", Domain.currentDomainId(), batch.getBatchGroupId());
-		List<Map> pasInspList = this.queryManager.selectListBySql(selectQuery, conds, Map.class, 0, 0);
+		//Map<String, Object> conds = ValueUtil.newMap("domainId,batchId", Domain.currentDomainId(), batch.getBatchGroupId());
+		params.put("batchId", batch.getBatchGroupId());
+		List<Map> pasInspList = this.queryManager.selectListBySql(selectQuery, params, Map.class, 0, 0);
 		
 		Query wmsQuery = new Query();
 		wmsQuery.addFilter("whCd", FnFConstants.WH_CD_ICF);  
@@ -344,9 +345,13 @@ public class SmsTrackingController extends AbstractRestService {
 						pasInsp.put("rfid_qty", sku.get("rfid_qty"));
 					}
 				}
+			} else {
+				pasInsp.put("rfid_order_qty", 0);
+				pasInsp.put("rfid_qty", 0);
 			}
 		}
 		
-		return null;
+		
+		return ValueUtil.newMap("items,total", pasInspList, pasInspList.size());
 	}
 }

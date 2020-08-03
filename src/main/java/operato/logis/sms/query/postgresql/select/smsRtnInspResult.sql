@@ -1,5 +1,5 @@
 SELECT 
-	JB.ID
+	JB.ID AS BATCH_ID
 	, JB.TITLE
 	, JB.JOB_DATE
 	, MPO.SHOP_CD
@@ -34,5 +34,17 @@ WHERE
 	MPO.BATCH_NO = :batchId
 AND 
 	MPR.BATCH_NO = :batchId
+#if($shop_cd)
+AND MPO.SHOP_CD like :shop_cd
+#end
+#if($box_id)
+AND MPO.BOX_ID like :box_id
+#end
+#if($chute_no)
+AND MPO.CHUTE_NO = :chute_no
+#end
+#if($sku_cd)
+AND MPO.SKU_CD like :sku_cd
+#end
 ORDER BY 
-	MPO.BOX_ID
+	MPO.CHUTE_NO

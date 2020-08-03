@@ -41,7 +41,7 @@ public class CalcDpsProductivityByDay extends AbstractQueryService {
 	@Qualifier("under_to_camel")
 	protected IJsonParser jsonParser;
 	
-	public ResponseObj calcDpsProductivity(Map<String, Object> params) throws Exception {
+	public ResponseObj calcDpsProductivityByDay(Map<String, Object> params) throws Exception {
 		int page = Integer.valueOf(String.valueOf(params.get("page")));
 		int limit = Integer.valueOf(String.valueOf(params.get("limit")));
 		String sort = String.valueOf(params.get("sort"));

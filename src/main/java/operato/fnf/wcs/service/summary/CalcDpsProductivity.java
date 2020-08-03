@@ -170,7 +170,7 @@ public class CalcDpsProductivity extends AbstractQueryService {
 			daySum.add(map.get(key));
 		}
 		
-		return null;
+		return daySum;
 	}
 
 	protected Query parseQuery(Class<?> entityClass, Integer page, Integer limit, String select, String sort, String query) {

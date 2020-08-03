@@ -130,6 +130,12 @@ public class CalcDpsProductivityByDay extends AbstractQueryService {
 		for (DpsProductivity obj: dpsPrdSum) {
 			obj.setPh(obj.getDoneQty()/obj.getWorkHours());
 			obj.setPhp(obj.getPh() / (obj.getWorkers()/obj.getWorkHours()));
+			
+			if ("D".equals(obj.getPackTcd())) {
+				obj.setWorkType("D" + obj.getWorkType());
+			} else {
+				obj.setWorkType("H" + obj.getWorkType());
+			}
 		}
 	}
 	

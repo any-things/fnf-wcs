@@ -835,7 +835,9 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		boxPack.setOrderNo(orderNo);
 		boxPack.setBoxTypeCd(trayCd);
 		boxPack.setBoxId(boxId);
-		boxPack.setJobDate(batch.getJobDate());
+		if (ValueUtil.isNotEmpty(batch.getJobDate())) {
+			boxPack.setJobDate(batch.getJobDate().replace("-", ""));
+		}
 		boxPack.setComCd(batch.getComCd());
 		boxPack.setWcsBatchNo(batch.getWcsBatchNo());
 		boxPack.setWmsBatchNo(batch.getWmsBatchNo());

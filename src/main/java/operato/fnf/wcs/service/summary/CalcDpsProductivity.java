@@ -21,6 +21,7 @@ import xyz.elidom.base.util.ResourceUtil;
 import xyz.elidom.dbist.dml.Filter;
 import xyz.elidom.dbist.dml.Order;
 import xyz.elidom.dbist.dml.Query;
+import xyz.elidom.exception.client.ElidomInputException;
 import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.SysConfigConstants;
 import xyz.elidom.sys.SysConstants;
@@ -53,19 +54,24 @@ public class CalcDpsProductivity extends AbstractQueryService {
 		if (ValueUtil.isNotEmpty(filters)) {
 			for (Filter filter: filters) {
 				if ("work_date".equals(filter.getName())) {
+					String[] dates = String.valueOf(filter.getValue()).split(",");
+					if (dates.length < 2) {
+						throw new ElidomInputException("값[date]이(가) 빈 값입니다.");
+					}
+					
 					fromDate = String.valueOf(filter.getValue()).split(",")[0];
 					if (ValueUtil.isNotEmpty(fromDate)) {
 						fromDate = fromDate.replace("-", "").replace(" ", "").replace(":", "");
 					}
 					toDate = String.valueOf(filter.getValue()).split(",")[1];
-					if (ValueUtil.isEmpty(toDate)) {
+					if (ValueUtil.isNotEmpty(toDate)) {
 						toDate = toDate.replace("-", "").replace(" ", "").replace(":", "");
 					}
 				}
 			}
 		}
 		
-		FnfUtils.checkValueEmpty(fromDate, toDate);
+		FnfUtils.checkValueEmpty("fromDate", fromDate, "toDate", toDate);
 		
 		List<DpsProductivity> dpsProductivities = new ArrayList<>();
 		List<DpsProductivity> tpSum = this.getDpsWcsSum(WORK_TYPE_TOTAL_PICKING, fromDate, toDate);
@@ -135,14 +141,26 @@ public class CalcDpsProductivity extends AbstractQueryService {
 			//DpsProductivity dpsSum = map.get(key);
 			if (ValueUtil.isEmpty(dpsSum)) {
 				dpsSum = ValueUtil.populate(obj, new DpsProductivity());
+				dpsSum.setDoneQty(0);
+				dpsSum.setWorkMinutes(0);
+				dpsSum.setWorkHours(0);
+				dpsSum.setWorkers(0);
+				
+				dpsSum.setPh(0);
+				dpsSum.setPhp(0);
 				//map.put(key, dpsSum);
 			}
 			
-			dpsSum.setDoneQty(dpsSum.getDoneQty() + obj.getDoneQty());
-			dpsSum.setWorkMinutes(dpsSum.getWorkMinutes() + obj.getWorkMinutes());
-			dpsSum.setWorkHours(dpsSum.getWorkMinutes()/60);
-			dpsSum.setWorkers(dpsSum.getWorkers() + obj.getWorkers());
-			
+			if (ValueUtil.isNotEmpty(obj.getDoneQty())) {
+				dpsSum.setDoneQty(dpsSum.getDoneQty() + obj.getDoneQty());
+			}
+			if (ValueUtil.isNotEmpty(obj.getWorkMinutes())) {
+				dpsSum.setWorkMinutes(dpsSum.getWorkMinutes() + obj.getWorkMinutes());
+				dpsSum.setWorkHours(dpsSum.getWorkMinutes()/60);
+			}
+			if (ValueUtil.isNotEmpty(obj.getWorkers())) {
+				dpsSum.setWorkers(dpsSum.getWorkers() + obj.getWorkers());
+			}
 			dpsSum.setPh(dpsSum.getDoneQty()/dpsSum.getWorkHours());
 			dpsSum.setPhp(dpsSum.getPh()/(dpsSum.getWorkers()/dpsPrdSum.size()));
 		}

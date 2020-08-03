@@ -2,6 +2,7 @@ package operato.fnf.wcs.service.summary;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -96,7 +97,7 @@ public class CalcDpsProductivity extends AbstractQueryService {
 		}
 		
 		
-		//Collections.sort(dpsProductivities);
+		Collections.sort(dpsProductivities);
 		ResponseObj resp = new ResponseObj();
 		resp.setItems(dpsProductivities);
 		return resp;

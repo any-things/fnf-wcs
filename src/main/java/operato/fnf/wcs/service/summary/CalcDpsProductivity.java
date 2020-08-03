@@ -67,17 +67,17 @@ public class CalcDpsProductivity extends AbstractQueryService {
 			DpsProductivity sum = this.calcByDay(tpSum);
 			dpsProductivities.add(sum);
 		}
-		List<DpsProductivity> loadSum = this.getDpsWcsSum(WORK_TYPE_TOTAL_PICKING, fromDate, toDate);
+		List<DpsProductivity> loadSum = this.getDpsWcsSum(WORK_TYPE_LOAD_STOCK, fromDate, toDate);
 		if (ValueUtil.isNotEmpty(loadSum)) {
 			DpsProductivity sum = this.calcByDay(loadSum);
 			dpsProductivities.add(sum);
 		}
-		List<DpsProductivity> pickingSum = this.getDpsWcsSum(WORK_TYPE_TOTAL_PICKING, fromDate, toDate);
+		List<DpsProductivity> pickingSum = this.getDpsWcsSum(WORK_TYPE_PICKING, fromDate, toDate);
 		if (ValueUtil.isNotEmpty(pickingSum)) {
 			DpsProductivity sum = this.calcByDay(pickingSum);
 			dpsProductivities.add(sum);
 		}
-		List<DpsProductivity> inspSum = this.getDpsWcsSum(WORK_TYPE_TOTAL_PICKING, fromDate, toDate);
+		List<DpsProductivity> inspSum = this.getDpsWcsSum(WORK_TYPE_INSPECTION, fromDate, toDate);
 		if (ValueUtil.isNotEmpty(inspSum)) {
 			DpsProductivity sum = this.calcByDay(inspSum);
 			dpsProductivities.add(sum);

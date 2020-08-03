@@ -119,7 +119,7 @@ public class CalcDpsProductivity extends AbstractQueryService {
 		Map<String, Object> params = new HashMap<>();
 		params.put("fromDate", fromDate);
 		params.put("toDate", toDate);
-		List<DpsProductivity> dpsPrdSum = queryManager.selectListBySql(dateSql, params, DpsProductivity.class, 0, 1000);
+		List<DpsProductivity> dpsPrdSum = queryManager.selectListBySql(dateSql, params, DpsProductivity.class, 0, 10000);
 		if (ValueUtil.isEmpty(dpsPrdSum)) {
 			return null;
 		}

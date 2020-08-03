@@ -1,5 +1,6 @@
 package operato.logis.sms.rest;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import operato.fnf.wcs.FnFConstants;
+import operato.fnf.wcs.entity.WmsWmtUifWcsInbRtnCnfm;
 import operato.logis.sms.query.SmsQueryStore;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
@@ -23,6 +26,8 @@ import xyz.anythings.sys.util.AnyValueUtil;
 import xyz.elidom.dbist.dml.Filter;
 import xyz.elidom.dbist.dml.Page;
 import xyz.elidom.dbist.dml.Query;
+import xyz.elidom.orm.IQueryManager;
+import xyz.elidom.orm.manager.DataSourceManager;
 import xyz.elidom.orm.system.annotation.service.ApiDesc;
 import xyz.elidom.orm.system.annotation.service.ServiceDesc;
 import xyz.elidom.sys.SysConstants;
@@ -31,6 +36,7 @@ import xyz.elidom.sys.system.service.AbstractRestService;
 import xyz.elidom.sys.util.MessageUtil;
 import xyz.elidom.sys.util.ThrowUtil;
 import xyz.elidom.sys.util.ValueUtil;
+import xyz.elidom.util.BeanUtil;
 
 @RestController
 @Transactional
@@ -243,5 +249,104 @@ public class SmsTrackingController extends AbstractRestService {
 		}
 		selectQuery += " order by mdo.chute_no, mdo.cell_no";
 		return this.queryManager.selectPageBySql(selectQuery, params, HashMap.class, 0, 0);
+	}
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@RequestMapping(value="/rtn_insp_result", method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
+	@ApiDesc(description="Search (Pagination) By Chute Result")
+	public Page<?> rtnInspResult(
+			@RequestParam(name="page", required=false) Integer page, 
+			@RequestParam(name="limit", required=false) Integer limit, 
+			@RequestParam(name="select", required=false) String select, 
+			@RequestParam(name="sort", required=false) String sort,
+			@RequestParam(name="query", required=false) String query) {
+		
+		Filter[] filters = ValueUtil.isEmpty(query) ? null : this.jsonParser.parse(query, Filter[].class);
+		String selectQuery = queryStore.getSmsRtnInspResultQuery();
+		String batchId = "";
+		
+		Map<String, Object> params = ValueUtil.newMap("domainId", Domain.currentDomainId());
+		if(ValueUtil.isNotEmpty(filters)) {
+			for(Filter filter : filters) {
+				String name = filter.getName();
+				String op = filter.getOperator();
+				Object val = filter.getValue();
+
+				if(ValueUtil.isEqual(val, "true")) {
+					val = true;
+				} else if(ValueUtil.isEqual(val, "false")) {
+					val = false;
+				}
+				
+				if(ValueUtil.isEqual(name, "batch_id")) {
+					batchId = ValueUtil.toString(val);
+				}
+
+				if(ValueUtil.isEmpty(op) || ValueUtil.isEqualIgnoreCase(op, "eq") || ValueUtil.isEqualIgnoreCase(op, "=")) {
+					params.put(name, val);
+				} else if(ValueUtil.isEqualIgnoreCase(op, "contains") || ValueUtil.isEqualIgnoreCase(op, "like")) {
+					params.put(name, "%" + val + "%");
+				}
+			}
+		}
+		
+		Query condition = new Query();
+		condition.addFilter("id", batchId);
+		JobBatch batch = this.queryManager.select(JobBatch.class, condition);
+		
+		String[] jobBatchInfo = batch.getId().split("-");
+		if(jobBatchInfo.length < 4) {
+			String msg = MessageUtil.getMessage("no_batch_id", "설비에서 운영중인 반품 Batch가 아닙니다.");
+			throw ThrowUtil.newValidationErrorWithNoLog(msg);
+		}
+		
+		Map<String, Object> conds = ValueUtil.newMap("domainId,batchId", Domain.currentDomainId(), batch.getBatchGroupId());
+		List<Map> pasInspList = this.queryManager.selectListBySql(selectQuery, conds, Map.class, 0, 0);
+		
+		Query wmsQuery = new Query();
+		wmsQuery.addFilter("whCd", FnFConstants.WH_CD_ICF);  
+		wmsQuery.addFilter("strrId", batch.getBrandCd());  
+		wmsQuery.addFilter("refSeason", batch.getSeasonCd());  
+		wmsQuery.addFilter("shopRtnType", jobBatchInfo[2]);  
+		wmsQuery.addFilter("shopRtnSeq", batch.getJobSeq());
+		
+		wmsQuery.addOrder("refNo", true);
+		wmsQuery.addOrder("itemCd", true);
+		IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager(WmsWmtUifWcsInbRtnCnfm.class);
+		List<WmsWmtUifWcsInbRtnCnfm> wmsInspList = wmsQueryMgr.selectList(WmsWmtUifWcsInbRtnCnfm.class, wmsQuery);
+		
+		Map<String, List<Map>> wmsBox = new HashMap<>();
+		List<Map> boxInSku = new ArrayList<Map>();
+		
+		for (WmsWmtUifWcsInbRtnCnfm wmsInsp : wmsInspList) {
+			Map<String, Object> skuInfo = new HashMap<>();
+			if(wmsBox.containsKey(wmsInsp.getRefNo())) {
+				skuInfo.put("sku_Cd", wmsInsp.getItemCd());
+				skuInfo.put("rfid_order_qty", wmsInsp.getInbEctQty());
+				skuInfo.put("rfid_qty", wmsInsp.getInbCmptQty());
+				boxInSku.add(skuInfo);
+				wmsBox.put(wmsInsp.getRefNo(), boxInSku);
+			} else {
+				boxInSku = new ArrayList<Map>();
+				skuInfo.put("sku_Cd", wmsInsp.getItemCd());
+				skuInfo.put("rfid_order_qty", wmsInsp.getInbEctQty());
+				skuInfo.put("rfid_qty", wmsInsp.getInbCmptQty());
+				boxInSku.add(skuInfo);
+				wmsBox.put(wmsInsp.getRefNo(), boxInSku);
+			}
+		}
+		
+		for (Map pasInsp : pasInspList) {
+			if(wmsBox.containsKey(pasInsp.get("box_no"))) {
+				for (Map sku : wmsBox.get(pasInsp.get("box_no"))) {
+					if(ValueUtil.isEqual(pasInsp.get("sku_cd"), sku.get("sku_cd"))) {
+						pasInsp.put("rfid_order_qty", sku.get("rfid_order_qty"));
+						pasInsp.put("rfid_qty", sku.get("rfid_qty"));
+					}
+				}
+			}
+		}
+		
+		return null;
 	}
 }

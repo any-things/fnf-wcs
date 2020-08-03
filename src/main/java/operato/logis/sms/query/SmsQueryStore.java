@@ -334,4 +334,12 @@ public class SmsQueryStore extends AbstractQueryStore {
 	public String getSmsDasResultQuery() {
 		return this.getQueryByPath("select/smsDasResult");
 	}
+	/**
+	 * SMS DAS 실적 조회 쿼리
+	 *
+	 * @return
+	 */
+	public String getSmsRtnInspResultQuery() {
+		return this.getQueryByPath("select/smsRtnInspResult");
+	}
 }

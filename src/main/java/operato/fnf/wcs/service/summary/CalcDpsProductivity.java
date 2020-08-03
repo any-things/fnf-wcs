@@ -59,7 +59,7 @@ public class CalcDpsProductivity extends AbstractQueryService {
 					}
 					toDate = String.valueOf(filter.getValue()).split(",")[1];
 					if (ValueUtil.isEmpty(toDate)) {
-						toDate = fromDate.replace("-", "").replace(" ", "").replace(":", "");
+						toDate = toDate.replace("-", "").replace(" ", "").replace(":", "");
 					}
 				}
 			}

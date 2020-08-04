@@ -82,7 +82,7 @@ public class FnfUtils {
 		return service.getServiceLogic();
 	}
 	
-	public static String queryCustServiceWithError(String serviceName) throws Exception {
+	public static String queryCustServiceWithCheck(String serviceName) throws Exception {
 		Query conds = new Query();
 		conds.addFilter("name", serviceName);
 		conds.addFilter("category", "SERVICE");

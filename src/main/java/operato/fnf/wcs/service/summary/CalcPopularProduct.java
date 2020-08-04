@@ -30,7 +30,7 @@ public class CalcPopularProduct extends AbstractQueryService {
 		conds.addOrder("updatedAt", false);
 		TopSkuSetting setting = queryManager.selectByCondition(true, TopSkuSetting.class, conds);
 		
-		String dateSql = FnfUtils.queryCustServiceWithError("sku_out_from_date");
+		String dateSql = FnfUtils.queryCustServiceWithCheck("sku_out_from_date");
 		Map<String, Object> dateParamMap = new HashMap<>();
 		dateParamMap.put("date", date);
 		dateParamMap.put("limit", setting.getScopeDays());
@@ -41,7 +41,7 @@ public class CalcPopularProduct extends AbstractQueryService {
 		String fromDate = values.get("fromdate");
 		paramMap.put("fromDate", fromDate);
 		paramMap.put("toDate", date);
-		String sql = FnfUtils.queryCustServiceWithError("online_out_sku_sum");
+		String sql = FnfUtils.queryCustServiceWithCheck("online_out_sku_sum");
 		List<OnlineOutSkuSum> skuSums = queryManager.selectListBySql(sql, paramMap, OnlineOutSkuSum.class, 0, 0);
 		
 		Map<String, TopSkuTrace> skuSumMap = new HashMap<>();

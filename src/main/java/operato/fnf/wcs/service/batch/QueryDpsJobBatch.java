@@ -39,7 +39,7 @@ public class QueryDpsJobBatch extends AbstractRestService {
 			}
 		}
 		
-		String sql = FnfUtils.queryCustServiceWithError("dps-job-batches");
+		String sql = FnfUtils.queryCustServiceWithCheck("dps-job-batches");
 		
 		Page<JobBatch> jbPage = queryManager.selectPageBySql(sql, queryParams, JobBatch.class, page, limit);
 		List<JobBatch> jbList = jbPage.getList();
@@ -56,7 +56,7 @@ public class QueryDpsJobBatch extends AbstractRestService {
 //				IQueryManager wmsQueryManager = BeanUtil.get(DataSourceManager.class).getQueryManager(WmsMheDr.class);
 //				Integer wmsOrderCnt = wmsQueryManager.selectBySql(orderQtySql, wmsOrdCntParams, Integer.class);
 				
-				String orderQtySql = FnfUtils.queryCustServiceWithError("dps-main-job-order-qty");				
+				String orderQtySql = FnfUtils.queryCustServiceWithCheck("dps-main-job-order-qty");				
 				Map<String, Object> wmsOrdCntParams = new HashMap<>();
 				wmsOrdCntParams.put("waveNo", obj.getWcsBatchNo());
 				wmsOrdCntParams.put("workseqNo", obj.getJobSeq());

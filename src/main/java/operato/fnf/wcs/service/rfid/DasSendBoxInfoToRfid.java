@@ -104,7 +104,7 @@ public class DasSendBoxInfoToRfid extends AbstractQueryService {
 		IQueryManager rfidQueryMgr = this.getDataSourceQueryManager(RfidBoxItem.class);
 		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsAssortItem.class);
 		
-		String extFieldsSql = FnfUtils.queryCustServiceWithError("das_rfid_box_ext_fields");
+		String extFieldsSql = FnfUtils.queryCustServiceWithCheck("das_rfid_box_ext_fields");
 		
 		for (WcsMheBox box: wcsMheBoxes) {
 			try {

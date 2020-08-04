@@ -106,14 +106,14 @@ public class CalcDpsProductivityByDay extends AbstractQueryService {
 		String dateSql = "";
 		IQueryManager queryManager = this.queryManager;
 		if (WORK_TYPE_TOTAL_PICKING.equals(type)) {
-			dateSql = FnfUtils.queryCustServiceWithError("dps_total_picking_ps_by_day");
+			dateSql = FnfUtils.queryCustServiceWithCheck("dps_total_picking_ps_by_day");
 			queryManager = this.getDataSourceQueryManager(WmsMheHr.class);
 		} else if (WORK_TYPE_LOAD_STOCK.equals(type)) {
-			dateSql = FnfUtils.queryCustServiceWithError("dps_load_stock_ps_by_day");
+			dateSql = FnfUtils.queryCustServiceWithCheck("dps_load_stock_ps_by_day");
 		} else if (WORK_TYPE_PICKING.equals(type)) {
-			dateSql = FnfUtils.queryCustServiceWithError("dps_picking_ps_by_day");
+			dateSql = FnfUtils.queryCustServiceWithCheck("dps_picking_ps_by_day");
 		} else if (WORK_TYPE_INSPECTION.equals(type)) {
-			dateSql = FnfUtils.queryCustServiceWithError("dps_inspection_ps_by_day");
+			dateSql = FnfUtils.queryCustServiceWithCheck("dps_inspection_ps_by_day");
 		}
 		Map<String, Object> params = new HashMap<>();
 		params.put("fromDate", fromDate);

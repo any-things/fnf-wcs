@@ -16,7 +16,7 @@ import xyz.elidom.util.BeanUtil;
 import xyz.elidom.util.ValueUtil;
 
 @Component
-public class GetRackStock extends AbstractLogisService {
+public class GetFloorRackStock extends AbstractLogisService {
 	public ResponseObj getRackStock(Map<String, Object> params) throws Exception {
 		IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager("WMS");
 		String floorCd = String.valueOf(params.get("floorCd"));

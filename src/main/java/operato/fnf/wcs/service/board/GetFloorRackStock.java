@@ -7,7 +7,6 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 import operato.fnf.wcs.FnfUtils;
-import operato.fnf.wcs.entity.WmsMheHr;
 import operato.fnf.wcs.service.model.BoardCellSum;
 import operato.fnf.wcs.service.model.BoardRackStock;
 import xyz.anythings.base.model.ResponseObj;
@@ -21,8 +20,8 @@ import xyz.elidom.util.ValueUtil;
 @Component
 public class GetFloorRackStock extends AbstractLogisService {
 	public ResponseObj getFloorRackStock(Map<String, Object> params) throws Exception {
-		String floorCd = String.valueOf(params.get("floorCd"));
-		String wcellNo = String.valueOf(params.get("wcellNo"));
+		String floorCd = String.valueOf(params.get("floorCd"));	// "3F%"
+		String wcellNo = String.valueOf(params.get("wcellNo"));	// "3F%"
 		String buildingTcd = String.valueOf(params.get("buildingTcd"));
 		String date = String.valueOf(params.get("date"));
 		
@@ -31,7 +30,7 @@ public class GetFloorRackStock extends AbstractLogisService {
 		}
 		
 		String sql = FnfUtils.queryCustServiceWithCheck("board_floor_rack_stock");
-		IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager(WmsMheHr.class);
+		IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager("WMS");
 		Map<String, Object> wmsParams = ValueUtil.newMap("floorCd,wcellNo,buildingTcd,date", floorCd,wcellNo,buildingTcd,date);
 		List<BoardRackStock> list = wmsQueryMgr.selectListBySql(sql, wmsParams, BoardRackStock.class, 0, 0);
 		

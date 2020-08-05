@@ -7,6 +7,7 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 import operato.fnf.wcs.FnfUtils;
+import operato.fnf.wcs.entity.WmsMheHr;
 import operato.fnf.wcs.service.model.BoardCellSum;
 import operato.fnf.wcs.service.model.BoardRackStock;
 import xyz.anythings.base.model.ResponseObj;
@@ -30,7 +31,7 @@ public class GetFloorRackStock extends AbstractLogisService {
 		}
 		
 		String sql = FnfUtils.queryCustServiceWithCheck("board_floor_rack_stock");
-		IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager("WMS");
+		IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager(WmsMheHr.class);
 		Map<String, Object> wmsParams = ValueUtil.newMap("floorCd,wcellNo,buildingTcd,date", floorCd,wcellNo,buildingTcd,date);
 		List<BoardRackStock> list = wmsQueryMgr.selectListBySql(sql, wmsParams, BoardRackStock.class, 0, 0);
 		

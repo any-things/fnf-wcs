@@ -17,7 +17,7 @@ import xyz.elidom.util.ValueUtil;
 @Component
 public class WmsExcuteSql extends AbstractQueryService {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public ResponseObj queryWmsData(Map<String, Object> params) throws Exception {
+	public ResponseObj wmsExcuteSql(Map<String, Object> params) throws Exception {
 		
 		String sql = FnfUtils.queryCustService("wms_excute_sql");
 		if (ValueUtil.isEmpty(sql)) {

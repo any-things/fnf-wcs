@@ -106,7 +106,7 @@ public class DpsProductivity implements Comparable<DpsProductivity> {
 	@Override
 	public int compareTo(DpsProductivity o) {
 		int i = (this.getWorkDate() + this.getSeq() + this.getWorkType())
-				.compareTo(o.getWorkDate() + this.getSeq() + o.getWorkType());
+				.compareTo(o.getWorkDate() + o.getSeq() + o.getWorkType());
 		return i;
 	}
 }

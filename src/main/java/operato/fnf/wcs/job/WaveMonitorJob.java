@@ -75,6 +75,8 @@ public class WaveMonitorJob extends AbstractFnFJob {
 				// 회수처리
 				BeanUtil.get(DasRecallBatchService.class).dasRecallBatchService(new HashMap<>());
 			} catch(Exception e) {
+				ErrorEvent errorEvent = new ErrorEvent(domain.getId(), "JOB_BATCH_RECALL_PROCESS_ERROR", e, null, true, true);
+				this.eventPublisher.publishEvent(errorEvent);
 				logger.error("monitorWave Error~~", e);
 			}
 			

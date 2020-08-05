@@ -14,6 +14,7 @@ public class DpsProductivity implements Comparable<DpsProductivity> {
 	private float workHours;
 	private float ph;
 	private float php;
+	private Integer seq;
 	
 	public String getWorkDate() {
 		return workDate;
@@ -96,9 +97,16 @@ public class DpsProductivity implements Comparable<DpsProductivity> {
 	public void setPhp(float php) {
 		this.php = php;
 	}
+	public Integer getSeq() {
+		return seq;
+	}
+	public void setSeq(Integer seq) {
+		this.seq = seq;
+	}
 	@Override
 	public int compareTo(DpsProductivity o) {
-		int i = (this.getWorkDate() + this.getWorkType()).compareTo(o.getWorkDate() + o.getWorkType());
+		int i = (this.getWorkDate() + this.getSeq() + this.getWorkType())
+				.compareTo(o.getWorkDate() + this.getSeq() + o.getWorkType());
 		return i;
 	}
 }

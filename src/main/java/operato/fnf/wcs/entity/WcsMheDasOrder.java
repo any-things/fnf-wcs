@@ -88,6 +88,9 @@ public class WcsMheDasOrder extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	@Column (name = "if_yn", length = 1)
 	private String ifYn;
+	
+	@Column (name = "plt_no", length = 10)
+	private String pltNo;
 
 	@Column (name = "ins_datetime", type = xyz.elidom.dbist.annotation.ColumnType.DATETIME)
 	private Date insDatetime;
@@ -261,5 +264,13 @@ public class WcsMheDasOrder extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setMheNo(String mheNo) {
 		this.mheNo = mheNo;
+	}
+
+	public String getPltNo() {
+		return pltNo;
+	}
+
+	public void setPltNo(String pltNo) {
+		this.pltNo = pltNo;
 	}
 }

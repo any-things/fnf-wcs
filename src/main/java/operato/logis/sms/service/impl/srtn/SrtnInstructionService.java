@@ -9,6 +9,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import operato.fnf.wcs.FnFConstants;
 import operato.fnf.wcs.entity.WcsMheDasOrder;
 import operato.fnf.wcs.entity.WcsMhePasOrder;
 import operato.fnf.wcs.entity.WmsWmtUifImpInbRtnTrg;
@@ -16,9 +17,9 @@ import operato.logis.sms.query.SmsQueryStore;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.Cell;
 import xyz.anythings.base.entity.JobBatch;
-import xyz.anythings.base.entity.Order;
 import xyz.anythings.base.entity.OrderPreprocess;
 import xyz.anythings.base.entity.Rack;
+import xyz.anythings.base.entity.SKU;
 import xyz.anythings.base.service.api.IInstructionService;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.anythings.sys.util.AnyOrmUtil;
@@ -161,7 +162,11 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 			List<OrderPreprocess> cellPreprocesses = AnyValueUtil.filterListBy(preprocesses, "classCd", cell.getCellCd());
 			this.generateJobInstances(batch, cell, cellPreprocesses);
 		}
-		this.interfaceSorter(batch);
+		if(ValueUtil.isEqual(batch.getIndConfigSetId(), FnFConstants.ORDER_RECEIVE_WMS)) {
+			this.interfaceSorter(batch);
+		} else {
+			this.interfaceSorterUpload(batch);
+		}
 		this.interfaceRack(batch);
 		
 		this.updateRackStatus(batch, preprocesses);
@@ -204,6 +209,22 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		}
 	}
 	
+	private void interfaceSorterUpload(JobBatch batch) {
+		String[] batchInfo = batch.getId().split("-");
+		if(batchInfo.length < 4) {
+			String msg = MessageUtil.getMessage("no_batch_id", "설비에서 운영중인 BatchId가 아닙니다.");
+			throw ThrowUtil.newValidationErrorWithNoLog(msg);
+		}
+		Map<String, Object> inspParams = ValueUtil.newMap(
+				"strrId,season,rtnType,jobSeq,ifAction,wcsIfChk", batchInfo[0], batchInfo[1],
+				batchInfo[2], batchInfo[3], LogisConstants.COMMON_STATUS_SKIPPED, LogisConstants.N_CAP_STRING);
+		
+		List<WcsMhePasOrder> pasOrderList = this.queryManager.selectListBySql(queryStore.getSrtnUploadBatchSendPasOrder(), inspParams, WcsMhePasOrder.class, 0, 0);
+		if(ValueUtil.isNotEmpty(pasOrderList)) {
+			AnyOrmUtil.insertBatch(pasOrderList, 100);
+		}
+	}
+	
 	@SuppressWarnings("rawtypes")
 	private void interfaceSorter(JobBatch batch) {
 		String[] batchInfo = batch.getId().split("-");
@@ -234,7 +255,6 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		
 		
 		List<WcsMhePasOrder> pasOrderList = new ArrayList<WcsMhePasOrder>(rtnTrgList.size());
-//		String srtDate = DateUtil.dateStr(new Date(), "yyyyMMdd");
 		
 		for (WmsWmtUifImpInbRtnTrg rtnTrg : rtnTrgList) {
 			WcsMhePasOrder wcsMhePasOrder = new WcsMhePasOrder();
@@ -268,6 +288,7 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		dsQueryManager.executeBySql(queryStore.getSrtnInspBoxTrgUpdate(), inspParams);
 	}
 	
+	@SuppressWarnings("rawtypes")
 	private void interfaceRack(JobBatch batch) {
 		String[] batchInfo = batch.getId().split("-");
 		
@@ -287,18 +308,18 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		List<String> dasSkuList = AnyValueUtil.filterValueListBy(dasList, "itemCd");
 		
 		skuCdList.removeAll(dasSkuList);
-		Query condition = AnyOrmUtil.newConditionForExecution(domainId);
-		condition.addSelect("skuCd", "skuBarcd", "skuBarcd2");
-		condition.addFilter("skuCd", SysConstants.IN, skuCdList.size() == 0 ? '1' : skuCdList);
-		condition.addFilter("batchId", batch.getId());
-		List<Order> skuInfoList = this.queryManager.selectList(Order.class, condition);
+		
+		Query skuQuery = AnyOrmUtil.newConditionForExecution(domainId);
+		skuQuery.addSelect("skuCd", "skuBarcd", "skuBarcd2", "styleCd", "sizeCd", "colorCd");
+		skuQuery.addFilter("skuCd", SysConstants.IN, skuCdList.size() == 0 ? '1' : skuCdList);
+		List<SKU> skuInfoList = this.queryManager.selectList(SKU.class, skuQuery);
 		
 		Query mainConds = new Query();
 		mainConds.addFilter("id", batch.getBatchGroupId());
 		JobBatch mainBatch = this.queryManager.select(JobBatch.class, mainConds);
 		
 		for (OrderPreprocess preProcess : preprocesses) {
-			for (Order skuInfo : skuInfoList) {
+			for (SKU skuInfo : skuInfoList) {
 				if(ValueUtil.isEqual(skuInfo.getSkuCd(), preProcess.getCellAssgnCd())) {
 					WcsMheDasOrder wcsMheDasOrder = new WcsMheDasOrder();
 					wcsMheDasOrder.setId(UUID.randomUUID().toString());
@@ -317,14 +338,33 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 					wcsMheDasOrder.setChuteNo(preProcess.getSubEquipCd());
 					wcsMheDasOrder.setBarcode(skuInfo.getSkuBarcd());
 					wcsMheDasOrder.setBarcode2(skuInfo.getSkuBarcd2());
+					wcsMheDasOrder.setItemStyle(skuInfo.getStyleCd());
+					wcsMheDasOrder.setItemColor(skuInfo.getColorCd());
+					wcsMheDasOrder.setItemSize(skuInfo.getSizeCd());
 					
 					dasOrderList.add(wcsMheDasOrder);
+					
+					break;
 				}
 			}
 		}
 		
 		if(ValueUtil.isNotEmpty(dasOrderList)) {
 			AnyOrmUtil.insertBatch(dasOrderList, 100);
+			
+			String styleGroupSql = "select item_style, sum(order_qty) as order_qty, row_number() over (order by sum(order_qty) desc) as plt_no from mhe_das_order where batch_no = :batchId group by item_style";
+			Map<String,Object> styleGroupParams = ValueUtil.newMap("batchId,skuCd", batch.getId(), skuCdList);
+			List<Map> styleGroupList = this.queryManager.selectListBySql(styleGroupSql, styleGroupParams, Map.class, 0, 0);
+			
+			for (WcsMheDasOrder wcsMheDasOrder : dasOrderList) {
+				for (Map style : styleGroupList) {
+					if(ValueUtil.isEqual(wcsMheDasOrder.getItemStyle(), style.get("item_style"))) {
+						wcsMheDasOrder.setPltNo(ValueUtil.toString(style.get("plt_no")));
+						break;
+					}
+				}
+			}
+			AnyOrmUtil.updateBatch(dasOrderList, 100, "pltNo");
 		}
 	}
 	

@@ -48,4 +48,14 @@ public class FnFConstants {
 	 * PAS 배치 일시정지 상태
 	 */
 	public static final String PAS_BATCH_PAUSE = "3";
+	
+	/**
+	 * SMS ORDER 수신 방식 - WMS
+	 */
+	public static final String ORDER_RECEIVE_WMS = "WMS";
+	
+	/**
+	 * SMS ORDER 수신 방식 - UPLOAD
+	 */
+	public static final String ORDER_RECEIVE_UPLOAD = "UPLOAD";
 }

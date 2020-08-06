@@ -307,6 +307,14 @@ public class SmsQueryStore extends AbstractQueryStore {
 		return this.getQueryByPath("srtn/srtnInspBoxTrgUpdate");
 	}
 	
+	/**
+	 * Upload 한 반품 배치 소터에 데이터 전송
+	 * 
+	 */
+	public String getSrtnUploadBatchSendPasOrder() {
+		return this.getQueryByPath("srtn/srtnUploadBatchSendPasOrder");
+	}
+	
 	
 	
 	/*** SMS 조회 관련 데이터 쿼리 ***/

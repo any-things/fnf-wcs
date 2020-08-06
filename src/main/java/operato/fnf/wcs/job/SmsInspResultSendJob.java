@@ -8,6 +8,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import operato.fnf.wcs.FnFConstants;
 import operato.fnf.wcs.service.send.SmsInspSendService;
 import operato.logis.sms.SmsConstants;
 import xyz.anythings.base.LogisConstants;
@@ -86,6 +87,7 @@ public class SmsInspResultSendJob extends AbstractFnFJob {
 	private List<JobBatch> searchRunningBatches(Long domainId) {
 		Query condition = AnyOrmUtil.newConditionForExecution(domainId);
 		condition.addFilter("status", JobBatch.STATUS_RUNNING);
+		condition.addFilter("indConfigSetId", FnFConstants.ORDER_RECEIVE_WMS);
 		condition.addFilter("jobType", LogisConstants.IN, ValueUtil.toList(SmsConstants.JOB_TYPE_SRTN));
 		condition.addOrder("jobType", false);
 		condition.addOrder("instructedAt", true);

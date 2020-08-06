@@ -8,7 +8,7 @@ SELECT
 	, HR.STRR_ID || '-' || HR.SEASON || '-' || HR.TYPE || '-' || HR.SEQ AS WCS_BATCH_NO
 	, 'FnF' AS COM_CD
 	, 'A' AS AREA_CD
-	, 'AB1' AS STAGE_CD
+	, 'A-B1' AS STAGE_CD
 	, 'SRTN' AS JOB_TYPE
 	, 'SORTER' AS EQUIP_TYPE
 	, :equipCd AS EQUIP_CD

@@ -255,6 +255,9 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	 */
 	@Column (name = "status", nullable = true, length = 1)
 	private String status;
+	
+	@Column (name = "bcr_status", nullable = true, length = 1)
+	private String bcrStatus;
 
 	public String getId() {
 		return id;
@@ -592,4 +595,11 @@ public class DpsJobInstance extends xyz.elidom.orm.entity.basic.AbstractStamp {
 		this.status = status;
 	}
 
+	public String getBcrStatus() {
+		return bcrStatus;
+	}
+
+	public void setBcrStatus(String bcrStatus) {
+		this.bcrStatus = bcrStatus;
+	}
 }

@@ -20,17 +20,20 @@ public class TopSkuSetting extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	private String workType;
 
 	@Column (name = "scope_days")
-	private Integer scopeDays;
+	private Integer scopeDays;	// 집계일수
 
 	@Column (name = "outb_days_rate")
-	private Float outbDaysRate;
+	private Float outbDaysRate;	// 출고일 비중
 
 	@Column (name = "outb_qty_rate")
-	private Float outbQtyRate;
+	private Float outbQtyRate;	// 주문수량 비중
 
 	@Column (name = "duration_days")
-	private Integer durationDays;
+	private Integer durationDays;	// 안전재고일수
   
+	@Column (name = "top_count")
+	private Integer topCount;
+	
 	public String getId() {
 		return id;
 	}
@@ -77,5 +80,14 @@ public class TopSkuSetting extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 
 	public void setDurationDays(Integer durationDays) {
 		this.durationDays = durationDays;
-	}	
+	}
+
+	public Integer getTopCount() {
+		return topCount;
+	}
+
+	public void setTopCount(Integer topCount) {
+		this.topCount = topCount;
+	}
+	
 }

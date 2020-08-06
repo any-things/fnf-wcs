@@ -1,60 +1,22 @@
-package operato.logis.wcs.entity;
+package operato.fnf.wcs.service.model;
 
-import xyz.elidom.dbist.annotation.Column;
-import xyz.elidom.dbist.annotation.PrimaryKey;
-import xyz.elidom.dbist.annotation.GenerationRule;
-import xyz.elidom.dbist.annotation.Table;
-
-@Table(name = "top_sku_traces", idStrategy = GenerationRule.UUID)
-public class TopSkuTrace extends xyz.elidom.orm.entity.basic.ElidomStampHook {
-	/**
-	 * SerialVersion UID
-	 */
-	private static final long serialVersionUID = 133616355584031131L;
-
-	@PrimaryKey
-	@Column (name = "id", nullable = false, length = 40)
+public class RecommandSku {
 	private String id;
-
-	@Column (name = "work_type", length = 16)
 	private String workType;
-
-	@Column (name = "sum_date", nullable = false, length = 16)
 	private String sumDate;
-
-	@Column (name = "sku_cd", nullable = false, length = 64)
 	private String skuCd;
-
-	@Column (name = "scope_days")
 	private Integer scopeDays;
-
-	@Column (name = "outb_days_rate")
 	private Float outbDaysRate;
-
-	@Column (name = "outb_count_rate")
 	private Float outbCountRate;
-
-	@Column (name = "duration_days")
 	private Integer durationDays;
-
-	@Column (name = "scope_days_pcs_qty")
 	private Integer scopeDaysPcsQty;
-
-	@Column (name = "scope_days_ord_cnt")
 	private Integer scopeDaysOrdCnt;
-
-	@Column (name = "scope_days_sku_cnt")
 	private Integer scopeDaysSkuCnt;
-
-	@Column (name = "scope_avg_pcs_qty")
 	private Integer scopeAvgPcsQty;
-
-	@Column (name = "popular_index")
 	private Float popularIndex;
-
-	@Column (name = "duration_pcs")
 	private Integer durationPcs;
-  
+	private Integer needQty;
+
 	public String getId() {
 		return id;
 	}
@@ -166,4 +128,12 @@ public class TopSkuTrace extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	public void setDurationPcs(Integer durationPcs) {
 		this.durationPcs = durationPcs;
 	}	
+
+	public Integer getNeedQty() {
+		return needQty;
+	}
+
+	public void setNeedQty(Integer needQty) {
+		this.needQty = needQty;
+	}
 }

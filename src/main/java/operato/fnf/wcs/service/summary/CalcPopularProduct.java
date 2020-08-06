@@ -41,7 +41,7 @@ public class CalcPopularProduct extends AbstractQueryService {
 		String fromDate = values.get("fromdate");
 		paramMap.put("fromDate", fromDate);
 		paramMap.put("toDate", date);
-		String sql = FnfUtils.queryCustServiceWithCheck("online_out_sku_sum");
+		String sql = FnfUtils.queryCustServiceWithCheck("dps_outb_sku_sum");
 		List<OnlineOutSkuSum> skuSums = queryManager.selectListBySql(sql, paramMap, OnlineOutSkuSum.class, 0, 0);
 		
 		Map<String, TopSkuTrace> skuSumMap = new HashMap<>();
@@ -87,6 +87,7 @@ public class CalcPopularProduct extends AbstractQueryService {
 			
 			float index = obj.getScopeDaysPcsQty() * setting.getOutbQtyRate()/100 + obj.getScopeDaysSkuCnt() * setting.getOutbDaysRate()/100;
 			obj.setPopularIndex(index);
+			obj.setDurationPcs(obj.getDurationDays() * obj.getScopeAvgPcsQty());
 			traces.add(obj);
 		}
 		

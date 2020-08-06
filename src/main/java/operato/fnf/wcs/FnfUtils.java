@@ -3,27 +3,45 @@ package operato.fnf.wcs;
 import java.lang.reflect.Field;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.validation.ValidationException;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import xyz.elidom.base.entity.Resource;
+import xyz.elidom.base.util.ResourceUtil;
+import xyz.elidom.dbist.dml.Filter;
+import xyz.elidom.dbist.dml.Order;
 import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.dev.entity.DiyService;
 import xyz.elidom.exception.client.ElidomInputException;
 import xyz.elidom.orm.IQueryManager;
+import xyz.elidom.sys.SysConfigConstants;
+import xyz.elidom.sys.SysConstants;
+import xyz.elidom.sys.util.SettingUtil;
 import xyz.elidom.util.BeanUtil;
 import xyz.elidom.util.ValueUtil;
+import xyz.elidom.util.converter.msg.IJsonParser;
 
 public class FnfUtils {
 	public static final String DPS_RECEIVE_MUTEX_LOCK = "dps.batch.receive.mutex";
 	public static final String MUTEX_LOCK_ON = "ON";
 	public static final String MUTEX_LOCK_OFF = "OFF";
 	public static final String BIZ_TYPE_PKG = "PKG";
+	
+	@Autowired
+	@Qualifier("under_to_camel")
+	protected static IJsonParser jsonParser;
 	
 	public static String today() {
 		Date date = Calendar.getInstance().getTime();
@@ -149,5 +167,67 @@ public class FnfUtils {
 	public static String bizTypeTitleProcess(String bizType, String title) {
 		String desc = BIZ_TYPE_PKG.equalsIgnoreCase(bizType) ? title + " :" + bizType : title;
 		return desc;
+	}
+	
+	public static Query parseQueryParams(Class<?> entityClass, Map<String, Object> params) {
+		Integer page = Integer.valueOf(String.valueOf(params.get("page")));
+		Integer limit = Integer.valueOf(String.valueOf(params.get("limit")));
+		String sort = String.valueOf(params.get("sort"));
+		String select = String.valueOf(params.get("select"));
+		String query = String.valueOf(params.get("query"));
+		
+		Query queryObj = new Query();
+		queryObj.setPageIndex(page == null ? 1 : page.intValue());
+		limit = (limit == null) ? ValueUtil.toInteger(SettingUtil.getValue(SysConfigConstants.SCREEN_PAGE_LIMIT, "50")) : limit.intValue();
+		queryObj.setPageSize(limit);
+
+		if (ValueUtil.isNotEmpty(select)) {
+			List<String> selectList = new ArrayList<String>(Arrays.asList(select.split(SysConstants.COMMA)));
+			Resource extResource = ResourceUtil.findExtResource(entityClass.getSimpleName());
+			// 확정 컬럼 정보가 존재하지 않을 경우, 기본 검색 항목에 추가 
+			if (ValueUtil.isEmpty(extResource) || ValueUtil.isEmpty(extResource.getId())) {
+				queryObj.setSelect(selectList);
+				
+			} else {
+				List<String> masterColumnList = new ArrayList<String>();
+				List<String> extColumnList = new ArrayList<String>();
+				List<String> extColumns = ResourceUtil.resourceColumnNames(extResource.getName());
+
+				for (String column : selectList) {
+					if (extColumns.contains(column)) {
+						extColumnList.add(column);
+					} else {
+						masterColumnList.add(column);
+					}
+				}
+
+				queryObj.setSelect(masterColumnList);
+				queryObj.setExtselect(extColumnList);
+			}
+		}
+
+		if (ValueUtil.isNotEmpty(sort)) {
+			queryObj.addOrder(FnfUtils.jsonParser.parse(sort, Order[].class));
+		}
+
+		if (limit >= 0 && ValueUtil.isNotEmpty(query)) {
+			//queryObj.addFilter(FnfUtils.jsonParser.parse(query, Filter[].class));
+		}
+
+		return queryObj;
+	}
+	
+	public static Map<String, Object> parseQueryParamsToMap(Class<?> entityClass, Map<String, Object> params) {
+		Query conds = FnfUtils.parseQueryParams(entityClass, params);
+		
+		List<Filter> filters = conds.getFilter();
+		Map<String, Object> queryParams = new HashMap<>();
+		if (ValueUtil.isNotEmpty(filters)) {
+			for (Filter filter : filters) {
+				queryParams.put(filter.getName(), filter.getValue());
+			}
+		}
+		
+		return queryParams;
 	}
 }

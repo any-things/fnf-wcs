@@ -13,9 +13,6 @@ import java.util.Map;
 
 import javax.validation.ValidationException;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import xyz.elidom.base.entity.Resource;
@@ -31,7 +28,7 @@ import xyz.elidom.sys.SysConstants;
 import xyz.elidom.sys.util.SettingUtil;
 import xyz.elidom.util.BeanUtil;
 import xyz.elidom.util.ValueUtil;
-import xyz.elidom.util.converter.msg.IJsonParser;
+import xyz.elidom.util.converter.msg.UnderToCamelJsonParser;
 
 public class FnfUtils {
 	public static final String DPS_RECEIVE_MUTEX_LOCK = "dps.batch.receive.mutex";
@@ -39,9 +36,9 @@ public class FnfUtils {
 	public static final String MUTEX_LOCK_OFF = "OFF";
 	public static final String BIZ_TYPE_PKG = "PKG";
 	
-	@Autowired
-	@Qualifier("under_to_camel")
-	protected static IJsonParser jsonParser;
+//	@Autowired
+//	@Qualifier("under_to_camel")
+//	public static IJsonParser jsonParser;
 	
 	public static String today() {
 		Date date = Calendar.getInstance().getTime();
@@ -206,12 +203,13 @@ public class FnfUtils {
 			}
 		}
 
+		UnderToCamelJsonParser jsonParser = new UnderToCamelJsonParser();
 		if (ValueUtil.isNotEmpty(sort)) {
-			queryObj.addOrder(FnfUtils.jsonParser.parse(sort, Order[].class));
+			queryObj.addOrder(jsonParser.parse(sort, Order[].class));
 		}
 
 		if (limit >= 0 && ValueUtil.isNotEmpty(query)) {
-			//queryObj.addFilter(FnfUtils.jsonParser.parse(query, Filter[].class));
+			queryObj.addFilter(jsonParser.parse(query, Filter[].class));
 		}
 
 		return queryObj;

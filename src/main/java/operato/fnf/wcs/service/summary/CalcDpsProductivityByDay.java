@@ -128,7 +128,8 @@ public class CalcDpsProductivityByDay extends AbstractQueryService {
 
 	private void calcByDay(List<DpsProductivity> dpsPrdSum) throws Exception {
 		for (DpsProductivity obj: dpsPrdSum) {
-			obj.setPh(obj.getDoneQty()/obj.getWorkHours());
+			obj.setWorkers(obj.getWorkHours() / 6 / obj.getWorkHours());
+			obj.setPh(obj.getDoneQty() / obj.getWorkHours());
 			obj.setPhp(obj.getPh() / (obj.getWorkers()/obj.getWorkHours()));
 			
 			if (WORK_TYPE_PICKING.equals(obj.getWorkType())) {

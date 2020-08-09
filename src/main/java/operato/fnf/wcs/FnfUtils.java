@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -227,5 +228,78 @@ public class FnfUtils {
 		}
 		
 		return queryParams;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static <T extends Object> List<T> parseObjList(Class<T> clazz, List<LinkedHashMap<String, Object>> input)
+			throws Exception {
+		if (ValueUtil.isEmpty(input)) {
+			return new ArrayList<>();
+		}
+		
+		ObjectMapper mapper = new ObjectMapper();
+		Field[] fields = clazz.getDeclaredFields();
+
+		List<LinkedHashMap<String, Object>> mapList = new ArrayList<>();
+		for (LinkedHashMap<String, Object> obj : input) {
+			LinkedHashMap<String, Object> toMap = new LinkedHashMap<>();
+			for (Field field : fields) {
+				String fieldName = field.getName();
+				
+				if ("serialVersionUID".equals(fieldName)) {
+					continue;
+				}
+				field.setAccessible(true);
+				
+				String dFieldName = ValueUtil.toDelimited(fieldName, '_');
+				if (ValueUtil.isNotEmpty(obj.get(dFieldName))) {
+					String typeName = obj.get(dFieldName).getClass().getName();
+					Object value = null;
+					if (typeName.equals("java.util.LinkedHashMap")) {
+						Class<?> c = field.getType();
+						
+						value = FnfUtils.parseObj(c, (LinkedHashMap<String, Object>)obj.get(dFieldName));
+					} else {
+						value = obj.get(dFieldName);
+					}
+					toMap.put(fieldName, value);
+				}
+			}
+			mapList.add(toMap);
+		}
+
+		List<T> list = new ArrayList<>();
+		for (LinkedHashMap<String, Object> obj : mapList) {
+			T toObj = null;
+			toObj = mapper.convertValue(obj, clazz);
+			
+			list.add(toObj);
+		}
+
+		return list;
+	}
+	
+	public static <T extends Object> T parseObj(Class<T> clazz, LinkedHashMap<String, Object> input)
+			throws Exception {
+		
+		Field[] fields = clazz.getDeclaredFields();
+		LinkedHashMap<String, Object> toMap = new LinkedHashMap<>();
+		for (Field field : fields) {
+			String fieldName = field.getName();
+			
+			if ("serialVersionUID".equals(fieldName)) {
+				continue;
+			}
+			field.setAccessible(true);
+			
+			String dFieldName = ValueUtil.toDelimited(fieldName, '_');
+			if (ValueUtil.isNotEmpty(input.get(dFieldName))) {
+				toMap.put(fieldName, input.get(dFieldName));
+			}
+		}
+		
+		ObjectMapper mapper = new ObjectMapper();
+		T toObj = mapper.convertValue(toMap, clazz);
+		return toObj;
 	}
 }

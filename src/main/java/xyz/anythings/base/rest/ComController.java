@@ -5,6 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URLDecoder;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -108,5 +109,25 @@ public class ComController extends AbstractRestService {
 		}
 
 		return paramsMap;
+	}
+	
+	@RequestMapping(value = "/update_multiple/{serviceUrl}", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ApiDesc(description = "Create, Update or Delete multiple at one time")
+	public ResponseObj multipleUpdate(@RequestBody List<Object> list, @PathVariable("serviceUrl") String serviceUrl) throws Exception {
+		String serviceName = ValueUtil.toCamelCase(serviceUrl, '_');
+		Object service = BeanUtil.get(serviceName);
+
+		Method method = service.getClass().getMethod(serviceName, Map.class);
+		ResponseObj response = null;
+		try {
+			Map<String, Object> params = new HashMap<>();
+			params.put("list", list);
+			response = (ResponseObj) method.invoke(service, params);
+		} catch (InvocationTargetException e) {
+			throw (Exception) e.getTargetException();
+		} catch (Exception e) {
+			throw e;
+		}
+		return response;
 	}
 }

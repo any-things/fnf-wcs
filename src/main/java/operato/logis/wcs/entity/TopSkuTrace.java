@@ -47,7 +47,7 @@ public class TopSkuTrace extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	private Integer scopeDaysSkuCnt;
 
 	@Column (name = "scope_avg_pcs_qty")
-	private Integer scopeAvgPcsQty;
+	private Float scopeAvgPcsQty;
 
 	@Column (name = "popular_index")
 	private Float popularIndex;
@@ -143,11 +143,11 @@ public class TopSkuTrace extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 		this.scopeDaysSkuCnt = scopeDaysSkuCnt;
 	}
 
-	public Integer getScopeAvgPcsQty() {
+	public Float getScopeAvgPcsQty() {
 		return scopeAvgPcsQty;
 	}
 
-	public void setScopeAvgPcsQty(Integer scopeAvgPcsQty) {
+	public void setScopeAvgPcsQty(Float scopeAvgPcsQty) {
 		this.scopeAvgPcsQty = scopeAvgPcsQty;
 	}
 

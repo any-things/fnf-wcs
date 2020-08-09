@@ -21,6 +21,7 @@ import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.util.DateUtil;
 import xyz.elidom.util.ValueUtil;
 
+//http://localhost:9500/rest/wcs/calc_recommand_sku?sumDate=20200805&page=1&limit=100&sort=[]&select=[]&query=[]
 @Component
 public class CalcRecommandSku extends AbstractQueryService {
 	public ResponseObj calcRecommandSku(Map<String, Object> params) throws Exception {

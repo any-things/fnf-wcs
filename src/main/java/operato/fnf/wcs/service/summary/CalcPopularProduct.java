@@ -85,11 +85,11 @@ public class CalcPopularProduct extends AbstractQueryService {
 		List<TopSkuTrace> traces = new ArrayList<>();
 		for (String skuCd: skuSumMap.keySet()) {
 			TopSkuTrace obj = skuSumMap.get(skuCd);
-			obj.setScopeAvgPcsQty((float)obj.getScopeDaysPcsQty()/setting.getScopeDays());
+			obj.setScopeAvgPcsQty(((float)obj.getScopeDaysPcsQty())/setting.getScopeDays());
 			
 			float index = obj.getScopeDaysPcsQty() * setting.getOutbQtyRate()/100 + obj.getScopeDaysSkuCnt() * setting.getOutbDaysRate()/100;
 			obj.setPopularIndex(index);
-			obj.setDurationPcs(Math.round(obj.getDurationDays() * obj.getScopeAvgPcsQty()));
+			obj.setDurationPcs(obj.getDurationDays() * obj.getScopeAvgPcsQty());
 			traces.add(obj);
 		}
 		

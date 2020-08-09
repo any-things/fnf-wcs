@@ -53,7 +53,7 @@ public class TopSkuTrace extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	private Float popularIndex;
 
 	@Column (name = "duration_pcs")
-	private Integer durationPcs;
+	private Float durationPcs;
   
 	public String getId() {
 		return id;
@@ -159,11 +159,11 @@ public class TopSkuTrace extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 		this.popularIndex = popularIndex;
 	}
 
-	public Integer getDurationPcs() {
+	public Float getDurationPcs() {
 		return durationPcs;
 	}
 
-	public void setDurationPcs(Integer durationPcs) {
+	public void setDurationPcs(Float durationPcs) {
 		this.durationPcs = durationPcs;
 	}	
 }

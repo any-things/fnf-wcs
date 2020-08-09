@@ -66,7 +66,7 @@ public class CalcRecommandSku extends AbstractQueryService {
 			
 			Integer needQty = 0;
 			if (obj.getDurationPcs() < wcsSkuStockQty && obj.getScopeAvgPcsQty() > wcsSkuStockQty) {
-				needQty = obj.getScopeAvgPcsQty() - wcsSkuStockQty;
+				needQty = Math.round(obj.getScopeAvgPcsQty()) - wcsSkuStockQty;
 				
 				if (wmsSkuStockQty < needQty ) {
 					needQty = wmsSkuStockQty;

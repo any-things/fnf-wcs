@@ -8,6 +8,7 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 import operato.fnf.wcs.FnfUtils;
+import operato.fnf.wcs.entity.DpsJobInstance;
 import operato.fnf.wcs.service.model.OnlineOutSkuSum;
 import operato.logis.wcs.entity.TopSkuSetting;
 import operato.logis.wcs.entity.TopSkuTrace;
@@ -24,6 +25,13 @@ public class CalcPopularProduct extends AbstractQueryService {
 		String date = String.valueOf(params.get("date"));
 		if (ValueUtil.isEmpty(date)) {
 			date = DateUtil.getCurrentDay();
+		}
+		
+		Query sizeConds = new Query(0, 1);
+		sizeConds.addFilter("workDate", date);
+		int size = queryManager.selectSize(DpsJobInstance.class, sizeConds);
+		if (size <= 0) {
+			return new ResponseObj();
 		}
 		
 		Query conds = new Query(0, 1);

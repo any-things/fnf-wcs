@@ -51,7 +51,7 @@ public class CalcRecommandSku extends AbstractQueryService {
 		
 		
 		Map<String, Integer> wcsStockMap = this.getSkuWcsStocks(skuCds);
-		Map<String, Integer> wmsStockMap = this.getSkuWmsStocks(skuCds);
+		//Map<String, Integer> wmsStockMap = this.getSkuWmsStocks(skuCds);
 		List<RecommandSku> recommandSkus = new ArrayList<>();
 		for (TopSkuTrace obj: topSkuTraces) {
 			//obj.getDurationPcs() < 현재재고수량
@@ -59,22 +59,22 @@ public class CalcRecommandSku extends AbstractQueryService {
 			if (ValueUtil.isEmpty(wcsSkuStockQty)) {
 				wcsSkuStockQty = 0;
 			}
-			Integer wmsSkuStockQty = wmsStockMap.get(obj.getSkuCd());
-			if (ValueUtil.isEmpty(wmsSkuStockQty)) {
-				wmsSkuStockQty = 0;
-			}
-			
-			Integer needQty = 0;
-			if (obj.getDurationPcs() < wcsSkuStockQty && obj.getScopeAvgPcsQty() > wcsSkuStockQty) {
-				needQty = Math.round(obj.getScopeAvgPcsQty()) - wcsSkuStockQty;
-				
-				if (wmsSkuStockQty < needQty ) {
-					needQty = wmsSkuStockQty;
-				}
-			}
-			
+//			Integer wmsSkuStockQty = wmsStockMap.get(obj.getSkuCd());
+//			if (ValueUtil.isEmpty(wmsSkuStockQty)) {
+//				wmsSkuStockQty = 0;
+//			}
+//			
+//			Integer needQty = 0;
+//			if (obj.getDurationPcs() < wcsSkuStockQty && obj.getScopeAvgPcsQty() > wcsSkuStockQty) {
+//				needQty = Math.round(obj.getScopeAvgPcsQty()) - wcsSkuStockQty;
+//				
+//				if (wmsSkuStockQty < needQty ) {
+//					needQty = wmsSkuStockQty;
+//				}
+//			}
+			Integer needQty = Math.round(obj.getScopeAvgPcsQty() * obj.getDurationDays() - wcsSkuStockQty);
 			RecommandSku rsku = FnfUtils.populate(obj, new RecommandSku(), true);
-			rsku.setNeedQty(needQty);
+			rsku.setNeedPcsQty(needQty);
 			recommandSkus.add(rsku);
 		}
 		
@@ -83,6 +83,7 @@ public class CalcRecommandSku extends AbstractQueryService {
 		return resp;
 	}
 	
+	@SuppressWarnings("unused")
 	private Map<String, Integer> getSkuWmsStocks(List<String> skuCds) throws Exception {
 		Query wmsConds = new Query(0, 1);
 		wmsConds.addFilter("whCd", FnFConstants.WH_CD_ICF);

@@ -12,10 +12,11 @@ public class RecommandSku {
 	private Integer scopeDaysPcsQty;
 	private Integer scopeDaysOrdCnt;
 	private Integer scopeDaysSkuCnt;
-	private Integer scopeAvgPcsQty;
+	private Float scopeAvgPcsQty;
 	private Float popularIndex;
-	private Integer durationPcs;
-	private Integer needQty;
+	private Float durationPcs;
+	private Integer wcsStockQty;
+	private Integer needPcsQty;
 
 	public String getId() {
 		return id;
@@ -105,11 +106,11 @@ public class RecommandSku {
 		this.scopeDaysSkuCnt = scopeDaysSkuCnt;
 	}
 
-	public Integer getScopeAvgPcsQty() {
+	public Float getScopeAvgPcsQty() {
 		return scopeAvgPcsQty;
 	}
 
-	public void setScopeAvgPcsQty(Integer scopeAvgPcsQty) {
+	public void setScopeAvgPcsQty(Float scopeAvgPcsQty) {
 		this.scopeAvgPcsQty = scopeAvgPcsQty;
 	}
 
@@ -121,19 +122,27 @@ public class RecommandSku {
 		this.popularIndex = popularIndex;
 	}
 
-	public Integer getDurationPcs() {
+	public Float getDurationPcs() {
 		return durationPcs;
 	}
 
-	public void setDurationPcs(Integer durationPcs) {
+	public void setDurationPcs(Float durationPcs) {
 		this.durationPcs = durationPcs;
-	}	
-
-	public Integer getNeedQty() {
-		return needQty;
 	}
 
-	public void setNeedQty(Integer needQty) {
-		this.needQty = needQty;
+	public Integer getWcsStockQty() {
+		return wcsStockQty;
+	}
+
+	public void setWcsStockQty(Integer wcsStockQty) {
+		this.wcsStockQty = wcsStockQty;
+	}
+
+	public Integer getNeedPcsQty() {
+		return needPcsQty;
+	}
+
+	public void setNeedPcsQty(Integer needPcsQty) {
+		this.needPcsQty = needPcsQty;
 	}
 }

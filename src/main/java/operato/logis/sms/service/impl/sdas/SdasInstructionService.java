@@ -161,10 +161,10 @@ public class SdasInstructionService extends AbstractQueryService implements IIns
 		
 		AnyOrmUtil.updateBatch(cellList, 100, "classCd", "batchId");
 		if(!isMerged) {
-//			batch.setStatus(JobBatch.STATUS_RUNNING);
-//			batch.setInstructedAt(new Date());
-//			batch.setEquipGroupCd(batch.getEquipCd());
-//			this.queryManager.update(batch, "instructedAt", "equipGroupCd");
+			batch.setStatus(JobBatch.STATUS_WORKING);
+			batch.setInstructedAt(new Date());
+			batch.setEquipGroupCd(batch.getEquipCd());
+			this.queryManager.update(batch, "instructedAt", "equipGroupCd");
 		}
 		
 		return preprocesses.size();

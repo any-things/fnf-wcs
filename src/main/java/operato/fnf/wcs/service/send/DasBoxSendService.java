@@ -71,23 +71,22 @@ public class DasBoxSendService extends AbstractQueryService {
 		IQueryManager rfidQueryMgr = this.getDataSourceQueryManager(RfidBoxItem.class);
 //		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsAssortItem.class);
 		DasBoxSendService boxSendSvc = BeanUtil.get(DasBoxSendService.class);
-		
-		// 1. 박스 완료 실적 조회
-//		List<WcsMheBox> boxOrderList = this.searchBoxedOrderList(batch);
 
+		
+		// 박스 취소 실적 조회
+		List<DasBoxCancel> cancelBoxList = this.searchCancelBoxList(batch);
+		// RFID에 박스 취소 전송
+		for(DasBoxCancel cancelBox : cancelBoxList) {
+			boxSendSvc.sendCancelPackingsToRfid(rfidQueryMgr, batch, cancelBox);
+		}
+		
+		// 박스 실적 전송
 		try {
 			if (LogisConstants.JOB_TYPE_DAS.equals(batch.getJobType()) || ValueUtil.isEqual(batch.getJobType(), SmsConstants.JOB_TYPE_SDAS)) {
 				BeanUtil.get(DasSendBoxInfoToRfid.class).dasSendBoxInfoToRfid(domain.getId(), batch);
 			}
 		} catch(Exception e) {
 			logger.error("dasSendBoxInfoToRfid error~~:", e);
-		}
-		
-		// 3. 박스 취소 실적 조회
-		List<DasBoxCancel> cancelBoxList = this.searchCancelBoxList(batch);
-		// 4. RFID에 박스 취소 전송
-		for(DasBoxCancel cancelBox : cancelBoxList) {
-			boxSendSvc.sendCancelPackingsToRfid(rfidQueryMgr, batch, cancelBox);
 		}
 	}
 	

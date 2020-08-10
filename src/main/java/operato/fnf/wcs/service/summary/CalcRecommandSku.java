@@ -39,9 +39,8 @@ public class CalcRecommandSku extends AbstractQueryService {
 		setting.getDurationDays();
 		setting.getScopeDays();
 		
-		
 		Query traceConds = new Query(0, setting.getTopCount());
-		//traceConds.addFilter("sumDate", date);
+		traceConds.addFilter("sumDate", date);
 		traceConds.addOrder("popularIndex", false);
 		List<TopSkuTrace> topSkuTraces = queryManager.selectList(TopSkuTrace.class, traceConds);
 		List<String> skuCds = new ArrayList<>();

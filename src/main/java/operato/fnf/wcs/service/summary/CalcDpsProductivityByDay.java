@@ -52,6 +52,7 @@ public class CalcDpsProductivityByDay extends AbstractQueryService {
 		List<Filter> filters = queryObj.getFilter();
 		String fromDate = null;
 		String toDate = null;
+		String workType = null;
 		if (ValueUtil.isNotEmpty(filters)) {
 			for (Filter filter: filters) {
 				if ("work_date".equals(filter.getName())) {
@@ -68,7 +69,9 @@ public class CalcDpsProductivityByDay extends AbstractQueryService {
 					if (ValueUtil.isNotEmpty(toDate)) {
 						toDate = toDate.replace("-", "").replace(" ", "").replace(":", "");
 					}
-				}
+				} else if ("work_type".equals(filter.getName())) {
+					workType = String.valueOf(filter.getValue());
+				}	
 			}
 		}
 		
@@ -76,22 +79,26 @@ public class CalcDpsProductivityByDay extends AbstractQueryService {
 		
 		List<DpsProductivity> dpsProductivities = new ArrayList<>();
 		List<DpsProductivity> tpSum = this.getDpsWcsSum(WORK_TYPE_TOTAL_PICKING, fromDate, toDate);
-		if (ValueUtil.isNotEmpty(tpSum)) {
+		if ((ValueUtil.isEmpty(workType) || WORK_TYPE_TOTAL_PICKING.equals(workType))
+				&& ValueUtil.isNotEmpty(tpSum)) {
 			this.calcByDay(tpSum);
 			dpsProductivities.addAll(tpSum);
 		}
 		List<DpsProductivity> loadSum = this.getDpsWcsSum(WORK_TYPE_LOAD_STOCK, fromDate, toDate);
-		if (ValueUtil.isNotEmpty(loadSum)) {
+		if ((ValueUtil.isEmpty(workType) || WORK_TYPE_LOAD_STOCK.equals(workType))
+				&& ValueUtil.isNotEmpty(loadSum)) {
 			this.calcByDay(loadSum);
 			dpsProductivities.addAll(loadSum);
 		}
 		List<DpsProductivity> pickingSum = this.getDpsWcsSum(WORK_TYPE_PICKING, fromDate, toDate);
-		if (ValueUtil.isNotEmpty(pickingSum)) {
+		if ((ValueUtil.isEmpty(workType) || WORK_TYPE_PICKING.equals(workType))
+				&& ValueUtil.isNotEmpty(pickingSum)) {
 			this.calcByDay(pickingSum);
 			dpsProductivities.addAll(pickingSum);
 		}
 		List<DpsProductivity> inspSum = this.getDpsWcsSum(WORK_TYPE_INSPECTION, fromDate, toDate);
-		if (ValueUtil.isNotEmpty(inspSum)) {
+		if ((ValueUtil.isEmpty(workType) || WORK_TYPE_INSPECTION.equals(workType))
+				&& ValueUtil.isNotEmpty(inspSum)) {
 			this.calcByDay(inspSum);
 			dpsProductivities.addAll(inspSum);
 		}

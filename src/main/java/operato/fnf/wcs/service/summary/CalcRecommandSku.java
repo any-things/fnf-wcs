@@ -36,9 +36,6 @@ public class CalcRecommandSku extends AbstractQueryService {
 		conds.addOrder("updatedAt", false);
 		TopSkuSetting setting = queryManager.selectByCondition(true, TopSkuSetting.class, conds);
 		
-		setting.getDurationDays();
-		setting.getScopeDays();
-		
 		Query traceConds = new Query(0, setting.getTopCount());
 		traceConds.addFilter("sumDate", date);
 		traceConds.addOrder("popularIndex", false);

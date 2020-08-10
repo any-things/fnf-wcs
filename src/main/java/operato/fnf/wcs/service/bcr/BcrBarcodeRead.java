@@ -33,7 +33,7 @@ public class BcrBarcodeRead extends AbstractLogisService {
 		}
 		
 		dpsJobInstance.setBcrStatus(STATUS_FINISH);
-		queryManager.update(dpsJobInstance, "brcStatus");
+		queryManager.update(dpsJobInstance, "bcrStatus");
 		
 		ResponseObj resp = new ResponseObj();
 		return resp;

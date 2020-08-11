@@ -21,13 +21,13 @@ import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.util.DateUtil;
 import xyz.elidom.util.ValueUtil;
 
-//http://localhost:9500/rest/wcs/calc_recommand_sku?sumDate=20200805&page=1&limit=100&sort=[]&select=[]&query=[]
+//http://localhost:9500/rest/wcs/calc_recommand_sku?query=%5B%7B%22name%22%3A%22sum_date%22%2C%22operator%22%3A%22eq%22%2C%22value%22%3A%2220200810%22%7D%5D&page=1&limit=50
 @Component
 public class CalcRecommandSku extends AbstractQueryService {
 	public ResponseObj calcRecommandSku(Map<String, Object> params) throws Exception {
 		Map<String, Object> kvParams = FnfUtils.parseQueryParamsToMap(TopSkuTrace.class, params);
 		
-		String date = String.valueOf(kvParams.get("sumDate"));
+		String date = String.valueOf(kvParams.get("sum_date"));
 		if (ValueUtil.isEmpty(date)) {
 			date = DateUtil.getCurrentDay();
 		}
@@ -45,6 +45,9 @@ public class CalcRecommandSku extends AbstractQueryService {
 			skuCds.add(obj.getSkuCd());
 		}
 		
+		if (ValueUtil.isEmpty(skuCds) || skuCds.size() == 0) {
+			return new ResponseObj();
+		}
 		
 		Map<String, Integer> wcsStockMap = this.getSkuWcsStocks(skuCds);
 		//Map<String, Integer> wmsStockMap = this.getSkuWmsStocks(skuCds);

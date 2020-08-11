@@ -73,6 +73,7 @@ public class CalcRecommandSku extends AbstractQueryService {
 //			}
 			Integer needQty = Math.round(obj.getScopeAvgPcsQty() * obj.getDurationDays() - wcsSkuStockQty);
 			RecommandSku rsku = FnfUtils.populate(obj, new RecommandSku(), true);
+			rsku.setWcsStockQty(wcsSkuStockQty);
 			rsku.setNeedPcsQty(needQty);
 			recommandSkus.add(rsku);
 		}

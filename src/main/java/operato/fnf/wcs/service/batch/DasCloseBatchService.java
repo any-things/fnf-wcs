@@ -17,6 +17,7 @@ import operato.fnf.wcs.entity.WmsMheBox;
 import operato.fnf.wcs.entity.WmsMheDr;
 import operato.fnf.wcs.entity.WmsMheHr;
 import operato.fnf.wcs.query.store.FnFDasQueryStore;
+import operato.logis.sms.SmsConstants;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.sys.service.AbstractQueryService;
@@ -83,6 +84,11 @@ public class DasCloseBatchService extends AbstractQueryService {
 		// 5. 배치에 반영 
 		this.setBatchInfoOnClosing(batch);
 		
+		// 5-1. SDAS 인경우 Rack, Cell 초기화
+		if(ValueUtil.isEqual(batch.getJobType(), SmsConstants.JOB_TYPE_SDAS)) {
+			this.resetRacksAndCells(batch);
+		}
+		
 		// 6. WMS MHE_HR 테이블에 반영
 		this.closeWmsWave(batch, wcsMheHr);
 		
@@ -104,6 +110,19 @@ public class DasCloseBatchService extends AbstractQueryService {
 		batch.setEquipRuntime(this.calcBatchEquipRuntime(batch));
 		batch.setUph(this.calcBatchUph(batch));
 		this.queryManager.update(batch, "status", "finishedAt", "resultBoxQty", "resultOrderQty", "resultPcs", "progressRate", "equipRuntime", "uph", "updatedAt");
+	}
+	
+	/**
+	 * 해당 배치의 랙, 작업 셀 정보 리셋
+	 *
+	 * @param batch
+	 * @return
+	 */
+	private void resetRacksAndCells(JobBatch batch) {
+		// rack, cell
+		Map<String, Object> params = ValueUtil.newMap("domainId,batchId", batch.getDomainId(), batch.getBatchGroupId());
+	  	this.queryManager.executeBySql("UPDATE RACKS SET STATUS = null, BATCH_ID = null WHERE DOMAIN_ID = :domainId AND BATCH_ID = :batchId", params);
+	  	this.queryManager.executeBySql("UPDATE CELLS SET CLASS_CD = null, BATCH_ID = null WHERE DOMAIN_ID = :domainId AND BATCH_ID = :batchId", params);
 	}
 
 	/**

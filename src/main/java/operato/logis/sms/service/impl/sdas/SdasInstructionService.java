@@ -164,7 +164,7 @@ public class SdasInstructionService extends AbstractQueryService implements IIns
 			batch.setStatus(JobBatch.STATUS_WORKING);
 			batch.setInstructedAt(new Date());
 			batch.setEquipGroupCd(batch.getEquipCd());
-			this.queryManager.update(batch, "instructedAt", "equipGroupCd");
+			this.queryManager.update(batch, "status", "instructedAt", "equipGroupCd");
 		}
 		
 		return preprocesses.size();

@@ -129,7 +129,7 @@ public class SmsTrackingController extends AbstractRestService {
 		Filter[] filters = ValueUtil.isEmpty(query) ? null : this.jsonParser.parse(query, Filter[].class);
 		String selectQuery = queryStore.getSmsRtnBoxResultQuery();
 		
-		Map<String, Object> params = ValueUtil.newMap("domainId", Domain.currentDomainId());
+		Map<String, Object> params = ValueUtil.newMap("domainId,comCd", Domain.currentDomainId(), FnFConstants.FNF_COM_CD);
 		if(ValueUtil.isNotEmpty(filters)) {
 			for(Filter filter : filters) {
 				String name = filter.getName();
@@ -199,7 +199,7 @@ public class SmsTrackingController extends AbstractRestService {
 		Filter[] filters = ValueUtil.isEmpty(query) ? null : this.jsonParser.parse(query, Filter[].class);
 		String selectQuery = queryStore.getSmsDasResultQuery();
 		
-		Map<String, Object> params = ValueUtil.newMap("domainId", Domain.currentDomainId());
+		Map<String, Object> params = ValueUtil.newMap("domainId,comCd", Domain.currentDomainId(), FnFConstants.FNF_COM_CD);
 		if(ValueUtil.isNotEmpty(filters)) {
 			for(Filter filter : filters) {
 				String name = filter.getName();
@@ -265,7 +265,7 @@ public class SmsTrackingController extends AbstractRestService {
 		String selectQuery = queryStore.getSmsRtnInspResultQuery();
 		String batchId = "";
 		
-		Map<String, Object> params = ValueUtil.newMap("domainId", Domain.currentDomainId());
+		Map<String, Object> params = ValueUtil.newMap("domainId,comCd", Domain.currentDomainId(), FnFConstants.FNF_COM_CD);
 		if(ValueUtil.isNotEmpty(filters)) {
 			for(Filter filter : filters) {
 				String name = filter.getName();

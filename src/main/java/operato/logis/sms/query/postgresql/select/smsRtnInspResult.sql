@@ -31,9 +31,9 @@ LEFT OUTER JOIN
 ON
 	MPO.SKU_CD = S.SKU_CD
 AND
-	SKU.DOMAIN_ID = :domainId
+	S.DOMAIN_ID = :domainId
 AND
-	SKU.COM_CD = :comCd
+	S.COM_CD = :comCd
 WHERE 
 	MPO.BATCH_NO = :batchId
 AND 

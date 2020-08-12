@@ -29,6 +29,8 @@ public class DasAutoReceiveBatchService extends AbstractLogisService {
 	@Autowired
 	protected EventPublisher eventPublisher;
 
+	//private final String DAS_AUTO_RECEIVE_DAYS_KEY = "das.auto.receive.days";
+	
 	public ResponseObj dasAutoReceiveBatchService(Map<String, String> params) {
 		String comCd = "_na_";
 		String areaCd = "_na_";
@@ -40,6 +42,16 @@ public class DasAutoReceiveBatchService extends AbstractLogisService {
 			workDate = DateUtil.currentDate();
 		}
 		
+		//Integer autoReceiveDays = 15;
+		//try {			
+		//	autoReceiveDays = Integer.parseInt(SettingUtil.getValue(DAS_AUTO_RECEIVE_DAYS_KEY));
+		//} catch(Exception e) {
+		//	logger.error("DasAutoReceiveBatchService parseInt Error~~", e);
+		//}
+		
+		//String toDate = DateUtil.addDateToStr(DateUtil.parse(workDate, "yyyyMMdd"), autoReceiveDays);
+		
+		//while (workDate.compareTo(toDate) <= 0) {
 		BatchReceipt receipt = BeanUtil.get(DasAutoReceiveBatchService.class).prepare(areaCd, stageCd, comCd, workDate, jobType);
 		
 		if (AnyConstants.COMMON_STATUS_FINISHED.equalsIgnoreCase(receipt.getStatus())) {
@@ -49,6 +61,8 @@ public class DasAutoReceiveBatchService extends AbstractLogisService {
 		}
 		
 		this.serviceDispatcher.getReceiveBatchService().startToReceive(receipt);
+		//workDate = DateUtil.addDateToStr(DateUtil.parse(workDate, "yyyyMMdd"), 1);
+		//}
 		
 		return new ResponseObj();
 	}

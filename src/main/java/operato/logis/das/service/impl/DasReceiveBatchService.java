@@ -180,7 +180,7 @@ public class DasReceiveBatchService extends AbstractQueryService {
 		
 		// 6. batchReceiptItem 상태 업데이트 
 		item.updateStatusImmediately(LogisConstants.COMMON_STATUS_FINISHED, null);
-						
+		
 		// 8. 배치 리턴
 		return;
 	}

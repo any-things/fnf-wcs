@@ -162,7 +162,7 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 			List<OrderPreprocess> cellPreprocesses = AnyValueUtil.filterListBy(preprocesses, "classCd", cell.getCellCd());
 			this.generateJobInstances(batch, cell, cellPreprocesses);
 		}
-		if(ValueUtil.isEqual(batch.getIndConfigSetId(), FnFConstants.ORDER_RECEIVE_WMS)) {
+		if(ValueUtil.isEqual(batch.getBatchType(), FnFConstants.ORDER_RECEIVE_WMS)) {
 			this.interfaceSorter(batch);
 		} else {
 			this.interfaceSorterUpload(batch);
@@ -215,9 +215,7 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 			String msg = MessageUtil.getMessage("no_batch_id", "설비에서 운영중인 BatchId가 아닙니다.");
 			throw ThrowUtil.newValidationErrorWithNoLog(msg);
 		}
-		Map<String, Object> inspParams = ValueUtil.newMap(
-				"strrId,season,rtnType,jobSeq,ifAction,wcsIfChk", batchInfo[0], batchInfo[1],
-				batchInfo[2], batchInfo[3], LogisConstants.COMMON_STATUS_SKIPPED, LogisConstants.N_CAP_STRING);
+		Map<String, Object> inspParams = ValueUtil.newMap("batchId", batch.getId());
 		
 		List<WcsMhePasOrder> pasOrderList = this.queryManager.selectListBySql(queryStore.getSrtnUploadBatchSendPasOrder(), inspParams, WcsMhePasOrder.class, 0, 0);
 		if(ValueUtil.isNotEmpty(pasOrderList)) {

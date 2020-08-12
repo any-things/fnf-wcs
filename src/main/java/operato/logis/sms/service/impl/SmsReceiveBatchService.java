@@ -251,8 +251,8 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 			
 			// 4. JobBatch 생성 
 			JobBatch batch = JobBatch.createJobBatch(item.getBatchId(), ValueUtil.toString(item.getJobSeq()), receipt, item);
-			batch.setIndConfigSetId(FnFConstants.ORDER_RECEIVE_WMS);
-			this.queryManager.update(batch, "indConfigSetId");
+			batch.setBatchType(FnFConstants.ORDER_RECEIVE_WMS);
+			this.queryManager.update(batch, "batchType");
 			// 5. 데이터 복사  
 			selfSvc.cloneData(item.getBatchId(), receipt, item);
 						

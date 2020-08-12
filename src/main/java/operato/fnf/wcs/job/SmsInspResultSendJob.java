@@ -87,7 +87,7 @@ public class SmsInspResultSendJob extends AbstractFnFJob {
 	private List<JobBatch> searchRunningBatches(Long domainId) {
 		Query condition = AnyOrmUtil.newConditionForExecution(domainId);
 		condition.addFilter("status", JobBatch.STATUS_RUNNING);
-		condition.addFilter("indConfigSetId", FnFConstants.ORDER_RECEIVE_WMS);
+		condition.addFilter("batchType", FnFConstants.ORDER_RECEIVE_WMS);
 		condition.addFilter("jobType", LogisConstants.IN, ValueUtil.toList(SmsConstants.JOB_TYPE_SRTN));
 		condition.addOrder("jobType", false);
 		condition.addOrder("instructedAt", true);

@@ -52,10 +52,14 @@ public class FnFConstants {
 	/**
 	 * SMS ORDER 수신 방식 - WMS
 	 */
-	public static final String ORDER_RECEIVE_WMS = "WMS";
+	public static final String ORDER_RECEIVE_WMS = "W";
 	
 	/**
 	 * SMS ORDER 수신 방식 - UPLOAD
 	 */
-	public static final String ORDER_RECEIVE_UPLOAD = "UPLOAD";
+	public static final String ORDER_RECEIVE_UPLOAD = "U";
+	/**
+	 * SMS UPLOAD ORDER SEASON - S
+	 */
+	public static final String UPLOAD_ORDER_SEASON = "S";
 }

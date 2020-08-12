@@ -123,22 +123,29 @@ public class OrderController extends AbstractRestService {
 		}
 	}
 	
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@RequestMapping(value = "/update_multiple_excel", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiDesc(description = "Create, Update or Delete multiple at one time")
 	public Boolean multipleUpdateExcel(@RequestBody List<Map> list) {
 		List<Order> orderList = new ArrayList<Order>(list.size());
 		
+		Map<String, Object> seqParams = ValueUtil.newMap("jobType,batchType", SmsConstants.JOB_TYPE_SRTN, FnFConstants.ORDER_RECEIVE_UPLOAD);
+		String seqSql = "select cast(COALESCE(max(job_seq), '0') as integer) + 1 as job_seq from job_batches where job_type = :jobType and batch_type = :batchType";
+		Map<String, Object> seqMap = this.queryManager.selectBySql(seqSql, seqParams, Map.class);
+		String tempJobSeq = "1";
+		if(ValueUtil.isNotEmpty(seqMap)) {
+			tempJobSeq = ValueUtil.toString(seqMap.get("job_seq"));
+		}
+		
+		
 		for (Map order : list) {
-			if (ValueUtil.isEmpty(order.get("brand_cd")) || ValueUtil.isEmpty(order.get("rtn_type")) || ValueUtil.isEmpty(order.get("season_cd"))
-					|| ValueUtil.isEmpty(order.get("job_seq")) || ValueUtil.isEmpty(order.get("sku_cd")) || ValueUtil.isEmpty(order.get("order_qty"))) {
+			if (ValueUtil.isEmpty(order.get("brand_cd")) || ValueUtil.isEmpty(order.get("sku_cd")) || ValueUtil.isEmpty(order.get("order_qty"))) {
 				String msg = MessageUtil.getMessage("Empty", "빈칸이 있습니다.");
 				throw ThrowUtil.newValidationErrorWithNoLog(msg);
 			}
 			Order orderInfo = new Order();
 			
-			String batchId = ValueUtil.toString(order.get("brand_cd")) + "-" + ValueUtil.toString(order.get("season_cd"))
-					+ "-" + ValueUtil.toString(order.get("rtn_type")) + "-" + ValueUtil.toString(order.get("job_seq"));
+			String batchId = ValueUtil.toString(order.get("brand_cd")) + "-" + FnFConstants.UPLOAD_ORDER_SEASON + "-" + FnFConstants.ORDER_RECEIVE_UPLOAD + "-" + tempJobSeq;
 			String jobDate = DateUtil.dateStr(new Date(), "yyyy-MM-dd");
 			
 			orderInfo.setId(UUID.randomUUID().toString());
@@ -147,7 +154,7 @@ public class OrderController extends AbstractRestService {
 			orderInfo.setWmsBatchNo(batchId);
 			orderInfo.setWcsBatchNo(batchId);
 			orderInfo.setJobDate(jobDate);
-			orderInfo.setJobSeq(ValueUtil.toString(order.get("job_seq")));
+			orderInfo.setJobSeq(tempJobSeq);
 			orderInfo.setJobType(SmsConstants.JOB_TYPE_SRTN);
 			orderInfo.setOrderDate(jobDate);
 			orderInfo.setComCd(FnFConstants.FNF_COM_CD);
@@ -218,7 +225,6 @@ public class OrderController extends AbstractRestService {
 			jobBatch.setBatchPcs(ValueUtil.toInteger(batch.get("pcs")));
 			jobBatch.setStatus(JobBatch.STATUS_WAIT);
 			jobBatch.setClosedFlag(false);
-			jobBatch.setIndConfigSetId(FnFConstants.ORDER_RECEIVE_UPLOAD);
 			this.queryManager.insert(jobBatch);
 		}
 		

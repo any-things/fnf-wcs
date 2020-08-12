@@ -148,19 +148,10 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		condition.addOrder("cellCd", false);
 		List<Cell> cellList = this.queryManager.selectList(Cell.class, condition);
 		
-		// 3. cell 중에 현재 작업 중이거나 사용 불가한 슈트가 있는지 체크
-//		for(Cell cell : cellList) {
-//			if(ValueUtil.isNotEmpty(cell.getClassCd())) {
-//				// 호기에 다른 작업 배치가 할당되어 있습니다
-//				throw ThrowUtil.newValidationErrorWithNoLog(true, "ASSIGNED_ANOTHER_BATCH", ValueUtil.toList(cell.getClassCd()));
-//			}
-//		}
-		
 		int cellCount = cellList.size();
 		for(int i = 0 ; i < cellCount ; i++) {
 			Cell cell = cellList.get(i);
-			List<OrderPreprocess> cellPreprocesses = AnyValueUtil.filterListBy(preprocesses, "classCd", cell.getCellCd());
-			this.generateJobInstances(batch, cell, cellPreprocesses);
+			this.generateJobInstances(batch, cell, preprocesses);
 		}
 		if(ValueUtil.isEqual(batch.getBatchType(), FnFConstants.ORDER_RECEIVE_WMS)) {
 			this.interfaceSorter(batch);
@@ -179,33 +170,28 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 			this.queryManager.update(batch, "status", "instructedAt", "equipGroupCd");
 		}
 		
-		// TODO agent에 정보 생성후 전달 해야한다.
-		
 		return preprocesses.size();
 	}
 	
 	private void generateJobInstances(JobBatch batch, Cell cell, List<OrderPreprocess> preprocesses) {
-		Map<String, Object> params = ValueUtil.newMap("domainId,batchId", batch.getDomainId(), batch.getId());
 		for (OrderPreprocess preprocess : preprocesses) {
-			params.put("equipCd", preprocess.getEquipCd());
-			params.put("equipNm", preprocess.getEquipNm());
-			params.put("subEquipCd", preprocess.getSubEquipCd());
-			params.put("shopNm", preprocess.getCellAssgnNm());
-			params.put("shopCd", preprocess.getCellAssgnCd());
-			
-			if(cell.getCategoryFlag()) {
-				String value = "";
-				if(ValueUtil.isNotEmpty(cell.getClassCd()) && ValueUtil.isNotEqual(cell.getClassCd(), preprocess.getCellAssgnNm())) {
-					value = cell.getClassCd() + ", " + preprocess.getCellAssgnNm();
-					cell.setClassCd(value);
-				} else if(ValueUtil.isEmpty(cell.getClassCd())) {
-					value = preprocess.getCellAssgnNm();
-					cell.setClassCd(value);
+			if(ValueUtil.isEqual(cell.getCellCd(), preprocess.getClassCd())) {
+				if(cell.getCategoryFlag()) {
+					String value = "";
+					if(ValueUtil.isNotEmpty(cell.getClassCd()) && ValueUtil.isNotEqual(cell.getClassCd(), preprocess.getCellAssgnNm())) {
+						value = cell.getClassCd() + ", " + preprocess.getCellAssgnNm();
+						cell.setClassCd(value);
+					} else if(ValueUtil.isEmpty(cell.getClassCd())) {
+						value = preprocess.getCellAssgnNm();
+						cell.setClassCd(value);
+					}
+				} else {
+					cell.setClassCd(preprocess.getCellAssgnCd());
 				}
-			} else {
-				cell.setClassCd(preprocess.getCellAssgnCd());
+				cell.setBatchId(batch.getBatchGroupId());
+				
+				break;
 			}
-			cell.setBatchId(batch.getBatchGroupId());
 		}
 	}
 	

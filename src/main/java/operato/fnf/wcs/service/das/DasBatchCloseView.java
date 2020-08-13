@@ -1,5 +1,6 @@
 package operato.fnf.wcs.service.das;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.stereotype.Component;
@@ -25,7 +26,15 @@ public class DasBatchCloseView extends AbstractRestService {
 		String sql = FnfUtils.queryCustService("das_job_batch_close_view");
 		if (ValueUtil.isNotEmpty(sql)) {
 			Map<String, Object> kvParams = FnfUtils.parseQueryParamsToMap(JobBatch.class, params);
-			jobBatchPage = queryManager.selectPageBySql(sql, kvParams, JobBatch.class, page, limit);
+			Map<String, Object> sqlParams = new HashMap<>();
+			for (String key: kvParams.keySet()) {
+				if (key.equals("progress_rate")) {	
+					sqlParams.put(FnfUtils.snakeToCamel(key), Float.parseFloat(String.valueOf(kvParams.get(key))));
+				} else {
+					sqlParams.put(FnfUtils.snakeToCamel(key), kvParams.get(key));
+				}
+			}
+			jobBatchPage = queryManager.selectPageBySql(sql, sqlParams, JobBatch.class, page, limit);
 		} else {
 			jobBatchPage = (Page<JobBatch>)this.search(JobBatch.class, page, limit, select, sort, query);
 		}

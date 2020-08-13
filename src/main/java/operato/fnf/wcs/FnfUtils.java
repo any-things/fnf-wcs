@@ -302,4 +302,23 @@ public class FnfUtils {
 		T toObj = mapper.convertValue(toMap, clazz);
 		return toObj;
 	}
+	
+	public static String snakeToCamel(String str) {
+		// Capitalize first letter of string
+		str = str.substring(0, 1).toLowerCase() + str.substring(1);
+
+		// Run a loop till string
+		// string contains underscore
+		while (str.contains("_")) {
+
+			// Replace the first occurrence
+			// of letter that present after
+			// the underscore, to capitalize
+			// form of next letter of underscore
+			str = str.replaceFirst("_[a-z]", String.valueOf(Character.toUpperCase(str.charAt(str.indexOf("_") + 1))));
+		}
+
+		// Return string
+		return str;
+	}
 }

@@ -28,7 +28,7 @@ public class DasBatchCloseView extends AbstractRestService {
 			jobBatchPage = queryManager.selectPageBySql(sql, kvParams, JobBatch.class, page, limit);
 		} else {
 			jobBatchPage = (Page<JobBatch>)this.search(JobBatch.class, page, limit, select, sort, query);
-		}		
+		}
 		
 		ResponseObj resp = new ResponseObj();
 		resp.setItems(jobBatchPage.getList());

@@ -60,11 +60,15 @@ public class DasCloseBatchService extends AbstractQueryService {
 		condition.addFilter("id", wcsMheHr.getWorkUnit());
 		JobBatch batch = this.queryManager.selectByCondition(JobBatch.class, condition);
 		
-		if(batch == null) {
+		if (batch == null) {
+			return;
+		}
+		
+		if (!batch.getBatchPcs().equals(batch.getResultPcs())) {
 			return;
 		}
 
-		try {			
+		try {
 			// 2. WMS에 박스 실적 한 번에 전송
 			this.sendAllBoxToWms(batch);
 		} catch(Exception e) {
@@ -101,7 +105,7 @@ public class DasCloseBatchService extends AbstractQueryService {
 	 * 
 	 * @param batch
 	 */
-	private void setBatchInfoOnClosing(JobBatch batch) {
+	public void setBatchInfoOnClosing(JobBatch batch) {
 		batch.setStatus(JobBatch.STATUS_END);
 		batch.setResultBoxQty(this.calcBatchResultBoxQty(batch));
 		batch.setResultOrderQty(this.calcBatchResultOrderQty(batch));
@@ -118,7 +122,7 @@ public class DasCloseBatchService extends AbstractQueryService {
 	 * @param batch
 	 * @return
 	 */
-	private void resetRacksAndCells(JobBatch batch) {
+	public void resetRacksAndCells(JobBatch batch) {
 		// rack, cell
 		Map<String, Object> params = ValueUtil.newMap("domainId,batchId", batch.getDomainId(), batch.getBatchGroupId());
 	  	this.queryManager.executeBySql("UPDATE RACKS SET STATUS = null, BATCH_ID = null WHERE DOMAIN_ID = :domainId AND BATCH_ID = :batchId", params);
@@ -198,7 +202,7 @@ public class DasCloseBatchService extends AbstractQueryService {
 	 * 
 	 * @param batch
 	 */
-	private void closeProductivity(JobBatch batch) {
+	public void closeProductivity(JobBatch batch) {
 		if(ValueUtil.isEmpty(batch.getFinishedAt())) {
 			batch.setFinishedAt(new Date());
 		}
@@ -212,7 +216,7 @@ public class DasCloseBatchService extends AbstractQueryService {
 	 * @param batch
 	 * @return
 	 */
-	private int sendAllBoxToWms(JobBatch batch) {
+	public int sendAllBoxToWms(JobBatch batch) {
 		// 배치별 박스 실적 모두 조회
 		Query condition = new Query();
 		condition.addFilter("workUnit", batch.getId());
@@ -252,7 +256,7 @@ public class DasCloseBatchService extends AbstractQueryService {
 	 * @param batch
 	 * @return
 	 */
-	private int sendAllPickingToWms(JobBatch batch) {
+	public int sendAllPickingToWms(JobBatch batch) {
 		// WCS 배치 주문 정보 모두 조회
 		Query condition = new Query();
 		condition.addSelect("wh_cd", "work_unit", "shipto_id", "outb_no", "location_cd", "item_cd", "cmpt_qty");
@@ -279,7 +283,7 @@ public class DasCloseBatchService extends AbstractQueryService {
 	 * @param batch
 	 * @param wcsMheHr
 	 */
-	private void closeWmsWave(JobBatch batch, WcsMheHr wcsMheHr) {
+	public void closeWmsWave(JobBatch batch, WcsMheHr wcsMheHr) {
 		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
 		Query condition = new Query();
 		condition.addFilter("whCd", wcsMheHr.getWhCd());
@@ -300,7 +304,7 @@ public class DasCloseBatchService extends AbstractQueryService {
 	 * @param batch
 	 * @param wcsMheHr
 	 */
-	private void closeWcsWave(JobBatch batch, WcsMheHr wcsMheHr) {
+	public void closeWcsWave(JobBatch batch, WcsMheHr wcsMheHr) {
 		Date currentTime = new Date();
 		wcsMheHr.setStatus("F");
 		wcsMheHr.setCnfDatetime(currentTime);

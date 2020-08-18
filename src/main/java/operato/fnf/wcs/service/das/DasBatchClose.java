@@ -13,6 +13,7 @@ import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.model.ResponseObj;
 import xyz.anythings.base.service.impl.AbstractLogisService;
 import xyz.elidom.dbist.dml.Query;
+import xyz.elidom.exception.server.ElidomValidationException;
 import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.util.ValueUtil;
 
@@ -30,6 +31,9 @@ public class DasBatchClose extends AbstractLogisService {
 		//mheHrConds.addFilter("domainId", Domain.currentDomainId());
 		mheHrConds.addFilter("workUnit", workUnit);
 		WcsMheHr wcsMheHr = this.queryManager.selectByCondition(true, WcsMheHr.class, mheHrConds);
+		if (!"C".equals(wcsMheHr.getStatus())) {
+			throw new ElidomValidationException("작업배치[" + workUnit + "]는(은) DAS에서 작업완료가 되지 않았습니다.");
+		}
 		
 		// 1. WCS MHE_HR 정보로 부터 작업 배치를 조회 
 		Query batchConds = new Query();

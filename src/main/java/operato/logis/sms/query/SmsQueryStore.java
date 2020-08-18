@@ -350,4 +350,20 @@ public class SmsQueryStore extends AbstractQueryStore {
 	public String getSmsRtnInspResultQuery() {
 		return this.getQueryByPath("select/smsRtnInspResult");
 	}
+	/**
+	 * SMS 일자별 반품 요약 쿼리
+	 *
+	 * @return
+	 */
+	public String getSmsRtnSummaryQuery() {
+		return this.getQueryByPath("select/smsRtnSummary");
+	}
+	/**
+	 * SMS 일자별 출고 요약 쿼리
+	 *
+	 * @return
+	 */
+	public String getSmsDasSummaryQuery() {
+		return this.getQueryByPath("select/smsDasSummary");
+	}
 }

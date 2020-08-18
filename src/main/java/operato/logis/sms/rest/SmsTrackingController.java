@@ -30,10 +30,12 @@ import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.orm.manager.DataSourceManager;
 import xyz.elidom.orm.system.annotation.service.ApiDesc;
 import xyz.elidom.orm.system.annotation.service.ServiceDesc;
+import xyz.elidom.sys.SysConfigConstants;
 import xyz.elidom.sys.SysConstants;
 import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.sys.system.service.AbstractRestService;
 import xyz.elidom.sys.util.MessageUtil;
+import xyz.elidom.sys.util.SettingUtil;
 import xyz.elidom.sys.util.ThrowUtil;
 import xyz.elidom.sys.util.ValueUtil;
 import xyz.elidom.util.BeanUtil;
@@ -353,5 +355,88 @@ public class SmsTrackingController extends AbstractRestService {
 		
 		
 		return ValueUtil.newMap("items,total", pasInspList, pasInspList.size());
+	}
+	
+	@RequestMapping(value="/rtn_summary", method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
+	@ApiDesc(description="Search (Pagination) By SRTN Summary")
+	public Page<?> rtnSummary(
+			@RequestParam(name="page", required=false) Integer page, 
+			@RequestParam(name="limit", required=false) Integer limit, 
+			@RequestParam(name="select", required=false) String select, 
+			@RequestParam(name="sort", required=false) String sort,
+			@RequestParam(name="query", required=false) String query) {
+		
+		Filter[] filters = ValueUtil.isEmpty(query) ? null : this.jsonParser.parse(query, Filter[].class);
+		String selectQuery = queryStore.getSmsRtnSummaryQuery();
+		
+		Map<String, Object> params = ValueUtil.newMap("domainId", Domain.currentDomainId());
+		if(ValueUtil.isNotEmpty(filters)) {
+			for(Filter filter : filters) {
+				String name = filter.getName();
+				String op = filter.getOperator();
+				Object val = filter.getValue();
+
+				if(ValueUtil.isEqual(val, "true")) {
+					val = true;
+				} else if(ValueUtil.isEqual(val, "false")) {
+					val = false;
+				}
+
+				if(ValueUtil.isEmpty(op) || ValueUtil.isEqualIgnoreCase(op, "eq") || ValueUtil.isEqualIgnoreCase(op, "=")) {
+					params.put(name, val);
+
+				} else if(ValueUtil.isEqualIgnoreCase(op, "contains") || ValueUtil.isEqualIgnoreCase(op, "like")) {
+					params.put(name, "%" + val + "%");
+				}
+			}
+		}
+		
+		page = (page == null) ? 1 : page;
+		limit = (limit == null) ? ValueUtil.toInteger(SettingUtil.getValue(SysConfigConstants.SCREEN_PAGE_LIMIT, "10000")) : limit;
+		return this.queryManager.selectPageBySql(selectQuery, params, HashMap.class, page, limit);
+		
+	}
+	
+	@RequestMapping(value="/das_summary", method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
+	@ApiDesc(description="Search (Pagination) By SDAS, SDPS Summary")
+	public Page<?> dasSummary(
+			@RequestParam(name="page", required=false) Integer page, 
+			@RequestParam(name="limit", required=false) Integer limit, 
+			@RequestParam(name="select", required=false) String select, 
+			@RequestParam(name="sort", required=false) String sort,
+			@RequestParam(name="query", required=false) String query) {
+		
+		Filter[] filters = ValueUtil.isEmpty(query) ? null : this.jsonParser.parse(query, Filter[].class);
+		String selectQuery = queryStore.getSmsDasSummaryQuery();
+		
+		Map<String, Object> params = ValueUtil.newMap("domainId", Domain.currentDomainId());
+		if(ValueUtil.isNotEmpty(filters)) {
+			for(Filter filter : filters) {
+				String name = filter.getName();
+				String op = filter.getOperator();
+				Object val = filter.getValue();
+
+				if(ValueUtil.isEqual(val, "true")) {
+					val = true;
+				} else if(ValueUtil.isEqual(val, "false")) {
+					val = false;
+				}
+
+				if(ValueUtil.isEmpty(op) || ValueUtil.isEqualIgnoreCase(op, "eq") || ValueUtil.isEqualIgnoreCase(op, "=")) {
+					params.put(name, val);
+
+				} else if(ValueUtil.isEqualIgnoreCase(op, "contains") || ValueUtil.isEqualIgnoreCase(op, "like")) {
+					params.put(name, "%" + val + "%");
+				} else if(ValueUtil.isEqualIgnoreCase(op, "in")) {
+					
+					params.put(name, ValueUtil.toList(val));
+				}
+			}
+		}
+		
+		page = (page == null) ? 1 : page;
+		limit = (limit == null) ? ValueUtil.toInteger(SettingUtil.getValue(SysConfigConstants.SCREEN_PAGE_LIMIT, "10000")) : limit;
+		return this.queryManager.selectPageBySql(selectQuery, params, HashMap.class, page, limit);
+		
 	}
 }

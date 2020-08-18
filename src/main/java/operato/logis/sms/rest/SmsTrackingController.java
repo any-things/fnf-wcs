@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -428,8 +429,12 @@ public class SmsTrackingController extends AbstractRestService {
 				} else if(ValueUtil.isEqualIgnoreCase(op, "contains") || ValueUtil.isEqualIgnoreCase(op, "like")) {
 					params.put(name, "%" + val + "%");
 				} else if(ValueUtil.isEqualIgnoreCase(op, "in")) {
-					
-					params.put(name, ValueUtil.toList(val));
+					String[] values = val.toString().split(",");
+					List<String> list = new ArrayList<String>(values.length);
+					for (String str : values) {
+						list.add(str);
+					}
+					params.put(name, list);
 				}
 			}
 		}

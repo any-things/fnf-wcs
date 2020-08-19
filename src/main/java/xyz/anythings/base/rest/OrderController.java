@@ -137,7 +137,7 @@ public class OrderController extends AbstractRestService {
 			tempJobSeq = ValueUtil.toString(seqMap.get("job_seq"));
 		}
 		
-		
+		String title = "";
 		for (Map order : list) {
 			if (ValueUtil.isEmpty(order.get("brand_cd")) || ValueUtil.isEmpty(order.get("sku_cd")) || ValueUtil.isEmpty(order.get("order_qty"))) {
 				String msg = MessageUtil.getMessage("Empty", "빈칸이 있습니다.");
@@ -165,6 +165,8 @@ public class OrderController extends AbstractRestService {
 			orderInfo.setOrderQty(ValueUtil.toInteger(order.get("order_qty")));
 			
 			orderList.add(orderInfo);
+			
+			title = ValueUtil.toString(order.get("title"));
 		}
 		
 		if(ValueUtil.isNotEmpty(orderList)) {
@@ -205,7 +207,7 @@ public class OrderController extends AbstractRestService {
 			jobBatch.setBatchGroupId(ValueUtil.toString(batch.get("batch_id")));
 			jobBatch.setWmsBatchNo(ValueUtil.toString(batch.get("batch_id")));
 			jobBatch.setWcsBatchNo(ValueUtil.toString(batch.get("batch_id")));
-			jobBatch.setTitle(ValueUtil.toString(batch.get("batch_id")) + " " + FnFConstants.ORDER_RECEIVE_UPLOAD);
+			jobBatch.setTitle(title);
 			jobBatch.setComCd(FnFConstants.FNF_COM_CD);
 			jobBatch.setJobType(SmsConstants.JOB_TYPE_SRTN);
 			jobBatch.setBatchType(rtnType);

@@ -15,7 +15,7 @@ public class RecallBatchService extends AbstractQueryService {
 		Query conds = new Query();
 		conds.addFilter("whCd", FnFConstants.WH_CD_ICF);
 		conds.addFilter("bizType", jobType);
-		conds.addFilter("workDate", workDate);
+		conds.addFilter("workDate", ">=", workDate);
 		conds.addFilter("delYn", "Y");
 		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheHr.class);
 		List<WmsMheHr> delWaveList = wmsQueryMgr.selectList(WmsMheHr.class, conds);

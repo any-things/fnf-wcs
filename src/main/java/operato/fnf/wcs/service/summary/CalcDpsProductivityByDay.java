@@ -103,6 +103,14 @@ public class CalcDpsProductivityByDay extends AbstractQueryService {
 			dpsProductivities.addAll(inspSum);
 		}
 		
+		for (DpsProductivity obj: dpsProductivities) {
+			obj.setWorkMinutes(Math.round(obj.getWorkMinutes()*100)/100);
+			obj.setWorkHours(Math.round(obj.getWorkHours()*100)/100);
+			obj.setPh(Math.round(obj.getPh()*100)/100);
+			obj.setPhp(Math.round(obj.getPhp()*100)/100);
+			obj.setWorkers(Math.round(obj.getWorkers()*100)/100);
+		}
+		
 		Collections.sort(dpsProductivities);
 		ResponseObj resp = new ResponseObj();
 		resp.setItems(dpsProductivities);

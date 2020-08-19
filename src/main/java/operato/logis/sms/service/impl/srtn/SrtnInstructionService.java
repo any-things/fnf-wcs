@@ -337,7 +337,7 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 			AnyOrmUtil.insertBatch(dasOrderList, 100);
 			
 			String styleGroupSql = "select item_style, sum(order_qty) as order_qty, row_number() over (order by sum(order_qty) desc) as plt_no from mhe_das_order where batch_no = :batchId group by item_style";
-			Map<String,Object> styleGroupParams = ValueUtil.newMap("batchId,skuCd", batch.getId(), skuCdList);
+			Map<String,Object> styleGroupParams = ValueUtil.newMap("batchId,skuCd", batch.getBatchGroupId(), skuCdList);
 			List<Map> styleGroupList = this.queryManager.selectListBySql(styleGroupSql, styleGroupParams, Map.class, 0, 0);
 			
 			for (WcsMheDasOrder wcsMheDasOrder : dasOrderList) {

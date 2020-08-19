@@ -19,7 +19,7 @@ FROM
   	 MHE_HR HR
 WHERE 
  	 HR.WH_CD = :whCd
- 	 AND HR.WORK_DATE >= :jobDate
+ 	 AND HR.WORK_DATE = :jobDate
  	 AND HR.STATUS = :status
  	 AND HR.BIZ_TYPE IN (:jobType)
  	 AND HR.DEL_YN = 'N'

@@ -16,7 +16,7 @@ import xyz.elidom.util.BeanUtil;
 public class DasBatchAutoReceiveJob extends AbstractFnFJob {
 	
 	@Transactional
-	@Scheduled(initialDelay=60000, fixedDelay=59000)
+	@Scheduled(initialDelay=90000, fixedDelay=89000)
 	public void job() {
 		if(!this.isJobEnabeld()) {
 			return;

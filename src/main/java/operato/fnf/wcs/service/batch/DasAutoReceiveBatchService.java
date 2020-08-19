@@ -14,6 +14,7 @@ import xyz.anythings.base.service.impl.LogisServiceDispatcher;
 import xyz.anythings.sys.AnyConstants;
 import xyz.anythings.sys.event.EventPublisher;
 import xyz.elidom.sys.entity.Domain;
+import xyz.elidom.sys.util.SettingUtil;
 import xyz.elidom.util.BeanUtil;
 import xyz.elidom.util.DateUtil;
 import xyz.elidom.util.ValueUtil;
@@ -29,7 +30,7 @@ public class DasAutoReceiveBatchService extends AbstractLogisService {
 	@Autowired
 	protected EventPublisher eventPublisher;
 
-	//private final String DAS_AUTO_RECEIVE_DAYS_KEY = "das.auto.receive.days";
+	private final String DAS_AUTO_RECEIVE_DAYS_KEY = "das.auto.receive.days";
 	
 	public ResponseObj dasAutoReceiveBatchService(Map<String, String> params) {
 		String comCd = "_na_";
@@ -42,27 +43,25 @@ public class DasAutoReceiveBatchService extends AbstractLogisService {
 			workDate = DateUtil.currentDate();
 		}
 		
-		//Integer autoReceiveDays = 15;
-		//try {			
-		//	autoReceiveDays = Integer.parseInt(SettingUtil.getValue(DAS_AUTO_RECEIVE_DAYS_KEY));
-		//} catch(Exception e) {
-		//	logger.error("DasAutoReceiveBatchService parseInt Error~~", e);
-		//}
-		
-		//String toDate = DateUtil.addDateToStr(DateUtil.parse(workDate, "yyyyMMdd"), autoReceiveDays);
-		
-		//while (workDate.compareTo(toDate) <= 0) {
-		BatchReceipt receipt = BeanUtil.get(DasAutoReceiveBatchService.class).prepare(areaCd, stageCd, comCd, workDate, jobType);
-		
-		if (AnyConstants.COMMON_STATUS_FINISHED.equalsIgnoreCase(receipt.getStatus())) {
-			ResponseObj resp = new ResponseObj();
-			resp.setMsg("Receive finished~~~");
-			return resp;
+		Integer autoReceiveDays = 15;
+		try {			
+			autoReceiveDays = Integer.parseInt(SettingUtil.getValue(DAS_AUTO_RECEIVE_DAYS_KEY));
+		} catch(Exception e) {
+			logger.error("DasAutoReceiveBatchService parseInt Error~~", e);
 		}
 		
-		this.serviceDispatcher.getReceiveBatchService().startToReceive(receipt);
-		//workDate = DateUtil.addDateToStr(DateUtil.parse(workDate, "yyyyMMdd"), 1);
-		//}
+		String toDate = DateUtil.addDateToStr(DateUtil.parse(workDate, "yyyy-MM-dd"), autoReceiveDays);
+		
+		while (workDate.compareTo(toDate) <= 0) {
+			BatchReceipt receipt = BeanUtil.get(DasAutoReceiveBatchService.class).prepare(areaCd, stageCd, comCd, workDate, jobType);
+			
+			workDate = DateUtil.addDateToStr(DateUtil.parse(workDate, "yyyy-MM-dd"), 1);
+			if (AnyConstants.COMMON_STATUS_FINISHED.equalsIgnoreCase(receipt.getStatus())) {
+				continue;
+			}
+			
+			this.serviceDispatcher.getReceiveBatchService().startToReceive(receipt);
+		}
 		
 		return new ResponseObj();
 	}

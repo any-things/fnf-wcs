@@ -542,7 +542,21 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 		this.dpsInspectionService.printInvoiceLabel(batch, inspection, printerId);
 		
 		// 12. 리턴 
-		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, job));
+		List<DpsInspItem> giftItems = this.dpsInspectionService.searchGiftItems(batch, job.getBoxId());	
+//		List<DpsInspItem> giftItems = new ArrayList<>();
+//		DpsInspItem a = new DpsInspItem();
+//		a.setSkuNm("aasdfasdfsdfasdanm");
+//		a.setSkuCd("aaaasdfasdfasdfcd");
+//		a.setOrderQty(1);
+//		giftItems.add(a);
+		// 사은품 조회
+		DpsInspection result = new DpsInspection();
+		result.setBoxId(job.getBoxId());
+		result.setOrderNo(job.getRefNo());
+		result.setStatus(job.getStatus());
+		result.setItems(giftItems);
+		// 이벤트 처리 결과 셋팅
+		event.setReturnResult(new BaseResponse(true, LogisConstants.OK_STRING, result));
 		event.setExecuted(true);
 	}
 	

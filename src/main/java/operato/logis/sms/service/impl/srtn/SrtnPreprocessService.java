@@ -184,6 +184,10 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 			}
 		}
 		
+		if(ValueUtil.isEmpty(enableChute)) {
+			throw ThrowUtil.newValidationErrorWithNoLog(true, "선택한 슈트가 없습니다.");
+		}
+		
 		// 2-1. 현재 셀에 매핑되어 있는 sku를 조회하여 할당할 batch에서 미리 셀을 할당한다.
 		this.alreadyAssignSku(items);
 		// 2-2. 기본 로직대로 할당 후 카테고리에 할당해야 한다면 다시 기존에 카테고리 셀에 할당되어 있는 카테고리 목록을 조회하여 할당한다.

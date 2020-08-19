@@ -104,11 +104,11 @@ public class CalcDpsProductivityByDay extends AbstractQueryService {
 		}
 		
 		for (DpsProductivity obj: dpsProductivities) {
-			obj.setWorkMinutes(Math.round(obj.getWorkMinutes()*100)/100);
-			obj.setWorkHours(Math.round(obj.getWorkHours()*100)/100);
-			obj.setPh(Math.round(obj.getPh()*100)/100);
-			obj.setPhp(Math.round(obj.getPhp()*100)/100);
-			obj.setWorkers(Math.round(obj.getWorkers()*100)/100);
+			obj.setWorkMinutes((float)Math.round(obj.getWorkMinutes()*100)/100);
+			obj.setWorkHours((float)Math.round(obj.getWorkHours()*100)/100);
+			obj.setPh((float)Math.round(obj.getPh()*100)/100);
+			obj.setPhp((float)Math.round(obj.getPhp()*100)/100);
+			obj.setWorkers((float)Math.round(obj.getWorkers()*100)/100);
 		}
 		
 		Collections.sort(dpsProductivities);

@@ -200,6 +200,9 @@ public class JobBatch extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	@Column (name = "status", length = 10)
 	private String status;
 	
+	@Column (name = "rfid_yn", length = 10)
+	private String rfidYn;
+	
 	/**
 	 * 일별 마감 처리가 되었는지 여부
 	 */
@@ -542,6 +545,14 @@ public class JobBatch extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 		}
 	}
 		
+	public String getRfidYn() {
+		return rfidYn;
+	}
+
+	public void setRfidYn(String rfidYn) {
+		this.rfidYn = rfidYn;
+	}
+
 	/**
 	 * 상태 업데이트, 즉시 반영
 	 *  

@@ -17,6 +17,7 @@ import operato.fnf.wcs.entity.WcsMheDr;
 import operato.fnf.wcs.entity.WcsMheHr;
 import operato.fnf.wcs.entity.WmsMheDr;
 import operato.fnf.wcs.entity.WmsMheHr;
+import operato.fnf.wcs.entity.WmsMheItemBarcode;
 import operato.logis.sms.SmsConstants;
 import operato.logis.sms.query.SmsQueryStore;
 import xyz.anythings.base.LogisConstants;
@@ -235,6 +236,7 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 	 * @param params
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	private BatchReceipt startToReceiveData(BatchReceipt receipt, BatchReceiptItem item, Object ... params) {		
 		// 1. 별도 트랜잭션 처리를 위해 컴포넌트 자신의 레퍼런스 준비
 		SmsReceiveBatchService selfSvc = BeanUtil.get(SmsReceiveBatchService.class);
@@ -255,6 +257,19 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 			this.queryManager.update(batch, "batchType");
 			// 5. 데이터 복사  
 			selfSvc.cloneData(item.getBatchId(), receipt, item);
+			
+			String orderSql = "select sku_cd from orders where batch_id = :batchId and sku_cd is not null limit 1";
+			Map<String, Object> skuValue = this.queryManager.selectBySql(orderSql, ValueUtil.newMap("batchId", batch.getId()), Map.class);
+			
+			IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheItemBarcode.class);
+			String sql = "select * from mhe_item_barcode where item_cd = :itemCd";
+			WmsMheItemBarcode sku = wmsQueryMgr.selectBySql(sql, ValueUtil.newMap("itemCd", skuValue.get("sku_cd")), WmsMheItemBarcode.class);
+			if(ValueUtil.isNotEmpty(sku)) {
+				batch.setRfidYn(sku.getRfidItemYn());
+			} else {
+				batch.setRfidYn(LogisConstants.N_CAP_STRING);
+			}
+			this.queryManager.update(batch, "rfidYn");
 						
 			// 6. JobBatch 상태 변경  
 			batch.updateStatusImmediately(LogisConstants.isB2CJobType(batch.getJobType())? JobBatch.STATUS_READY : JobBatch.STATUS_WAIT);

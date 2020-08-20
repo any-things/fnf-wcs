@@ -298,13 +298,12 @@ public class SmsQueryStore extends AbstractQueryStore {
 	public String getSrtnInspBoxTrg() {
 		return this.getQueryByPath("srtn/srtnInspBoxTrg");
 	}
-
 	/**
-	 * 매장 반품 검수예정정보 수신 체크 업데이트
+	 * 매장 반품 검수예정정보 조회
 	 * 
 	 */
-	public String getSrtnInspBoxTrgUpdate() {
-		return this.getQueryByPath("srtn/srtnInspBoxTrgUpdate");
+	public String getSrtnInspCnfmBox() {
+		return this.getQueryByPath("srtn/srtnInspCnfmBox");
 	}
 	
 	/**
@@ -365,5 +364,21 @@ public class SmsQueryStore extends AbstractQueryStore {
 	 */
 	public String getSmsDasSummaryQuery() {
 		return this.getQueryByPath("select/smsDasSummary");
+	}
+	/**
+	 * SMS PAS - DAS(출고) 실적 조회
+	 *
+	 * @return
+	 */
+	public String getSmsPasDasResultQuery() {
+		return this.getQueryByPath("select/smsPasDasResultSummary");
+	}
+	/**
+	 * SMS PAS - DAS(반품) 실적 조회
+	 *
+	 * @return
+	 */
+	public String getSmsPasRtnResultQuery() {
+		return this.getQueryByPath("select/smsPasRtnResultSummary");
 	}
 }

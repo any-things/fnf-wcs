@@ -136,7 +136,8 @@ public class SmsCloseBatchService extends AbstractQueryService {
 	 * 소터 실적으로 검수정보가 없는 정보들은 매장 반품예정 검수 스캔결과(WMT_UIF_IMP_MHE_RTN_SCAN) 테이블로 전송
 	 */
 	private void sendInspBoxScanResultToWms(JobBatch batch) {
-		if(ValueUtil.isEqualIgnoreCase(SmsConstants.JOB_TYPE_SRTN, batch.getJobType()) && ValueUtil.isEqualIgnoreCase(batch.getBatchType(), FnFConstants.ORDER_RECEIVE_WMS)) {
+		if(ValueUtil.isEqualIgnoreCase(SmsConstants.JOB_TYPE_SRTN, batch.getJobType()) && ValueUtil.isEqualIgnoreCase(batch.getBatchType(), FnFConstants.ORDER_RECEIVE_WMS)
+				&& ValueUtil.isEqualIgnoreCase(batch.getRfidYn(), LogisConstants.N_CAP_STRING)) {
 			this.smsInspSendSvc.sendInspBoxScanResultToWms(batch);
 		}
 	}

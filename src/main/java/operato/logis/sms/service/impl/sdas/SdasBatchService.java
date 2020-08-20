@@ -144,7 +144,7 @@ public class SdasBatchService extends AbstractLogisService implements IBatchServ
 		// rack, cell
 		Map<String, Object> params = ValueUtil.newMap("domainId,batchId", batch.getDomainId(), batch.getBatchGroupId());
 	  	this.queryManager.executeBySql("UPDATE RACKS SET STATUS = null, BATCH_ID = null WHERE DOMAIN_ID = :domainId AND BATCH_ID = :batchId", params);
-	  	this.queryManager.executeBySql("UPDATE CELLS SET CLASS_CD = null, BATCH_ID = null WHERE DOMAIN_ID = :domainId AND BATCH_ID = :batchId", params);
+	  	this.queryManager.executeBySql("UPDATE CELLS SET CLASS_CD = null, BATCH_ID = null, BRAND_CD = null WHERE DOMAIN_ID = :domainId AND BATCH_ID = :batchId", params);
 	}
 	
 	/**

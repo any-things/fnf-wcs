@@ -208,7 +208,7 @@ public class SdasPreprocessService extends AbstractExecutionService implements I
 		}
 		
 		// 2-1. 현재 셀에 매핑되어 있는 shop를 조회하여 할당할 batch에서 미리 셀을 할당한다.
-		this.alreadyAssignShop(items);
+		this.alreadyAssignShop(items, batch);
 		
 		
 		// 3. 사용가능한 Cell을 사용 순서순으로 조회한다.
@@ -380,7 +380,7 @@ public class SdasPreprocessService extends AbstractExecutionService implements I
 		}
 	}
 	
-	private void alreadyAssignShop(List<OrderPreprocess> items) {
+	private void alreadyAssignShop(List<OrderPreprocess> items, JobBatch jobBatch) {
 		Query query = new Query();
 		query.addFilter("equipType", "Sorter");
 		query.addFilter("categoryFlag", false);
@@ -388,7 +388,7 @@ public class SdasPreprocessService extends AbstractExecutionService implements I
 		List<Cell> cellList = this.queryManager.selectList(Cell.class, query);
 		for (Cell cell : cellList) {
 			for (OrderPreprocess item : items) {
-				if(ValueUtil.isEqual(cell.getClassCd(), item.getCellAssgnCd())) {
+				if(ValueUtil.isEqual(cell.getClassCd(), item.getCellAssgnCd()) && ValueUtil.isEqual(cell.getBrandCd(), jobBatch.getBrandCd())) {
 					String chuteNo = cell.getEquipCd().split("-")[1];
 					int chuteCd = Integer.parseInt(chuteNo);
 					item.setSubEquipCd(String.format("%03d", chuteCd));

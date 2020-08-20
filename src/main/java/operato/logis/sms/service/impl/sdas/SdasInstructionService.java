@@ -159,7 +159,7 @@ public class SdasInstructionService extends AbstractQueryService implements IIns
 		
 		this.updateRackStatus(batch, preprocesses);
 		
-		AnyOrmUtil.updateBatch(cellList, 100, "classCd", "batchId");
+		AnyOrmUtil.updateBatch(cellList, 100, "classCd", "batchId", "brandCd");
 		if(!isMerged) {
 			batch.setStatus(JobBatch.STATUS_WORKING);
 			batch.setInstructedAt(new Date());
@@ -174,6 +174,7 @@ public class SdasInstructionService extends AbstractQueryService implements IIns
 		for (OrderPreprocess preprocess : preprocesses) {
 			cell.setClassCd(preprocess.getCellAssgnCd());
 			cell.setBatchId(batch.getBatchGroupId());
+			cell.setBrandCd(batch.getBrandCd());
 		}
 	}
 	

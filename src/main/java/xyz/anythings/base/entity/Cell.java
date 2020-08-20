@@ -81,6 +81,9 @@ public class Cell extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	
 	@Column (name = "batch_id", length = 40)
 	private String batchId;
+	
+	@Column (name = "brand_cd", length = 10)
+	private String brandCd;
 
 	public String getId() {
 		return id;
@@ -232,6 +235,14 @@ public class Cell extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 
 	public void setBatchId(String batchId) {
 		this.batchId = batchId;
+	}
+
+	public String getBrandCd() {
+		return brandCd;
+	}
+
+	public void setBrandCd(String brandCd) {
+		this.brandCd = brandCd;
 	}
 
 	@Override

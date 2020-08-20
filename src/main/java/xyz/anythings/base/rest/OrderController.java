@@ -227,6 +227,7 @@ public class OrderController extends AbstractRestService {
 			jobBatch.setBatchPcs(ValueUtil.toInteger(batch.get("pcs")));
 			jobBatch.setStatus(JobBatch.STATUS_WAIT);
 			jobBatch.setClosedFlag(false);
+			jobBatch.setRfidYn(LogisConstants.N_CAP_STRING);
 			this.queryManager.insert(jobBatch);
 		}
 		

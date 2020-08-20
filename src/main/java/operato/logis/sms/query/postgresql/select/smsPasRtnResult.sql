@@ -1,6 +1,7 @@
 select 
 	mpr.batch_no as batch_id, mpr.job_type, mpr.chute_no, mpr.sku_cd, mpr.sku_bcd, mpr.strr_id
-	, mpo.order_qty, mpr.qty, mdrbr.cmpt_qty, mpr.qty - mdrbr.cmpt_qty as diff_qty
+	, mpo.order_qty, coalesce(mpr.qty, 0) as qty, coalesce(mdrbr.cmpt_qty, 0) as cmpt_qty
+	, coalesce(mpr.qty, 0) - coalesce(mdrbr.cmpt_qty, 0) as diff_qty
 from 
 	mhe_pas_order mpo
 left outer join 

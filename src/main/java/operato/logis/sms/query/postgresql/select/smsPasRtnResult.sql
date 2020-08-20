@@ -1,5 +1,5 @@
 select 
-	mpr.batch_no, mpr.job_type, mpr.chute_no, mpr.sku_cd, mpr.sku_bcd, mpr.strr_id
+	mpr.batch_no as batch_id, mpr.job_type, mpr.chute_no, mpr.sku_cd, mpr.sku_bcd, mpr.strr_id
 	, mpo.order_qty, mpr.qty, mdrbr.cmpt_qty, mpr.qty - mdrbr.cmpt_qty as diff_qty
 from 
 	mhe_pas_order mpo

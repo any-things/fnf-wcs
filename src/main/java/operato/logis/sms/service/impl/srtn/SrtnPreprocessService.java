@@ -1,6 +1,7 @@
 package operato.logis.sms.service.impl.srtn;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -178,9 +179,11 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 		
 		// 2. 사용자가 선택한 슈트번호로 데이터 가공
 		List<String> enableChute = new ArrayList<String>();
+		List<String> reverseChute = new ArrayList<String>();
 		for(Entry<String, Object> entry : chuteStatus.entrySet()) {
 			if(ValueUtil.isEqual(entry.getValue(), SysConstants.CAP_Y_STRING)) {
 				enableChute.add(entry.getKey().replaceAll("chute-check-", ""));
+				reverseChute.add(entry.getKey().replaceAll("chute-check-", ""));
 			}
 		}
 		
@@ -200,14 +203,9 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 		List<Map> cellList = this.queryManager.selectListBySql(sql, paramMap, Map.class, 0, 0);
 		
 		// 4. 사용가능한 Cell에 주문정보를 매핑한다.
-		int cellIdx;
-		for(cellIdx = 0 ; cellIdx < cellList.size() ; cellIdx++) {
-			if(ValueUtil.isEmpty(items.get(cellIdx).getSubEquipCd()) && ValueUtil.isEmpty(items.get(cellIdx).getClassCd())) {
-				items.get(cellIdx).setSubEquipCd(ValueUtil.toString(cellList.get(cellIdx).get("chute_no")));
-				items.get(cellIdx).setClassCd(ValueUtil.toString(cellList.get(cellIdx).get("cell_cd")));
-			}
-			if(cellIdx >= items.size() - 1) break;
-		}
+		
+		Collections.reverse(reverseChute);
+		this.assignChuteCell(items, enableChute, reverseChute, cellList);
 		
 		if(isUpdate) {
 			this.queryManager.updateBatch(items);
@@ -217,7 +215,7 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 		
 		// 5. 사용가능한 Cell 수량보다 주문수량이 많을 경우 각 호기별 카테고리 매핑 Cell을 조회한다.
 		// 5-1. 카테고리 Cell에 남은 Sku에 해당하는 카테고리를 조회하여 매핑한다.
-		if(cellIdx < items.size() - 1) {
+		if(cellList.size() < items.size()) {
 			this.categoryCellAssign(batch, items, enableChute);
 		}
 	}
@@ -426,7 +424,34 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 		}
 	}
 	
-	/*private void alreadyAssignCategory() {
+	@SuppressWarnings("rawtypes")
+	private void assignChuteCell(List<OrderPreprocess> items, List<String> enableChute, List<String> reverseChute, List<Map> cellList) {
+		boolean normalFlag = true;
+		int idx = 0;
+		int cellIdx = 0;
 		
-	}*/
+		for (OrderPreprocess orderPreprocess : items) {
+			if(normalFlag) {
+				orderPreprocess.setSubEquipCd(enableChute.get(idx));
+			} else {
+				orderPreprocess.setSubEquipCd(reverseChute.get(idx));
+			}
+			idx++;
+			if(idx >= enableChute.size()) {
+				idx = 0;
+				normalFlag = !normalFlag;
+			}
+			cellIdx++;
+			if(cellIdx >= cellList.size()) break;
+		}
+		
+		for (Map cell : cellList) {
+			for (OrderPreprocess orderPreprocess : items) {
+				if(ValueUtil.isNotEmpty(orderPreprocess.getSubEquipCd()) && ValueUtil.isEmpty(orderPreprocess.getClassCd()) && ValueUtil.isEqual(orderPreprocess.getSubEquipCd(), cell.get("chute_no"))) {
+					orderPreprocess.setClassCd(ValueUtil.toString(cell.get("cell_cd")));
+					break;
+				}
+			}
+		}
+	}
 }

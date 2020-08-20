@@ -371,7 +371,7 @@ public class SmsQueryStore extends AbstractQueryStore {
 	 * @return
 	 */
 	public String getSmsPasDasResultQuery() {
-		return this.getQueryByPath("select/smsPasDasResultSummary");
+		return this.getQueryByPath("select/smsPasDasResult");
 	}
 	/**
 	 * SMS PAS - DAS(반품) 실적 조회
@@ -379,6 +379,6 @@ public class SmsQueryStore extends AbstractQueryStore {
 	 * @return
 	 */
 	public String getSmsPasRtnResultQuery() {
-		return this.getQueryByPath("select/smsPasRtnResultSummary");
+		return this.getQueryByPath("select/smsPasRtnResult");
 	}
 }

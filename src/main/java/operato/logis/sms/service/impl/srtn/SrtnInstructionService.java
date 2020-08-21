@@ -218,66 +218,7 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 			throw ThrowUtil.newValidationErrorWithNoLog(msg);
 		}
 		
-		if(ValueUtil.isEqual(batch.getRfidYn(), LogisConstants.N_CAP_STRING)) {
-			Map<String, Object> inspParams = ValueUtil.newMap(
-					"strrId,season,rtnType,jobSeq,ifAction,wcsIfChk", batchInfo[0], batchInfo[1],
-					batchInfo[2], batchInfo[3], LogisConstants.COMMON_STATUS_SKIPPED, LogisConstants.N_CAP_STRING);
-			
-			IQueryManager dsQueryManager = this.getDataSourceQueryManager(WmsWmtUifImpInbRtnTrg.class);
-			List<WmsWmtUifImpInbRtnTrg> rtnTrgList = dsQueryManager.selectListBySql(queryStore.getSrtnInspBoxTrg(), inspParams, WmsWmtUifImpInbRtnTrg.class, 0, 0);
-			
-			List<String> skuCdList = AnyValueUtil.filterValueListBy(rtnTrgList, "refDetlNo");
-			
-			if(ValueUtil.isEmpty(skuCdList)) {
-				skuCdList.add("1");
-			}
-			
-			String skuInfoQuery = queryStore.getSrtnCnfmQuery();
-			Map<String,Object> sqlParams = ValueUtil.newMap("batchId,skuCd", batch.getId(), skuCdList);
-			List<Map> skuInfoList = this.queryManager.selectListBySql(skuInfoQuery, sqlParams, Map.class, 0, 0);
-			
-			Query condition = new Query();
-			condition.addFilter("id", batch.getBatchGroupId());
-			JobBatch mainBatch = this.queryManager.select(JobBatch.class, condition);
-			
-			
-			List<WcsMhePasOrder> pasOrderList = new ArrayList<WcsMhePasOrder>(rtnTrgList.size());
-			String srtDate = DateUtil.dateStr(new Date(), "yyyyMMddHHmmss");
-			
-			for (WmsWmtUifImpInbRtnTrg rtnTrg : rtnTrgList) {
-				WcsMhePasOrder wcsMhePasOrder = new WcsMhePasOrder();
-				wcsMhePasOrder.setId(UUID.randomUUID().toString());
-				wcsMhePasOrder.setBatchNo(batch.getBatchGroupId());
-				wcsMhePasOrder.setMheNo(batch.getEquipCd());
-				wcsMhePasOrder.setJobDate(mainBatch.getJobDate().replaceAll("-", ""));
-				wcsMhePasOrder.setInputDate(rtnTrg.getInbEctDate());
-				wcsMhePasOrder.setJobType(WcsMhePasOrder.JOB_TYPE_RTN);
-				wcsMhePasOrder.setBoxId(rtnTrg.getRefNo());
-				wcsMhePasOrder.setSkuCd(rtnTrg.getRefDetlNo());
-				wcsMhePasOrder.setShopCd(rtnTrg.getSupprId());
-				wcsMhePasOrder.setShopNm(rtnTrg.getSupprNm());
-				wcsMhePasOrder.setOrderQty(rtnTrg.getInbEctQty());
-				wcsMhePasOrder.setInsDatetime(DateUtil.getDate());
-				wcsMhePasOrder.setIfYn(LogisConstants.N_CAP_STRING);
-				wcsMhePasOrder.setStrrId(rtnTrg.getStrrId());
-				
-				for (Map skuInfo : skuInfoList) {
-					if(ValueUtil.isEqual(skuInfo.get("sku_cd"), rtnTrg.getRefDetlNo())) {
-						wcsMhePasOrder.setSkuBcd(ValueUtil.toString(skuInfo.get("sku_barcd2")));
-						wcsMhePasOrder.setChuteNo(ValueUtil.toString(skuInfo.get("sub_equip_cd")));	
-					}
-				}
-				pasOrderList.add(wcsMhePasOrder);
-				
-				rtnTrg.setWcsIfChk(LogisConstants.Y_CAP_STRING);
-				rtnTrg.setWcsIfChkDtm(srtDate);
-			}
-			
-			if(ValueUtil.isNotEmpty(pasOrderList)) {
-				AnyOrmUtil.insertBatch(pasOrderList, 100);
-			}
-			dsQueryManager.updateBatch(rtnTrgList);
-		} else {
+		if(ValueUtil.isEqual(batch.getRfidYn(), LogisConstants.Y_CAP_STRING)) {
 			Map<String, Object> inspParams = ValueUtil.newMap(
 					"strrId,season,rtnType,jobSeq,wcsIfChk", batchInfo[0], batchInfo[1],
 					batchInfo[2], batchInfo[3], LogisConstants.N_CAP_STRING);
@@ -336,6 +277,65 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 				AnyOrmUtil.insertBatch(pasOrderList, 100);
 			}
 			dsQueryManager.updateBatch(rtnCnfmList);
+		} else {
+			Map<String, Object> inspParams = ValueUtil.newMap(
+					"strrId,season,rtnType,jobSeq,ifAction,wcsIfChk", batchInfo[0], batchInfo[1],
+					batchInfo[2], batchInfo[3], LogisConstants.COMMON_STATUS_SKIPPED, LogisConstants.N_CAP_STRING);
+			
+			IQueryManager dsQueryManager = this.getDataSourceQueryManager(WmsWmtUifImpInbRtnTrg.class);
+			List<WmsWmtUifImpInbRtnTrg> rtnTrgList = dsQueryManager.selectListBySql(queryStore.getSrtnInspBoxTrg(), inspParams, WmsWmtUifImpInbRtnTrg.class, 0, 0);
+			
+			List<String> skuCdList = AnyValueUtil.filterValueListBy(rtnTrgList, "refDetlNo");
+			
+			if(ValueUtil.isEmpty(skuCdList)) {
+				skuCdList.add("1");
+			}
+			
+			String skuInfoQuery = queryStore.getSrtnCnfmQuery();
+			Map<String,Object> sqlParams = ValueUtil.newMap("batchId,skuCd", batch.getId(), skuCdList);
+			List<Map> skuInfoList = this.queryManager.selectListBySql(skuInfoQuery, sqlParams, Map.class, 0, 0);
+			
+			Query condition = new Query();
+			condition.addFilter("id", batch.getBatchGroupId());
+			JobBatch mainBatch = this.queryManager.select(JobBatch.class, condition);
+			
+			
+			List<WcsMhePasOrder> pasOrderList = new ArrayList<WcsMhePasOrder>(rtnTrgList.size());
+			String srtDate = DateUtil.dateStr(new Date(), "yyyyMMddHHmmss");
+			
+			for (WmsWmtUifImpInbRtnTrg rtnTrg : rtnTrgList) {
+				WcsMhePasOrder wcsMhePasOrder = new WcsMhePasOrder();
+				wcsMhePasOrder.setId(UUID.randomUUID().toString());
+				wcsMhePasOrder.setBatchNo(batch.getBatchGroupId());
+				wcsMhePasOrder.setMheNo(batch.getEquipCd());
+				wcsMhePasOrder.setJobDate(mainBatch.getJobDate().replaceAll("-", ""));
+				wcsMhePasOrder.setInputDate(rtnTrg.getInbEctDate());
+				wcsMhePasOrder.setJobType(WcsMhePasOrder.JOB_TYPE_RTN);
+				wcsMhePasOrder.setBoxId(rtnTrg.getRefNo());
+				wcsMhePasOrder.setSkuCd(rtnTrg.getRefDetlNo());
+				wcsMhePasOrder.setShopCd(rtnTrg.getSupprId());
+				wcsMhePasOrder.setShopNm(rtnTrg.getSupprNm());
+				wcsMhePasOrder.setOrderQty(rtnTrg.getInbEctQty());
+				wcsMhePasOrder.setInsDatetime(DateUtil.getDate());
+				wcsMhePasOrder.setIfYn(LogisConstants.N_CAP_STRING);
+				wcsMhePasOrder.setStrrId(rtnTrg.getStrrId());
+				
+				for (Map skuInfo : skuInfoList) {
+					if(ValueUtil.isEqual(skuInfo.get("sku_cd"), rtnTrg.getRefDetlNo())) {
+						wcsMhePasOrder.setSkuBcd(ValueUtil.toString(skuInfo.get("sku_barcd2")));
+						wcsMhePasOrder.setChuteNo(ValueUtil.toString(skuInfo.get("sub_equip_cd")));	
+					}
+				}
+				pasOrderList.add(wcsMhePasOrder);
+				
+				rtnTrg.setWcsIfChk(LogisConstants.Y_CAP_STRING);
+				rtnTrg.setWcsIfChkDtm(srtDate);
+			}
+			
+			if(ValueUtil.isNotEmpty(pasOrderList)) {
+				AnyOrmUtil.insertBatch(pasOrderList, 100);
+			}
+			dsQueryManager.updateBatch(rtnTrgList);
 		}
 	}
 	

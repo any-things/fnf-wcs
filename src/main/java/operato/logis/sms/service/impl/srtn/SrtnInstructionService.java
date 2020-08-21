@@ -226,7 +226,7 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 			IQueryManager dsQueryManager = this.getDataSourceQueryManager(WmsWmtUifWcsInbRtnCnfm.class);
 			List<WmsWmtUifWcsInbRtnCnfm> rtnCnfmList = dsQueryManager.selectListBySql(queryStore.getSrtnInspCnfmBox(), inspParams, WmsWmtUifWcsInbRtnCnfm.class, 0, 0);
 			
-			List<String> skuCdList = AnyValueUtil.filterValueListBy(rtnCnfmList, "refDetlNo");
+			List<String> skuCdList = AnyValueUtil.filterValueListBy(rtnCnfmList, "itemCd");
 			
 			if(ValueUtil.isEmpty(skuCdList)) {
 				skuCdList.add("1");

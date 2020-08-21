@@ -431,15 +431,17 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 		int cellIdx = 0;
 		
 		for (OrderPreprocess orderPreprocess : items) {
-			if(normalFlag) {
-				orderPreprocess.setSubEquipCd(enableChute.get(idx));
-			} else {
-				orderPreprocess.setSubEquipCd(reverseChute.get(idx));
-			}
-			idx++;
-			if(idx >= enableChute.size()) {
-				idx = 0;
-				normalFlag = !normalFlag;
+			if(ValueUtil.isEmpty(orderPreprocess.getSubEquipCd())) {
+				if(normalFlag) {
+					orderPreprocess.setSubEquipCd(enableChute.get(idx));
+				} else {
+					orderPreprocess.setSubEquipCd(reverseChute.get(idx));
+				}
+				idx++;
+				if(idx >= enableChute.size()) {
+					idx = 0;
+					normalFlag = !normalFlag;
+				}
 			}
 			cellIdx++;
 			if(cellIdx >= cellList.size()) break;

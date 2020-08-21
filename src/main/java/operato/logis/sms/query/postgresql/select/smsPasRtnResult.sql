@@ -3,9 +3,11 @@ select
 	, mpo.order_qty, coalesce(mpr.qty, 0) as qty, coalesce(mdrbr.cmpt_qty, 0) as cmpt_qty
 	, coalesce(mpr.qty, 0) - coalesce(mdrbr.cmpt_qty, 0) as diff_qty
 from 
-	mhe_pas_order mpo
+	(select batch_no, chute_no, sku_cd, sum(order_qty) order_qty from mhe_pas_order 
+	where batch_no in ( :batchList ) group by batch_no, chute_no, sku_cd) as mpo
 left outer join 
-	mhe_pas_rlst mpr
+	(select batch_no, job_type, chute_no, sku_cd, sku_bcd, strr_id, sum(qty) qty from mhe_pas_rlst 
+	where batch_no in ( :batchList ) group by batch_no, job_type, chute_no, sku_cd, sku_bcd, strr_id) as mpr
 on
 	mpo.batch_no = mpr.batch_no
 and

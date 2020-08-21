@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -307,32 +308,61 @@ public class SmsTrackingController extends AbstractRestService {
 		params.put("batchId", batch.getBatchGroupId());
 		List<Map> pasInspList = this.queryManager.selectListBySql(selectQuery, params, Map.class, 0, 0);
 		
-		Query wmsQuery = new Query();
-		wmsQuery.addFilter("whCd", FnFConstants.WH_CD_ICF);  
-		wmsQuery.addFilter("strrId", batch.getBrandCd());  
-		wmsQuery.addFilter("refSeason", batch.getSeasonCd());  
-		wmsQuery.addFilter("shopRtnType", jobBatchInfo[2]);  
-		wmsQuery.addFilter("shopRtnSeq", batch.getJobSeq());
 		
-		wmsQuery.addOrder("refNo", true);
-		wmsQuery.addOrder("itemCd", true);
+		Query batchQuery = AnyOrmUtil.newConditionForExecution(Domain.currentDomainId());
+		batchQuery.addFilter("batchGroupId", LogisConstants.IN, batch.getBatchGroupId());
+		batchQuery.addOrder("jobType", false);
+		batchQuery.addOrder("instructedAt", true);
+		List<JobBatch> batchList = this.queryManager.selectList(JobBatch.class, batchQuery);
+		
+		Map<String, Object> wmsParams = ValueUtil.newMap("whCd", FnFConstants.WH_CD_ICF);
+		StringJoiner selectSql = new StringJoiner(SysConstants.LINE_SEPARATOR);
+		selectSql.add("SELECT");
+		selectSql.add("	*");
+		selectSql.add("FROM");
+		selectSql.add("	WMT_UIF_WCS_INB_RTN_CNFM");
+		selectSql.add("WHERE");
+		selectSql.add("	WH_CD = :whCd");
+		
+		int idx = 0;
+		for(JobBatch batchInfo : batchList) {
+			String[] batchSplit = batchInfo.getId().split("-");
+			if(idx == 0) {
+				selectSql.add("AND (( ");
+			} else {
+				selectSql.add("OR ( ");
+			}
+			selectSql.add("	STRR_ID = '" + batchSplit[0] + "'");
+			selectSql.add("AND");
+			selectSql.add("	REF_SEASON = '" + batchSplit[1] + "'");
+			selectSql.add("AND");
+			selectSql.add("	SHOP_RTN_TYPE = '" + batchSplit[2] + "'");
+			selectSql.add("AND");
+			selectSql.add("	SHOP_RTN_SEQ = '" + batchSplit[3] + "' )");
+			idx++;
+			if(idx >= batchList.size()) {
+				selectSql.add("	)");
+			}
+		}
+		selectSql.add("order by ref_no, item_cd");
+
 		IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager(WmsWmtUifWcsInbRtnCnfm.class);
-		List<WmsWmtUifWcsInbRtnCnfm> wmsInspList = wmsQueryMgr.selectList(WmsWmtUifWcsInbRtnCnfm.class, wmsQuery);
+		List<WmsWmtUifWcsInbRtnCnfm> wmsInspList = wmsQueryMgr.selectListBySql(selectSql.toString(), wmsParams, WmsWmtUifWcsInbRtnCnfm.class, 0, 0);
 		
-		Map<String, List<Map>> wmsBox = new HashMap<>();
+		Map<String, List<Map>> wmsBox = new HashMap<String, List<Map>>();
 		List<Map> boxInSku = new ArrayList<Map>();
 		
 		for (WmsWmtUifWcsInbRtnCnfm wmsInsp : wmsInspList) {
 			Map<String, Object> skuInfo = new HashMap<>();
 			if(wmsBox.containsKey(wmsInsp.getRefNo())) {
-				skuInfo.put("sku_Cd", wmsInsp.getItemCd());
+				skuInfo.put("sku_cd", wmsInsp.getItemCd());
 				skuInfo.put("rfid_order_qty", wmsInsp.getInbEctQty());
 				skuInfo.put("rfid_qty", wmsInsp.getInbCmptQty());
 				boxInSku.add(skuInfo);
 				wmsBox.put(wmsInsp.getRefNo(), boxInSku);
 			} else {
 				boxInSku = new ArrayList<Map>();
-				skuInfo.put("sku_Cd", wmsInsp.getItemCd());
+				skuInfo.put("sku_cd", wmsInsp.getItemCd());
 				skuInfo.put("rfid_order_qty", wmsInsp.getInbEctQty());
 				skuInfo.put("rfid_qty", wmsInsp.getInbCmptQty());
 				boxInSku.add(skuInfo);
@@ -341,16 +371,23 @@ public class SmsTrackingController extends AbstractRestService {
 		}
 		
 		for (Map pasInsp : pasInspList) {
-			if(wmsBox.containsKey(pasInsp.get("box_no"))) {
-				for (Map sku : wmsBox.get(pasInsp.get("box_no"))) {
+			if(wmsBox.containsKey(pasInsp.get("box_id"))) {
+				for (Map sku : wmsBox.get(pasInsp.get("box_id"))) {
 					if(ValueUtil.isEqual(pasInsp.get("sku_cd"), sku.get("sku_cd"))) {
 						pasInsp.put("rfid_order_qty", sku.get("rfid_order_qty"));
 						pasInsp.put("rfid_qty", sku.get("rfid_qty"));
+						pasInsp.put("diff_qty", ValueUtil.toInteger(pasInsp.get("qty")) - ValueUtil.toInteger(sku.get("rfid_qty")));
+						break;
+					} else {
+						pasInsp.put("rfid_order_qty", 0);
+						pasInsp.put("rfid_qty", 0);
+						pasInsp.put("diff_qty", ValueUtil.toInteger(pasInsp.get("qty")));
 					}
 				}
 			} else {
 				pasInsp.put("rfid_order_qty", 0);
 				pasInsp.put("rfid_qty", 0);
+				pasInsp.put("diff_qty", ValueUtil.toInteger(pasInsp.get("qty")));
 			}
 		}
 		

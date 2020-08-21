@@ -4,7 +4,7 @@ SELECT
 	, B.INB_CMPT_QTY
 	, B.SUPPR_ID
 	, B.SUPPR_NM
-	, B.INB_DATE
+	, B.inb__date
 	, B.STRR_ID
 FROM (
 	SELECT 

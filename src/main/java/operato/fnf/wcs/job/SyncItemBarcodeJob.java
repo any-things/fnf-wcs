@@ -9,7 +9,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import operato.fnf.wcs.FnFConstants;
 import operato.fnf.wcs.entity.WmsMheItemBarcode;
+import xyz.anythings.base.LogisConstants;
+import xyz.anythings.base.entity.SKU;
 import xyz.anythings.sys.event.model.ErrorEvent;
 import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.entity.Domain;
@@ -84,13 +87,15 @@ public class SyncItemBarcodeJob extends AbstractFnFJob {
 					List<WmsMheItemBarcode> skuList = wmsQueryMgr.selectListBySql(this.skuSearchSql, ValueUtil.newMap("lastUpdatedAt", lastUpdatedAt), WmsMheItemBarcode.class, skuCurrentPage, this.skuPageLimit);
 					
 					while(xyz.elidom.sys.util.ValueUtil.isNotEmpty(skuList)) {
-						// 4.4 상품 수신 처리 
-						lastUpdatedAt = this.syncSkuList(domain.getId(), skuList, lastUpdatedAt);
+						// 4.4 코텍 테이블에 상품 수신 처리 
+						lastUpdatedAt = this.syncSkuList1(domain.getId(), skuList, lastUpdatedAt);
+						// 4.5 본 SKU 테이블에 상품 수신 처리
+						this.syncSkuList2(domain.getId(), skuList, lastUpdatedAt);
 						
-						// 4.5 5초간 쉬었다가 
+						// 4.6 5초간 쉬었다가 
 						ThreadUtil.sleep(5000);
 						
-						// 4.6 다시 조회 
+						// 4.7 다시 조회 
 						skuCurrentPage += 1;
 						skuList = wmsQueryMgr.selectListBySql(this.skuSearchSql, ValueUtil.newMap("lastUpdatedAt", lastUpdatedAt), WmsMheItemBarcode.class, skuCurrentPage, this.skuPageLimit);
 					}
@@ -115,14 +120,14 @@ public class SyncItemBarcodeJob extends AbstractFnFJob {
 	}
 	
 	/**
-	 * 상품 수신 처리
+	 * 코텍이 보는 테이블에 상품 수신 처리
 	 * 
 	 * @param domainId
 	 * @param fromSkuList
 	 * @param lastUpdatedAt
 	 * @return
 	 */
-	private Date syncSkuList(Long domainId, List<WmsMheItemBarcode> fromSkuList, Date lastUpdatedAt) {
+	private Date syncSkuList1(Long domainId, List<WmsMheItemBarcode> fromSkuList, Date lastUpdatedAt) {
 		
 		String skuMasterTable = this.getItemTable(domainId);
 		String selectSql = this.getSkuSelectSql(skuMasterTable);
@@ -145,6 +150,42 @@ public class SyncItemBarcodeJob extends AbstractFnFJob {
 		}
 		
 		return lastUpdatedAt;
+	}
+	
+	/**
+	 * 본 SKU 상품 테이블에 수신 처리
+	 * 
+	 * @param domainId
+	 * @param fromSkuList
+	 */
+	private void syncSkuList2(Long domainId, List<WmsMheItemBarcode> fromSkuList, Date lastUpdatedAt) {
+		
+		Map<String, Object> condition = ValueUtil.newMap("domainId,comCd", domainId, FnFConstants.FNF_COM_CD);
+		
+		for(WmsMheItemBarcode fromSku : fromSkuList) {
+			condition.put("skuCd", fromSku.getItemCd());
+			SKU toSku = this.queryManager.selectByCondition(SKU.class, condition);
+			
+			if(toSku == null) {
+				toSku = new SKU();
+				toSku.setDomainId(domainId);
+				toSku.setSkuNm(LogisConstants.SPACE);
+			}
+			
+			toSku.setComCd(FnFConstants.FNF_COM_CD);
+			toSku.setSkuCd(fromSku.getItemCd());
+			toSku.setSkuBarcd(fromSku.getBarcode2());
+			toSku.setSkuBarcd2(fromSku.getBarcode());
+			toSku.setBrandCd(fromSku.getBrand());
+			toSku.setSeasonCd(fromSku.getItemSeason());
+			toSku.setStyleCd(fromSku.getItemStyle());
+			toSku.setColorCd(fromSku.getItemColor());
+			toSku.setSizeCd(fromSku.getItemSize());
+			toSku.setSkuClass(fromSku.getFloorCd());
+			toSku.setSkuType(fromSku.getItemGcd());
+			toSku.setSkuDesc(fromSku.getItemGcdNm());
+			this.queryManager.upsert(toSku);
+		}
 	}
 	
 	/**

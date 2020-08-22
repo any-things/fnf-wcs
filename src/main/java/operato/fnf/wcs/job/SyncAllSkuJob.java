@@ -9,7 +9,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import operato.fnf.wcs.FnFConstants;
 import operato.fnf.wcs.entity.WmsMheItemBarcode;
+import xyz.anythings.base.LogisConstants;
+import xyz.anythings.base.entity.SKU;
 import xyz.anythings.sys.event.model.ErrorEvent;
 import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.entity.Domain;
@@ -42,10 +45,6 @@ public class SyncAllSkuJob extends AbstractFnFJob {
 	 * 현재 수신 페이지 설정 명
 	 */
 	private String currentPageSettingName = "fnf.sku.receive.current.page";
-	/**
-	 * 고객사 코드
-	 */
-	//private String comCd = "FnF";
 	/**
 	 * 상품 소스 조회 쿼리 
 	 */
@@ -90,8 +89,10 @@ public class SyncAllSkuJob extends AbstractFnFJob {
 					boolean noMoreSku = skuList.isEmpty();
 					
 					if(!noMoreSku) {
-						// 4.4 상품 수신 처리 
-						this.syncSkuList(domain.getId(), skuList);
+						// 4.4 상품 수신 처리 (SKU 테이블) 
+						this.syncSkuList1(domain.getId(), skuList);
+						// 4.5 상품 수신 처리 (코텍 사용 테이블)
+						this.syncSkuList2(domain.getId(), skuList);
 					}
 					
 					// 4.5 상품 수신 현재 페이지 업데이트 ...
@@ -119,9 +120,9 @@ public class SyncAllSkuJob extends AbstractFnFJob {
 	 * @param domainId
 	 * @param fromSkuList
 	 */
-	/*private void syncSkuList(Long domainId, List<WmsMheItemBarcode> fromSkuList) {
+	private void syncSkuList1(Long domainId, List<WmsMheItemBarcode> fromSkuList) {
 		
-		Map<String, Object> condition = ValueUtil.newMap("domainId,comCd", domainId, this.comCd);
+		Map<String, Object> condition = ValueUtil.newMap("domainId,comCd", domainId, FnFConstants.FNF_COM_CD);
 		
 		for(WmsMheItemBarcode fromSku : fromSkuList) {
 			condition.put("skuCd", fromSku.getItemCd());
@@ -133,7 +134,7 @@ public class SyncAllSkuJob extends AbstractFnFJob {
 				toSku.setSkuNm(LogisConstants.SPACE);
 			}
 			
-			toSku.setComCd(this.comCd);
+			toSku.setComCd(FnFConstants.FNF_COM_CD);
 			toSku.setSkuCd(fromSku.getItemCd());
 			toSku.setSkuBarcd(fromSku.getBarcode2());
 			toSku.setSkuBarcd2(fromSku.getBarcode());
@@ -147,15 +148,15 @@ public class SyncAllSkuJob extends AbstractFnFJob {
 			toSku.setSkuDesc(fromSku.getItemGcdNm());
 			this.queryManager.upsert(toSku);
 		}
-	}*/
+	}
 	
 	/**
-	 * 상품 수신 처리
+	 * I상품 수신 처리
 	 * 
 	 * @param domainId
 	 * @param fromSkuList
 	 */
-	private void syncSkuList(Long domainId, List<WmsMheItemBarcode> fromSkuList) {
+	private void syncSkuList2(Long domainId, List<WmsMheItemBarcode> fromSkuList) {
 		
 		String skuMasterTable = this.getItemTable(domainId);
 		String selectSql = this.getSkuSelectSql(skuMasterTable);

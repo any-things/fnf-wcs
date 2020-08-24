@@ -175,7 +175,7 @@ public class OrderController extends AbstractRestService {
 		
 		List<String> batchIdList = AnyValueUtil.filterValueListBy(orderList, "batchId");
 		Map<String, Object> updateParams = ValueUtil.newMap("batchList", batchIdList);
-		String updateSql = "update orders set sku_type = a.sku_type, sku_barcd = a.sku_barcd, sku_barcd2 = a.sku_barcd2 from (select * from sku) as a where orders.sku_cd = a.sku_cd and orders.batch_id in ( :batchList )";
+		String updateSql = "update orders set sku_cd = a.sku_cd, sku_type = a.sku_type, sku_barcd = a.sku_barcd, sku_barcd2 = a.sku_barcd2 from (select * from sku) as a where (orders.sku_cd = a.sku_cd or orders.sku_cd = a.sku_barcd) and orders.batch_id in ( :batchList )";
 		this.queryManager.executeBySql(updateSql, updateParams);
 		
 		StringJoiner selectSql = new StringJoiner(SysConstants.LINE_SEPARATOR);

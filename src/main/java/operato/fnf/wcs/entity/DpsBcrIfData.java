@@ -3,9 +3,13 @@ package operato.fnf.wcs.entity;
 import xyz.elidom.dbist.annotation.Column;
 import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.GenerationRule;
+import xyz.elidom.dbist.annotation.Index;
 import xyz.elidom.dbist.annotation.Table;
 
-@Table(name = "dps_bcr_if_data", idStrategy = GenerationRule.UUID)
+@Table(name = "dps_bcr_if_data", idStrategy = GenerationRule.UUID, indexes = {
+	@Index(name = "ix_dps_bcr_if_data_01", columnList = "proc_yn"),
+	@Index(name = "ix_dps_bcr_if_data_02", columnList = "waybill_no")
+})
 public class DpsBcrIfData extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	/**
 	 * SerialVersion UID

@@ -56,11 +56,25 @@ public class SkuStockListSearch extends StockInSearch {
 		
 		Long domainId = Domain.currentDomainId();
 		List<Stock> stocks = new ArrayList<>();
-		Stock stock = null;
+		
+		Query conds = new Query(0, 1);
+		conds.addFilter("name", "dps.stock.odps.check");
+		Setting setting = queryManager.selectByCondition(Setting.class, conds);
+		
+		boolean wmsStockCheck = false;
+		if (ValueUtil.isNotEmpty(setting) && "Y".equalsIgnoreCase(setting.getValue())) {
+			wmsStockCheck = true;
+		}
+		
 		if (hasRackBatch) {
 			stocks = this.stockService.searchRecommendCells(domainId, equipType, null, comCd, skuCd, false);
 			
-			stock = this.stockService.calculateSkuOrderStock(domainId, rackBatch.getId(), equipType, null, comCd, skuCd);
+			Stock stock = null;
+//			if (wmsStockCheck) {
+//				stock = this.calculateSkuOrderStock(skuCd, stocks, true);
+//			} else {
+				stock = this.stockService.calculateSkuOrderStock(domainId, rackBatch.getId(), equipType, null, comCd, skuCd);
+//			}
 			if (ValueUtil.isNotEmpty(stock)) {
 				if (stock.getInputQty() == 0) {
 					throw ThrowUtil.newValidationErrorWithNoLog("이제품은 이미 필요수량만큼 보충되었습니다.");
@@ -92,16 +106,8 @@ public class SkuStockListSearch extends StockInSearch {
 //				throw ThrowUtil.newValidationErrorWithNoLog("고정셀이 없습니다.");
 //			}
 			
-			Query conds = new Query(0, 1);
-			conds.addFilter("name", "dps.stock.odps.check");
-			Setting setting = queryManager.selectByCondition(Setting.class, conds);
-			
-			boolean wmsStockCheck = false;
-			if (ValueUtil.isNotEmpty(setting) && "Y".equalsIgnoreCase(setting.getValue())) {
-				wmsStockCheck = true;
-			}
 			//stock = this.stockService.calculateSkuOrderStock(domainId, null, equipType, null, comCd, skuCd);
-			stock = this.calculateSkuOrderStock(skuCd, stocks, wmsStockCheck);
+			Stock stock = this.calculateSkuOrderStock(skuCd, stocks, wmsStockCheck);
 			if (stock.getInputQty() == 0 && wmsStockCheck) {
 				throw ThrowUtil.newValidationErrorWithNoLog("이제품은 이미 필요수량만큼 보충되었습니다.");
 			}
@@ -139,9 +145,9 @@ public class SkuStockListSearch extends StockInSearch {
 		for (Stock obj: stocks) {
 			// 작업 완료후 보충하므로, 실제 재고 수량은 적치수량이랑 같음.
 			if (ValueUtil.isNotEmpty(obj.getLoadQty())) {
-				if (wmsStockCheck) {
-					allowQty -= obj.getLoadQty();
-				}
+//				if (wmsStockCheck) {
+//					allowQty -= obj.getLoadQty();
+//				}
 				sumLoadQty += obj.getLoadQty();
 			}			
 		}
@@ -149,7 +155,7 @@ public class SkuStockListSearch extends StockInSearch {
 		Stock stock = new Stock();
 		stock.setOrderQty(allowQty);
 		stock.setStockQty(sumLoadQty);
-		stock.setInputQty(allowQty);
+		stock.setInputQty(allowQty - sumLoadQty);
 		
 		return stock;
 	}

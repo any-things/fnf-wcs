@@ -1,6 +1,5 @@
 package operato.fnf.wcs.service.bcr;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,9 +24,7 @@ public class BcrBarcodeProcess extends AbstractLogisService {
 		List<DpsBcrIfData> list = FnfUtils.parseObjList(DpsBcrIfData.class, temp);
 		
 		for (DpsBcrIfData obj: list) {
-			Map<String, Object> dataParams = new HashMap<>();
-			dataParams.put("waybillNo", obj.getWaybillNo());
-			BeanUtil.get(BcrBarcodeProcess.class).bcrBarcodeProcess(dataParams);
+			BeanUtil.get(BcrBarcodeProcess.class).processData(obj);
 		}
 		
 		return new ResponseObj();

@@ -70,7 +70,7 @@ public class SkuStockListSearch extends StockInSearch {
 				if(stock.getOrderQty() > 0) {
 					stock.setEquipType(equipType);
 					stock.setEquipCd(equipCd);
-					stock.setOrderQty(stock.getOrderQty() - stock.getAllocQty() - stock.getStockQty());
+					//stock.setOrderQty(stock.getOrderQty() - stock.getAllocQty() - stock.getStockQty());
 					
 					values.put("orderQty", stock.getOrderQty());
 					values.put("stockQty", stock.getStockQty());

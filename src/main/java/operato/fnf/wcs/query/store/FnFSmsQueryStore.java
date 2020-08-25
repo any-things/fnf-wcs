@@ -19,14 +19,29 @@ public class FnFSmsQueryStore extends AbstractQueryStore {
 		this.basePath = "operato/fnf/wcs/query/" + this.databaseType + SysConstants.SLASH;
 		this.defaultBasePath = "operato/fnf/wcs/query/ansi/";		
 	}
-
 	/**
-	 * 작업 배치별 최종 10분대 별 작업 실적 서머리 조회
+	 * SRTN 작업 배치별 10분대 별 작업 실적 서머리 조회
 	 * 
 	 * @return
 	 */
-	public String getSrtnBatchTotalResultSummary() {
-		return this.getQueryByPath("srtn/BatchTotalMinuteResultSummary");
+	public String getSrtnCalc10MinuteResultSummary() {
+		return this.getQueryByPath("srtn/Calc10MinuteResultSummary");
+	}
+	/**
+	 * SDAS 작업 배치별 10분대 별 작업 실적 서머리 조회
+	 * 
+	 * @return
+	 */
+	public String getSdasCalc10MinuteResultSummary() {
+		return this.getQueryByPath("sdas/Calc10MinuteResultSummary");
+	}
+	/**
+	 * SDPS 작업 배치별 10분대 별 작업 실적 서머리 조회
+	 * 
+	 * @return
+	 */
+	public String getSdpsCalc10MinuteResultSummary() {
+		return this.getQueryByPath("sdps/Calc10MinuteResultSummary");
 	}
 
 }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import operato.fnf.wcs.service.batch.JobSummaryService;
+import operato.logis.sms.SmsConstants;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.sys.event.model.ErrorEvent;
@@ -86,7 +87,7 @@ public class JobSummaryJob extends AbstractFnFJob {
 	private List<JobBatch> searchRunningBatches(Long domainId) {
 		Query condition = AnyOrmUtil.newConditionForExecution(domainId);
 		condition.addFilter("status", JobBatch.STATUS_RUNNING);
-		condition.addFilter("jobType", LogisConstants.IN, ValueUtil.toList(LogisConstants.JOB_TYPE_DAS, LogisConstants.JOB_TYPE_DPS));
+		condition.addFilter("jobType", LogisConstants.IN, ValueUtil.toList(LogisConstants.JOB_TYPE_DAS, LogisConstants.JOB_TYPE_DPS, SmsConstants.JOB_TYPE_SRTN, SmsConstants.JOB_TYPE_SDAS, SmsConstants.JOB_TYPE_SDPS));
 		return this.queryManager.selectList(JobBatch.class, condition);
 	}
 

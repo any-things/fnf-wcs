@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import operato.fnf.wcs.query.store.FnFDasQueryStore;
 import operato.fnf.wcs.query.store.FnFDpsQueryStore;
+import operato.fnf.wcs.query.store.FnFSmsQueryStore;
 import operato.fnf.wcs.service.model.ResultSummary;
 import operato.logis.sms.SmsConstants;
 import operato.logis.wcs.entity.DailyProdSummary;
@@ -19,6 +20,7 @@ import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.anythings.sys.util.AnyOrmUtil;
+import xyz.anythings.sys.util.AnyValueUtil;
 import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.util.ClassUtil;
 import xyz.elidom.util.ValueUtil;
@@ -44,8 +46,8 @@ public class JobSummaryService extends AbstractQueryService {
 	/**
 	 * FnF SMS용 쿼리 스토어
 	 */
-	//@Autowired
-	//private FnFSmsQueryStore fnfSmsQueryStore;
+	@Autowired
+	private FnFSmsQueryStore fnfSmsQueryStore;
 	
 	/**
 	 * 작업 배치별 10분대별 실적 서머리 처리
@@ -318,6 +320,18 @@ public class JobSummaryService extends AbstractQueryService {
 		String timeFrom = this.getFrom10Minute(date, hour, minFrom);
 		String timeTo = this.getTo10Minute(date, hour, minTo);
 		Map<String, Object> params = ValueUtil.newMap("batchId,timeFrom,timeTo", batch.getId(), timeFrom, timeTo);
+		
+		if(ValueUtil.isEqualIgnoreCase(SmsConstants.JOB_TYPE_SDPS, batch.getJobType())) {
+			Query query = AnyOrmUtil.newConditionForExecution(batch.getDomainId());
+			query.addFilter("status", LogisConstants.NOT_EQUAL, JobBatch.STATUS_END);
+			query.addFilter("batchGroupId", LogisConstants.IN, batch.getBatchGroupId());
+			query.addOrder("jobType", false);
+			query.addOrder("instructedAt", true);
+			List<JobBatch> groupBatch = this.queryManager.selectList(JobBatch.class, query);
+			List<String> batchList = AnyValueUtil.filterValueListBy(groupBatch, "id");
+			
+			params.put("batchList", batchList);
+		}
 		return this.queryManager.selectBySql(sql, params, Integer.class);
 	}
 	
@@ -356,6 +370,12 @@ public class JobSummaryService extends AbstractQueryService {
 		} else if(LogisConstants.isDpsJobType(jobType)) {
 			return this.fnfDpsQueryStore.getDpsCalc10MinuteResultSummary();
 			
+		} else if(ValueUtil.isEqualIgnoreCase(SmsConstants.JOB_TYPE_SRTN, jobType)) {
+			return this.fnfSmsQueryStore.getSrtnCalc10MinuteResultSummary();
+		} else if(ValueUtil.isEqualIgnoreCase(SmsConstants.JOB_TYPE_SDAS, jobType)) {
+			return this.fnfSmsQueryStore.getSdasCalc10MinuteResultSummary();
+		} else if(ValueUtil.isEqualIgnoreCase(SmsConstants.JOB_TYPE_SDPS, jobType)) {
+			return this.fnfSmsQueryStore.getSdpsCalc10MinuteResultSummary();
 		} else {
 			return null;
 		}

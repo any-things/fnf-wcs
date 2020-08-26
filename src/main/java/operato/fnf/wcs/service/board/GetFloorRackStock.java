@@ -57,7 +57,7 @@ public class GetFloorRackStock extends AbstractLogisService {
 		
 		String usedRateSql = FnfUtils.queryCustServiceWithCheck("board_floor_rack_used_rate");
 		FloorTotalSum floorTotalSum = wmsQueryMgr.selectBySql(usedRateSql, wmsParams, FloorTotalSum.class);
-		floorTotalSum.setSkuCount(Long.parseLong(String.valueOf(totalSkuCnt)));
+		floorTotalSum.setSkuCount((long)Math.round(totalSkuCnt));
 		
 		Map<String, Object> values = new HashMap<>();
 		values.put("cells", cellMap);

@@ -2,11 +2,11 @@ package operato.fnf.wcs.service.model;
 
 public class FloorStock {
 	private String floorTcd;
-	private Integer totalCbm;
-	private Integer usedCbm;
-	private Integer pcsQty;
-	private Integer avaCbm;
-	private Integer usedRate;
+	private Long totalCbm;
+	private Long usedCbm;
+	private Long pcsQty;
+	private Long avaCbm;
+	private Long usedRate;
 	
 	public String getFloorTcd() {
 		return floorTcd;
@@ -14,34 +14,34 @@ public class FloorStock {
 	public void setFloorTcd(String floorTcd) {
 		this.floorTcd = floorTcd;
 	}
-	public Integer getTotalCbm() {
+	public Long getTotalCbm() {
 		return totalCbm;
 	}
-	public void setTotalCbm(Integer totalCbm) {
+	public void setTotalCbm(Long totalCbm) {
 		this.totalCbm = totalCbm;
 	}
-	public Integer getUsedCbm() {
+	public Long getUsedCbm() {
 		return usedCbm;
 	}
-	public void setUsedCbm(Integer usedCbm) {
+	public void setUsedCbm(Long usedCbm) {
 		this.usedCbm = usedCbm;
 	}
-	public Integer getPcsQty() {
+	public Long getPcsQty() {
 		return pcsQty;
 	}
-	public void setPcsQty(Integer pcsQty) {
+	public void setPcsQty(Long pcsQty) {
 		this.pcsQty = pcsQty;
 	}
-	public Integer getAvaCbm() {
+	public Long getAvaCbm() {
 		return avaCbm;
 	}
-	public void setAvaCbm(Integer avaCbm) {
+	public void setAvaCbm(Long avaCbm) {
 		this.avaCbm = avaCbm;
 	}
-	public Integer getUsedRate() {
+	public Long getUsedRate() {
 		return usedRate;
 	}
-	public void setUsedRate(Integer usedRate) {
+	public void setUsedRate(Long usedRate) {
 		this.usedRate = usedRate;
 	}
 }

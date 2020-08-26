@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import operato.fnf.wcs.FnfUtils;
 import operato.fnf.wcs.service.model.BoardCellSum;
 import operato.fnf.wcs.service.model.BoardRackStock;
+import operato.fnf.wcs.service.model.FloorTotalSum;
 import xyz.anythings.base.model.ResponseObj;
 import xyz.anythings.base.service.impl.AbstractLogisService;
 import xyz.elidom.orm.IQueryManager;
@@ -20,7 +21,7 @@ import xyz.elidom.util.ValueUtil;
 @Component
 public class GetFloorRackStock extends AbstractLogisService {
 	public ResponseObj getFloorRackStock(Map<String, Object> params) throws Exception {
-		String floorCd = String.valueOf(params.get("floorCd"));	// "3F%"
+		String floorTcd = String.valueOf(params.get("floorTcd"));	// "3F%"
 		String wcellNo = String.valueOf(params.get("wcellNo"));	// "3F%"
 		String buildingTcd = String.valueOf(params.get("buildingTcd"));
 		String date = String.valueOf(params.get("date"));
@@ -31,7 +32,7 @@ public class GetFloorRackStock extends AbstractLogisService {
 		
 		String sql = FnfUtils.queryCustServiceWithCheck("board_floor_rack_stock");
 		IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager("WMS");
-		Map<String, Object> wmsParams = ValueUtil.newMap("floorCd,wcellNo,buildingTcd,date", floorCd,wcellNo,buildingTcd,date);
+		Map<String, Object> wmsParams = ValueUtil.newMap("floorTcd,wcellNo,buildingTcd,date", floorTcd,wcellNo,buildingTcd,date);
 		List<BoardRackStock> list = wmsQueryMgr.selectListBySql(sql, wmsParams, BoardRackStock.class, 0, 0);
 		
 		Map<String, BoardCellSum> cellMap = new HashMap<>();
@@ -55,14 +56,12 @@ public class GetFloorRackStock extends AbstractLogisService {
 		Float totalSkuCnt = wmsQueryMgr.selectBySql(skuCntSql, wmsParams, Float.class);
 		
 		String usedRateSql = FnfUtils.queryCustServiceWithCheck("board_floor_rack_used_rate");
-		Float totalUsedRate = wmsQueryMgr.selectBySql(usedRateSql, wmsParams, Float.class);
-		
-		
+		FloorTotalSum floorTotalSum = wmsQueryMgr.selectBySql(usedRateSql, wmsParams, FloorTotalSum.class);
+		floorTotalSum.setSkuCount(Long.parseLong(String.valueOf(totalSkuCnt)));
 		
 		Map<String, Object> values = new HashMap<>();
 		values.put("cells", cellMap);
-		values.put("totalSkuCnt", totalSkuCnt);
-		values.put("totalUsedRate", totalUsedRate);
+		values.put("floorSum", floorTotalSum);
 		ResponseObj resp = new ResponseObj();
 		resp.setItems(list);
 		resp.setValues(values);

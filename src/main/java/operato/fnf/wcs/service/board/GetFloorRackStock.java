@@ -60,7 +60,7 @@ public class GetFloorRackStock extends AbstractLogisService {
 		
 		
 		Map<String, Object> values = new HashMap<>();
-		values.put("cells", cellMap.values());
+		values.put("cells", cellMap);
 		values.put("totalSkuCnt", totalSkuCnt);
 		values.put("totalUsedRate", totalUsedRate);
 		ResponseObj resp = new ResponseObj();

@@ -6,7 +6,7 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 import operato.fnf.wcs.FnfUtils;
-import operato.fnf.wcs.service.model.BoardRackStock;
+import operato.fnf.wcs.service.model.FloorStock;
 import xyz.anythings.base.model.ResponseObj;
 import xyz.anythings.base.service.impl.AbstractLogisService;
 import xyz.elidom.orm.IQueryManager;
@@ -19,7 +19,7 @@ public class GetStockDataByFloor extends AbstractLogisService {
 
 		String sql = FnfUtils.queryCustServiceWithCheck("board_floor_stock_sum");
 		IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager("WMS");
-		List<BoardRackStock> list = wmsQueryMgr.selectListBySql(sql, params, BoardRackStock.class, 0, 0);
+		List<FloorStock> list = wmsQueryMgr.selectListBySql(sql, params, FloorStock.class, 0, 0);
 		
 		ResponseObj resp = new ResponseObj();
 		resp.setItems(list);

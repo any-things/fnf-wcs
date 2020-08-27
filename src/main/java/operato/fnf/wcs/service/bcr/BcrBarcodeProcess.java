@@ -12,9 +12,7 @@ import operato.fnf.wcs.entity.DpsJobInstance;
 import xyz.anythings.base.model.ResponseObj;
 import xyz.anythings.base.service.impl.AbstractLogisService;
 import xyz.elidom.dbist.dml.Query;
-import xyz.elidom.exception.server.ElidomValidationException;
 import xyz.elidom.util.BeanUtil;
-import xyz.elidom.util.ValueUtil;
 
 @Component
 public class BcrBarcodeProcess extends AbstractLogisService {
@@ -35,16 +33,15 @@ public class BcrBarcodeProcess extends AbstractLogisService {
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void processData(DpsBcrIfData obj) throws Exception {
 		try {
-			Query conds = new Query(0, 1);
+			Query conds = new Query();
 			conds.addFilter("waybillNo", obj.getWaybillNo());
 			conds.addOrder("mheDatetime", false);
-			DpsJobInstance dpsJobInstance = queryManager.selectByCondition(DpsJobInstance.class, conds);
+			List<DpsJobInstance> dpsJobInstances = queryManager.selectList(DpsJobInstance.class, conds);
 			
-			if (ValueUtil.isEmpty(dpsJobInstance)) {
-				throw new ElidomValidationException("BcrBarcodeRead: boxId["+ obj.getWaybillNo() +"] not found~~");
+			for (DpsJobInstance dpsJobInstance: dpsJobInstances) {				
+				dpsJobInstance.setBcrStatus(STATUS_FINISH);
 			}
-			dpsJobInstance.setBcrStatus(STATUS_FINISH);
-			queryManager.update(dpsJobInstance, "bcrStatus");
+			queryManager.updateBatch(dpsJobInstances, "bcrStatus");
 			
 			obj.setProcYn("Y");
 			queryManager.update(obj, "procYn");

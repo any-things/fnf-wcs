@@ -104,7 +104,7 @@ public class CalcPopularProduct extends AbstractQueryService {
 			traces.add(obj);
 		}
 		
-		queryManager.insertBatch(traces);
+		//queryManager.insertBatch(traces);
 		
 		ResponseObj resp = new ResponseObj();
 		resp.setItems(traces);

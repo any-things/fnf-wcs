@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import operato.fnf.wcs.FnFConstants;
 import operato.fnf.wcs.entity.WcsMhePasBatchStatus;
 import operato.fnf.wcs.service.batch.SmsCloseBatchService;
+import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.entity.Order;
 import xyz.anythings.base.event.main.BatchCloseEvent;
@@ -44,6 +45,7 @@ public class SrtnBatchService extends AbstractLogisService implements IBatchServ
 		Query batchConds = new Query();
 		batchConds.addFilter("mheNo", batch.getEquipCd());
 		batchConds.addFilter("wcsBatchNo", batch.getBatchGroupId());
+		batchConds.addFilter("status", LogisConstants.NOT_EQUAL, "9");
 		pasBatchStatus = this.queryManager.selectByCondition(WcsMhePasBatchStatus.class, batchConds);
 		
 		if(ValueUtil.isNotEqual(pasBatchStatus.getStatus(), FnFConstants.PAS_BATCH_STOP)) {
@@ -150,7 +152,7 @@ public class SrtnBatchService extends AbstractLogisService implements IBatchServ
 		// rack, cell
 		Map<String, Object> params = ValueUtil.newMap("domainId,batchId", batch.getDomainId(), batch.getBatchGroupId());
 	  	this.queryManager.executeBySql("UPDATE RACKS SET STATUS = null, BATCH_ID = null WHERE DOMAIN_ID = :domainId AND BATCH_ID = :batchId", params);
-	  	this.queryManager.executeBySql("UPDATE CELLS SET CLASS_CD = null, BATCH_ID = null WHERE DOMAIN_ID = :domainId AND BATCH_ID = :batchId", params);
+	  	this.queryManager.executeBySql("UPDATE CELLS SET CLASS_CD = null, BATCH_ID = null, BRAND_CD = null WHERE DOMAIN_ID = :domainId AND BATCH_ID = :batchId", params);
 	}
 	
 	/**

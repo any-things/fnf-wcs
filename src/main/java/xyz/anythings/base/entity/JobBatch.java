@@ -66,6 +66,10 @@ public class JobBatch extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	 * 주문 작업지시중 상태 : WORKING
 	 */
 	public static final String STATUS_WORKING = "WORKING";
+	/**
+	 * 작업 일시정지 상태 : PAUSE
+	 */
+	public static final String STATUS_PAUSE = "PAUSE";
 	
 	/**
 	 * 배치 ID (WMS의 WorkUnit 코드)

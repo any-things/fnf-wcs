@@ -62,10 +62,10 @@ public class GetDpsOrderSum extends AbstractLogisService {
 		}
 		
 		String orderCntSql = FnfUtils.queryCustServiceWithCheck("dps_today_order_cnt_by_pack_type");
-		List<DpsOrderDetail> orderCntByPackTypes = queryManager.selectListBySql(orderCntSql, params, DpsOrderDetail.class, 0, 0);
+		List<DpsOrderDetail> orderCntByPackTypes = wmsQueryMgr.selectListBySql(orderCntSql, params, DpsOrderDetail.class, 0, 0);
 		
 		orderCntSql = FnfUtils.queryCustServiceWithCheck("dps_today_order_cnt_by_brand");
-		List<DpsOrderDetail> orderCntByBrands = queryManager.selectListBySql(orderCntSql, params, DpsOrderDetail.class, 0, 0);
+		List<DpsOrderDetail> orderCntByBrands = wmsQueryMgr.selectListBySql(orderCntSql, params, DpsOrderDetail.class, 0, 0);
 		
 		ResponseObj resp = new ResponseObj();
 		Map<String, List<DpsOrderDetail>> values = new HashMap<>();

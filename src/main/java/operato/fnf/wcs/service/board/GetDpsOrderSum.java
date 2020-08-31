@@ -24,7 +24,8 @@ public class GetDpsOrderSum extends AbstractLogisService {
 	public ResponseObj getDpsOrderSum(Map<String, Object> params) throws Exception {
 		String date = String.valueOf(params.get("date"));
 		if (ValueUtil.isEmpty(date)) {
-			params.put("date", DateUtil.getCurrentDay());
+			date = DateUtil.getCurrentDay();
+			params.put("date", date);
 		}
 		
 		IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager("WMS");

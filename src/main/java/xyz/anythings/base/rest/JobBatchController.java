@@ -2,6 +2,7 @@ package xyz.anythings.base.rest;
 
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import operato.logis.sms.SmsConstants;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.BatchReceipt;
 import xyz.anythings.base.entity.BatchReceiptItem;
@@ -26,6 +28,7 @@ import xyz.anythings.base.service.impl.LogisServiceDispatcher;
 import xyz.anythings.gw.entity.IndConfigSet;
 import xyz.anythings.sys.model.BaseResponse;
 import xyz.anythings.sys.util.AnyEntityUtil;
+import xyz.anythings.sys.util.AnyValueUtil;
 import xyz.elidom.dbist.dml.Page;
 import xyz.elidom.exception.server.ElidomValidationException;
 import xyz.elidom.orm.system.annotation.service.ApiDesc;
@@ -497,14 +500,14 @@ public class JobBatchController extends AbstractRestService {
 	 * @return
 	 */
 	@RequestMapping(value = "/{id}/pause_batch", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ApiDesc(description = "Close batch")
+	@ApiDesc(description = "Pause batch")
 	public Map<String, Object> pauseBatch(@RequestParam(name = "id", required = true) String batchId) {
 
 		// 1. JobBatch 조회 
 		JobBatch batch = this.findWithLock(true, batchId, true);
 		batch.setStatus(JobBatch.STATUS_PAUSE);
 		this.queryManager.update(batch);
-		// 2. 작업 배치 마감
+		// 2. Rack, Cell 초기화
 		try {
 			Map<String, Object> params = ValueUtil.newMap("domainId,batchId", batch.getDomainId(), batch.getBatchGroupId());
 		  	this.queryManager.executeBySql("UPDATE RACKS SET STATUS = null, BATCH_ID = null WHERE DOMAIN_ID = :domainId AND BATCH_ID = :batchId", params);
@@ -523,16 +526,53 @@ public class JobBatchController extends AbstractRestService {
 	 * @return
 	 */
 	@RequestMapping(value = "/{id}/restart_batch", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ApiDesc(description = "Close batch")
+	@ApiDesc(description = "Restart batch")
 	public Map<String, Object> restartBatch(@RequestParam(name = "id", required = true) String batchId) {
 
 		// 1. JobBatch 조회 
 		JobBatch batch = this.findWithLock(true, batchId, true);
 		batch.setStatus(JobBatch.STATUS_RUNNING);
 		this.queryManager.update(batch);
+		
+		String jobBatchSql = "select * from job_batches where batch_group_id = :batchGroupId";
+		Map<String, Object> query = ValueUtil.newMap("batchGroupId", batch.getBatchGroupId());
+		List<JobBatch> jobBatches = this.queryManager.selectListBySql(jobBatchSql, query, JobBatch.class, 0, 0);
+		List<String> batchList = AnyValueUtil.filterValueListBy(jobBatches, "id");
+		
+		StringJoiner updateSql = new StringJoiner(SysConstants.LINE_SEPARATOR);
+		
+		if(ValueUtil.isEqual(batch.getJobType(), SmsConstants.JOB_TYPE_SRTN)) {
+			updateSql.add("update");
+			updateSql.add("	cells");
+			updateSql.add("set batch_id = a.batch_no, class_cd = a.item_cd, brand_cd = a.strr_id");
+			updateSql.add("from");
+			updateSql.add("	(select batch_no, cell_no, item_cd, strr_id from mhe_das_order where batch_no in ( :batchList ) group by batch_no, cell_no, strr_id, item_cd) as a");
+			updateSql.add("where");
+			updateSql.add("cells.cell_cd = a.cell_no");
+		} else {
+			updateSql.add("update");
+			updateSql.add("	cells");
+			updateSql.add("set batch_id = a.batch_no, class_cd = a.shop_cd, brand_cd = a.strr_id");
+			updateSql.add("from");
+			updateSql.add("	(select batch_no, cell_no, shop_cd, strr_id from mhe_das_order where batch_no in ( :batchList ) group by batch_no, cell_no, strr_id, shop_cd) as a");
+			updateSql.add("where");
+			updateSql.add("cells.cell_cd = a.cell_no");
+		}
+		Map<String, Object> updateParams = ValueUtil.newMap("batchList,status", batchList, JobBatch.STATUS_RUNNING);
+
+		StringJoiner updateRackSql = new StringJoiner(SysConstants.LINE_SEPARATOR);
+		updateRackSql.add("update");
+		updateRackSql.add("	racks");
+		updateRackSql.add("set status = :status, batch_id = a.batch_id ");
+		updateRackSql.add("from");
+		updateRackSql.add("	(select * from cells where batch_id in ( :batchList )) as a");
+		updateRackSql.add("where");
+		updateRackSql.add("	racks.rack_cd = a.equip_cd");
+		
 		// 2. 작업 배치 마감
 		try {
-			
+			this.queryManager.executeBySql(updateSql.toString(), updateParams);
+			this.queryManager.executeBySql(updateRackSql.toString(), updateParams);
 		} catch (ElidomValidationException eve) {
 			return ValueUtil.newMap("result,msg", LogisConstants.NG_STRING, eve.getMessage()); 
 		}

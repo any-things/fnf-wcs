@@ -81,6 +81,7 @@ public class SrtnBatchService extends AbstractLogisService implements IBatchServ
 		if(!closeForcibly) {
 			Query params = new Query();
 			params.addFilter(new Filter("wcsBatchNo", batch.getId()));
+			params.addFilter("status", LogisConstants.NOT_EQUAL, "9");
 			WcsMhePasBatchStatus batchStatus = this.queryManager.selectByCondition(WcsMhePasBatchStatus.class, params);
 			
 			if(ValueUtil.isEmpty(batchStatus)) {

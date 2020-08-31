@@ -1,6 +1,7 @@
 package operato.fnf.wcs.service.summary;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import operato.fnf.wcs.FnfUtils;
 import operato.fnf.wcs.entity.DpsJobInstance;
+import operato.fnf.wcs.service.model.DpsPopularSku;
 import operato.fnf.wcs.service.model.OnlineOutSkuSum;
 import operato.logis.wcs.entity.TopSkuSetting;
 import operato.logis.wcs.entity.TopSkuTrace;
@@ -93,22 +95,24 @@ public class CalcPopularProduct extends AbstractQueryService {
 			trace.setScopeDaysOrdCnt(ordCnt);
 		}
 		
-		List<TopSkuTrace> traces = new ArrayList<>();
+		List<DpsPopularSku> popularSkus = new ArrayList<>();
 		for (String skuCd: skuSumMap.keySet()) {
 			TopSkuTrace obj = skuSumMap.get(skuCd);
-			obj.setScopeAvgPcsQty(((float)obj.getScopeDaysPcsQty())/setting.getScopeDays());
+			DpsPopularSku popSku = FnfUtils.populate(obj, new DpsPopularSku(), false);
+			popSku.setScopeAvgPcsQty(((float)obj.getScopeDaysPcsQty())/setting.getScopeDays());
 			
 			float index = obj.getPcsRank() * setting.getOutbQtyRate()/100 + obj.getTimesRank() * setting.getOutbDaysRate()/100;
-			obj.setPopularIndex(index);	// index
-			obj.setDurationPcs(obj.getDurationDays() * obj.getScopeAvgPcsQty());
-			traces.add(obj);
+			popSku.setPopularIndex(index);	// index
+			popSku.setDurationPcs(obj.getDurationDays() * obj.getScopeAvgPcsQty());
+			popularSkus.add(popSku);
 		}
 		
+		Collections.sort(popularSkus);
 		//queryManager.insertBatch(traces);
 		
 		ResponseObj resp = new ResponseObj();
-		resp.setItems(traces);
-		resp.setTotal(traces.size());
+		resp.setItems(popularSkus);
+		resp.setTotal(popularSkus.size());
 		return resp;
 	}
 }

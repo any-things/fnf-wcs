@@ -40,6 +40,9 @@ public class GetDpsOrderSum extends AbstractLogisService {
 			return new ResponseObj();
 		}
 		
+//		String orderSumParams = FnfUtils.queryCustServiceWithCheck("dps_today_order_summary");
+//		List<DpsOrderDetail> orderSums = queryManager.selectListBySql(orderSumParams, params, DpsOrderDetail.class, 0, 0);
+		
 		String itemGroupSql = FnfUtils.queryCustServiceWithCheck("dps_order_item_group");
 		Map<String, Object> itemGroupParams = new HashMap<>();
 		itemGroupParams.put("skuCds", skuCds);
@@ -58,8 +61,21 @@ public class GetDpsOrderSum extends AbstractLogisService {
 			FnfUtils.populate(itemGroup, obj, false);
 		}
 		
+		String orderCntSql = FnfUtils.queryCustServiceWithCheck("dps_today_order_cnt_by_pack_type");
+		List<DpsOrderDetail> orderCntByPackTypes = queryManager.selectListBySql(orderCntSql, params, DpsOrderDetail.class, 0, 0);
+		
+		orderCntSql = FnfUtils.queryCustServiceWithCheck("dps_today_order_cnt_by_brand");
+		List<DpsOrderDetail> orderCntByBrands = queryManager.selectListBySql(orderCntSql, params, DpsOrderDetail.class, 0, 0);
+		
 		ResponseObj resp = new ResponseObj();
+		Map<String, List<DpsOrderDetail>> values = new HashMap<>();
+//		values.put("orderSums", orderSums);
+		values.put("orderCntByPackTypes", orderCntByPackTypes);
+		values.put("orderCntByBrands", orderCntByBrands);
+		resp.setValues(values);
 		resp.setItems(dpsOrders);
 		return resp;
 	}
+	
+	
 }

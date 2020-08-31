@@ -22,7 +22,7 @@ import xyz.elidom.util.ValueUtil;
 public class CalcPopularProduct extends AbstractQueryService {
 	public ResponseObj calcPopularProduct(Map<String, Object> params) throws Exception {
 		
-		String date = String.valueOf(params.get("date"));
+		String date = String.valueOf(params.get("sumDate"));
 		if (ValueUtil.isEmpty(date)) {
 			date = DateUtil.getCurrentDay();
 		}
@@ -31,7 +31,7 @@ public class CalcPopularProduct extends AbstractQueryService {
 		sizeConds.addFilter("workDate", date);
 		int size = queryManager.selectSize(DpsJobInstance.class, sizeConds);
 		if (size <= 0) {
-			return new ResponseObj();
+			//return new ResponseObj();
 		}
 		
 		Query conds = new Query(0, 1);

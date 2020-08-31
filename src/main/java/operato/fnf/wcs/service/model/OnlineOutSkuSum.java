@@ -3,6 +3,8 @@ package operato.fnf.wcs.service.model;
 public class OnlineOutSkuSum {
 	private String workDate;
 	private String itemCd;
+	private Integer pcsRank;
+	private Integer timesRank;
 	private Integer outPcsQty;
 	private Integer outSkuTimes;
 	private Integer outOrdCnt;
@@ -18,6 +20,18 @@ public class OnlineOutSkuSum {
 	}
 	public void setItemCd(String itemCd) {
 		this.itemCd = itemCd;
+	}
+	public Integer getPcsRank() {
+		return pcsRank;
+	}
+	public void setPcsRank(Integer pcsRank) {
+		this.pcsRank = pcsRank;
+	}
+	public Integer getTimesRank() {
+		return timesRank;
+	}
+	public void setTimesRank(Integer timesRank) {
+		this.timesRank = timesRank;
 	}
 	public Integer getOutPcsQty() {
 		return outPcsQty;

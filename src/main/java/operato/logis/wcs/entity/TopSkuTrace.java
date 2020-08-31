@@ -10,7 +10,7 @@ public class TopSkuTrace extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	/**
 	 * SerialVersion UID
 	 */
-	private static final long serialVersionUID = 133616355584031131L;
+	private static final long serialVersionUID = 650517012770087054L;
 
 	@PrimaryKey
 	@Column (name = "id", nullable = false, length = 40)
@@ -36,6 +36,12 @@ public class TopSkuTrace extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 
 	@Column (name = "duration_days")
 	private Integer durationDays;
+
+	@Column (name = "pcs_rank")
+	private Integer pcsRank;
+
+	@Column (name = "times_rank")
+	private Integer timesRank;
 
 	@Column (name = "scope_days_pcs_qty")
 	private Integer scopeDaysPcsQty;
@@ -117,6 +123,22 @@ public class TopSkuTrace extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 
 	public void setDurationDays(Integer durationDays) {
 		this.durationDays = durationDays;
+	}
+
+	public Integer getPcsRank() {
+		return pcsRank;
+	}
+
+	public void setPcsRank(Integer pcsRank) {
+		this.pcsRank = pcsRank;
+	}
+
+	public Integer getTimesRank() {
+		return timesRank;
+	}
+
+	public void setTimesRank(Integer timesRank) {
+		this.timesRank = timesRank;
 	}
 
 	public Integer getScopeDaysPcsQty() {

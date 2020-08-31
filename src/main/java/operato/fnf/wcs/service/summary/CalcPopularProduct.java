@@ -95,8 +95,8 @@ public class CalcPopularProduct extends AbstractQueryService {
 			TopSkuTrace obj = skuSumMap.get(skuCd);
 			obj.setScopeAvgPcsQty(((float)obj.getScopeDaysPcsQty())/setting.getScopeDays());
 			
-			float index = obj.getScopeDaysPcsQty() * setting.getOutbQtyRate()/100 + obj.getScopeDaysSkuCnt() * setting.getOutbDaysRate()/100;
-			obj.setPopularIndex(index);
+			float index = obj.getPcsRank() * setting.getOutbQtyRate()/100 + obj.getTimesRank() * setting.getOutbDaysRate()/100;
+			obj.setPopularIndex(index);	// index
 			obj.setDurationPcs(obj.getDurationDays() * obj.getScopeAvgPcsQty());
 			traces.add(obj);
 		}
@@ -104,7 +104,7 @@ public class CalcPopularProduct extends AbstractQueryService {
 		queryManager.insertBatch(traces);
 		
 		ResponseObj resp = new ResponseObj();
-		//resp.setItems(traces);
+		resp.setItems(traces);
 		resp.setTotal(traces.size());
 		return resp;
 	}

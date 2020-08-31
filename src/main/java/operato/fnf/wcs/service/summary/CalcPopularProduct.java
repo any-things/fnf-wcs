@@ -103,7 +103,7 @@ public class CalcPopularProduct extends AbstractQueryService {
 			
 			float index = obj.getPcsRank() * setting.getOutbQtyRate()/100 + obj.getTimesRank() * setting.getOutbDaysRate()/100;
 			popSku.setPopularIndex(index);	// index
-			popSku.setDurationPcs(obj.getDurationDays() * obj.getScopeAvgPcsQty());
+			popSku.setDurationPcs(popSku.getDurationDays() * popSku.getScopeAvgPcsQty());
 			popularSkus.add(popSku);
 		}
 		

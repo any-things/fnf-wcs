@@ -21,8 +21,9 @@ import xyz.elidom.util.ValueUtil;
 @Component
 public class CalcPopularProduct extends AbstractQueryService {
 	public ResponseObj calcPopularProduct(Map<String, Object> params) throws Exception {
+		Map<String, Object> kvParams = FnfUtils.parseQueryParamsToMap(TopSkuTrace.class, params);
 		
-		String date = String.valueOf(params.get("sumDate"));
+		String date = String.valueOf(kvParams.get("sumDate"));
 		if (ValueUtil.isEmpty(date)) {
 			date = DateUtil.getCurrentDay();
 		}

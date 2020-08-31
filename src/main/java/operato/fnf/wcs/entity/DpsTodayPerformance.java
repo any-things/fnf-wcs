@@ -4,7 +4,7 @@ import xyz.elidom.dbist.annotation.Column;
 import xyz.elidom.dbist.annotation.GenerationRule;
 import xyz.elidom.dbist.annotation.Table;
 
-@Table(name = "dps_today_performance", idStrategy = GenerationRule.UUID)
+@Table(name = "dps_today_performance", ignoreDdl = true, idStrategy = GenerationRule.UUID)
 public class DpsTodayPerformance extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	/**
 	 * SerialVersion UID

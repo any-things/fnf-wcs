@@ -1,7 +1,7 @@
 select 
 	uuid_generate_v4() as id
 	, jb.batch_group_id as batch_no
-	, to_char(to_date(jb.job_date, 'YYYY-MM-DD'), 'YYYYMMDD') as job_date
+	, :jobDate as job_date
 	, '0' as job_type
 	, '99999999' as box_id
 	, op.sub_equip_cd as chute_no

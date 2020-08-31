@@ -202,7 +202,12 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 			String msg = MessageUtil.getMessage("no_batch_id", "설비에서 운영중인 BatchId가 아닙니다.");
 			throw ThrowUtil.newValidationErrorWithNoLog(msg);
 		}
-		Map<String, Object> inspParams = ValueUtil.newMap("batchId", batch.getId());
+		
+		Query condition = new Query();
+		condition.addFilter("id", batch.getBatchGroupId());
+		JobBatch mainBatch = this.queryManager.select(JobBatch.class, condition);
+
+		Map<String, Object> inspParams = ValueUtil.newMap("batchId,jobDate", batch.getId(), mainBatch.getJobDate());
 		
 		List<WcsMhePasOrder> pasOrderList = this.queryManager.selectListBySql(queryStore.getSrtnUploadBatchSendPasOrder(), inspParams, WcsMhePasOrder.class, 0, 0);
 		if(ValueUtil.isNotEmpty(pasOrderList)) {

@@ -68,6 +68,7 @@ public class CalcPopularProduct extends AbstractQueryService {
 			trace.setWorkType("DPS");
 			trace.setOutbCountRate(setting.getOutbQtyRate());
 			trace.setPcsRank(obj.getPcsRank());
+			trace.setTimesRank(obj.getTimesRank());
 			
 			Integer pcsQty = trace.getScopeDaysPcsQty();
 			Integer skuCnt = trace.getScopeDaysSkuCnt();

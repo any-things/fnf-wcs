@@ -55,8 +55,15 @@ public class GetFloorRackStock extends AbstractLogisService {
 		String skuCntSql = FnfUtils.queryCustServiceWithCheck("board_floor_rack_sku_cnt");
 		Float totalSkuCnt = wmsQueryMgr.selectBySql(skuCntSql, wmsParams, Float.class);
 		
+		if (ValueUtil.isEmpty(totalSkuCnt)) {
+			return new ResponseObj();
+		}
+		
 		String usedRateSql = FnfUtils.queryCustServiceWithCheck("board_floor_rack_used_rate");
 		FloorTotalSum floorTotalSum = wmsQueryMgr.selectBySql(usedRateSql, wmsParams, FloorTotalSum.class);
+		if (ValueUtil.isEmpty(floorTotalSum)) {
+			return new ResponseObj();
+		}
 		floorTotalSum.setSkuCount((long)Math.round(totalSkuCnt));
 		
 		Map<String, Object> values = new HashMap<>();

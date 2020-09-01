@@ -58,8 +58,8 @@ public class GetDpsOrderSum extends AbstractLogisService {
 		}
 		
 		for (DpsTodayPerformance obj: dpsOrders) {
-			DpsOrderDetail itemGroup = itemGroupMap.get(obj.getItemCd());
-			FnfUtils.populate(itemGroup, obj, false);
+			DpsOrderDetail detail = itemGroupMap.get(obj.getItemCd());
+			obj.setItemSeason(detail.getItemGroup());
 		}
 		
 		String orderCntSql = FnfUtils.queryCustServiceWithCheck("dps_today_order_cnt_by_pack_type");

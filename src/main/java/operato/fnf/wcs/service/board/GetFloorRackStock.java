@@ -15,24 +15,58 @@ import xyz.anythings.base.service.impl.AbstractLogisService;
 import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.orm.manager.DataSourceManager;
 import xyz.elidom.util.BeanUtil;
-import xyz.elidom.util.DateUtil;
 import xyz.elidom.util.ValueUtil;
 
 @Component
 public class GetFloorRackStock extends AbstractLogisService {
 	public ResponseObj getFloorRackStock(Map<String, Object> params) throws Exception {
-		String floorTcd = String.valueOf(params.get("floorTcd"));	// "3F%"
-		String wcellNo = String.valueOf(params.get("wcellNo"));	// "3F%"
 		String buildingTcd = String.valueOf(params.get("buildingTcd"));
-		String date = String.valueOf(params.get("date"));
-		
-		if (ValueUtil.isEmpty(date)) {
-			params.put("date", DateUtil.getCurrentDay());
-		}
+		String floorTcd = String.valueOf(params.get("floorTcd"));	// "3F%"
+		String brand = String.valueOf(params.get("brand"));
+		String itemCd = String.valueOf(params.get("itemCd"));
+		String itemGcd = String.valueOf(params.get("itemGcd"));
+		String itemNm = String.valueOf(params.get("itemNm"));
+		String season = String.valueOf(params.get("season"));
+		String color = String.valueOf(params.get("color"));
+		String style = String.valueOf(params.get("style"));
+		String size = String.valueOf(params.get("size"));
+		String assortYn = String.valueOf(params.get("assortYn"));
+		String assortCd = String.valueOf(params.get("assortCd"));
 		
 		String sql = FnfUtils.queryCustServiceWithCheck("board_floor_rack_stock");
 		IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager("WMS");
-		Map<String, Object> wmsParams = ValueUtil.newMap("floorTcd,wcellNo,buildingTcd,date", floorTcd,wcellNo,buildingTcd,date);
+		Map<String, Object> wmsParams = ValueUtil.newMap("floorTcd,buildingTcd", floorTcd,buildingTcd);
+		if (ValueUtil.isNotEmpty(brand)) {
+			wmsParams.put("brand", brand);
+		}
+		if (ValueUtil.isNotEmpty(itemCd)) {
+			wmsParams.put("itemCd", itemCd);
+		}
+		if (ValueUtil.isNotEmpty(brand)) {
+			wmsParams.put("itemGcd", itemGcd);
+		}
+		if (ValueUtil.isNotEmpty(itemNm)) {
+			wmsParams.put("itemNm", itemNm);
+		}
+		if (ValueUtil.isNotEmpty(season)) {
+			wmsParams.put("season", season);
+		}
+		if (ValueUtil.isNotEmpty(color)) {
+			wmsParams.put("color", color);
+		}
+		if (ValueUtil.isNotEmpty(style)) {
+			wmsParams.put("style", style);
+		}
+		if (ValueUtil.isNotEmpty(size)) {
+			wmsParams.put("size", size);
+		}
+		if (ValueUtil.isNotEmpty(assortYn)) {
+			wmsParams.put("assortYn", assortYn);
+		}
+		if (ValueUtil.isNotEmpty(assortCd)) {
+			wmsParams.put("assortCd", assortCd);
+		}
+		
 		List<BoardRackStock> list = wmsQueryMgr.selectListBySql(sql, wmsParams, BoardRackStock.class, 0, 0);
 		
 		Map<String, BoardCellSum> cellMap = new HashMap<>();
@@ -47,8 +81,8 @@ public class GetFloorRackStock extends AbstractLogisService {
 				cell.setCapacity(cell.getCapacity() + obj.getSpaceCbm());
 				cell.setUsed(cell.getUsed() + obj.getUsedRate());	// 셀 사용율을 함수내에서 계산해줌.
 			}
-			if (ValueUtil.isNotEmpty(obj.getSkuCd()) && !cell.getSkuCds().contains(obj.getSkuCd())) {
-				cell.addSkuCd(obj.getSkuCd());
+			if (ValueUtil.isNotEmpty(obj.getItemCd()) && !cell.getSkuCds().contains(obj.getItemCd())) {
+				cell.addSkuCd(obj.getItemCd());
 			}
 		}
 		

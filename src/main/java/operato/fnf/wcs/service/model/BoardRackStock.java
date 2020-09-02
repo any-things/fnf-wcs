@@ -4,8 +4,8 @@ public class BoardRackStock {
 	private String whCd;
 	private String zoneCd;
 	private String location;
-	private String skuCd;
-	private String skuNm;
+	private String itemCd;
+	private String itemNm;
 	private String itemGcd;
 	private String itemGnm;
 	private String brand;
@@ -36,17 +36,17 @@ public class BoardRackStock {
 	public void setLocation(String location) {
 		this.location = location;
 	}
-	public String getSkuCd() {
-		return skuCd;
+	public String getItemCd() {
+		return itemCd;
 	}
-	public void setSkuCd(String skuCd) {
-		this.skuCd = skuCd;
+	public void setItemCd(String itemCd) {
+		this.itemCd = itemCd;
 	}
-	public String getSkuNm() {
-		return skuNm;
+	public String getItemNm() {
+		return itemNm;
 	}
-	public void setSkuNm(String skuNm) {
-		this.skuNm = skuNm;
+	public void setItemNm(String itemNm) {
+		this.itemNm = itemNm;
 	}
 	public String getItemGcd() {
 		return itemGcd;

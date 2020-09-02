@@ -270,7 +270,11 @@ public class SmsInspSendService extends AbstractQueryService {
 			scan.setInbNo(result.getBoxId());
 			scan.setInbDetlNo(result.getSkuCd());
 			scan.setItemCd(result.getSkuCd());
-			scan.setQty(result.getQty());
+			if(ValueUtil.isEqual(result.getNewYn(), LogisConstants.CAP_Y_STRING)) {
+				scan.setQty(result.getNewQty());
+			} else {
+				scan.setQty(result.getQty());
+			}
 			scan.setDmgQty(result.getDmgQty());
 			scan.setNewYn(result.getNewYn());
 			scan.setInsPersonId(result.getMheNo());
@@ -280,7 +284,7 @@ public class SmsInspSendService extends AbstractQueryService {
 			resultValue.add(scan);
 		}
 		
-		this.queryManager.updateBatch(pasResults);
+		AnyOrmUtil.updateBatch(pasResults, 100, "ifYn");
 		dsQueryManager.updateBatch(rtnCnfmList);
 		wmsQueryManager.insertBatch(resultValue);
 	}

@@ -20,33 +20,33 @@ import xyz.elidom.util.ValueUtil;
 @Component
 public class GetFloorRackStock extends AbstractLogisService {
 	public ResponseObj getFloorRackStock(Map<String, Object> params) throws Exception {
-		String buildingTcd = String.valueOf(params.get("buildingTcd"));
-		String floorTcd = String.valueOf(params.get("floorTcd"));	// "3F%"
+		String buildingTcd = String.valueOf(params.get("building_tcd"));
+		String floorTcd = String.valueOf(params.get("floor_tcd"));	// "3F%"
 		String brand = String.valueOf(params.get("brand"));
-		String itemCd = String.valueOf(params.get("itemCd"));
-		String itemGcd = String.valueOf(params.get("itemGcd"));
-		String itemNm = String.valueOf(params.get("itemNm"));
+		String itemCd = String.valueOf(params.get("item_cd"));
+		String itemGcd = String.valueOf(params.get("item_gcd"));
+		String itemNm = String.valueOf(params.get("item_nm"));
 		String season = String.valueOf(params.get("season"));
 		String color = String.valueOf(params.get("color"));
 		String style = String.valueOf(params.get("style"));
 		String size = String.valueOf(params.get("size"));
-		String assortYn = String.valueOf(params.get("assortYn"));
-		String assortCd = String.valueOf(params.get("assortCd"));
+		String assortYn = String.valueOf(params.get("assort_yn"));
+		String assortCd = String.valueOf(params.get("assort_cd"));
 		
-		String sql = FnfUtils.queryCustServiceWithCheck("board_floor_rack_stock");
+		
 		IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager("WMS");
-		Map<String, Object> wmsParams = ValueUtil.newMap("floorTcd,buildingTcd", floorTcd,buildingTcd);
+		Map<String, Object> wmsParams = ValueUtil.newMap("building_tcd,floor_tcd", buildingTcd,floorTcd);
 		if (ValueUtil.isNotEmpty(brand)) {
 			wmsParams.put("brand", brand);
 		}
 		if (ValueUtil.isNotEmpty(itemCd)) {
-			wmsParams.put("itemCd", itemCd);
+			wmsParams.put("item_cd", itemCd);
 		}
-		if (ValueUtil.isNotEmpty(brand)) {
-			wmsParams.put("itemGcd", itemGcd);
+		if (ValueUtil.isNotEmpty(itemGcd)) {
+			wmsParams.put("item_gcd", itemGcd);
 		}
 		if (ValueUtil.isNotEmpty(itemNm)) {
-			wmsParams.put("itemNm", itemNm);
+			wmsParams.put("item_nm", itemNm);
 		}
 		if (ValueUtil.isNotEmpty(season)) {
 			wmsParams.put("season", season);
@@ -61,12 +61,13 @@ public class GetFloorRackStock extends AbstractLogisService {
 			wmsParams.put("size", size);
 		}
 		if (ValueUtil.isNotEmpty(assortYn)) {
-			wmsParams.put("assortYn", assortYn);
+			wmsParams.put("assort_yn", assortYn);
 		}
 		if (ValueUtil.isNotEmpty(assortCd)) {
-			wmsParams.put("assortCd", assortCd);
+			wmsParams.put("assort_cd", assortCd);
 		}
 		
+		String sql = FnfUtils.queryCustServiceWithCheck("board_floor_rack_stock");	// detail
 		List<BoardRackStock> list = wmsQueryMgr.selectListBySql(sql, wmsParams, BoardRackStock.class, 0, 0);
 		
 		Map<String, BoardCellSum> cellMap = new HashMap<>();
@@ -86,19 +87,8 @@ public class GetFloorRackStock extends AbstractLogisService {
 			}
 		}
 		
-		String skuCntSql = FnfUtils.queryCustServiceWithCheck("board_floor_rack_sku_cnt");
-		Float totalSkuCnt = wmsQueryMgr.selectBySql(skuCntSql, wmsParams, Float.class);
-		
-		if (ValueUtil.isEmpty(totalSkuCnt)) {
-			return new ResponseObj();
-		}
-		
-		String usedRateSql = FnfUtils.queryCustServiceWithCheck("board_floor_rack_used_rate");
-		FloorTotalSum floorTotalSum = wmsQueryMgr.selectBySql(usedRateSql, wmsParams, FloorTotalSum.class);
-		if (ValueUtil.isEmpty(floorTotalSum)) {
-			return new ResponseObj();
-		}
-		floorTotalSum.setSkuCount((long)Math.round(totalSkuCnt));
+		String skuCntSql = FnfUtils.queryCustServiceWithCheck("board_floor_rack_sum");	// 층 summary
+		FloorTotalSum floorTotalSum = wmsQueryMgr.selectBySql(skuCntSql, wmsParams, FloorTotalSum.class);
 		
 		Map<String, Object> values = new HashMap<>();
 		values.put("cells", cellMap);

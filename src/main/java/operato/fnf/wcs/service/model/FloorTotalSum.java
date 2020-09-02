@@ -2,16 +2,22 @@ package operato.fnf.wcs.service.model;
 
 public class FloorTotalSum {
 	private Long totalCap;
+	private Float usedRate;
 	private Long boxQty;
 	private Long pcsQty;
 	private Long skuCount;
-	private Float usedRate;
 	
 	public Long getTotalCap() {
 		return totalCap;
 	}
 	public void setTotalCap(Long totalCap) {
 		this.totalCap = totalCap;
+	}
+	public Float getUsedRate() {
+		return usedRate;
+	}
+	public void setUsedRate(Float usedRate) {
+		this.usedRate = usedRate;
 	}
 	public Long getBoxQty() {
 		return boxQty;
@@ -30,11 +36,5 @@ public class FloorTotalSum {
 	}
 	public void setSkuCount(Long skuCount) {
 		this.skuCount = skuCount;
-	}
-	public Float getUsedRate() {
-		return usedRate;
-	}
-	public void setUsedRate(Float usedRate) {
-		this.usedRate = usedRate;
 	}
 }

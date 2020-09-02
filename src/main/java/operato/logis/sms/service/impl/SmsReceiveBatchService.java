@@ -263,9 +263,14 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 			
 			IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsMheItemBarcode.class);
 			String sql = "select * from mhe_item_barcode where item_cd = :itemCd";
-			WmsMheItemBarcode sku = wmsQueryMgr.selectBySql(sql, ValueUtil.newMap("itemCd", skuValue.get("sku_cd")), WmsMheItemBarcode.class);
-			if(ValueUtil.isNotEmpty(sku)) {
-				batch.setRfidYn(sku.getRfidItemYn());
+			
+			if(ValueUtil.isNotEmpty(skuValue)) {
+				WmsMheItemBarcode sku = wmsQueryMgr.selectBySql(sql, ValueUtil.newMap("itemCd", skuValue.get("sku_cd")), WmsMheItemBarcode.class);
+				if(ValueUtil.isNotEmpty(sku)) {
+					batch.setRfidYn(sku.getRfidItemYn());
+				} else {
+					batch.setRfidYn(LogisConstants.N_CAP_STRING);
+				}
 			} else {
 				batch.setRfidYn(LogisConstants.N_CAP_STRING);
 			}

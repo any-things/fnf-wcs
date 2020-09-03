@@ -20,18 +20,18 @@ import xyz.elidom.util.ValueUtil;
 @Component
 public class GetFloorRackStock extends AbstractLogisService {
 	public ResponseObj getFloorRackStock(Map<String, Object> params) throws Exception {
-		String buildingTcd = String.valueOf(params.get("building_tcd"));
-		String floorTcd = String.valueOf(params.get("floor_tcd"));	// "3F%"
+		String buildingTcd = String.valueOf(params.get("buildingTcd"));
+		String floorTcd = String.valueOf(params.get("floorTcd"));	// "3F%"
 		String brand = String.valueOf(params.get("brand"));
-		String itemCd = String.valueOf(params.get("item_cd"));
-		String itemGcd = String.valueOf(params.get("item_gcd"));
-		String itemNm = String.valueOf(params.get("item_nm"));
+		String itemCd = String.valueOf(params.get("itemCd"));
+		String itemGcd = String.valueOf(params.get("itemGcd"));
+		String itemNm = String.valueOf(params.get("itemNm"));
 		String season = String.valueOf(params.get("season"));
 		String color = String.valueOf(params.get("color"));
 		String style = String.valueOf(params.get("style"));
 		String size = String.valueOf(params.get("size"));
-		String assortYn = String.valueOf(params.get("assort_yn"));
-		String assortCd = String.valueOf(params.get("assort_cd"));
+		String assortYn = String.valueOf(params.get("assortYn"));
+		String assortCd = String.valueOf(params.get("assortCd"));
 		
 		
 		IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager("WMS");

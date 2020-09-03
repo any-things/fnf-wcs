@@ -430,13 +430,39 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 		int idx = 0;
 		int cellIdx = 0;
 		
+		String enableCnt = queryStore.getSrtnEnableCellCntQuery();
+		Map<String, Object> categoryCellParamMap = ValueUtil.newMap("chuteNo,activeFlag,categoryFlag", enableChute, true, true);
+		List<Map> enableCntList = this.queryManager.selectListBySql(enableCnt, categoryCellParamMap, Map.class, 0, 0);
+		Map<String, Object> chuteCellCnt = new HashMap<>();
+		for (Map chute : enableCntList) {
+			chuteCellCnt.put(ValueUtil.toString(chute.get("chute_no")), chute.get("cnt"));
+		}
+		
+		
 		for (OrderPreprocess orderPreprocess : items) {
 			if(ValueUtil.isEmpty(orderPreprocess.getSubEquipCd())) {
+				int cellCnt = 0;
+				String currentChute = "";
 				if(normalFlag) {
 					orderPreprocess.setSubEquipCd(enableChute.get(idx));
+					
+					cellCnt = ValueUtil.toInteger(chuteCellCnt.get(enableChute.get(idx))) - 1;
+					chuteCellCnt.put(enableChute.get(idx), cellCnt);
+					currentChute = enableChute.get(idx);
 				} else {
 					orderPreprocess.setSubEquipCd(reverseChute.get(idx));
+					
+					cellCnt = ValueUtil.toInteger(chuteCellCnt.get(reverseChute.get(idx))) - 1;
+					chuteCellCnt.put(reverseChute.get(idx), cellCnt);
+					currentChute = reverseChute.get(idx);
 				}
+				
+				if(cellCnt <= 0) {
+					enableChute.remove(currentChute);
+					reverseChute.remove(currentChute);
+				}
+				
+				
 				idx++;
 				if(idx >= enableChute.size()) {
 					idx = 0;

@@ -230,6 +230,15 @@ public class SmsQueryStore extends AbstractQueryStore {
 	public String getSrtnCellStatusQuery() {
 		return this.getQueryByPath("srtn/srtnCellStatus");
 	}
+	
+	/**
+	 * 작업 배치 별 주문 가공 정보에서 슈트별 가용 Cell 수량 조회 쿼리
+	 *
+	 * @return
+	 */
+	public String getSrtnEnableCellCntQuery() {
+		return this.getQueryByPath("srtn/srtnEnableCellCnt");
+	}
 
 	/**
 	 * 작업 배치 별 주문 가공 정보에서 Category Cell 상태를 조회 쿼리

@@ -180,10 +180,12 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 		// 2. 사용자가 선택한 슈트번호로 데이터 가공
 		List<String> enableChute = new ArrayList<String>();
 		List<String> reverseChute = new ArrayList<String>();
+		List<String> tempEnableChute = new ArrayList<String>();
 		for(Entry<String, Object> entry : chuteStatus.entrySet()) {
 			if(ValueUtil.isEqual(entry.getValue(), SysConstants.CAP_Y_STRING)) {
 				enableChute.add(entry.getKey().replaceAll("chute-check-", ""));
 				reverseChute.add(entry.getKey().replaceAll("chute-check-", ""));
+				tempEnableChute.add(entry.getKey().replaceAll("chute-check-", ""));
 			}
 		}
 		
@@ -205,7 +207,7 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 		// 4. 사용가능한 Cell에 주문정보를 매핑한다.
 		
 		Collections.reverse(reverseChute);
-		this.assignChuteCell(items, enableChute, reverseChute, cellList);
+		this.assignChuteCell(items, tempEnableChute, reverseChute, cellList);
 		
 		if(isUpdate) {
 			this.queryManager.updateBatch(items);
@@ -431,7 +433,7 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 		int cellIdx = 0;
 		
 		String enableCnt = queryStore.getSrtnEnableCellCntQuery();
-		Map<String, Object> categoryCellParamMap = ValueUtil.newMap("chuteNo,activeFlag,categoryFlag", enableChute, true, true);
+		Map<String, Object> categoryCellParamMap = ValueUtil.newMap("chuteNo,activeFlag,categoryFlag", enableChute, true, false);
 		List<Map> enableCntList = this.queryManager.selectListBySql(enableCnt, categoryCellParamMap, Map.class, 0, 0);
 		Map<String, Object> chuteCellCnt = new HashMap<>();
 		for (Map chute : enableCntList) {

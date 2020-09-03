@@ -36,34 +36,34 @@ public class GetFloorRackStock extends AbstractLogisService {
 		
 		IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager("WMS");
 		Map<String, Object> wmsParams = ValueUtil.newMap("building_tcd,floor_tcd", buildingTcd,floorTcd);
-		if (ValueUtil.isNotEmpty(brand)) {
+		if (ValueUtil.isNotEmpty(brand) || !"undefined".equals(brand)) {
 			wmsParams.put("brand", brand);
 		}
-		if (ValueUtil.isNotEmpty(itemCd)) {
+		if (ValueUtil.isNotEmpty(itemCd) || !"undefined".equals(itemCd)) {
 			wmsParams.put("item_cd", itemCd);
 		}
-		if (ValueUtil.isNotEmpty(itemGcd)) {
+		if (ValueUtil.isNotEmpty(itemGcd) || !"undefined".equals(itemGcd)) {
 			wmsParams.put("item_gcd", itemGcd);
 		}
-		if (ValueUtil.isNotEmpty(itemNm)) {
+		if (ValueUtil.isNotEmpty(itemNm) || !"undefined".equals(itemNm)) {
 			wmsParams.put("item_nm", itemNm);
 		}
-		if (ValueUtil.isNotEmpty(season)) {
+		if (ValueUtil.isNotEmpty(season) || !"undefined".equals(season)) {
 			wmsParams.put("season", season);
 		}
-		if (ValueUtil.isNotEmpty(color)) {
+		if (ValueUtil.isNotEmpty(color) || !"undefined".equals(color)) {
 			wmsParams.put("color", color);
 		}
-		if (ValueUtil.isNotEmpty(style)) {
+		if (ValueUtil.isNotEmpty(style) || !"undefined".equals(style)) {
 			wmsParams.put("style", style);
 		}
-		if (ValueUtil.isNotEmpty(size)) {
+		if (ValueUtil.isNotEmpty(size) || !"undefined".equals(size)) {
 			wmsParams.put("size", size);
 		}
-		if (ValueUtil.isNotEmpty(assortYn)) {
+		if (ValueUtil.isNotEmpty(assortYn) || !"undefined".equals(assortYn)) {
 			wmsParams.put("assort_yn", assortYn);
 		}
-		if (ValueUtil.isNotEmpty(assortCd)) {
+		if (ValueUtil.isNotEmpty(assortCd) || !"undefined".equals(assortCd)) {
 			wmsParams.put("assort_cd", assortCd);
 		}
 		

@@ -153,7 +153,7 @@ public class WcsBatchProgressService extends AbstractQueryService {
 		} else if (ValueUtil.isEqual(SmsConstants.JOB_TYPE_SRTN, jobType)) {
 			List<String> batchList = this.searchBatchIds(batch);
 			sql = "SELECT COALESCE(SUM(CMPT_QTY), 0) AS RESULT FROM MHE_DAS_RTN_BOX_RSLT WHERE WH_CD = :whCd AND BATCH_NO IN ( :batchList ) AND DEL_YN = :delYn";
-			
+//			sql = "SELECT COALESCE(SUM(QTY), 0) AS RESULT FROM MHE_PAS_RLST WHERE BATCH_NO IN ( :batchList )";
 			params.put("batchList", batchList);
 			params.put("delYn", LogisConstants.N_CAP_STRING);
 		} else if (ValueUtil.isEqual(SmsConstants.JOB_TYPE_SDAS, jobType)) {

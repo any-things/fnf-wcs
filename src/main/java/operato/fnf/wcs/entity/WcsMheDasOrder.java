@@ -53,7 +53,7 @@ public class WcsMheDasOrder extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "chute_no", length = 3)
 	private String chuteNo;
 
-	@Column (name = "shop_cd", length = 20)
+	@Column (name = "shop_cd", length = 30)
 	private String shopCd;
 
 	@Column (name = "shop_nm", length = 200)

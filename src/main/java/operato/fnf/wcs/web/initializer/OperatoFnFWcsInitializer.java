@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import operato.fnf.wcs.config.ModuleProperties;
 import operato.fnf.wcs.query.store.FnFDasQueryStore;
 import operato.fnf.wcs.query.store.FnFDpsQueryStore;
+import operato.fnf.wcs.query.store.FnFSmsQueryStore;
 import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.config.ModuleConfigSet;
 import xyz.elidom.sys.system.config.module.IModuleProperties;
@@ -53,6 +54,9 @@ public class OperatoFnFWcsInitializer {
 	
 	@Autowired
 	private FnFDpsQueryStore fnfDpsQueryStore;
+	
+	@Autowired
+	private FnFSmsQueryStore fnfSmsQueryStore;
 	
 	@EventListener({ ContextRefreshedEvent.class })
 	public void refresh(ContextRefreshedEvent event) {
@@ -100,6 +104,7 @@ public class OperatoFnFWcsInitializer {
 		String dbType = this.queryManager.getDbType();
 		this.fnfDasQueryStore.initQueryStore(dbType);
 		this.fnfDpsQueryStore.initQueryStore(dbType);
+		this.fnfSmsQueryStore.initQueryStore(dbType);
 	}
 
 }

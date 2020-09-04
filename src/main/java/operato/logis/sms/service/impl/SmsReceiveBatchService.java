@@ -18,6 +18,7 @@ import operato.fnf.wcs.entity.WcsMheHr;
 import operato.fnf.wcs.entity.WmsMheDr;
 import operato.fnf.wcs.entity.WmsMheHr;
 import operato.fnf.wcs.entity.WmsMheItemBarcode;
+import operato.fnf.wcs.entity.WmsWmtUifImpInbRtnTrg;
 import operato.logis.sms.SmsConstants;
 import operato.logis.sms.query.SmsQueryStore;
 import xyz.anythings.base.LogisConstants;
@@ -39,7 +40,9 @@ import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.orm.manager.DataSourceManager;
 import xyz.elidom.sys.SysConstants;
 import xyz.elidom.sys.util.DateUtil;
+import xyz.elidom.sys.util.MessageUtil;
 import xyz.elidom.sys.util.SettingUtil;
+import xyz.elidom.sys.util.ThrowUtil;
 import xyz.elidom.util.BeanUtil;
 import xyz.elidom.util.ValueUtil;
 
@@ -254,7 +257,25 @@ public class SmsReceiveBatchService extends AbstractQueryService {
 			// 4. JobBatch 생성 
 			JobBatch batch = JobBatch.createJobBatch(item.getBatchId(), ValueUtil.toString(item.getJobSeq()), receipt, item);
 			batch.setBatchType(FnFConstants.ORDER_RECEIVE_WMS);
-			this.queryManager.update(batch, "batchType");
+			
+			if(ValueUtil.isEqual(batch.getJobType(), SmsConstants.JOB_TYPE_SRTN)) {
+				String[] batchInfo = batch.getId().split("-");
+				if(batchInfo.length < 4) {
+					String msg = MessageUtil.getMessage("no_batch_id", "BatchId 형식에 맞지 않습니다.");
+					throw ThrowUtil.newValidationErrorWithNoLog(msg);
+				}
+				String totalPcsSql = "select sum(inb_ect_qty) as total_qty from WMT_UIF_IMP_INB_RTN_TRG where WH_CD = :whCd and STRR_ID = :strrId and ref_season = :season and shop_rtn_type = :rtnType and shop_rtn_seq = :jobSeq";
+				Map<String,Object> totalPcsParams = ValueUtil.newMap("whCd,strrId,season,rtnType,jobSeq", FnFConstants.WH_CD_ICF, batchInfo[0], batchInfo[1], batchInfo[2], batchInfo[3]);
+				
+				IQueryManager dsQueryManager = this.getDataSourceQueryManager(WmsWmtUifImpInbRtnTrg.class);
+				Map<String, Object> resultPcs = dsQueryManager.selectBySql(totalPcsSql, totalPcsParams, Map.class);
+				
+				batch.setParentPcs(ValueUtil.toInteger(resultPcs.get("total_qty")));
+				batch.setBatchPcs(ValueUtil.toInteger(resultPcs.get("total_qty")));
+			}
+			
+			
+			this.queryManager.update(batch, "batchType", "parentPcs", "batchPcs");
 			// 5. 데이터 복사  
 			selfSvc.cloneData(item.getBatchId(), receipt, item);
 			

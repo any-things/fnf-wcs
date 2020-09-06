@@ -13,7 +13,8 @@ public class BoardRackStock {
 	private String color;
 	private String style;
 	private String size;
-	private Integer spaceCbm;
+	private Float spaceCbm;
+	private Float usedCbm;
 	private Float usedRate;
 	private Integer boxQty;
 	private Integer pcsQty;
@@ -90,11 +91,17 @@ public class BoardRackStock {
 	public void setSize(String size) {
 		this.size = size;
 	}
-	public Integer getSpaceCbm() {
+	public Float getSpaceCbm() {
 		return spaceCbm;
 	}
-	public void setSpaceCbm(Integer spaceCbm) {
+	public void setSpaceCbm(Float spaceCbm) {
 		this.spaceCbm = spaceCbm;
+	}
+	public Float getUsedCbm() {
+		return usedCbm;
+	}
+	public void setUsedCbm(Float usedCbm) {
+		this.usedCbm = usedCbm;
 	}
 	public Float getUsedRate() {
 		return usedRate;

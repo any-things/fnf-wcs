@@ -76,14 +76,16 @@ public class GetFloorRackStock extends AbstractLogisService {
 			if (ValueUtil.isEmpty(cell)) {
 				cell = new BoardCellSum();
 				cellMap.put(obj.getLocation(), cell);
+				cell.setLocation(obj.getLocation());
 				cell.setCapacity((float)obj.getSpaceCbm());
-				cell.setUsed(obj.getUsedRate());	// 셀 사용율을 함수내에서 계산해줌.
+				cell.setUsed((float)obj.getUsedCbm());
+				cell.setUsedRate(cell.getUsed()/cell.getCapacity() * 100);
 			} else {
-				cell.setCapacity(cell.getCapacity() + obj.getSpaceCbm());
-				cell.setUsed(cell.getUsed() + obj.getUsedRate());	// 셀 사용율을 함수내에서 계산해줌.
+				cell.setUsed(cell.getUsed() + (float)obj.getUsedCbm());
+				cell.setUsedRate(cell.getUsed()/cell.getCapacity() * 100);
 			}
-			if (ValueUtil.isNotEmpty(obj.getItemCd()) && !cell.getSkuCds().contains(obj.getItemCd())) {
-				cell.addSkuCd(obj.getItemCd());
+			if (ValueUtil.isNotEmpty(obj.getItemCd()) && !cell.getItems().contains(obj)) {
+				cell.addItems(obj);
 			}
 		}
 		
@@ -91,10 +93,10 @@ public class GetFloorRackStock extends AbstractLogisService {
 		FloorTotalSum floorTotalSum = wmsQueryMgr.selectBySql(skuCntSql, wmsParams, FloorTotalSum.class);
 		
 		Map<String, Object> values = new HashMap<>();
-		values.put("cells", cellMap);
+		values.put("cellData", cellMap.values());
 		values.put("floorSum", floorTotalSum);
 		ResponseObj resp = new ResponseObj();
-		resp.setItems(list);
+//		resp.setItems(list);
 		resp.setValues(values);
 		return resp;
 	}

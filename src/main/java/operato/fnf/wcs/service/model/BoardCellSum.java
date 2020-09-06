@@ -6,10 +6,10 @@ import java.util.List;
 public class BoardCellSum {
 	private String location;
 	private Integer cellItemCount = 0;
-	private List<String> skuCds = new ArrayList<>();
+	private List<BoardRackStock> items = new ArrayList<>();
 	private Float capacity = 0f;
 	private Float used = 0f;
-	private Float cellUsedRate = 0f;
+	private Float usedRate = 0f;
 	
 	public String getLocation() {
 		return location;
@@ -23,16 +23,16 @@ public class BoardCellSum {
 	public void setCellItemCount(Integer cellItemCount) {
 		this.cellItemCount = cellItemCount;
 	}
-	public List<String> getSkuCds() {
-		return skuCds;
+	public List<BoardRackStock> getItems() {
+		return items;
 	}
-	public void setSkuCds(List<String> skuCds) {
-		this.skuCds = skuCds;
+	public void setItems(List<BoardRackStock> items) {
+		this.items = items;
 	}
-	public void addSkuCd(String skuCd) {
-		this.skuCds.add(skuCd);
+	public void addItems(BoardRackStock obj) {
+		this.items.add(obj);
 		
-		this.cellItemCount = this.skuCds.size();
+		this.cellItemCount = this.items.size();
 	}
 	public Float getCapacity() {
 		return capacity;
@@ -43,17 +43,13 @@ public class BoardCellSum {
 	public Float getUsed() {
 		return used;
 	}
+	public Float getUsedRate() {
+		return usedRate;
+	}
+	public void setUsedRate(Float usedRate) {
+		this.usedRate = usedRate;
+	}
 	public void setUsed(Float used) {
 		this.used = used;
-		this.calcUsedRate();
-	}
-	public Float getCellUsedRate() {
-		return cellUsedRate;
-	}
-	public void setCellUsedRate(Float cellUsedRate) {
-		this.cellUsedRate = cellUsedRate;
-	}
-	public void calcUsedRate() {
-		this.cellUsedRate = this.used / this.capacity * 100;
 	}
 }

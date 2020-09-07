@@ -36,10 +36,10 @@ public class SmsInspResultSendJob extends AbstractFnFJob {
 	private SmsInspSendService smsInspSendSvc;
 	
 	/**
-	 * 매 100초 마다  
+	 * 매 600초 마다  
 	 */
 	@Transactional
-	@Scheduled(initialDelay=100000, fixedDelay=60000)
+	@Scheduled(initialDelay=100000, fixedDelay=600000)
 	public void inspBoxJob() {
 		// 스케줄링 활성화 여부 체크
 		if(!this.isJobEnabeld()) {

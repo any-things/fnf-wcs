@@ -260,16 +260,19 @@ public class SmsInspSendService extends AbstractQueryService {
 				List<SKU> skuList = this.queryManager.selectListBySql(skuSql, skuParams, SKU.class, 0, 0);
 				if(ValueUtil.isEmpty(skuList)) {
 					scan.setStrrId("EMPTY");
+					scan.setItemCd(result.getSkuCd());
+					scan.setInbDetlNo(result.getSkuCd());
 				} else {
 					scan.setStrrId(skuList.get(0).getBrandCd());
 					scan.setItemCd(skuList.get(0).getSkuCd());
+					scan.setInbDetlNo(skuList.get(0).getSkuCd());
 				}
 			} else {
 				scan.setStrrId(result.getStrrId());
+				scan.setItemCd(result.getSkuCd());
+				scan.setInbDetlNo(result.getSkuCd());
 			}
 			scan.setInbNo(result.getBoxId());
-			scan.setInbDetlNo(result.getSkuCd());
-			scan.setItemCd(result.getSkuCd());
 			if(ValueUtil.isEqual(result.getNewYn(), LogisConstants.CAP_Y_STRING)) {
 				scan.setQty(result.getNewQty());
 			} else {

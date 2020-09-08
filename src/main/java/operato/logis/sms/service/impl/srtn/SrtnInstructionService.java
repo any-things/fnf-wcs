@@ -288,7 +288,7 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 			
 			IQueryManager dsQueryManager = this.getDataSourceQueryManager(WmsWmtUifImpInbRtnTrg.class);
 			List<WmsWmtUifImpInbRtnTrg> rtnTrgList = dsQueryManager.selectListBySql(queryStore.getSrtnInspBoxTrg(), inspParams, WmsWmtUifImpInbRtnTrg.class, 0, 0);
-			
+			List<WmsWmtUifImpInbRtnTrg> tempRtnTrgList = new ArrayList<WmsWmtUifImpInbRtnTrg>(rtnTrgList.size());
 			List<String> skuCdList = AnyValueUtil.filterValueListBy(rtnTrgList, "itemCd");
 			
 			if(ValueUtil.isEmpty(skuCdList)) {
@@ -313,13 +313,13 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 			for (WmsWmtUifImpInbRtnTrg trg : rtnTrgList) {
 				for (WcsMhePasOrder pas : pasList) {
 					if(ValueUtil.isEqual(trg.getRefNo(), pas.getBoxId()) && ValueUtil.isEqual(trg.getItemCd(), pas.getSkuCd())) {
-						rtnTrgList.remove(trg);
+						tempRtnTrgList.remove(trg);
 						break;
 					}
 				}
 			}
 			
-			for (WmsWmtUifImpInbRtnTrg rtnTrg : rtnTrgList) {
+			for (WmsWmtUifImpInbRtnTrg rtnTrg : tempRtnTrgList) {
 				WcsMhePasOrder wcsMhePasOrder = new WcsMhePasOrder();
 				wcsMhePasOrder.setId(UUID.randomUUID().toString());
 				wcsMhePasOrder.setBatchNo(batch.getBatchGroupId());

@@ -273,12 +273,12 @@ public class SmsInspSendService extends AbstractQueryService {
 				scan.setInbDetlNo(result.getSkuCd());
 			}
 			scan.setInbNo(result.getBoxId());
+			scan.setQty(result.getQty());
 			if(ValueUtil.isEqual(result.getNewYn(), LogisConstants.CAP_Y_STRING)) {
-				scan.setQty(result.getNewQty());
+				scan.setDmgQty(result.getDmgQty() + result.getNewQty());
 			} else {
-				scan.setQty(result.getQty());
+				scan.setDmgQty(result.getDmgQty());
 			}
-			scan.setDmgQty(result.getDmgQty());
 			scan.setNewYn(result.getNewYn());
 			scan.setInsPersonId(result.getMheNo());
 			scan.setInsDatetime(result.getInsDatetime());

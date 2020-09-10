@@ -103,16 +103,16 @@ public class CalcPopularProduct extends AbstractQueryService {
 		List<Integer> timesRank = new ArrayList<>();
 		for (String skuCd: skuSumMap.keySet()) {
 			TopSkuTrace obj = skuSumMap.get(skuCd);
-			if (pcsRank.contains(obj.getScopeDaysSkuCnt())) {
+			if (!pcsRank.contains(obj.getScopeDaysPcsQty())) {
 				pcsRank.add(obj.getScopeDaysPcsQty());
 			}
 			
-			if (timesRank.contains(obj.getScopeDaysSkuCnt())) {
+			if (!timesRank.contains(obj.getScopeDaysSkuCnt())) {
 				timesRank.add(obj.getScopeDaysSkuCnt());
 			}
 		}
-		pcsRank.sort(Comparator.naturalOrder());
-		timesRank.sort(Comparator.naturalOrder());
+		pcsRank.sort(Comparator.reverseOrder());
+		timesRank.sort(Comparator.reverseOrder());
 		
 		Map<String, Integer> wcsStockMap = this.getSkuWcsStocks(new ArrayList<>(skuSumMap.keySet()));
 		
@@ -121,15 +121,19 @@ public class CalcPopularProduct extends AbstractQueryService {
 			DpsPopularSku popSku = FnfUtils.populate(obj, new DpsPopularSku(), false);
 			popSku.setScopeAvgPcsQty(((float)obj.getScopeDaysPcsQty())/setting.getScopeDays());	// 평균재고
 			
-			popSku.setPcsRank(pcsRank.indexOf(obj.getScopeDaysPcsQty()));
-			popSku.setTimesRank(timesRank.indexOf(obj.getScopeDaysSkuCnt()));	// 출고차수랭크
+			popSku.setPcsRank(pcsRank.indexOf(obj.getScopeDaysPcsQty()) + 1);
+			popSku.setTimesRank(timesRank.indexOf(obj.getScopeDaysSkuCnt()) + 1);	// 출고차수랭크
 			
-			float index = obj.getPcsRank() * setting.getOutbQtyRate()/100 + obj.getTimesRank() * setting.getOutbDaysRate()/100;
+			float index = popSku.getPcsRank() * setting.getOutbQtyRate()/100 + popSku.getTimesRank() * setting.getOutbDaysRate()/100;
 			popSku.setPopularIndex(index);	// index
 						
 			popSku.setDurationPcs(popSku.getDurationDays() * popSku.getScopeAvgPcsQty());	// 안전재고
 			Integer wcsStockQty = wcsStockMap.get(skuCd);	// WCS재고수량
-			popSku.setWcsStockPcs((float)wcsStockQty);
+			if (ValueUtil.isNotEmpty(wcsStockQty)) {				
+				popSku.setWcsStockPcs((float)wcsStockQty);
+			} else {
+				popSku.setWcsStockPcs(0f);
+			}
 			popSku.setNeedPcs(popSku.getDurationPcs() - popSku.getWcsStockPcs());
 			
 			popularSkus.add(popSku);
@@ -139,7 +143,11 @@ public class CalcPopularProduct extends AbstractQueryService {
 		//queryManager.insertBatch(traces);
 		
 		ResponseObj resp = new ResponseObj();
-		resp.setItems(popularSkus);
+		if (popularSkus.size() >= setting.getTopCount()) {
+			resp.setItems(popularSkus.subList(0, setting.getTopCount()));
+		} else {
+			resp.setItems(popularSkus);
+		}
 		resp.setTotal(popularSkus.size());
 		return resp;
 	}

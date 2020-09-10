@@ -26,7 +26,6 @@ public class SendPopularProductToWms extends AbstractQueryService {
 		String date = String.valueOf(params.get("date"));
 		if (ValueUtil.isEmpty(date)) {
 			date = DateUtil.getCurrentDay();
-			params.put("date", date);
 		}
 		
 		ResponseObj resp = BeanUtil.get(CalcPopularProduct.class).calcPopularProduct(params);
@@ -59,7 +58,7 @@ public class SendPopularProductToWms extends AbstractQueryService {
 		sql.add("	:safetyQty,");
 		sql.add("	:wcsNeedQty,");
 		sql.add("	:itemPrty,");
-		sql.add("	'WMS'");
+		sql.add("	'WMS',");
 		sql.add("	:ifCrtDtm");
 		sql.add(")");
 		
@@ -77,6 +76,7 @@ public class SendPopularProductToWms extends AbstractQueryService {
 			Map<String, Object> paramMap = new HashMap<>();
 			paramMap.put("date", DateUtil.getCurrentDay());
 			paramMap.put("whCd", "ICF");
+			paramMap.put("strrId", " ");
 			paramMap.put("itemCd", obj.getSkuCd());
 			paramMap.put("safetyDay", obj.getDurationDays());
 			paramMap.put("avgShipQty", obj.getScopeAvgPcsQty());

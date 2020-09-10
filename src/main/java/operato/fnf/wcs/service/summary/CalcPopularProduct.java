@@ -2,6 +2,7 @@ package operato.fnf.wcs.service.summary;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,7 @@ import operato.fnf.wcs.service.model.DpsPopularSku;
 import operato.fnf.wcs.service.model.OnlineOutSkuSum;
 import operato.logis.wcs.entity.TopSkuSetting;
 import operato.logis.wcs.entity.TopSkuTrace;
+import xyz.anythings.base.entity.Stock;
 import xyz.anythings.base.model.ResponseObj;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.elidom.dbist.dml.Query;
@@ -83,12 +85,12 @@ public class CalcPopularProduct extends AbstractQueryService {
 			if (ValueUtil.isEmpty(skuCnt)) {
 				skuCnt = 0;
 			}
-			skuCnt += obj.getOutSkuTimes();
+			skuCnt += obj.getOutSkuTimes();	// 주문회수
 			
 			if (ValueUtil.isEmpty(ordCnt)) {
 				ordCnt = 0;
 			}
-			ordCnt += obj.getOutOrdCnt();
+			ordCnt += obj.getOutOrdCnt();	// 주문수량
 			
 			trace.setScopeDaysPcsQty(pcsQty);
 			trace.setScopeDaysSkuCnt(skuCnt);
@@ -96,14 +98,40 @@ public class CalcPopularProduct extends AbstractQueryService {
 		}
 		
 		List<DpsPopularSku> popularSkus = new ArrayList<>();
+		
+		List<Integer> pcsRank = new ArrayList<>();
+		List<Integer> timesRank = new ArrayList<>();
+		for (String skuCd: skuSumMap.keySet()) {
+			TopSkuTrace obj = skuSumMap.get(skuCd);
+			if (pcsRank.contains(obj.getScopeDaysSkuCnt())) {
+				pcsRank.add(obj.getScopeDaysPcsQty());
+			}
+			
+			if (timesRank.contains(obj.getScopeDaysSkuCnt())) {
+				timesRank.add(obj.getScopeDaysSkuCnt());
+			}
+		}
+		pcsRank.sort(Comparator.naturalOrder());
+		timesRank.sort(Comparator.naturalOrder());
+		
+		Map<String, Integer> wcsStockMap = this.getSkuWcsStocks(new ArrayList<>(skuSumMap.keySet()));
+		
 		for (String skuCd: skuSumMap.keySet()) {
 			TopSkuTrace obj = skuSumMap.get(skuCd);
 			DpsPopularSku popSku = FnfUtils.populate(obj, new DpsPopularSku(), false);
-			popSku.setScopeAvgPcsQty(((float)obj.getScopeDaysPcsQty())/setting.getScopeDays());
+			popSku.setScopeAvgPcsQty(((float)obj.getScopeDaysPcsQty())/setting.getScopeDays());	// 평균재고
+			
+			popSku.setPcsRank(pcsRank.indexOf(obj.getScopeDaysPcsQty()));
+			popSku.setTimesRank(timesRank.indexOf(obj.getScopeDaysSkuCnt()));	// 출고차수랭크
 			
 			float index = obj.getPcsRank() * setting.getOutbQtyRate()/100 + obj.getTimesRank() * setting.getOutbDaysRate()/100;
 			popSku.setPopularIndex(index);	// index
-			popSku.setDurationPcs(popSku.getDurationDays() * popSku.getScopeAvgPcsQty());
+						
+			popSku.setDurationPcs(popSku.getDurationDays() * popSku.getScopeAvgPcsQty());	// 안전재고
+			Integer wcsStockQty = wcsStockMap.get(skuCd);	// WCS재고수량
+			popSku.setWcsStockPcs((float)wcsStockQty);
+			popSku.setNeedPcs(popSku.getDurationPcs() - popSku.getWcsStockPcs());
+			
 			popularSkus.add(popSku);
 		}
 		
@@ -114,5 +142,19 @@ public class CalcPopularProduct extends AbstractQueryService {
 		resp.setItems(popularSkus);
 		resp.setTotal(popularSkus.size());
 		return resp;
+	}
+	
+	private Map<String, Integer> getSkuWcsStocks(List<String> skuCds) throws Exception {
+		String sql = FnfUtils.queryCustServiceWithCheck("dps_wcs_stock_sum");
+		Map<String, Object> paramMap = new HashMap<>();
+		paramMap.put("skuCds", skuCds);
+		List<Stock> stocks = queryManager.selectListBySql(sql, paramMap, Stock.class, 0, 0);
+		
+		Map<String, Integer> map = new HashMap<>();
+		for (Stock obj: stocks) {
+			map.put(obj.getSkuCd(), obj.getStockQty());
+		}
+		
+		return map;
 	}
 }

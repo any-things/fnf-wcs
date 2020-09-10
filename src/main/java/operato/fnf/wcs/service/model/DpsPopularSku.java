@@ -17,6 +17,8 @@ public class DpsPopularSku implements Comparable<DpsPopularSku> {
 	private Float scopeAvgPcsQty;
 	private Float popularIndex;
 	private Float durationPcs;
+	private Float wcsStockPcs;
+	private Float needPcs;
 	
 	public String getId() {
 		return id;
@@ -113,6 +115,18 @@ public class DpsPopularSku implements Comparable<DpsPopularSku> {
 	}
 	public void setDurationPcs(Float durationPcs) {
 		this.durationPcs = durationPcs;
+	}
+	public Float getWcsStockPcs() {
+		return wcsStockPcs;
+	}
+	public void setWcsStockPcs(Float wcsStockPcs) {
+		this.wcsStockPcs = wcsStockPcs;
+	}
+	public Float getNeedPcs() {
+		return needPcs;
+	}
+	public void setNeedPcs(Float needPcs) {
+		this.needPcs = needPcs;
 	}
 	@Override
 	public int compareTo(DpsPopularSku o) {

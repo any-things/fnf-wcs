@@ -16,7 +16,7 @@ import xyz.elidom.util.BeanUtil;
 @Component
 public class CalcOnlineTopSku extends AbstractFnFJob {
 	@Transactional
-	@Scheduled(cron="0 0 22 * * *")
+	@Scheduled(cron="0 0 22 * * 1-5")
 	public void summaryJob() throws Exception {
 		// 1. 스케줄링 활성화 여부
 		if(!this.isJobEnabeld()) {

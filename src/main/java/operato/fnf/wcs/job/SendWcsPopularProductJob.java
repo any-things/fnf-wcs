@@ -12,14 +12,14 @@ import xyz.anythings.sys.event.model.ErrorEvent;
 import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.sys.system.context.DomainContext;
 
-public class SendWcsPopularProduct extends AbstractFnFJob {
+public class SendWcsPopularProductJob extends AbstractFnFJob {
 	
 	@Autowired
 	private SendPopularProductToWms sendPopularProductToWms;
 	
 	@Transactional
-	@Scheduled(cron = "0 0 23 * * 1-5")
-	public void inspBoxJob() {
+	@Scheduled(cron="0 0 23 * * 1-5")
+	public void sendJob() {
 		// 스케줄링 활성화 여부 체크
 		if(!this.isJobEnabeld()) {
 			return;

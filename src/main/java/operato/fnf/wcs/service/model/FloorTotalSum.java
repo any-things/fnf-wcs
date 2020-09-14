@@ -6,6 +6,7 @@ public class FloorTotalSum {
 	private Long boxQty;
 	private Long pcsQty;
 	private Long skuCount;
+	private Float cellUsedRate;
 	
 	public Long getTotalCap() {
 		return totalCap;
@@ -36,5 +37,11 @@ public class FloorTotalSum {
 	}
 	public void setSkuCount(Long skuCount) {
 		this.skuCount = skuCount;
+	}
+	public Float getCellUsedRate() {
+		return cellUsedRate;
+	}
+	public void setCellUsedRate(Float cellUsedRate) {
+		this.cellUsedRate = cellUsedRate;
 	}
 }

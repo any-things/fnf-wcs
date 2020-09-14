@@ -44,17 +44,17 @@ public class ResultSendJob extends AbstractFnFJob {
 	private final String JOB_STATUS = "das.if.result.rfid.processing";
 	
 	/**
-	 * 매 20초 마다  
+	 * 매 60초 마다  
 	 */
 	@Transactional
 	@Scheduled(initialDelay=60000, fixedDelay=60000)
 	public void summaryJob() {
 		// 스케줄링 활성화 여부 체크
 		if(!this.isJobEnabeld()) {
-			return;
+//			return;
 		}
 		
-		String isRunning = SettingUtil.getValue("STATUS_NAME");
+		String isRunning = SettingUtil.getValue(1l, JOB_STATUS);
 		if ("Y".equals(isRunning)) {
 			return;
 		}
@@ -100,7 +100,7 @@ public class ResultSendJob extends AbstractFnFJob {
 	public Setting updateJobStatus(String value) {
 		Query conds = new Query(0, 1);
 		conds.addFilter("name", JOB_STATUS);
-		Setting setting = queryManager.selectWithLock(Setting.class, conds);
+		Setting setting = queryManager.selectByCondition(Setting.class, conds);
 		
 		setting.setValue(value);
 		queryManager.update(setting);

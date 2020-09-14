@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import operato.fnf.wcs.service.summary.SendPopularProductToWms;
@@ -12,6 +13,7 @@ import xyz.anythings.sys.event.model.ErrorEvent;
 import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.sys.system.context.DomainContext;
 
+@Component
 public class SendWcsPopularProductJob extends AbstractFnFJob {
 	
 	@Autowired

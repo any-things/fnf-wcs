@@ -56,7 +56,7 @@ public class WaveMonitorJob extends AbstractFnFJob {
 	 */
 	@Transactional
 	//@Scheduled(cron="45 0/1 * * * *")
-	@Scheduled(initialDelay=125000, fixedDelay=60000)
+	@Scheduled(initialDelay=125000, fixedDelay=120000)
 	public void monitorWave() {
 		// 1. 스케줄링 활성화 여부
 		if(!this.isJobEnabeld()) {

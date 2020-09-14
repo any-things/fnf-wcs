@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import operato.fnf.wcs.service.send.DasBoxSendService;
@@ -15,8 +16,11 @@ import xyz.anythings.sys.event.model.ErrorEvent;
 import xyz.anythings.sys.util.AnyOrmUtil;
 import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.sys.entity.Domain;
+import xyz.elidom.sys.entity.Setting;
 import xyz.elidom.sys.system.context.DomainContext;
+import xyz.elidom.sys.util.SettingUtil;
 import xyz.elidom.sys.util.ValueUtil;
+import xyz.elidom.util.BeanUtil;
 
 /**
  * DAS / DPS 박스 처리 실적 전송 Job
@@ -37,6 +41,8 @@ public class ResultSendJob extends AbstractFnFJob {
 	@Autowired
 	private PickingResultSendService pickResultSendSvc;
 	
+	private final String JOB_STATUS = "das.if.result.rfid.processing";
+	
 	/**
 	 * 매 20초 마다  
 	 */
@@ -47,6 +53,13 @@ public class ResultSendJob extends AbstractFnFJob {
 		if(!this.isJobEnabeld()) {
 			return;
 		}
+		
+		String isRunning = SettingUtil.getValue("STATUS_NAME");
+		if ("Y".equals(isRunning)) {
+			return;
+		}
+		
+		BeanUtil.get(ResultSendJob.class).updateJobStatus("Y");
 		
 		logger.error("ResultSendJob is RUNNING~~");
 		
@@ -79,6 +92,20 @@ public class ResultSendJob extends AbstractFnFJob {
 				DomainContext.unsetAll();
 			}
 		}
+		
+		BeanUtil.get(ResultSendJob.class).updateJobStatus("N");
+	}
+	
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public Setting updateJobStatus(String value) {
+		Query conds = new Query(0, 1);
+		conds.addFilter("name", JOB_STATUS);
+		Setting setting = queryManager.selectWithLock(Setting.class, conds);
+		
+		setting.setValue(value);
+		queryManager.update(setting);
+		
+		return setting;
 	}
 	
 	/**

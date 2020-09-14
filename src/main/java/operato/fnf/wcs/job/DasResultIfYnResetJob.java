@@ -17,7 +17,7 @@ import xyz.elidom.util.BeanUtil;
 public class DasResultIfYnResetJob extends AbstractFnFJob {
 	
 	@Transactional
-	@Scheduled(initialDelay=31000, fixedDelay=120000)
+	@Scheduled(initialDelay=31000, fixedDelay=300000)
 	public void resetJob() {
 		// 스케줄링 활성화 여부 체크
 		if(!this.isJobEnabeld()) {

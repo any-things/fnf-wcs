@@ -1,7 +1,9 @@
 package operato.fnf.wcs.job;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -35,7 +37,13 @@ public class SendWcsPopularProductJob extends AbstractFnFJob {
 			DomainContext.setCurrentDomain(domain);
 			
 			try {
-				sendPopularProductToWms.sendPopularProductToWms(new HashMap<>());
+				Map<String, Object> params = new HashMap<>();
+				params.put("page", 0);
+				params.put("limit", 0);
+				params.put("select", new ArrayList<>());
+				params.put("query", new ArrayList<>());
+				params.put("sort", new ArrayList<>());
+				sendPopularProductToWms.sendPopularProductToWms(params);
 			} catch (Exception e) {
 				// 예외 처리
 				ErrorEvent errorEvent = new ErrorEvent(domain.getId(), "SendWcsPopularProduct_JOB_ERROR", e, null, true, true);

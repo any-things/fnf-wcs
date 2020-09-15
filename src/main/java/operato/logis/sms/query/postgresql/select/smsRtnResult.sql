@@ -1,10 +1,19 @@
 select 
-	mpo.job_date, mpr.batch_no as batch_id
-	, jb.title, mpr.chute_no, mdo.cell_no
-	, mpr.sku_cd, mpr.sku_bcd, sku.brand_cd
-	, sku.season_cd, sku.style_cd, sku.color_cd, sku.size_cd
-	, mpo.order_qty, coalesce(mpr.qty, 0) as qty
-	, coalesce(mdrbr.cmpt_qty, 0) as cmpt_qty
+	mpo.job_date
+	, mpr.batch_no as batch_id
+	, jb.title
+	, mpr.chute_no
+	, mdo.cell_no
+	, mpr.sku_cd
+	, mpr.sku_bcd as sku_barcd
+	, sku.brand_cd
+	, sku.season_cd
+	, sku.style_cd
+	, sku.color_cd
+	, sku.size_cd
+	, mpo.order_qty
+	, coalesce(mpr.qty, 0) as pas_qty
+	, coalesce(mdrbr.cmpt_qty, 0) as das_qty
 	, coalesce(mpr.qty, 0) - coalesce(mdrbr.cmpt_qty, 0) as diff_qty
 from 
 	(

@@ -390,4 +390,53 @@ public class SmsQueryStore extends AbstractQueryStore {
 	public String getSmsPasRtnResultQuery() {
 		return this.getQueryByPath("select/smsPasRtnResult");
 	}
+	
+	/**
+	 * SMS 반품 분류 상세 내역
+	 *
+	 * @return
+	 */
+	public String getSmsRtnResultQuery() {
+		return this.getQueryByPath("select/smsRtnResult");
+	}
+	/**
+	 * SMS 반품 분류 박스 내역
+	 *
+	 * @return
+	 */
+	public String getSmsRtnBoxQuery() {
+		return this.getQueryByPath("select/smsRtnBox");
+	}
+	/**
+	 * SMS 출고 분류 상세 내역
+	 *
+	 * @return
+	 */
+	public String getSmsDasResult2Query() {
+		return this.getQueryByPath("select/smsDasResult2");
+	}
+	/**
+	 * SMS 출고 분류 박스 내역
+	 *
+	 * @return
+	 */
+	public String getSmsDasBoxQuery() {
+		return this.getQueryByPath("select/smsDasBox");
+	}
+	/**
+	 * SMS PAS 실적
+	 *
+	 * @return
+	 */
+	public String getSmsPasRejectQuery() {
+		return this.getQueryByPath("select/smsRejectResult");
+	}
+	/**
+	 * SMS 반품 입고/검수 결과 
+	 *
+	 * @return
+	 */
+	public String getSmsRtnInspQuery() {
+		return this.getQueryByPath("select/smsRtnInsp");
+	}
 }

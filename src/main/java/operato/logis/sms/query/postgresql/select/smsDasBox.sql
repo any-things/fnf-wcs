@@ -12,10 +12,6 @@ SELECT
 	, SKU.STYLE_CD
 	, SKU.COLOR_CD
 	, SKU.SIZE_CD
-	, MDO.SHOP_CD
-	, MDO.SHOP_NM
-	, SKU.SKU_NM AS SKU_NM
-	, MDO.ORDER_QTY
 	, MB.CMPT_QTY AS PICKED_QTY
 FROM
 	MHE_BOX MB
@@ -44,8 +40,8 @@ WHERE
 #if($cell_no)
 AND MDO.CELL_NO LIKE :cell_no
 #end
-#if($box_id)
-AND MB.BOX_NO LIKE :box_id
+#if($box_no)
+AND MB.BOX_NO LIKE :box_no
 #end
 #if($sku_cd)
 AND MDO.ITEM_CD LIKE :sku_cd

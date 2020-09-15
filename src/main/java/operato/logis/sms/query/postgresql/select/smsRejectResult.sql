@@ -1,13 +1,13 @@
 SELECT 
 	MPO.JOB_DATE
-	, MPO.BATCH_NO
+	, MPO.BATCH_NO AS BATCH_ID
 	, JB.TITLE
 	, MPR.CHUTE_NO
 	, MPO.SHOP_CD
 	, MPO.SHOP_NM
 	, MPO.BOX_ID
 	, SKU.SKU_CD
-	, MPR.SKU_BCD
+	, MPR.SKU_BCD AS SKU_BARCD
 	, SKU.BRAND_CD
 	, SKU.SEASON_CD
 	, SKU.STYLE_CD
@@ -24,7 +24,7 @@ LEFT OUTER JOIN
 		FROM 
 			MHE_PAS_ORDER 
 		WHERE 
-			BATCH_NO = :batch_id
+			BATCH_NO in ( :batchList )
 		GROUP BY 
 			JOB_DATE, BATCH_NO, BOX_ID, SHOP_CD, SHOP_NM
 	) MPO
@@ -43,9 +43,8 @@ ON
 OR
 	MPR.SKU_CD = SKU.SKU_BARCD
 WHERE 
-	MPR.BATCH_NO = :batch_id
+	MPR.BATCH_NO in ( :batchList )
 AND 
-	--MPR.CHUTE_NO IN ('018', '019', '020', '021', '022')
 	(MPR.NEW_QTY > 0 OR MPR.DMG_QTY > 0)
 #if($shop_cd)
 AND MPO.SHOP_CD LIKE :shop_cd
@@ -54,7 +53,7 @@ AND MPO.SHOP_CD LIKE :shop_cd
 AND MPO.BOX_ID LIKE :box_id
 #end
 #if($sku_cd)
-AND SKU.SKU_CD LIKE :sku_cd
+AND (SKU.SKU_CD LIKE :sku_cd OR SKU.SKU_BARCD LIKE :sku_cd)
 #end
 ORDER BY 
 	MPR.CHUTE_NO

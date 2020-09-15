@@ -36,12 +36,12 @@ AND
 AND
 	SKU.COM_CD = :comCd
 WHERE
-	MDRR.BATCH_NO = :batch_id
+	MDRR.BATCH_NO in ( :batchList )
 #if($cell_no)
 AND MDO.CELL_NO LIKE :cell_no
 #end
-#if($box_id)
-AND MDRR.BOX_NO like :box_id
+#if($box_no)
+AND MDRR.BOX_NO like :box_no
 #end
 #if($sku_cd)
 AND MDRR.ITEM_CD like :sku_cd

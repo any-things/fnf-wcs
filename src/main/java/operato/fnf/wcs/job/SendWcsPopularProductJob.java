@@ -20,7 +20,7 @@ public class SendWcsPopularProductJob extends AbstractFnFJob {
 	private SendPopularProductToWms sendPopularProductToWms;
 	
 	@Transactional
-	@Scheduled(cron="0 30 23 * * 1-5")
+	@Scheduled(cron="0 0 23 * * 1-5")
 	public void sendJob() {
 		// 스케줄링 활성화 여부 체크
 		if(!this.isJobEnabeld()) {

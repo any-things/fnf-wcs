@@ -1,5 +1,6 @@
 package operato.fnf.wcs.service.summary;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import operato.fnf.wcs.service.model.DpsPopularSku;
 import operato.logis.wcs.entity.TopSkuSetting;
+import xyz.anythings.base.entity.SKU;
 import xyz.anythings.base.model.ResponseObj;
 import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.elidom.dbist.dml.Query;
@@ -31,6 +33,27 @@ public class SendPopularProductToWms extends AbstractQueryService {
 		ResponseObj resp = BeanUtil.get(CalcPopularProduct.class).calcPopularProduct(params);
 		@SuppressWarnings("unchecked")
 		List<DpsPopularSku> wcsList = (List<DpsPopularSku>)resp.getItems();
+		
+		Query conds = new Query(0, 1);
+		conds.addOrder("updatedAt", false);
+		TopSkuSetting setting = queryManager.selectByCondition(true, TopSkuSetting.class, conds);
+		
+		List<String> skuCds = new ArrayList<>();
+		for (DpsPopularSku obj: wcsList) {
+			if (skuCds.size() >= setting.getTopCount()) {
+				break;
+			}
+			
+			skuCds.add(obj.getSkuCd());
+		}
+		
+		Query skuConds = new Query();
+		skuConds.addFilter("skuCd", "in", skuCds);
+		List<SKU> skus = queryManager.selectList(SKU.class, skuConds);
+		Map<String, String> brandMap = new HashMap<>();
+		for (SKU obj: skus) {
+			brandMap.put(obj.getSkuCd(), obj.getBrandCd());
+		}
 		
 		StringJoiner sql = new StringJoiner(SysConstants.LINE_SEPARATOR);
 		sql.add("INSERT INTO wcs_imp_dps_repl_buffer_rcmd (");
@@ -62,13 +85,9 @@ public class SendPopularProductToWms extends AbstractQueryService {
 		sql.add("	:ifCrtDtm");
 		sql.add(")");
 		
-		Query conds = new Query(0, 1);
-		conds.addOrder("updatedAt", false);
-		TopSkuSetting setting = queryManager.selectByCondition(true, TopSkuSetting.class, conds);
-		
 		int i = 0;
 		for (DpsPopularSku obj: wcsList) {
-			if (i >= setting.getTopCount()) {	// 50개만 넘겨줌
+			if (i >= setting.getTopCount()) {
 				break;
 			}
 			
@@ -76,7 +95,7 @@ public class SendPopularProductToWms extends AbstractQueryService {
 			Map<String, Object> paramMap = new HashMap<>();
 			paramMap.put("date", DateUtil.getCurrentDay());
 			paramMap.put("whCd", "ICF");
-			paramMap.put("strrId", " ");
+			paramMap.put("strrId", brandMap.get(obj.getSkuCd()));
 			paramMap.put("itemCd", obj.getSkuCd());
 			paramMap.put("safetyDay", obj.getDurationDays());
 			paramMap.put("avgShipQty", obj.getScopeAvgPcsQty());

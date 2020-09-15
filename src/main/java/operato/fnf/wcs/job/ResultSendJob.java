@@ -51,7 +51,7 @@ public class ResultSendJob extends AbstractFnFJob {
 	public void summaryJob() {
 		// 스케줄링 활성화 여부 체크
 		if(!this.isJobEnabeld()) {
-//			return;
+			return;
 		}
 		
 		String isRunning = SettingUtil.getValue(1l, JOB_STATUS);

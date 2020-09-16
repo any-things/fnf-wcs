@@ -16,10 +16,10 @@ import xyz.elidom.util.BeanUtil;
 public class DasBatchAutoReceiveJob extends AbstractFnFJob {
 	
 	@Transactional
-	@Scheduled(initialDelay=90000, fixedDelay=89000)
+	@Scheduled(initialDelay=90000, fixedDelay=119000)
 	public void job() {
 		if(!this.isJobEnabeld()) {
-			return;
+//			return;
 		}
 		
 		List<Domain> domainList = domainCtrl.domainList();

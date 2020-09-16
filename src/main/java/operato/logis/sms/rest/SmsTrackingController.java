@@ -973,18 +973,18 @@ public class SmsTrackingController extends AbstractRestService {
 					if(ValueUtil.isEqual(pasInsp.get("sku_cd"), sku.get("sku_cd"))) {
 						pasInsp.put("rfid_order_qty", sku.get("rfid_order_qty"));
 						pasInsp.put("rfid_qty", sku.get("rfid_qty"));
-						pasInsp.put("diff_qty", ValueUtil.toInteger(pasInsp.get("qty")) - ValueUtil.toInteger(sku.get("rfid_qty")));
+						pasInsp.put("diff_qty", ValueUtil.toInteger(pasInsp.get("pas_qty")) - ValueUtil.toInteger(sku.get("rfid_qty")));
 						break;
 					} else {
 						pasInsp.put("rfid_order_qty", 0);
 						pasInsp.put("rfid_qty", 0);
-						pasInsp.put("diff_qty", ValueUtil.toInteger(pasInsp.get("qty")));
+						pasInsp.put("diff_qty", ValueUtil.toInteger(pasInsp.get("pas_qty")));
 					}
 				}
 			} else {
 				pasInsp.put("rfid_order_qty", 0);
 				pasInsp.put("rfid_qty", 0);
-				pasInsp.put("diff_qty", ValueUtil.toInteger(pasInsp.get("qty"), 0));
+				pasInsp.put("diff_qty", ValueUtil.toInteger(pasInsp.get("pas_qty"), 0));
 			}
 		}
 		

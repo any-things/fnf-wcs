@@ -10,7 +10,7 @@ public class WcsCell extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	/**
 	 * SerialVersion UID
 	 */
-	private static final long serialVersionUID = 147854285436175805L;
+	private static final long serialVersionUID = 549144435112396878L;
 
 	@PrimaryKey
 	@Column (name = "id", nullable = false, length = 40)
@@ -45,6 +45,9 @@ public class WcsCell extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 
 	@Column (name = "flag", length = 1)
 	private String flag;
+
+	@Column (name = "gen_date", length = 8)
+	private String genDate;
 
 	@Column (name = "item_cd", length = 64)
 	private String itemCd;
@@ -138,6 +141,14 @@ public class WcsCell extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 
 	public void setFlag(String flag) {
 		this.flag = flag;
+	}
+
+	public String getGenDate() {
+		return genDate;
+	}
+
+	public void setGenDate(String genDate) {
+		this.genDate = genDate;
 	}
 
 	public String getItemCd() {

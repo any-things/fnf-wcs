@@ -7,11 +7,13 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 import operato.fnf.wcs.FnfUtils;
+import operato.fnf.wcs.entity.WmsCellUseRate;
 import operato.fnf.wcs.service.model.BoardCellSum;
 import operato.fnf.wcs.service.model.BoardRackStock;
 import operato.fnf.wcs.service.model.FloorTotalSum;
 import xyz.anythings.base.model.ResponseObj;
 import xyz.anythings.base.service.impl.AbstractLogisService;
+import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.orm.manager.DataSourceManager;
 import xyz.elidom.util.BeanUtil;
@@ -71,6 +73,7 @@ public class GetFloorRackStock extends AbstractLogisService {
 		List<BoardRackStock> list = wmsQueryMgr.selectListBySql(sql, wmsParams, BoardRackStock.class, 0, 0);
 		
 		Map<String, BoardCellSum> cellMap = new HashMap<>();
+		
 		for (BoardRackStock obj: list) {
 			BoardCellSum cell = cellMap.get(obj.getLocation());
 			if (ValueUtil.isEmpty(cell)) {
@@ -92,12 +95,44 @@ public class GetFloorRackStock extends AbstractLogisService {
 		String skuCntSql = FnfUtils.queryCustServiceWithCheck("board_floor_rack_sum");	// 층 summary
 		FloorTotalSum floorTotalSum = wmsQueryMgr.selectBySql(skuCntSql, wmsParams, FloorTotalSum.class);
 		
+		Query conds = new Query(0, 1);
+		conds.addFilter("buildingTcd", buildingTcd);
+		conds.addFilter("floorTcd", floorTcd);
+		WmsCellUseRate cellUseRate = wmsQueryMgr.selectByCondition(WmsCellUseRate.class, conds);
+		if (ValueUtil.isNotEmpty(cellUseRate)) {
+			floorTotalSum.setCellUsedRate(cellUseRate.getRtUseLoc());
+		}
+		
+		
+//		String ifAddData = SettingUtil.getValue("board.rack.add.data");	// 가상데이터 스위치
+//		if ("Y".equalsIgnoreCase(ifAddData)) {			
+//			List<String> emptyCells = new ArrayList<>();
+//			
+//			this.getVirtualData(buildingTcd, floorTcd, emptyCells);
+//			// 빈셀
+//			
+//			// 가상데이터랑 실제 데이터를 merge
+//			for (String cellNo: emptyCells) {
+//				BoardCellSum cellSum = cellMap.get(cellNo);
+//				cellSum.setLocation(cellNo);
+////				cellSum.setUsed(used);
+////				cellSum.setCellItemCount();
+////				cellSum.setUsedRate(usedRate);
+//			}
+//		}
+		
 		Map<String, Object> values = new HashMap<>();
 		values.put("cellData", cellMap.values());
 		values.put("floorSum", floorTotalSum);
+		
 		ResponseObj resp = new ResponseObj();
-//		resp.setItems(list);
 		resp.setValues(values);
 		return resp;
 	}
+	
+//	private void getVirtualData(String buildingTcd, String floorTcd, List<String> emptyCells) {
+//		//sumData: usedRate, skuCount, 
+//		
+//		//List<WcsCell> wcsCell = 
+//	}
 }

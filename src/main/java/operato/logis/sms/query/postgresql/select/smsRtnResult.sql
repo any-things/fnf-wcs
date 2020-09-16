@@ -88,7 +88,7 @@ left outer join
 on
 	mpo.sku_cd = sku.sku_cd
 where 
-	mpr.batch_no in ( :batchList )
+	mpo.batch_no in ( :batchList )
 #if($cell_no)
 and mdo.cell_no like :cell_no
 #end

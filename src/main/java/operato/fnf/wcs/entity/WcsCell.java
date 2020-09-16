@@ -10,7 +10,7 @@ public class WcsCell extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	/**
 	 * SerialVersion UID
 	 */
-	private static final long serialVersionUID = 549144435112396878L;
+	private static final long serialVersionUID = 266042846519787378L;
 
 	@PrimaryKey
 	@Column (name = "id", nullable = false, length = 40)
@@ -51,6 +51,9 @@ public class WcsCell extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 
 	@Column (name = "item_cd", length = 64)
 	private String itemCd;
+
+	@Column (name = "used_cbm")
+	private Float usedCbm;
 
 	@Column (name = "used_rate")
 	private Float usedRate;
@@ -157,6 +160,14 @@ public class WcsCell extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 
 	public void setItemCd(String itemCd) {
 		this.itemCd = itemCd;
+	}
+
+	public Float getUsedCbm() {
+		return usedCbm;
+	}
+
+	public void setUsedCbm(Float usedCbm) {
+		this.usedCbm = usedCbm;
 	}
 
 	public Float getUsedRate() {

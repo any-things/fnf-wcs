@@ -6,7 +6,7 @@ public class FloorStock {
 	private Long usedCbm;
 	private Long pcsQty;
 	private Long avaCbm;
-	private Long usedRate;
+	private Float usedRate;
 	
 	public String getFloorTcd() {
 		return floorTcd;
@@ -38,10 +38,10 @@ public class FloorStock {
 	public void setAvaCbm(Long avaCbm) {
 		this.avaCbm = avaCbm;
 	}
-	public Long getUsedRate() {
+	public Float getUsedRate() {
 		return usedRate;
 	}
-	public void setUsedRate(Long usedRate) {
+	public void setUsedRate(Float usedRate) {
 		this.usedRate = usedRate;
 	}
 }

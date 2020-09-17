@@ -1,8 +1,9 @@
 package operato.fnf.wcs.entity;
 
+import xyz.elidom.dbist.annotation.DataSourceType;
 import xyz.elidom.dbist.annotation.Table;
 
-@Table(name = "vms_cell_use_rate", ignoreDdl = true)
+@Table(name = "vms_cell_use_rate", ignoreDdl = true, dataSourceType=DataSourceType.DATASOURCE)
 public class WmsCellUseRate extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	/**
 	 * SerialVersion UID

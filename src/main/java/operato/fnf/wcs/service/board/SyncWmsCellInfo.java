@@ -36,7 +36,7 @@ public class SyncWmsCellInfo extends AbstractLogisService {
 				list.add(wcsCell);
 			}
 			queryManager.insertBatch(list);
-			fromIndex += page;
+			fromIndex += toIndex;
 			list = new ArrayList<>();
 		}
 		
@@ -54,7 +54,7 @@ public class SyncWmsCellInfo extends AbstractLogisService {
 				list.add(wcsCell);
 			}
 			queryManager.insertBatch(list);
-			fromIndex += page;
+			fromIndex += toIndex;
 			list = new ArrayList<>();
 		}
 		

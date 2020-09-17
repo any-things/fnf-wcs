@@ -2,7 +2,7 @@ package operato.fnf.wcs.entity;
 
 import xyz.elidom.dbist.annotation.Table;
 
-@Table(name = "vms_cell_use_rate")
+@Table(name = "vms_cell_use_rate", ignoreDdl = true)
 public class WmsCellUseRate extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	/**
 	 * SerialVersion UID

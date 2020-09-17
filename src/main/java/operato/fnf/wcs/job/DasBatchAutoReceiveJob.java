@@ -19,7 +19,7 @@ public class DasBatchAutoReceiveJob extends AbstractFnFJob {
 	@Scheduled(initialDelay=90000, fixedDelay=119000)
 	public void job() {
 		if(!this.isJobEnabeld()) {
-//			return;
+			return;
 		}
 		
 		List<Domain> domainList = domainCtrl.domainList();

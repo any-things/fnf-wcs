@@ -1,16 +1,19 @@
 package operato.fnf.wcs.entity;
 
+import xyz.elidom.dbist.annotation.Index;
 import xyz.elidom.dbist.annotation.Column;
 import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.GenerationRule;
 import xyz.elidom.dbist.annotation.Table;
 
-@Table(name = "wcs_cells", idStrategy = GenerationRule.UUID)
+@Table(name = "wcs_cells", idStrategy = GenerationRule.UUID, uniqueFields="id", indexes = {
+	@Index(name = "ix_wcs_cells_0", columnList = "id", unique = true)
+})
 public class WcsCell extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	/**
 	 * SerialVersion UID
 	 */
-	private static final long serialVersionUID = 266042846519787378L;
+	private static final long serialVersionUID = 378148115739415020L;
 
 	@PrimaryKey
 	@Column (name = "id", nullable = false, length = 40)

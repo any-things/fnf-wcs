@@ -69,12 +69,12 @@ public class GetFloorRackStock extends AbstractLogisService {
 			wmsParams.put("assort_cd", assortCd);
 		}
 		
-		String sql = FnfUtils.queryCustServiceWithCheck("board_floor_rack_stock");	// detail
-		List<BoardRackStock> list = wmsQueryMgr.selectListBySql(sql, wmsParams, BoardRackStock.class, 0, 0);
+		String stockDetailSql = FnfUtils.queryCustServiceWithCheck("board_floor_rack_stock");	// detail
+		List<BoardRackStock> stockDetailList = wmsQueryMgr.selectListBySql(stockDetailSql, wmsParams, BoardRackStock.class, 0, 0);
 		
 		Map<String, BoardCellSum> cellMap = new HashMap<>();
 		
-		for (BoardRackStock obj: list) {
+		for (BoardRackStock obj: stockDetailList) {
 			BoardCellSum cell = cellMap.get(obj.getLocation());
 			if (ValueUtil.isEmpty(cell)) {
 				cell = new BoardCellSum();
@@ -83,11 +83,28 @@ public class GetFloorRackStock extends AbstractLogisService {
 				cell.setCapacity((float)obj.getSpaceCbm());
 				cell.setUsed((float)obj.getUsedCbm());
 				cell.setUsedRate(cell.getUsed()/cell.getCapacity() * 100);
+				
+				cell.setErpSaleRate(Math.max(cell.getErpSaleRate(), obj.getErpSaleRate()));
+				cell.setCellPcsQty(obj.getPcsQty());
+				String velocity = cell.getVelocity().compareTo(obj.getVelocity()) <= 0 ? obj.getVelocity() : cell.getVelocity();
+				cell.setVelocity(velocity);
 			} else {
+				cell.setCellPcsQty(cell.getCellPcsQty() + obj.getPcsQty());
 				cell.setUsed(cell.getUsed() + (float)obj.getUsedCbm());
 				cell.setUsedRate(cell.getUsed()/cell.getCapacity() * 100);
 			}
+			
 			if (ValueUtil.isNotEmpty(obj.getItemCd()) && !cell.getItems().contains(obj)) {
+				cell.addItems(obj);
+			} else {
+				obj.setBrand(" ");
+				obj.setSeason(" ");
+				obj.setStyle(" ");
+				obj.setColor(" ");
+				obj.setSize(" ");
+				obj.setPcsQty(0f);
+				obj.setBoxQty(0f);
+				
 				cell.addItems(obj);
 			}
 		}
@@ -102,7 +119,6 @@ public class GetFloorRackStock extends AbstractLogisService {
 		if (ValueUtil.isNotEmpty(cellUseRate)) {
 			floorTotalSum.setCellUsedRate(cellUseRate.getRtUseLoc());
 		}
-		
 		
 //		String ifAddData = SettingUtil.getValue("board.rack.add.data");	// 가상데이터 스위치
 //		if ("Y".equalsIgnoreCase(ifAddData)) {			

@@ -10,6 +10,9 @@ public class BoardCellSum {
 	private Float capacity = 0f;
 	private Float used = 0f;
 	private Float usedRate = 0f;
+	private String velocity;	// 출고빈도: A, B, C
+	private Float erpSaleRate = 0f;	// 판매율
+	private Float cellPcsQty = 0f;	// pcs수
 	
 	public String getLocation() {
 		return location;
@@ -51,5 +54,23 @@ public class BoardCellSum {
 	}
 	public void setUsed(Float used) {
 		this.used = used;
+	}
+	public String getVelocity() {
+		return velocity;
+	}
+	public void setVelocity(String velocity) {
+		this.velocity = velocity;
+	}
+	public Float getErpSaleRate() {
+		return erpSaleRate;
+	}
+	public void setErpSaleRate(Float erpSaleRate) {
+		this.erpSaleRate = erpSaleRate;
+	}
+	public Float getCellPcsQty() {
+		return cellPcsQty;
+	}
+	public void setCellPcsQty(Float cellPcsQty) {
+		this.cellPcsQty = cellPcsQty;
 	}
 }

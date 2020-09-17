@@ -138,4 +138,14 @@ public class DpsBatchService extends AbstractLogisService implements IBatchServi
 		this.dpsCloseBatchSvc.closeBatch(batch);
 	}
 
+	@Override
+	public void isPossibleChangeEquipment(JobBatch batch, String toEquipCd) {
+		throw ThrowUtil.newNotSupportedMethod();
+	}
+
+	@Override
+	public void changeEquipment(JobBatch batch, String toEquipCd) {
+		throw ThrowUtil.newNotSupportedMethod();
+	}
+
 }

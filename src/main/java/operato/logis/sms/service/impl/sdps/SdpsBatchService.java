@@ -165,4 +165,14 @@ public class SdpsBatchService extends AbstractLogisService implements IBatchServ
 		this.smsCloseBatchSvc.closeBatch(batch);
 	}
 
+	@Override
+	public void isPossibleChangeEquipment(JobBatch batch, String toEquipCd) {
+		throw ThrowUtil.newNotSupportedMethod();
+	}
+
+	@Override
+	public void changeEquipment(JobBatch batch, String toEquipCd) {
+		throw ThrowUtil.newNotSupportedMethod();
+	}
+
 }

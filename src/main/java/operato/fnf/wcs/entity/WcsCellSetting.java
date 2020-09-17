@@ -5,7 +5,7 @@ import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.GenerationRule;
 import xyz.elidom.dbist.annotation.Table;
 
-@Table(name = "wcs_cell_setting", idStrategy = GenerationRule.UUID)
+@Table(name = "wcs_cell_setting", idStrategy = GenerationRule.UUID, uniqueFields="id")
 public class WcsCellSetting extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 	/**
 	 * SerialVersion UID

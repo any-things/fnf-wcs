@@ -600,7 +600,7 @@ public class SmsTrackingController extends AbstractRestService {
 		
 		page = (page == null) ? 1 : page;
 		limit = (limit == null) ? ValueUtil.toInteger(SettingUtil.getValue(SysConfigConstants.SCREEN_PAGE_LIMIT, "10000")) : limit;
-		return this.queryManager.selectPageBySql(selectQuery, params, HashMap.class, page, limit);	
+		return this.queryManager.selectPageBySql(selectQuery, params, HashMap.class, 0, 0);	
 	}
 	
 	@RequestMapping(value="/sms_rtn_box", method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
@@ -662,7 +662,7 @@ public class SmsTrackingController extends AbstractRestService {
 		
 		page = (page == null) ? 1 : page;
 		limit = (limit == null) ? ValueUtil.toInteger(SettingUtil.getValue(SysConfigConstants.SCREEN_PAGE_LIMIT, "10000")) : limit;
-		return this.queryManager.selectPageBySql(selectQuery, params, HashMap.class, page, limit);	
+		return this.queryManager.selectPageBySql(selectQuery, params, HashMap.class, 0, 0);	
 	}
 	
 	@RequestMapping(value="/sms_das_result", method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
@@ -724,7 +724,7 @@ public class SmsTrackingController extends AbstractRestService {
 		
 		page = (page == null) ? 1 : page;
 		limit = (limit == null) ? ValueUtil.toInteger(SettingUtil.getValue(SysConfigConstants.SCREEN_PAGE_LIMIT, "10000")) : limit;
-		return this.queryManager.selectPageBySql(selectQuery, params, HashMap.class, page, limit);	
+		return this.queryManager.selectPageBySql(selectQuery, params, HashMap.class, 0, 0);	
 	}
 	
 	@RequestMapping(value="/sms_das_box", method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
@@ -786,7 +786,7 @@ public class SmsTrackingController extends AbstractRestService {
 		
 		page = (page == null) ? 1 : page;
 		limit = (limit == null) ? ValueUtil.toInteger(SettingUtil.getValue(SysConfigConstants.SCREEN_PAGE_LIMIT, "10000")) : limit;
-		return this.queryManager.selectPageBySql(selectQuery, params, HashMap.class, page, limit);	
+		return this.queryManager.selectPageBySql(selectQuery, params, HashMap.class, 0, 0);	
 	}
 	
 	@RequestMapping(value="/sms_pas_reject", method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
@@ -848,7 +848,7 @@ public class SmsTrackingController extends AbstractRestService {
 		
 		page = (page == null) ? 1 : page;
 		limit = (limit == null) ? ValueUtil.toInteger(SettingUtil.getValue(SysConfigConstants.SCREEN_PAGE_LIMIT, "10000")) : limit;
-		return this.queryManager.selectPageBySql(selectQuery, params, HashMap.class, page, limit);	
+		return this.queryManager.selectPageBySql(selectQuery, params, HashMap.class, 0, 0);	
 	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })

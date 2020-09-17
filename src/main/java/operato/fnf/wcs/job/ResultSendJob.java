@@ -100,7 +100,7 @@ public class ResultSendJob extends AbstractFnFJob {
 	public Setting updateJobStatus(String value) {
 		Query conds = new Query(0, 1);
 		conds.addFilter("name", JOB_STATUS);
-		Setting setting = queryManager.selectByCondition(Setting.class, conds);
+		Setting setting = queryManager.selectByCondition(true, Setting.class, conds);
 		
 		setting.setValue(value);
 		queryManager.update(setting);

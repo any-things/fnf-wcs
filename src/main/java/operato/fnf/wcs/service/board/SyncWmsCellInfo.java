@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import operato.fnf.wcs.FnfUtils;
 import operato.fnf.wcs.entity.WcsCell;
@@ -28,14 +30,14 @@ public class SyncWmsCellInfo extends AbstractLogisService {
 		List<WcsCell> list = new ArrayList<>();
 		int fromIndex = 0;
 		int page = 5000;
-		for (int i = 0; i < cellList.size()/page; i++) {
+		for (int i = 0; i < Math.ceil(cellList.size()/(float)page); i++) {
 			int toIndex = Math.min(fromIndex + page, cellList.size());
 			List<WmsCellList> subList = cellList.subList(fromIndex, toIndex);
 			for (WmsCellList obj: subList) {
 				WcsCell wcsCell = FnfUtils.populate(obj, new WcsCell(), false);
 				list.add(wcsCell);
 			}
-			queryManager.insertBatch(list);
+			BeanUtil.get(SyncWmsCellInfo.class).doInsert(list);
 			fromIndex += page;
 			list = new ArrayList<>();
 		}
@@ -46,18 +48,23 @@ public class SyncWmsCellInfo extends AbstractLogisService {
 		
 		list = new ArrayList<>();
 		fromIndex = 0;
-		for (int i = 0; i < cellList.size()/page; i++) {
+		for (int i = 0; i < Math.ceil(cellList.size()/(float)page); i++) {
 			int toIndex = Math.min(fromIndex + page, cellList.size());
 			List<WmsCellList> subList = cellList.subList(fromIndex, toIndex);
 			for (WmsCellList obj: subList) {
 				WcsCell wcsCell = FnfUtils.populate(obj, new WcsCell(), false);
 				list.add(wcsCell);
 			}
-			queryManager.insertBatch(list);
+			BeanUtil.get(SyncWmsCellInfo.class).doInsert(list);
 			fromIndex += page;
 			list = new ArrayList<>();
 		}
 		
 		return new ResponseObj();
+	}
+	
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public void doInsert(List<WcsCell> list) {
+		queryManager.insertBatch(list);
 	}
 }

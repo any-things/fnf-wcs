@@ -28,7 +28,7 @@ public class SyncWmsCellInfo extends AbstractLogisService {
 		List<WcsCell> list = new ArrayList<>();
 		int fromIndex = 0;
 		int page = 5000;
-		for (int i = 0; i < cellList.size(); i++) {
+		for (int i = 0; i < cellList.size()/page; i++) {
 			int toIndex = Math.min(fromIndex + page, cellList.size());
 			List<WmsCellList> subList = cellList.subList(fromIndex, toIndex);
 			for (WmsCellList obj: subList) {
@@ -36,7 +36,7 @@ public class SyncWmsCellInfo extends AbstractLogisService {
 				list.add(wcsCell);
 			}
 			queryManager.insertBatch(list);
-			fromIndex += toIndex;
+			fromIndex += page;
 			list = new ArrayList<>();
 		}
 		
@@ -46,7 +46,7 @@ public class SyncWmsCellInfo extends AbstractLogisService {
 		
 		list = new ArrayList<>();
 		fromIndex = 0;
-		for (int i = 0; i < cellList.size(); i++) {
+		for (int i = 0; i < cellList.size()/page; i++) {
 			int toIndex = Math.min(fromIndex + page, cellList.size());
 			List<WmsCellList> subList = cellList.subList(fromIndex, toIndex);
 			for (WmsCellList obj: subList) {
@@ -54,7 +54,7 @@ public class SyncWmsCellInfo extends AbstractLogisService {
 				list.add(wcsCell);
 			}
 			queryManager.insertBatch(list);
-			fromIndex += toIndex;
+			fromIndex += page;
 			list = new ArrayList<>();
 		}
 		

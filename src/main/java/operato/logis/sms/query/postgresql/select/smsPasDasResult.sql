@@ -60,3 +60,11 @@ and
 	mpo.chute_no = das.chute_no
 and 
 	mpo.sku_cd = das.item_cd
+where
+	1=1
+#if($chute_no)
+AND mpo.chute_no LIKE :chute_no
+#end
+#if($sku_cd)
+AND mpo.sku_cd LIKE :sku_cd
+#end

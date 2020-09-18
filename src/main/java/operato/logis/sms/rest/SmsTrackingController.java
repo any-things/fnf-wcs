@@ -498,6 +498,7 @@ public class SmsTrackingController extends AbstractRestService {
 		if(ValueUtil.isNotEmpty(filters)) {
 			for(Filter filter : filters) {
 				String name = filter.getName();
+				String op = filter.getOperator();
 				Object val = filter.getValue();
 
 				if(ValueUtil.isEqual(val, "true")) {
@@ -531,6 +532,13 @@ public class SmsTrackingController extends AbstractRestService {
 					
 					List<String> batchList = AnyValueUtil.filterValueListBy(jobBatches, "id");
 					params.put("batchList", batchList);
+				}
+				
+				if(ValueUtil.isEmpty(op) || ValueUtil.isEqualIgnoreCase(op, "eq") || ValueUtil.isEqualIgnoreCase(op, "=")) {
+					params.put(name, val);
+
+				} else if(ValueUtil.isEqualIgnoreCase(op, "contains") || ValueUtil.isEqualIgnoreCase(op, "like")) {
+					params.put(name, "%" + val + "%");
 				}
 			}
 		}

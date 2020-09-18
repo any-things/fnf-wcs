@@ -1,6 +1,6 @@
 select 
 	mpo.batch_no as batch_id, mpo.job_type, mpo.chute_no, mpo.sku_cd, mpo.sku_bcd, mpo.strr_id
-	, mpo.order_qty, coalesce(mpr.qty, 0) as qty, coalesce(das.cmpt_qty, 0) as cmpt_qty
+	, mpo.order_qty, coalesce(mpr.qty, 0) as pas_qty, coalesce(das.cmpt_qty, 0) as cmpt_qty
 	, coalesce(mpr.qty, 0) - coalesce(das.cmpt_qty, 0) as diff_qty
 from 
 	(

@@ -439,4 +439,12 @@ public class SmsQueryStore extends AbstractQueryStore {
 	public String getSmsRtnInspQuery() {
 		return this.getQueryByPath("select/smsRtnInsp");
 	}
+	/**
+	 * SMS 출보분류 상세 내역
+	 *
+	 * @return
+	 */
+	public String getSmsDasResultDetailQuery() {
+		return this.getQueryByPath("select/smsDasResultDetail");
+	}
 }

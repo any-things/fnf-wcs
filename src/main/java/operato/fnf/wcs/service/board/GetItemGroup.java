@@ -3,6 +3,8 @@ package operato.fnf.wcs.service.board;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.stereotype.Component;
+
 import operato.fnf.wcs.entity.WmsItemGroup;
 import xyz.anythings.base.model.ResponseObj;
 import xyz.anythings.base.service.impl.AbstractLogisService;
@@ -11,6 +13,7 @@ import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.orm.manager.DataSourceManager;
 import xyz.elidom.util.BeanUtil;
 
+@Component
 public class GetItemGroup extends AbstractLogisService {
 	public ResponseObj getItemGroup(Map<String, Object> params) throws Exception {
 		

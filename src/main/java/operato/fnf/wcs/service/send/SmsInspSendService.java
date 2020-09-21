@@ -132,6 +132,7 @@ public class SmsInspSendService extends AbstractQueryService {
 			List<WmsWmtUifImpInbRtnTrg> rtnTrgList = dsQueryManager.selectListBySql(queryStore.getSrtnInspBoxTrg(), inspParams, WmsWmtUifImpInbRtnTrg.class, 0, 0);
 			List<WmsWmtUifImpInbRtnTrg> tempRtnTrgList = new ArrayList<WmsWmtUifImpInbRtnTrg>(rtnTrgList.size());
 			List<String> skuCdList = AnyValueUtil.filterValueListBy(rtnTrgList, "itemCd");
+			tempRtnTrgList.addAll(rtnTrgList);
 			
 			if(ValueUtil.isEmpty(skuCdList)) {
 				skuCdList.add("1");

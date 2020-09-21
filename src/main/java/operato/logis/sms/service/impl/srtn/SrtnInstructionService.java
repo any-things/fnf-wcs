@@ -341,9 +341,11 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 					if(ValueUtil.isEqual(skuInfo.get("sku_cd"), rtnTrg.getItemCd())) {
 						wcsMhePasOrder.setSkuBcd(ValueUtil.toString(skuInfo.get("sku_barcd2")));
 						wcsMhePasOrder.setChuteNo(ValueUtil.toString(skuInfo.get("sub_equip_cd")));	
+						
+						pasOrderList.add(wcsMhePasOrder);
+						break;
 					}
 				}
-				pasOrderList.add(wcsMhePasOrder);
 			}
 			
 			if(ValueUtil.isNotEmpty(pasOrderList)) {

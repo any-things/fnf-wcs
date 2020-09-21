@@ -6,6 +6,7 @@ import java.util.StringJoiner;
 
 import org.springframework.stereotype.Component;
 
+import operato.fnf.wcs.FnfUtils;
 import xyz.anythings.base.model.ResponseObj;
 import xyz.anythings.base.service.impl.AbstractLogisService;
 import xyz.elidom.orm.IQueryManager;
@@ -36,29 +37,36 @@ public class GetDpsOrderCount extends AbstractLogisService {
 		return resp;
 	}
 	
-	private String getOrderCntQuery() {
-		StringJoiner query = new StringJoiner(SysConstants.LINE_SEPARATOR);
+	private String getOrderCntQuery() throws Exception {
+//		StringJoiner query = new StringJoiner(SysConstants.LINE_SEPARATOR);
+//		
+//		query.add("SELECT");
+//		query.add("COUNT(DISTINCT ref_no) AS order_qty");
+//		query.add("FROM");
+//		query.add("  dps_today_performance");
+//		query.add("WHERE");
+//		query.add("  outb_ect_ymd = :date");
+//		return query.toString();
 		
-		query.add("SELECT");
-		query.add("COUNT(DISTINCT ref_no) AS order_qty");
-		query.add("FROM");
-		query.add("  dps_today_performance");
-		query.add("WHERE");
-		query.add("  outb_ect_ymd = :date");
+		String sql = FnfUtils.queryCustServiceWithCheck("board_dps_order_count");
 		
-		return query.toString();
+		return sql;
 	}
 	
-	private String getOrderPcsQuery() {
-		StringJoiner query = new StringJoiner(SysConstants.LINE_SEPARATOR);
+	private String getOrderPcsQuery() throws Exception {
+//		StringJoiner query = new StringJoiner(SysConstants.LINE_SEPARATOR);
+//		
+//		query.add("SELECT");
+//		query.add("  SUM(ORDER_QTY) AS pcs_qty");
+//		query.add("FROM");
+//		query.add("  dps_today_performance");
+//		query.add("WHERE");
+//		query.add("  outb_ect_ymd = :date");
+//		
+//		return query.toString();
 		
-		query.add("SELECT");
-		query.add("  SUM(ORDER_QTY) AS pcs_qty");
-		query.add("FROM");
-		query.add("  dps_today_performance");
-		query.add("WHERE");
-		query.add("  outb_ect_ymd = :date");
+		String sql = FnfUtils.queryCustServiceWithCheck("board_dps_pcs_qty");
 		
-		return query.toString();
+		return sql;
 	}
 }

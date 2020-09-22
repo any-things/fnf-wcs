@@ -4,9 +4,12 @@ import java.util.Date;
 import xyz.elidom.dbist.annotation.Column;
 import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.GenerationRule;
+import xyz.elidom.dbist.annotation.Index;
 import xyz.elidom.dbist.annotation.Table;
 
-@Table(name = "mhe_pas_rlst", idStrategy = GenerationRule.UUID)
+@Table(name = "mhe_pas_rlst", idStrategy = GenerationRule.UUID, indexes = {
+		@Index(name = "ix_mhe_pas_rlst_1", columnList = "batch_no"),
+		@Index(name = "ix_mhe_pas_rlst_2", columnList = "batch_no,box_id,chute_no,sku_cd") })
 public class WcsMhePasRlst extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	/**
 	 * SerialVersion UID

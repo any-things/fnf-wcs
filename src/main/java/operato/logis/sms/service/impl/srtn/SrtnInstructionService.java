@@ -2,6 +2,7 @@ package operato.logis.sms.service.impl.srtn;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -354,7 +355,7 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		}
 	}
 	
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private void interfaceRack(JobBatch batch) {
 		String[] batchInfo = batch.getId().split("-");
 		
@@ -418,16 +419,28 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		if(ValueUtil.isNotEmpty(dasOrderList)) {
 			AnyOrmUtil.insertBatch(dasOrderList, 100);
 			
-			String styleGroupSql = "select item_style, sum(order_qty) as order_qty, row_number() over (order by sum(order_qty) desc) as plt_no from mhe_das_order where batch_no = :batchId group by item_style";
+			String maxPltNoSql = "select COALESCE(max(cast(plt_no as int)), 0) + 1 as seq from mhe_das_order where batch_no = :batchId";
+			Map<String, Object> condition = ValueUtil.newMap("batchIds", batch.getBatchGroupId());
+			Map<String, Object> maxResult = this.queryManager.selectBySql(maxPltNoSql, condition, Map.class);
+			int pltNo = ValueUtil.toInteger(maxResult.get("seq"));
+			
+			String styleGroupSql = "select item_style, plt_no from mhe_das_order where batch_no = :batchId and plt_no is not null group by item_style, plt_no";
 			Map<String,Object> styleGroupParams = ValueUtil.newMap("batchId,skuCd", batch.getBatchGroupId(), skuCdList);
 			List<Map> styleGroupList = this.queryManager.selectListBySql(styleGroupSql, styleGroupParams, Map.class, 0, 0);
 			
+			Map<String, Object> stylePltNo = new HashMap<String, Object>();
+			
+			for (Map style : styleGroupList) {
+				stylePltNo.put(ValueUtil.toString(style.get("item_style")), ValueUtil.toString(style.get("plt_no")));
+			}
+			
 			for (WcsMheDasOrder wcsMheDasOrder : dasOrderList) {
-				for (Map style : styleGroupList) {
-					if(ValueUtil.isEqual(wcsMheDasOrder.getItemStyle(), style.get("item_style"))) {
-						wcsMheDasOrder.setPltNo(ValueUtil.toString(style.get("plt_no")));
-						break;
-					}
+				if(stylePltNo.containsKey(wcsMheDasOrder.getItemStyle())) {
+					wcsMheDasOrder.setPltNo(ValueUtil.toString(stylePltNo.get(wcsMheDasOrder.getItemStyle())));
+				}else {
+					stylePltNo.put(wcsMheDasOrder.getItemStyle(), pltNo);
+					wcsMheDasOrder.setPltNo(ValueUtil.toString(stylePltNo.get(wcsMheDasOrder.getItemStyle())));
+					pltNo++;
 				}
 			}
 			AnyOrmUtil.updateBatch(dasOrderList, 100, "pltNo");

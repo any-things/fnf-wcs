@@ -441,7 +441,7 @@ public class DpsDeviceProcessService extends AbstractLogisService {
 			throw ThrowUtil.newValidationErrorWithNoLog("스캔한 바코드가 유효하지 않습니다.");
 		}
 		
-		boolean rfidFlag = skuCd.length() >= 30;
+		boolean rfidFlag = skuCd.length() == 32 || skuCd.length() == 24;
 		String rfidId = null;
 		String itemCd = null;
 		

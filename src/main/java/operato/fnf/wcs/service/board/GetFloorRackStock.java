@@ -112,7 +112,7 @@ public class GetFloorRackStock extends AbstractLogisService {
 		String skuCntSql = FnfUtils.queryCustServiceWithCheck("board_floor_rack_sum");	// 층 summary
 		FloorTotalSum floorTotalSum = wmsQueryMgr.selectBySql(skuCntSql, wmsParams, FloorTotalSum.class);
 		
-		Query conds = new Query(0, 1);
+		Query conds = new Query();
 		conds.addFilter("buildingTcd", buildingTcd);
 		conds.addFilter("floorTcd", floorTcd);
 		List<WmsCellUseRate> cellUseRates = wmsQueryMgr.selectList(WmsCellUseRate.class, conds);

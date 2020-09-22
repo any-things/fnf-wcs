@@ -86,7 +86,7 @@ public class GetFloorRackStock extends AbstractLogisService {
 				
 				cell.setErpSaleRate(Math.max(cell.getErpSaleRate(), obj.getErpSaleRate()));
 				cell.setCellPcsQty(obj.getPcsQty());
-				String velocity = cell.getVelocity().compareTo(obj.getVelocity()) <= 0 ? obj.getVelocity() : cell.getVelocity();
+				String velocity = cell.getVelocity().compareTo(obj.getVelocity()) <= 0 ? obj.getVelocity() : cell.getVelocity();	// 출고빈도
 				cell.setVelocity(velocity);
 			} else {
 				cell.setCellPcsQty(cell.getCellPcsQty() + obj.getPcsQty());
@@ -115,9 +115,13 @@ public class GetFloorRackStock extends AbstractLogisService {
 		Query conds = new Query(0, 1);
 		conds.addFilter("buildingTcd", buildingTcd);
 		conds.addFilter("floorTcd", floorTcd);
-		WmsCellUseRate cellUseRate = wmsQueryMgr.selectByCondition(WmsCellUseRate.class, conds);
-		if (ValueUtil.isNotEmpty(cellUseRate)) {
-			floorTotalSum.setCellUsedRate(cellUseRate.getRtUseLoc());
+		List<WmsCellUseRate> cellUseRates = wmsQueryMgr.selectList(WmsCellUseRate.class, conds);
+		for (WmsCellUseRate obj: cellUseRates) {
+			if ("A".equals(obj.getRackType())) {
+				floorTotalSum.setArackUsedRate(obj.getRtUseLoc());
+			} else if ("P".equals(obj.getRackType())) {
+				floorTotalSum.setPrackUsedRate(obj.getRtUseLoc());
+			}
 		}
 		
 //		String ifAddData = SettingUtil.getValue("board.rack.add.data");	// 가상데이터 스위치

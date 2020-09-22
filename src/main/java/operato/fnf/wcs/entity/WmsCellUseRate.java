@@ -16,6 +16,7 @@ public class WmsCellUseRate extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	private Integer totLocCnt;
 	private Integer useLocCnt;
 	private Float rtUseLoc;
+	private String rackType;
 	
 	public String getWhCd() {
 		return whCd;
@@ -52,5 +53,11 @@ public class WmsCellUseRate extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	}
 	public void setRtUseLoc(Float rtUseLoc) {
 		this.rtUseLoc = rtUseLoc;
+	}
+	public String getRackType() {
+		return rackType;
+	}
+	public void setRackType(String rackType) {
+		this.rackType = rackType;
 	}
 }

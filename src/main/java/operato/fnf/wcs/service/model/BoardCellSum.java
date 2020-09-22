@@ -10,7 +10,7 @@ public class BoardCellSum {
 	private Float capacity = 0f;
 	private Float used = 0f;
 	private Float usedRate = 0f;
-	private String velocity = " ";	// 출고빈도: A, B, C
+	private String velocity = "Z";	// 출고빈도: A, B, C
 	private Float erpSaleRate = 0f;	// 판매율
 	private Float cellPcsQty = 0f;	// pcs수
 	

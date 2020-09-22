@@ -18,7 +18,9 @@ public class GetItemGroup extends AbstractLogisService {
 	public ResponseObj getItemGroup(Map<String, Object> params) throws Exception {
 		
 		IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager("WMS");
-		List<WmsItemGroup> list = wmsQueryMgr.selectList(WmsItemGroup.class, new Query());
+		Query conds = new Query();
+		conds.addOrder("itemgrpSnm", true);
+		List<WmsItemGroup> list = wmsQueryMgr.selectList(WmsItemGroup.class, conds);
 		
 		ResponseObj resp = new ResponseObj();
 		resp.setItems(list);

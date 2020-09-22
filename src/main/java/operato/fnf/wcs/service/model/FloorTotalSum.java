@@ -7,6 +7,8 @@ public class FloorTotalSum {
 	private Long pcsQty;
 	private Long skuCount;
 	private Float cellUsedRate;
+	private Float PrackUsedRate;
+	private Float ArackUsedRate;
 	
 	public Long getTotalCap() {
 		return totalCap;
@@ -43,5 +45,17 @@ public class FloorTotalSum {
 	}
 	public void setCellUsedRate(Float cellUsedRate) {
 		this.cellUsedRate = cellUsedRate;
+	}
+	public Float getPrackUsedRate() {
+		return PrackUsedRate;
+	}
+	public void setPrackUsedRate(Float prackUsedRate) {
+		PrackUsedRate = prackUsedRate;
+	}
+	public Float getArackUsedRate() {
+		return ArackUsedRate;
+	}
+	public void setArackUsedRate(Float arackUsedRate) {
+		ArackUsedRate = arackUsedRate;
 	}
 }

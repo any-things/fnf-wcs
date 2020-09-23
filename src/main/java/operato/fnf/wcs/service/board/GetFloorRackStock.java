@@ -86,8 +86,8 @@ public class GetFloorRackStock extends AbstractLogisService {
 				
 				cell.setErpSaleRate(Math.max(cell.getErpSaleRate(), obj.getErpSaleRate()));
 				cell.setCellPcsQty(obj.getPcsQty());
-				String velocity = cell.getVelocity().compareTo(obj.getVelocity()) <= 0 ? obj.getVelocity() : cell.getVelocity();	// 출고빈도
-				cell.setVelocity(velocity);
+				//String velocity = obj.getVelocity().compareTo(cell.getVelocity()) <= 0 ? obj.getVelocity() : cell.getVelocity();	// 출고빈도
+				cell.setVelocity(obj.getVelocity());
 			} else {
 				cell.setCellPcsQty(cell.getCellPcsQty() + obj.getPcsQty());
 				cell.setUsed(cell.getUsed() + (float)obj.getUsedCbm());

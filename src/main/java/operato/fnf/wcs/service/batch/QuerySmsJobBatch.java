@@ -9,16 +9,12 @@ import org.springframework.stereotype.Component;
 
 import operato.fnf.wcs.FnfUtils;
 import operato.fnf.wcs.entity.RfidBoxResult;
-import operato.fnf.wcs.entity.WmsMheDr;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.model.ResponseObj;
 import xyz.elidom.dbist.dml.Filter;
 import xyz.elidom.dbist.dml.Page;
 import xyz.elidom.dbist.dml.Query;
-import xyz.elidom.orm.IQueryManager;
-import xyz.elidom.orm.manager.DataSourceManager;
 import xyz.elidom.sys.system.service.AbstractRestService;
-import xyz.elidom.util.BeanUtil;
 import xyz.elidom.util.ValueUtil;
 
 @Component
@@ -70,8 +66,8 @@ public class QuerySmsJobBatch extends AbstractRestService {
 			}
 			
 			if (ValueUtil.isNotEmpty(mainJob)) {
-				mainJob.setParentPcs(mainJob.getParentPcs() - obj.getParentPcs());
-				mainJob.setBatchPcs(mainJob.getBatchPcs() - obj.getBatchPcs());
+//				mainJob.setParentPcs(mainJob.getParentPcs() - obj.getParentPcs());
+//				mainJob.setBatchPcs(mainJob.getBatchPcs() - obj.getBatchPcs());
 				mainJob.setResultPcs(mainJob.getResultPcs() - obj.getResultPcs());
 				mainJob.setResultBoxQty(mainJob.getResultBoxQty() - obj.getResultBoxQty());
 			}

@@ -65,6 +65,7 @@ public class SdpsInstructionService extends AbstractQueryService implements IIns
 		return 0;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public int mergeBatch(JobBatch mainBatch, JobBatch newBatch, Object... params) {
 		int retCnt = newBatch.getBatchOrderQty();
@@ -80,17 +81,17 @@ public class SdpsInstructionService extends AbstractQueryService implements IIns
 		newBatch.setInstructedAt(new Date());
 		this.queryManager.update(newBatch);
 		
-		//Query query = AnyOrmUtil.newConditionForExecution(mainBatch.getDomainId());
-		//query.addFilter("batchGroupId", mainBatch.getId());
-		//List<JobBatch> jobBatches = this.queryManager.selectList(JobBatch.class, query);
-		//List<String> batchIds = AnyValueUtil.filterValueListBy(jobBatches, "id");
-		//Map<String, Object> condition = ValueUtil.newMap("batchIds", batchIds);
-		//String sql = "SELECT COALESCE(SUM(TOTAL_PCS), 0) AS PCS_CNT, COUNT(DISTINCT(CELL_ASSGN_CD)) AS ORDER_CNT FROM ORDER_PREPROCESSES WHERE BATCH_ID IN (:batchIds )";
-		//Map<String, Object> totalResult = this.queryManager.selectBySql(sql, condition, Map.class);
-		//mainBatch.setParentOrderQty(ValueUtil.toInteger(totalResult.get("order_cnt")));
-		//mainBatch.setParentPcs(ValueUtil.toInteger(totalResult.get("pcs_cnt")));
+		Query query = AnyOrmUtil.newConditionForExecution(mainBatch.getDomainId());
+		query.addFilter("batchGroupId", mainBatch.getId());
+		List<JobBatch> jobBatches = this.queryManager.selectList(JobBatch.class, query);
+		List<String> batchIds = AnyValueUtil.filterValueListBy(jobBatches, "id");
+		Map<String, Object> condition = ValueUtil.newMap("batchIds", batchIds);
+		String sql = "SELECT COALESCE(SUM(TOTAL_PCS), 0) AS PCS_CNT, COUNT(DISTINCT(CELL_ASSGN_CD)) AS ORDER_CNT FROM ORDER_PREPROCESSES WHERE BATCH_ID IN (:batchIds )";
+		Map<String, Object> totalResult = this.queryManager.selectBySql(sql, condition, Map.class);
+		mainBatch.setParentOrderQty(ValueUtil.toInteger(totalResult.get("order_cnt")));
+		mainBatch.setParentPcs(ValueUtil.toInteger(totalResult.get("pcs_cnt")));
 		
-		//this.queryManager.update(mainBatch, "parentOrderQty", "parentPcs");
+		this.queryManager.update(mainBatch, "parentOrderQty", "parentPcs");
 		
 		this.doInstructBatch(newBatch, null, true);
 		

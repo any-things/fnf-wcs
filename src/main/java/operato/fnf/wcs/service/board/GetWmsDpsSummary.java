@@ -27,10 +27,10 @@ public class GetWmsDpsSummary extends AbstractLogisService {
 		@SuppressWarnings("unchecked")
 		Map<String, Integer> wmsDpsSum = (Map<String, Integer>) wmsQueryMgr.selectBySql(wmsSql, params, HashMap.class);
 		
-		Integer donePcsQty = wmsDpsSum.get("done_pcs_qty");
-		Integer orderPcsQty = wmsDpsSum.get("order_pcs_qty");
-		Integer doneOrderCnt = wmsDpsSum.get("done_order_cnt");
-		Integer totalOrderCnt = wmsDpsSum.get("total_order_cnt");
+		Integer donePcsQty = Integer.parseInt(String.valueOf(wmsDpsSum.get("done_pcs_qty")));
+		Integer orderPcsQty = Integer.parseInt(String.valueOf(wmsDpsSum.get("order_pcs_qty")));
+		Integer doneOrderCnt = Integer.parseInt(String.valueOf(wmsDpsSum.get("done_order_cnt")));
+		Integer totalOrderCnt = Integer.parseInt(String.valueOf(wmsDpsSum.get("total_order_cnt")));
 		
 		// WCS 합포수량 조회
 		String wcsSql = FnfUtils.queryCustServiceWithCheck("board_wcs_dps_summary");
@@ -38,8 +38,8 @@ public class GetWmsDpsSummary extends AbstractLogisService {
 		Map<String, Integer> wcsDpsSum = (Map<String, Integer>) wmsQueryMgr.selectBySql(wcsSql, params, HashMap.class);
 //		Integer hDonePcsQty = wcsDpsSum.get("h_done_pcs_qty");
 //		Integer hOrderPcsQty = wcsDpsSum.get("h_order_pcs_qty");
-		Integer hDoneOrderCnt = wcsDpsSum.get("h_done_order_cnt");
-		Integer hTotalOrderCnt = wcsDpsSum.get("h_total_order_cnt");
+		Integer hDoneOrderCnt = Integer.parseInt(String.valueOf(wcsDpsSum.get("h_done_order_cnt")));
+		Integer hTotalOrderCnt = Integer.parseInt(String.valueOf(wcsDpsSum.get("h_total_order_cnt")));
 		
 		// WMS 전체수량 - WCS 합포수량 = 단포수량 
 //		Integer dDonePcsQty = donePcsQty - hDonePcsQty;

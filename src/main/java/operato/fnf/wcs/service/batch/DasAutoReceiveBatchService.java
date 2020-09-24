@@ -56,11 +56,15 @@ public class DasAutoReceiveBatchService extends AbstractLogisService {
 			BatchReceipt receipt = BeanUtil.get(DasAutoReceiveBatchService.class).prepare(areaCd, stageCd, comCd, workDate, jobType);
 			
 			workDate = DateUtil.addDateToStr(DateUtil.parse(workDate, "yyyy-MM-dd"), 1);
-			if (AnyConstants.COMMON_STATUS_FINISHED.equalsIgnoreCase(receipt.getStatus())) {
+			if (ValueUtil.isEmpty(receipt.getItems()) || AnyConstants.COMMON_STATUS_FINISHED.equalsIgnoreCase(receipt.getStatus())) {
 				continue;
 			}
 			
-			this.serviceDispatcher.getReceiveBatchService().startToReceive(receipt);
+			try {
+				this.serviceDispatcher.getReceiveBatchService().startToReceive(receipt);
+			} catch(Exception e) {
+				logger.error("DasAutoReceiveBatchService~~", e);
+			}
 		}
 		
 		return new ResponseObj();

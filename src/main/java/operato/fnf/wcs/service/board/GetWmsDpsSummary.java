@@ -26,6 +26,9 @@ public class GetWmsDpsSummary extends AbstractLogisService {
 		IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager("WMS");
 		@SuppressWarnings("unchecked")
 		Map<String, Object> wmsDpsSum = (Map<String, Object>) wmsQueryMgr.selectBySql(wmsSql, params, HashMap.class);
+		if (ValueUtil.isEmpty(wmsDpsSum)) {
+			return new ResponseObj();
+		}
 		
 		Integer donePcsQty = Integer.parseInt(String.valueOf(wmsDpsSum.get("done_pcs_qty")));
 		Integer orderPcsQty = Integer.parseInt(String.valueOf(wmsDpsSum.get("order_pcs_qty")));
@@ -35,7 +38,7 @@ public class GetWmsDpsSummary extends AbstractLogisService {
 		// WCS 합포수량 조회
 		String wcsSql = FnfUtils.queryCustServiceWithCheck("board_wcs_dps_summary");
 		@SuppressWarnings("unchecked")
-		Map<String, Object> wcsDpsSum = (Map<String, Object>) wmsQueryMgr.selectBySql(wcsSql, params, HashMap.class);
+		Map<String, Object> wcsDpsSum = (Map<String, Object>) queryManager.selectBySql(wcsSql, params, HashMap.class);
 //		Integer hDonePcsQty = wcsDpsSum.get("h_done_pcs_qty");
 //		Integer hOrderPcsQty = wcsDpsSum.get("h_order_pcs_qty");
 		Integer hDoneOrderCnt = Integer.parseInt(String.valueOf(wcsDpsSum.get("h_done_order_cnt")));
@@ -52,16 +55,23 @@ public class GetWmsDpsSummary extends AbstractLogisService {
 		result.put("total_pcs_qty", orderPcsQty);
 		result.put("done_order_qty", doneOrderCnt);
 		result.put("total_order_qty", totalOrderCnt);
-		result.put("multi_done_order_qty", hDoneOrderCnt);
-		result.put("multi_total_order_qty", hTotalOrderCnt);
-		result.put("single_done_order_qty", dDoneOrderCnt);
-		result.put("single_total_order_qty", dTotalOrderCnt);
+		result.put("multi_done_ord_cnt", hDoneOrderCnt);
+		result.put("multi_ord_cnt", hTotalOrderCnt);
+		result.put("single_done_ord_cnt", dDoneOrderCnt);
+		result.put("single_ord_cnt", dTotalOrderCnt);
 		
-		result.put("done_order_rate", doneOrderCnt/totalOrderCnt * 100);
-		result.put("done_pcs_rate", donePcsQty/orderPcsQty * 100);
-		result.put("multi_done_rate", hDoneOrderCnt/hTotalOrderCnt * 100);
-		result.put("single_done_rate", dDoneOrderCnt/dTotalOrderCnt * 100);
-		result.put("bar_single_done_rate", dDoneOrderCnt/dTotalOrderCnt * 100);
+		if (ValueUtil.isNotEmpty(totalOrderCnt) && totalOrderCnt > 0) {			
+			result.put("done_order_rate", doneOrderCnt/totalOrderCnt * 100);
+		}
+		if (ValueUtil.isNotEmpty(orderPcsQty) && orderPcsQty > 0) {			
+			result.put("done_pcs_rate", donePcsQty/orderPcsQty * 100);
+		}
+		if (ValueUtil.isNotEmpty(hTotalOrderCnt) && hTotalOrderCnt > 0) {			
+			result.put("multi_done_ord_rate", hDoneOrderCnt/hTotalOrderCnt * 100);
+		}
+		if (ValueUtil.isNotEmpty(dTotalOrderCnt) && dTotalOrderCnt > 0) {
+			result.put("single_done_ord_rate", dDoneOrderCnt/dTotalOrderCnt * 100);
+		}
 		
 		ResponseObj resp = new ResponseObj();
 		resp.setValues(result);

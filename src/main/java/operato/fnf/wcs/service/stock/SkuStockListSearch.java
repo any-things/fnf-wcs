@@ -1,6 +1,7 @@
 package operato.fnf.wcs.service.stock;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -127,11 +128,13 @@ public class SkuStockListSearch extends StockInSearch {
 	
 	private Stock calculateSkuOrderStock(String skuCd, List<Stock> stocks, boolean wmsStockCheck) throws Exception {
 		// query wms odps inventory
-		Query conds = new Query(0, 1);
-		conds.addFilter("whCd", FnFConstants.WH_CD_ICF);
-		conds.addFilter("itemCd", skuCd);
+//		Query conds = new Query(0, 1);
+//		conds.addFilter("whCd", FnFConstants.WH_CD_ICF);
+//		conds.addFilter("itemCd", skuCd);
 		IQueryManager wmsQueryMgr = this.getDataSourceQueryManager(WmsOdpsZoneInv.class);
-		WmsOdpsZoneInv zoneInv = wmsQueryMgr.selectByCondition(WmsOdpsZoneInv.class, conds);
+		//WmsOdpsZoneInv zoneInv = wmsQueryMgr.selectByCondition(WmsOdpsZoneInv.class, conds);
+		String sql = "select * from dps_inventory where wh_cd = :whCd and item_cd = :itemCd";
+		WmsOdpsZoneInv zoneInv = wmsQueryMgr.selectBySql(sql, ValueUtil.newMap("whCd,itemCd", Arrays.asList(FnFConstants.WH_CD_ICF, skuCd)), WmsOdpsZoneInv.class);
 		if (wmsStockCheck && ValueUtil.isEmpty(zoneInv) 
 				|| ValueUtil.isEmpty(zoneInv.getInvnQty()) || zoneInv.getInvnQty() == 0) {
 			throw ThrowUtil.newValidationErrorWithNoLog("이제품은 재고가 없습니다.");

@@ -32,7 +32,7 @@ public class DasBatchAutoReceiveJob extends AbstractFnFJob {
 		if ("Y".equals(isRunning)) {
 			return;
 		}
-		BeanUtil.get(ResultSendJob.class).updateJobStatus("Y");
+		BeanUtil.get(DasBatchAutoReceiveJob.class).updateJobStatus("Y");
 		
 		List<Domain> domainList = domainCtrl.domainList();
 		
@@ -44,7 +44,7 @@ public class DasBatchAutoReceiveJob extends AbstractFnFJob {
 		} catch(Exception e) {
 			logger.error("DasBatchAutoReceiveJob error~~", e);
 		} finally {
-			BeanUtil.get(ResultSendJob.class).updateJobStatus("N");
+			BeanUtil.get(DasBatchAutoReceiveJob.class).updateJobStatus("N");
 		}
 		
 	}

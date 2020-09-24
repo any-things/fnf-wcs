@@ -50,26 +50,24 @@ public class QuerySmsJobBatch extends AbstractRestService {
 				sumJb.setId("SUM");
 				sumJb.setWmsBatchNo(obj.getBatchGroupId());
 				sumJb.setParentOrderQty(obj.getParentOrderQty());
-				sumJb.setBatchOrderQty(obj.getBatchOrderQty());
-				sumJb.setResultOrderQty(obj.getResultOrderQty());
 				sumJb.setParentPcs(obj.getParentPcs());
-				sumJb.setBatchPcs(obj.getBatchPcs());
+				sumJb.setResultOrderQty(obj.getResultOrderQty());
 				sumJb.setResultPcs(obj.getResultPcs());
 				sumJb.setResultBoxQty(obj.getResultBoxQty());
 				
+				
+				
+				sumJb.setBatchOrderQty(obj.getParentOrderQty());
+				sumJb.setBatchPcs(obj.getParentPcs());
+				
 				mainJob.setParentOrderQty(mainJob.getParentOrderQty());
 				mainJob.setBatchOrderQty(mainJob.getBatchOrderQty());
+				mainJob.setResultPcs(mainJob.getResultPcs() - obj.getResultPcs());
+				mainJob.setResultBoxQty(mainJob.getResultBoxQty() - obj.getResultBoxQty());
 				
 				totalJb.add(sumJb);
 				totalJb.add(obj);
 				continue;
-			}
-			
-			if (ValueUtil.isNotEmpty(mainJob)) {
-//				mainJob.setParentPcs(mainJob.getParentPcs() - obj.getParentPcs());
-//				mainJob.setBatchPcs(mainJob.getBatchPcs() - obj.getBatchPcs());
-				mainJob.setResultPcs(mainJob.getResultPcs() - obj.getResultPcs());
-				mainJob.setResultBoxQty(mainJob.getResultBoxQty() - obj.getResultBoxQty());
 			}
 			
 			totalJb.add(obj);

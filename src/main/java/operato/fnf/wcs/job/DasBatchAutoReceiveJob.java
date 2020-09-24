@@ -22,7 +22,7 @@ public class DasBatchAutoReceiveJob extends AbstractFnFJob {
 	private final String JOB_STATUS = "das.auto.receiving.processing";
 	
 	@Transactional
-	@Scheduled(initialDelay=90000, fixedDelay=119000)
+	@Scheduled(initialDelay=90000, fixedDelay=80000)
 	public void job() {
 		if(!this.isJobEnabeld()) {
 			return;

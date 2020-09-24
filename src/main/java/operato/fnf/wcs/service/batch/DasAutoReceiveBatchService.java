@@ -43,7 +43,7 @@ public class DasAutoReceiveBatchService extends AbstractLogisService {
 			workDate = DateUtil.currentDate();
 		}
 		
-		Integer autoReceiveDays = 15;
+		Integer autoReceiveDays = 30;
 		try {			
 			autoReceiveDays = Integer.parseInt(SettingUtil.getValue(DAS_AUTO_RECEIVE_DAYS_KEY));
 		} catch(Exception e) {

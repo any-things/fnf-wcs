@@ -25,7 +25,7 @@ public class GetWmsDpsSummary extends AbstractLogisService {
 		String wmsSql = FnfUtils.queryCustServiceWithCheck("board_wms_dps_summary");
 		IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager("WMS");
 		@SuppressWarnings("unchecked")
-		Map<String, Integer> wmsDpsSum = (Map<String, Integer>) wmsQueryMgr.selectListBySql(wmsSql, params, Map.class, 0, 0);
+		Map<String, Integer> wmsDpsSum = (Map<String, Integer>) wmsQueryMgr.selectBySql(wmsSql, params, HashMap.class);
 		
 		Integer donePcsQty = wmsDpsSum.get("done_pcs_qty");
 		Integer orderPcsQty = wmsDpsSum.get("order_pcs_qty");
@@ -35,7 +35,7 @@ public class GetWmsDpsSummary extends AbstractLogisService {
 		// WCS 합포수량 조회
 		String wcsSql = FnfUtils.queryCustServiceWithCheck("board_wcs_dps_summary");
 		@SuppressWarnings("unchecked")
-		Map<String, Integer> wcsDpsSum = (Map<String, Integer>) wmsQueryMgr.selectListBySql(wcsSql, params, Map.class, 0, 0);
+		Map<String, Integer> wcsDpsSum = (Map<String, Integer>) wmsQueryMgr.selectBySql(wcsSql, params, HashMap.class);
 //		Integer hDonePcsQty = wcsDpsSum.get("h_done_pcs_qty");
 //		Integer hOrderPcsQty = wcsDpsSum.get("h_order_pcs_qty");
 		Integer hDoneOrderCnt = wcsDpsSum.get("h_done_order_cnt");

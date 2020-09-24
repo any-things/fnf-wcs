@@ -1,8 +1,7 @@
 select 
-	COALESCE(sum(cmpt_qty), 0) as result 
+	COALESCE(sum(qty), 0) as result 
 from 
-	mhe_dr 
+	mhe_pas_rlst
 where
-	wh_cd = 'ICF'
-	and work_unit in ( :batchList ) 
-	and mhe_datetime between to_timestamp(:timeFrom, 'YYYY-MM-DD HH24:MI:SS.MS') and to_timestamp(:timeTo, 'YYYY-MM-DD HH24:MI:SS.MS')
+	batch_no = :batchId
+	and ins_datetime between to_timestamp(:timeFrom, 'YYYY-MM-DD HH24:MI:SS.MS') and to_timestamp(:timeTo, 'YYYY-MM-DD HH24:MI:SS.MS')

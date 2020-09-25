@@ -2,10 +2,10 @@ select
 	mpo.job_date
 	, mpr.batch_no as batch_id
 	, jb.title
-	, mpr.chute_no
+	, mpo.chute_no
 	, mdo.cell_no
-	, mpr.sku_cd
-	, mpr.sku_bcd as sku_barcd
+	, mpo.sku_cd
+	, sku.sku_barcd as sku_barcd
 	, sku.brand_cd
 	, sku.season_cd
 	, sku.style_cd

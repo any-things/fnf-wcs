@@ -19,6 +19,7 @@ import xyz.elidom.util.ValueUtil;
 
 @Component
 public class QuerySmsJobBatch extends AbstractRestService {
+	@SuppressWarnings("unchecked")
 	public ResponseObj querySmsJobBatch(Map<String, Object> params) throws Exception {
 		int page = Integer.valueOf(String.valueOf(params.get("page")));
 		int limit = Integer.valueOf(String.valueOf(params.get("limit")));
@@ -34,6 +35,12 @@ public class QuerySmsJobBatch extends AbstractRestService {
 				queryParams.put(filter.getName(), filter.getValue());
 			}
 		}
+		
+		JobBatch jobBatch = this.queryManager.select(JobBatch.class, queryParams.get("wms_batch_no"));
+		Map<String, Object> condition = ValueUtil.newMap("batchGroupId", jobBatch.getBatchGroupId());
+		
+		String batchQtySql = FnfUtils.queryCustServiceWithCheck("sms-main-job-qty");
+		Map<String, Object> batchSummary = this.queryManager.selectBySql(batchQtySql, condition, Map.class);
 		
 		String sql = FnfUtils.queryCustServiceWithCheck("sms-job-batches");
 		
@@ -58,16 +65,19 @@ public class QuerySmsJobBatch extends AbstractRestService {
 				
 				
 				sumJb.setBatchOrderQty(obj.getParentOrderQty());
-				sumJb.setBatchPcs(obj.getParentPcs());
+				sumJb.setBatchPcs(ValueUtil.toInteger(batchSummary.get("batch_pcs")));//배치총pcs
 				
 				mainJob.setParentOrderQty(mainJob.getParentOrderQty());
 				mainJob.setBatchOrderQty(mainJob.getBatchOrderQty());
-				mainJob.setResultPcs(mainJob.getResultPcs() - obj.getResultPcs());
-				mainJob.setResultBoxQty(mainJob.getResultBoxQty() - obj.getResultBoxQty());
 				
 				totalJb.add(sumJb);
 				totalJb.add(obj);
 				continue;
+			}
+			
+			if (ValueUtil.isNotEmpty(mainJob)) {
+				mainJob.setResultPcs(mainJob.getResultPcs() - obj.getResultPcs());
+				mainJob.setResultBoxQty(mainJob.getResultBoxQty() - obj.getResultBoxQty());
 			}
 			
 			totalJb.add(obj);

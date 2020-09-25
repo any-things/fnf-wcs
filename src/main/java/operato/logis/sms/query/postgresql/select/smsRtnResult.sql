@@ -18,26 +18,26 @@ select
 from 
 	(
 		select 
-			strr_id, job_date, batch_no
+			job_date, batch_no
 			, chute_no, sku_cd, sum(order_qty) order_qty 
 		from 
 			mhe_pas_order 
 		where 
 			batch_no in ( :batchList ) 
 		group by 
-			strr_id, job_date, batch_no, chute_no, sku_cd
+			job_date, batch_no, chute_no, sku_cd
 	) as mpo
 left outer join 
 	(
 		select 
 			batch_no, job_type, chute_no
-			, sku_cd, sku_bcd, strr_id, sum(qty) qty 
+			, sku_cd, sku_bcd, sum(qty) qty 
 		from 
 			mhe_pas_rlst 
 		where 
 			batch_no in ( :batchList ) 
 		group by 
-			batch_no, job_type, chute_no, sku_cd, sku_bcd, strr_id
+			batch_no, job_type, chute_no, sku_cd, sku_bcd
 	) as mpr
 on
 	mpo.batch_no = mpr.batch_no
@@ -48,37 +48,37 @@ and
 left outer join
 	(
 		select 
-			batch_no, item_cd, strr_id, cell_no 
+			batch_no, item_cd, chute_no, cell_no 
 		from 
 			mhe_das_order 
 		where 
 			batch_no in ( :batchList )
 		group by
-			batch_no, item_cd, strr_id, cell_no 
+			batch_no, item_cd, chute_no, cell_no 
 	) mdo
 on
 	mpo.batch_no = mdo.batch_no
 and
 	mpo.sku_cd = mdo.item_cd
 and
-	mpo.strr_id = mdo.strr_id
+	mpo.chute_no = mdo.chute_no
 left outer join 
 	(
 		select 
-			batch_no, item_cd, strr_id, sum(cmpt_qty) cmpt_qty 
+			batch_no, item_cd, cell_no, sum(cast(work_qty as int)) cmpt_qty 
 		from 
-			mhe_das_rtn_box_rslt 
+			mhe_das_rtn_com_rslt 
 		where 
 			batch_no in ( :batchList )
 		group by 
-			batch_no, item_cd, strr_id
+			batch_no, item_cd, cell_no
 	) mdrbr
 on
-	mpr.batch_no = mdrbr.batch_no
+	mdo.batch_no = mdrbr.batch_no
 and
-	mpr.strr_id = mdrbr.strr_id
+	mdo.cell_no = mdrbr.cell_no
 and
-	mpr.sku_cd = mdrbr.item_cd
+	mdo.item_cd = mdrbr.item_cd
 left outer join
 	job_batches jb
 on
@@ -96,4 +96,4 @@ and mdo.cell_no like :cell_no
 and mpr.sku_cd like :sku_cd
 #end
 order by 
-	mpr.chute_no, mdo.cell_no, mpr.sku_cd
+	mpr.chute_no, mdo.cell_no, mpr.sku_cd	

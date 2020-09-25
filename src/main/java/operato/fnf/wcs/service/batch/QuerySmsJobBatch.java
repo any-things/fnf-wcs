@@ -36,11 +36,7 @@ public class QuerySmsJobBatch extends AbstractRestService {
 			}
 		}
 		
-		JobBatch jobBatch = this.queryManager.select(JobBatch.class, queryParams.get("wms_batch_no"));
-		Map<String, Object> condition = ValueUtil.newMap("batchGroupId", jobBatch.getBatchGroupId());
 		
-		String batchQtySql = FnfUtils.queryCustServiceWithCheck("sms-main-job-qty");
-		Map<String, Object> batchSummary = this.queryManager.selectBySql(batchQtySql, condition, Map.class);
 		
 		String sql = FnfUtils.queryCustServiceWithCheck("sms-job-batches");
 		
@@ -51,6 +47,11 @@ public class QuerySmsJobBatch extends AbstractRestService {
 		for (int i = jbList.size() - 1; i >= 0; i--) {
 			JobBatch obj = jbList.get(i);
 			if (obj.getWmsBatchNo().equals(obj.getBatchGroupId())) {
+				Map<String, Object> condition = ValueUtil.newMap("batchGroupId", obj.getBatchGroupId());
+				
+				String batchQtySql = FnfUtils.queryCustServiceWithCheck("sms-main-job-qty");
+				Map<String, Object> batchSummary = this.queryManager.selectBySql(batchQtySql, condition, Map.class);
+				
 				mainJob = obj;
 				
 				JobBatch sumJb = new JobBatch();

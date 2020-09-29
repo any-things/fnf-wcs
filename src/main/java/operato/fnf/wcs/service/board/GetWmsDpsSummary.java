@@ -39,6 +39,18 @@ public class GetWmsDpsSummary extends AbstractLogisService {
 		String wcsSql = FnfUtils.queryCustServiceWithCheck("board_wcs_dps_summary");
 		@SuppressWarnings("unchecked")
 		Map<String, Object> wcsDpsSum = (Map<String, Object>) queryManager.selectBySql(wcsSql, params, HashMap.class);
+		Map<String, Object> result = new HashMap<>();
+		if (ValueUtil.isEmpty(wcsDpsSum)) {
+			result.put("done_pcs_qty", donePcsQty);
+			result.put("total_pcs_qty", orderPcsQty);
+			result.put("done_order_qty", doneOrderCnt);
+			result.put("total_order_qty", totalOrderCnt);
+			
+			ResponseObj resp = new ResponseObj();
+			resp.setValues(result);
+			return resp;
+		}		
+		
 //		Integer hDonePcsQty = wcsDpsSum.get("h_done_pcs_qty");
 //		Integer hOrderPcsQty = wcsDpsSum.get("h_order_pcs_qty");
 		Integer hDoneOrderCnt = Integer.parseInt(String.valueOf(wcsDpsSum.get("h_done_order_cnt")));
@@ -50,11 +62,7 @@ public class GetWmsDpsSummary extends AbstractLogisService {
 		Integer dDoneOrderCnt = doneOrderCnt - hDoneOrderCnt;
 		Integer dTotalOrderCnt = totalOrderCnt - hTotalOrderCnt;
 		
-		Map<String, Object> result = new HashMap<>();
-		result.put("done_pcs_qty", donePcsQty);
-		result.put("total_pcs_qty", orderPcsQty);
-		result.put("done_order_qty", doneOrderCnt);
-		result.put("total_order_qty", totalOrderCnt);
+		
 		result.put("multi_done_ord_cnt", hDoneOrderCnt);
 		result.put("multi_ord_cnt", hTotalOrderCnt);
 		result.put("single_done_ord_cnt", dDoneOrderCnt);

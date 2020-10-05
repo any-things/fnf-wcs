@@ -56,6 +56,7 @@ public class DasBatchClose extends AbstractLogisService {
 		// 5-1. SDAS 인경우 Rack, Cell 초기화
 		if(ValueUtil.isEqual(jobBatch.getJobType(), SmsConstants.JOB_TYPE_SDAS)) {
 			closeBatchSvc.resetRacksAndCells(jobBatch);
+			closeBatchSvc.deleteOrderPreprocesses(jobBatch);
 		}
 		
 		// 6. WMS MHE_HR 테이블에 반영

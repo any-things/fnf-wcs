@@ -91,6 +91,7 @@ public class DasCloseBatchService extends AbstractQueryService {
 		// 5-1. SDAS 인경우 Rack, Cell 초기화
 		if(ValueUtil.isEqual(batch.getJobType(), SmsConstants.JOB_TYPE_SDAS)) {
 			this.resetRacksAndCells(batch);
+			this.deleteOrderPreprocesses(batch);
 		}
 		
 		// 6. WMS MHE_HR 테이블에 반영
@@ -127,6 +128,21 @@ public class DasCloseBatchService extends AbstractQueryService {
 		Map<String, Object> params = ValueUtil.newMap("domainId,batchId", batch.getDomainId(), batch.getBatchGroupId());
 	  	this.queryManager.executeBySql("UPDATE RACKS SET STATUS = null, BATCH_ID = null WHERE DOMAIN_ID = :domainId AND BATCH_ID = :batchId", params);
 	  	this.queryManager.executeBySql("UPDATE CELLS SET CLASS_CD = null, BATCH_ID = null WHERE DOMAIN_ID = :domainId AND BATCH_ID = :batchId", params);
+	}
+	
+	/**
+	 * 해당 배치 order_preprocesses 정보 삭제
+	 *
+	 * @param batch
+	 * @return
+	 */
+	public void deleteOrderPreprocesses(JobBatch batch) {
+		Query query = AnyOrmUtil.newConditionForExecution(batch.getDomainId());
+		query.addFilter("batchGroupId", batch.getBatchGroupId());
+		List<JobBatch> jobBatches = this.queryManager.selectList(JobBatch.class, query);
+		for (JobBatch jobBatch : jobBatches) {
+			this.queryManager.executeBySql("DELETE FROM ORDER_PREPROCESSES WHERE DOMAIN_ID = :domainId AND BATCH_ID= :batchId", ValueUtil.newMap("domainId,batchId", jobBatch.getDomainId(), jobBatch.getId()));
+		}
 	}
 
 	/**

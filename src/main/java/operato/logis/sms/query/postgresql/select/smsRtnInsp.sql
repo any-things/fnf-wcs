@@ -71,5 +71,8 @@ AND MDO.CELL_NO LIKE :cell_no
 #if($sku_cd)
 AND MPO.SKU_CD LIKE :sku_cd
 #end
+#if($box_id)
+AND MPO.BOX_ID LIKE :box_id
+#end
 ORDER BY 
 	MPO.CHUTE_NO, MDO.CELL_NO, MPO.BOX_ID

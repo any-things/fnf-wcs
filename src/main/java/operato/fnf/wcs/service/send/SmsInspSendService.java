@@ -226,13 +226,24 @@ public class SmsInspSendService extends AbstractQueryService {
 		Map<String, Object> conds = ValueUtil.newMap("whCd,strrId,refSeason,shopRtnType,shopRtnSeq,wcsIfChk", FnFConstants.WH_CD_ICF, batchInfo[0], batchInfo[1], batchInfo[2], batchInfo[3], LogisConstants.N_CAP_STRING);
 		List<WmsWmtUifWcsInbRtnCnfm> rtnCnfmList = dsQueryManager.selectListBySql(rtnCnfmSql, conds, WmsWmtUifWcsInbRtnCnfm.class, 0, 0);
 		
-		Query condition = new Query();
-		condition.addFilter("batchNo", batch.getBatchGroupId());
-		condition.addFilter("ifYn", LogisConstants.N_CAP_STRING);
-		List<WcsMhePasRlst> pasResults = this.queryManager.selectList(WcsMhePasRlst.class, condition);
+		// 수정해야 할 부분 Start
+//		Query condition = new Query();
+//		condition.addFilter("batchNo", batch.getBatchGroupId());
+//		condition.addFilter("ifYn", LogisConstants.N_CAP_STRING);
+//		List<WcsMhePasRlst> pasResults = this.queryManager.selectList(WcsMhePasRlst.class, condition);
+		String selectQuery = queryStore.getSmsRtnResultQuery();
+		Map<String, Object> condition = ValueUtil.newMap("batchNo,ifYn", batch.getBatchGroupId(), LogisConstants.N_CAP_STRING);
+		List<WcsMhePasRlst> pasResults = this.queryManager.selectListBySql(selectQuery, condition, WcsMhePasRlst.class, 0, 0);
+		// 수정해야 할 부분 End
 		
 		List<WcsMhePasRlst> tempResults = new ArrayList<WcsMhePasRlst>(pasResults.size());
 		tempResults.addAll(pasResults);
+		
+		/**
+		 * PAS에서 주는 방식이 변경 되면 WCS에서 WMS로 전송하는 쿼리가 변경되야함
+		 * 1. PAS에서 주는 결과값에서 group by를 해서 조회해야함 
+		 * 2. PAS Flag 처리도 쿼리 생성해서 다시 업데이트 해야함
+		 */
 		
 		for (WcsMhePasRlst pasResult : pasResults) {
 			for (WmsWmtUifWcsInbRtnCnfm wmsResult : rtnCnfmList) {
@@ -242,7 +253,7 @@ public class SmsInspSendService extends AbstractQueryService {
 					wmsResult.setWcsIfChkDtm(currentTimeStr);
 				}
 			}
-			pasResult.setIfYn(LogisConstants.CAP_Y_STRING);
+//			pasResult.setIfYn(LogisConstants.CAP_Y_STRING);
 		}
 		
 		IQueryManager wmsQueryManager = this.getDataSourceQueryManager(WmsWmtUifImpMheRtnScan.class);
@@ -290,7 +301,10 @@ public class SmsInspSendService extends AbstractQueryService {
 			resultValue.add(scan);
 		}
 		
-		AnyOrmUtil.updateBatch(pasResults, 100, "ifYn");
+		
+		String sql = "update mhe_pas_rlst set if_yn = :yString where batch_no = :batchId and if_yn = :nString";
+		this.queryManager.executeBySql(sql, ValueUtil.newMap("yString,batchId,nString", LogisConstants.CAP_Y_STRING, batch.getBatchGroupId(), LogisConstants.N_CAP_STRING));
+//		AnyOrmUtil.updateBatch(pasResults, 100, "ifYn");
 		dsQueryManager.updateBatch(rtnCnfmList);
 		wmsQueryManager.insertBatch(resultValue);
 	}

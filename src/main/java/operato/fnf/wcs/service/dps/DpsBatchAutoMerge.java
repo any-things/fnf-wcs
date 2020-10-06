@@ -31,7 +31,7 @@ public class DpsBatchAutoMerge extends AbstractQueryService {
 		
 		// 작업진행중 batch조회 
 		Query mainConds = new Query();
-		mainConds.addFilter("status", "");	// FIXME
+		mainConds.addFilter("status", "RUN");
 		List<JobBatch> mainJobBatches = queryManager.selectList(JobBatch.class, mainConds);
 		
 		if (mainJobBatches.size() == 0 || mainJobBatches.size() > 1) {
@@ -42,7 +42,7 @@ public class DpsBatchAutoMerge extends AbstractQueryService {
 		
 		// 
 		Query subConds = new Query();
-		subConds.addFilter("status", "");	// FIXME
+		subConds.addFilter("status", "READY");
 		List<JobBatch> subJobBatches = queryManager.selectList(JobBatch.class, subConds);
 		
 		if (subJobBatches.size() == 0) {

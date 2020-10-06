@@ -24,14 +24,14 @@ private final String JOB_STATUS = "dps.auto.merge.processing";
 	@Scheduled(initialDelay=30000, fixedDelay=20000)
 	public void job() {
 		if(!this.isJobEnabeld()) {
-			return;
+//			return;
 		}
 		
 		String isRunning = SettingUtil.getValue(1l, JOB_STATUS);
 		if ("Y".equals(isRunning)) {
 			return;
 		}
-		BeanUtil.get(DasBatchAutoReceiveJob.class).updateJobStatus("Y");
+		BeanUtil.get(DpsBatchAutoMergeJob.class).updateJobStatus("Y");
 		
 		List<Domain> domainList = domainCtrl.domainList();
 		
@@ -43,7 +43,7 @@ private final String JOB_STATUS = "dps.auto.merge.processing";
 		} catch(Exception e) {
 			logger.error("DasBatchAutoReceiveJob error~~", e);
 		} finally {
-			BeanUtil.get(DasBatchAutoReceiveJob.class).updateJobStatus("N");
+			BeanUtil.get(DpsBatchAutoMergeJob.class).updateJobStatus("N");
 		}
 		
 	}

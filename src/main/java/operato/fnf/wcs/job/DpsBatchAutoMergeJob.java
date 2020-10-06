@@ -24,7 +24,7 @@ private final String JOB_STATUS = "dps.auto.merge.processing";
 	@Scheduled(initialDelay=30000, fixedDelay=20000)
 	public void job() {
 		if(!this.isJobEnabeld()) {
-//			return;
+			return;
 		}
 		
 		String isRunning = SettingUtil.getValue(1l, JOB_STATUS);

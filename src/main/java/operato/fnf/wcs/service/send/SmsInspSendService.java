@@ -231,7 +231,7 @@ public class SmsInspSendService extends AbstractQueryService {
 //		condition.addFilter("batchNo", batch.getBatchGroupId());
 //		condition.addFilter("ifYn", LogisConstants.N_CAP_STRING);
 //		List<WcsMhePasRlst> pasResults = this.queryManager.selectList(WcsMhePasRlst.class, condition);
-		String selectQuery = queryStore.getSmsRtnResultQuery();
+		String selectQuery = queryStore.getSrtnPasResultQuery();
 		Map<String, Object> condition = ValueUtil.newMap("batchNo,ifYn", batch.getBatchGroupId(), LogisConstants.N_CAP_STRING);
 		List<WcsMhePasRlst> pasResults = this.queryManager.selectListBySql(selectQuery, condition, WcsMhePasRlst.class, 0, 0);
 		// 수정해야 할 부분 End

@@ -275,6 +275,15 @@ public class SmsQueryStore extends AbstractQueryStore {
 	public String getSrtnCnfmQuery() {
 		return this.getQueryByPath("srtn/srtnCnfm");
 	}
+	
+	/**
+	 * 검수확정 정보를 PAS Interface
+	 *
+	 * @return
+	 */
+	public String getSrtnPasResultQuery() {
+		return this.getQueryByPath("srtn/srtnPasResult");
+	}
 
 	/**
 	 * 반품 가공화면 batch 정보

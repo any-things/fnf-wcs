@@ -67,14 +67,14 @@ public class SkuStockListSearch extends StockInSearch {
 		}
 		
 		if (hasRackBatch) {
-			stocks = this.stockService.searchRecommendCells(domainId, equipType, null, comCd, skuCd, false);
+			stocks = this.searchRecommendCells(domainId, equipType, null, comCd, skuCd, false);
 			
 			Stock stock = null;
-//			if (wmsStockCheck) {
-//				stock = this.calculateSkuOrderStock(skuCd, stocks, true);
-//			} else {
+			if (wmsStockCheck) {
+				stock = this.calculateSkuOrderStock(skuCd, stocks, true);
+			} else {
 				stock = this.stockService.calculateSkuOrderStock(domainId, rackBatch.getId(), equipType, null, comCd, skuCd);
-//			}
+			}
 			if (ValueUtil.isNotEmpty(stock)) {
 				if (stock.getInputQty() == 0) {
 					throw ThrowUtil.newValidationErrorWithNoLog("이제품은 이미 필요수량만큼 보충되었습니다.");
@@ -109,7 +109,7 @@ public class SkuStockListSearch extends StockInSearch {
 			//stock = this.stockService.calculateSkuOrderStock(domainId, null, equipType, null, comCd, skuCd);
 			Stock stock = this.calculateSkuOrderStock(skuCd, stocks, wmsStockCheck);
 			if (stock.getInputQty() == 0 && wmsStockCheck) {
-				throw ThrowUtil.newValidationErrorWithNoLog("이제품은 이미 필요수량만큼 보충되었습니다.");
+				throw ThrowUtil.newValidationErrorWithNoLog("이제품은 이미 재고수량만큼 보충되었습니다.");
 			}
 			
 			if (ValueUtil.isNotEmpty(stock)) {
@@ -123,6 +123,25 @@ public class SkuStockListSearch extends StockInSearch {
 		resp.setValues(values);
 		
 		return resp;
+	}
+	
+	public List<Stock> searchRecommendCells(Long domainId, String equipType, String equipCd, String comCd, String skuCd, Boolean fixedFlag) {
+		// 1. 조회 조건
+		Query condition = AnyOrmUtil.newConditionForExecution(domainId);
+		//condition.addSelect("cellCd", "fixedFlag");
+		condition.addFilter("equipType", equipType);
+		condition.addFilter("comCd", comCd);
+		condition.addFilter("skuCd", skuCd);
+		
+		if(equipCd != null) {
+			condition.addFilter("equipCd", equipCd);
+		}
+		
+		if(fixedFlag != null) {
+			condition.addFilter("fixedFlag", fixedFlag);
+		}
+		
+		return this.queryManager.selectList(Stock.class, condition);
 	}
 	
 	private Stock calculateSkuOrderStock(String skuCd, List<Stock> stocks, boolean wmsStockCheck) throws Exception {
@@ -151,7 +170,7 @@ public class SkuStockListSearch extends StockInSearch {
 //					allowQty -= obj.getLoadQty();
 //				}
 				sumLoadQty += obj.getLoadQty();
-			}			
+			}
 		}
 		
 		Stock stock = new Stock();

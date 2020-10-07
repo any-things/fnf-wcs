@@ -44,7 +44,7 @@ public class DpsBatchAutoMerge extends AbstractQueryService {
 		// 
 		Query subConds = new Query();
 		subConds.addFilter("status", "READY");
-		mainConds.addFilter("jobType", "DPS");
+		subConds.addFilter("jobType", "DPS");
 		List<JobBatch> subJobBatches = queryManager.selectList(JobBatch.class, subConds);
 		
 		if (subJobBatches.size() == 0) {
@@ -52,7 +52,7 @@ public class DpsBatchAutoMerge extends AbstractQueryService {
 		}
 		
 		for (JobBatch obj: subJobBatches) {
-			try {				
+			try {
 				BeanUtil.get(DpsBatchAutoMerge.class).doMerge(jobBatch.getId(), obj.getId());
 			} catch(Exception e) {
 				logger.error("DpsBatchAutoMerge error~~", e);

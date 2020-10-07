@@ -41,7 +41,7 @@ private final String JOB_STATUS = "dps.auto.merge.processing";
 				BeanUtil.get(DpsBatchAutoMerge.class).dpsBatchAutoMerge(new HashMap<>());
 			}
 		} catch(Exception e) {
-			logger.error("DasBatchAutoReceiveJob error~~", e);
+			logger.error("DpsBatchAutoMergeJob error~~", e);
 		} finally {
 			BeanUtil.get(DpsBatchAutoMergeJob.class).updateJobStatus("N");
 		}

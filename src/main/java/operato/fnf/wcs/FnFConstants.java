@@ -62,4 +62,16 @@ public class FnFConstants {
 	 * SMS UPLOAD ORDER SEASON - S
 	 */
 	public static final String UPLOAD_ORDER_SEASON = "S";
+	/**
+	 * SMS -WMS Prefix - W
+	 */
+	public static final String RTN_SCAN_PREFIX = "W";
+	/**
+	 * SMS -Sorter No - 94
+	 */
+	public static final String SORTER_NO = "94";
+	/**
+	 * SMS -EMPTY
+	 */
+	public static final String IF_EMPTY = "EMPTY";
 }

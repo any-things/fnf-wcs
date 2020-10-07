@@ -258,22 +258,23 @@ public class SmsInspSendService extends AbstractQueryService {
 		
 		IQueryManager wmsQueryManager = this.getDataSourceQueryManager(WmsWmtUifImpMheRtnScan.class);
 		
+		String wmsSeq = "select max(interface_no) from wmt_uif_imp_mhe_rtn_scan where ins_person_id = :sorterNo";
+		Map<String, Object> maxSeq = wmsQueryManager.selectBySql(wmsSeq, ValueUtil.newMap("sorterNo", FnFConstants.SORTER_NO), Map.class);
+		String srtnInterfaceNo = ValueUtil.toString(maxSeq.get("seq")).replaceAll(FnFConstants.RTN_SCAN_PREFIX, "0");
+		int interfaceNo = ValueUtil.toInteger(srtnInterfaceNo);
+		
 		List<WmsWmtUifImpMheRtnScan> resultValue = new ArrayList<WmsWmtUifImpMheRtnScan>(tempResults.size());
 		for (WcsMhePasRlst result : tempResults) {
-			String sql = "SELECT 'W' || LPAD(FNF_IF.WMS_UIF_IMP_MHE_RTN_SCAN.NEXTVAL,14,'0') AS seq FROM DUAL";
-			Map<String, Object> maxSeq = wmsQueryManager.selectBySql(sql, new HashMap<String, Object>(), Map.class);
-			String interfaceNo = ValueUtil.toString(maxSeq.get("seq"));
-			
 			WmsWmtUifImpMheRtnScan scan = new WmsWmtUifImpMheRtnScan();
 			scan.setInterfaceCrtDt(srtDate);
-			scan.setInterfaceNo(ValueUtil.toString(interfaceNo));
+			scan.setInterfaceNo(FnFConstants.RTN_SCAN_PREFIX + String.format("%014d", interfaceNo));
 			scan.setWhCd(FnFConstants.WH_CD_ICF);
 			if(ValueUtil.isEmpty(result.getStrrId())) {
 				String skuSql = "select * from sku where domain_id = :domainId and com_cd = :comCd and (sku_cd = :skuCd or sku_barcd = :skuCd or sku_barcd2 = :skuCd)";
 				Map<String,Object> skuParams = ValueUtil.newMap("domainId,comCd,skuCd", batch.getDomainId(), batch.getComCd(), result.getSkuCd());
 				List<SKU> skuList = this.queryManager.selectListBySql(skuSql, skuParams, SKU.class, 0, 0);
 				if(ValueUtil.isEmpty(skuList)) {
-					scan.setStrrId("EMPTY");
+					scan.setStrrId(FnFConstants.IF_EMPTY);
 					scan.setItemCd(result.getSkuCd());
 					scan.setInbDetlNo(result.getSkuCd());
 				} else {
@@ -298,7 +299,10 @@ public class SmsInspSendService extends AbstractQueryService {
 			scan.setInsDatetime(result.getInsDatetime());
 			scan.setIfYn(LogisConstants.N_CAP_STRING);
 			
-			resultValue.add(scan);
+			if(ValueUtil.isNotEqual(FnFConstants.IF_EMPTY, scan.getStrrId())) {
+				resultValue.add(scan);
+				interfaceNo++;
+			}
 		}
 		
 		

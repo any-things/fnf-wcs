@@ -7,12 +7,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.BatchReceipt;
+import xyz.anythings.base.entity.JobBatch;
+import xyz.anythings.base.event.EventConstants;
+import xyz.anythings.base.event.main.BatchReceiveEvent;
 import xyz.anythings.base.model.ResponseObj;
 import xyz.anythings.base.service.impl.AbstractLogisService;
 import xyz.anythings.base.service.impl.LogisServiceDispatcher;
 import xyz.anythings.sys.AnyConstants;
 import xyz.anythings.sys.event.EventPublisher;
+import xyz.anythings.sys.event.model.EventResultSet;
+import xyz.anythings.sys.event.model.SysEvent;
 import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.sys.util.SettingUtil;
 import xyz.elidom.util.BeanUtil;
@@ -70,10 +76,78 @@ public class DasAutoReceiveBatchService extends AbstractLogisService {
 		return new ResponseObj();
 	}
 	
+//	@Transactional(propagation = Propagation.REQUIRES_NEW)
+//	public BatchReceipt prepare(String areaCd, String stageCd, String comCd, String workDate, String jobType) {
+//		BatchReceipt receipt = this.serviceDispatcher.getReceiveBatchService()
+//				.readyToReceive(Domain.currentDomainId(), areaCd, stageCd, comCd, workDate, jobType);
+//		return receipt;
+//	}
+	
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public BatchReceipt prepare(String areaCd, String stageCd, String comCd, String workDate, String jobType) {
-		BatchReceipt receipt = this.serviceDispatcher.getReceiveBatchService()
-				.readyToReceive(Domain.currentDomainId(), areaCd, stageCd, comCd, workDate, jobType);
-		return receipt;
+		// 1. BatchReceipt 하나 생성
+		int jobSeq = BatchReceipt.newBatchReceiptJobSeq(Domain.currentDomainId(), areaCd, stageCd, comCd, workDate);
+		BatchReceipt batchReceipt = new BatchReceipt();
+		batchReceipt.setComCd(comCd);
+		batchReceipt.setAreaCd(areaCd);
+		batchReceipt.setStageCd(stageCd);
+		batchReceipt.setJobDate(workDate);
+		batchReceipt.setJobSeq(ValueUtil.toString(jobSeq));
+		batchReceipt.setStatus(LogisConstants.COMMON_STATUS_WAIT);
+		this.queryManager.insert(batchReceipt);
+		batchReceipt.setStatus("AW");
+		
+		this.readyToReceiveEvent(SysEvent.EVENT_STEP_BEFORE, Domain.currentDomainId(), jobType, areaCd, stageCd, comCd, workDate, batchReceipt);
+		
+		// 4. 수신 정보가 있는지 체크 
+		if(ValueUtil.isEmpty(batchReceipt.getItems())) {
+			batchReceipt.setStatus(AnyConstants.COMMON_STATUS_FINISHED);
+		}
+		
+		// 5. 수신 정보가 있다면 리턴
+		return batchReceipt;
+	}
+	
+	private EventResultSet readyToReceiveEvent(
+			short eventStep, 
+			Long domainId, 
+			String jobType, 
+			String areaCd, 
+			String stageCd, 
+			String comCd, 
+			String jobDate, 
+			BatchReceipt receiptData, 
+			Object ... params) {
+		
+		return this.publishBatchReceiveEvent(EventConstants.EVENT_RECEIVE_TYPE_RECEIPT, eventStep, domainId, jobType, areaCd, stageCd, comCd, jobDate, receiptData, null, params);
+	}
+	
+	private EventResultSet publishBatchReceiveEvent(
+			short eventType, 
+			short eventStep, 
+			Long domainId, 
+			String jobType, 
+			String areaCd, 
+			String stageCd, 
+			String comCd, 
+			String jobDate, 
+			BatchReceipt receiptData, 
+			JobBatch batch, 
+			Object ... params) {
+		
+		// 1. 이벤트 생성 
+		BatchReceiveEvent receiptEvent = new BatchReceiveEvent(domainId, eventType, eventStep);
+		receiptEvent.setJobType(jobType);
+		receiptEvent.setComCd(comCd);
+		receiptEvent.setAreaCd(areaCd);
+		receiptEvent.setStageCd(stageCd);
+		receiptEvent.setJobDate(jobDate);
+		receiptEvent.setJobBatch(batch);
+		receiptEvent.setReceiptData(receiptData);
+		receiptEvent.setPayload(params);
+		
+		// 2. Event Publish
+		receiptEvent = (BatchReceiveEvent)this.eventPublisher.publishEvent(receiptEvent);
+		return receiptEvent.getEventResultSet();
 	}
 }

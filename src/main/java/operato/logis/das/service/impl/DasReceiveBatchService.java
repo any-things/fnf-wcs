@@ -57,11 +57,30 @@ public class DasReceiveBatchService extends AbstractQueryService {
 	 * 주문 정보 수신을 위한 수신 서머리 정보 조회
 	 *  
 	 * @param event
+	 * @throws Exception 
 	 */
 	@EventListener(classes = BatchReceiveEvent.class, condition = "#event.isExecuted() == false and #event.eventType == 10 and #event.eventStep == 1 and (#event.jobType == 'DAS')")
-	public void handleReadyToReceive(BatchReceiveEvent event) {
+	public void handleReadyToReceive(BatchReceiveEvent event) throws Exception {
 		BatchReceipt receipt = event.getReceiptData();
-		receipt = this.createReadyToReceiveData(receipt);
+		if ("AW".equalsIgnoreCase(receipt.getStatus())) {
+			receipt.setStatus(LogisConstants.COMMON_STATUS_WAIT);
+			// 1. WMS IF 테이블에서 수신 대상 데이터 확인
+			String workDate = receipt.getJobDate().replace(LogisConstants.DASH, LogisConstants.EMPTY_STRING);
+			Map<String, Object> params = ValueUtil.newMap("whCd,jobType,jobDate,status", this.whCd, Arrays.asList(this.JOB_TYPE_DAS, this.JOB_TYPE_PKG), workDate, "A");
+			IQueryManager dsQueryManager = this.getDataSourceQueryManager(WmsMheHr.class);
+			String sql = FnfUtils.queryCustServiceWithCheck("das_auto_receive_summary");
+			List<BatchReceiptItem> receiptItems = dsQueryManager.selectListBySql(sql, params, BatchReceiptItem.class, 0, 1000);
+			
+			// 2. 수신 아이템 데이터 생성 
+			for(BatchReceiptItem item : receiptItems) {
+				item.setBatchId(item.getWmsBatchNo());
+				item.setBatchReceiptId(receipt.getId());
+				this.queryManager.insert(item);
+				receipt.addItem(item);
+			}
+		} else {
+			receipt = this.createReadyToReceiveData(receipt);
+		}
 		event.setReceiptData(receipt);
 		event.setExecuted(true);
 	}

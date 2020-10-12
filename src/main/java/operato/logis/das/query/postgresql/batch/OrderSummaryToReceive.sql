@@ -21,6 +21,6 @@ WHERE
  	 HR.WH_CD = :whCd
  	 AND HR.WORK_DATE = :jobDate
  	 AND HR.STATUS = :status
- 	 AND HR.BIZ_TYPE IN ('SHIPBYDAS')
+ 	 AND HR.BIZ_TYPE IN (:jobType)
  	 AND HR.DEL_YN = 'N'
 ORDER BY JOB_TYPE

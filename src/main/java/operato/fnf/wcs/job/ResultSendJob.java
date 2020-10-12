@@ -117,7 +117,7 @@ public class ResultSendJob extends AbstractFnFJob {
 	private List<JobBatch> searchRunningBatches(Long domainId) {
 		Query condition = AnyOrmUtil.newConditionForExecution(domainId);
 		condition.addFilter("status", JobBatch.STATUS_RUNNING);
-		condition.addFilter("jobType", LogisConstants.IN, ValueUtil.toList(LogisConstants.JOB_TYPE_DAS, LogisConstants.JOB_TYPE_DPS));
+		condition.addFilter("jobType", LogisConstants.IN, ValueUtil.toList(LogisConstants.JOB_TYPE_DAS, "SDAS"));
 		condition.addOrder("jobType", false);
 		condition.addOrder("instructedAt", true);
 		return this.queryManager.selectList(JobBatch.class, condition);
@@ -131,9 +131,7 @@ public class ResultSendJob extends AbstractFnFJob {
 	 * @return
 	 */
 	private void sendBoxResults(Domain domain, JobBatch batch) {		
-		if(LogisConstants.isDasJobType(batch.getJobType())) {
-			this.dasBoxSendSvc.sendBoxResults(domain, batch);
-		}
+		this.dasBoxSendSvc.sendBoxResults(domain, batch);
 	}
 	
 	/**

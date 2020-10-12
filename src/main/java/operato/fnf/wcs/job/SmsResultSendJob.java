@@ -50,7 +50,7 @@ public class SmsResultSendJob extends AbstractFnFJob {
 	 * 매 20초 마다  
 	 */
 	@Transactional
-	@Scheduled(initialDelay=20000, fixedDelay=3000)
+	@Scheduled(initialDelay=20000, fixedDelay=20000)
 	public void inspBoxJob() {
 		// 스케줄링 활성화 여부 체크
 		if(!this.isJobEnabeld()) {
@@ -73,7 +73,7 @@ public class SmsResultSendJob extends AbstractFnFJob {
 						// 1. DAS에서 올려 준 피킹 실적을 WMS에 피킹 실적 전송 - 별도 트랜잭션
 						this.sendPickResults(domain, batch);
 						// 2. SDAS인 경우 RFID에 박스 실적 전송 - 박스 실적 전송 & 박스 취소까지 처리 - 별도 트랜잭션
-						this.sendBoxResults(domain, batch);
+						// this.sendBoxResults(domain, batch);
 						// 3. SDPS인 경우 Job Instances 테이블에 박스 실적 전송
 						this.sendSdpsBoxResults(domain, batch);
 					}
@@ -136,6 +136,7 @@ public class SmsResultSendJob extends AbstractFnFJob {
 	 * @param batch
 	 * @return
 	 */
+	@SuppressWarnings("unused")
 	private void sendBoxResults(Domain domain, JobBatch batch) {
 		if(ValueUtil.isEqual(batch.getJobType(), SmsConstants.JOB_TYPE_SDAS)) {
 			this.dasBoxSendSvc.sendBoxResults(domain, batch);

@@ -132,6 +132,7 @@ public class SdasInstructionService extends AbstractQueryService implements IIns
 	 * @param regionList
 	 * @return
 	 */
+	@SuppressWarnings("rawtypes")
 	protected int doInstructBatch(JobBatch batch, List<String> regionList, boolean isMerged) {
 		// 1. 배치의 주문 가공 정보 조회
 		Long domainId = batch.getDomainId();
@@ -154,6 +155,18 @@ public class SdasInstructionService extends AbstractQueryService implements IIns
 			List<OrderPreprocess> cellPreprocesses = AnyValueUtil.filterListBy(preprocesses, "classCd", cell.getCellCd());
 			this.generateJobInstances(batch, cell, cellPreprocesses);
 		}
+		
+
+		Map<String, Object> pasParams = ValueUtil.newMap("batchId", batch.getId());
+		List<Map> pasList = this.queryManager.selectListBySql(queryStore.getSdasPasOrder(), pasParams, Map.class, 0, 0);
+		Map<String, Object> drParams = ValueUtil.newMap("batchId", batch.getId());
+		List<Map> mheDrList = this.queryManager.selectListBySql(queryStore.getSdasDasOrder(), drParams, Map.class, 0, 0);
+		// PAS, DAS 오더 데이터 유무를 판단
+		if(ValueUtil.isEmpty(pasList) || ValueUtil.isEmpty(mheDrList)) {
+			// 작업을 완료하지 못했습니다.
+			throw ThrowUtil.newValidationErrorWithNoLog(MessageUtil.getTerm("terms.text.process_did_not_complete", "JobBatch Process Did Not Complete"));
+		}
+		
 		this.interfaceSorter(batch);
 		this.interfaceRack(batch);
 		

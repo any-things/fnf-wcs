@@ -15,7 +15,7 @@ import xyz.elidom.util.ValueUtil;
 
 @Component
 public class DpsOutbTcdSum extends AbstractQueryService {
-	public ResponseObj dpsBatchAutoMerge(Map<String, Object> params) throws Exception {
+	public ResponseObj dpsOutbTcdSum(Map<String, Object> params) throws Exception {
 		// TODO FNF_IF.MPS_EXPRESS_WAYBILL_PRINT.OUTB_TCD, 
 
 		String date = String.valueOf(params.get("date"));

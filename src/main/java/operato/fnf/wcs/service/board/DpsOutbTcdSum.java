@@ -1,5 +1,6 @@
 package operato.fnf.wcs.service.board;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,13 @@ public class DpsOutbTcdSum extends AbstractQueryService {
 		String byBrandSql = FnfUtils.queryCustServiceWithCheck("board_dps_outb_brand_summary");
 		List<DpsOutbWaybill> dpsOutbs = queryManager.selectListBySql(byBrandSql, params, DpsOutbWaybill.class, 0, 10000);
 		
+		List<String> waybillNos = new ArrayList<>();
+		for (DpsOutbWaybill obj: dpsOutbs) {
+			waybillNos.add(obj.getWaybillNo());
+		}
+		
 		String byOutbTcdSql = FnfUtils.queryCustServiceWithCheck("board_dps_outb_tcd_summary");
+		params.put("waybillNos", waybillNos);
 		List<DpsOutbWaybill> dpsOutbTcds = queryManager.selectListBySql(byOutbTcdSql, params, DpsOutbWaybill.class, 0, 10000);
 		
 		Map<String, DpsOutbWaybill> outbTcds = new HashMap<>();

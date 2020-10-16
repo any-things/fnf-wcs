@@ -16,7 +16,7 @@ import xyz.elidom.util.ValueUtil;
 @Component
 public class DpsOutbTcdSum extends AbstractQueryService {
 	public ResponseObj dpsBatchAutoMerge(Map<String, Object> params) throws Exception {
-		// TODO FNF_IF.MPS_PACKING_CMPT.OUTB_TCD, MPS_EXPRESS_WAYBILL_PRINT
+		// TODO FNF_IF.MPS_EXPRESS_WAYBILL_PRINT.OUTB_TCD, 
 
 		String date = String.valueOf(params.get("date"));
 		if (ValueUtil.isEmpty(date)) {
@@ -34,7 +34,12 @@ public class DpsOutbTcdSum extends AbstractQueryService {
 			outbTcds.put(obj.getWaybillNo(), obj);
 		}
 		
-		
+		for (DpsOutbWaybill obj: dpsOutbs) {
+			DpsOutbWaybill dpsOutbTcd = outbTcds.get(obj.getWaybillNo());
+			String brand = dpsOutbTcd.getStrrId();
+			obj.setStrrId(brand);
+			obj.setOutbTcd(dpsOutbTcd.getOutbTcd());
+		}
 		
 		//Map<String, Object> result = new HashMap<>();
 		ResponseObj resp = new ResponseObj();

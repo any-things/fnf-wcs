@@ -11,6 +11,9 @@ import operato.fnf.wcs.FnfUtils;
 import operato.fnf.wcs.service.model.DpsOutbWaybill;
 import xyz.anythings.base.model.ResponseObj;
 import xyz.anythings.sys.service.AbstractQueryService;
+import xyz.elidom.orm.IQueryManager;
+import xyz.elidom.orm.manager.DataSourceManager;
+import xyz.elidom.util.BeanUtil;
 import xyz.elidom.util.DateUtil;
 import xyz.elidom.util.ValueUtil;
 
@@ -36,9 +39,10 @@ public class DpsOutbTcdSum extends AbstractQueryService {
 			return new ResponseObj();
 		}
 		
+		IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager("WMS");
 		String byOutbTcdSql = FnfUtils.queryCustServiceWithCheck("board_dps_outb_tcd_summary");
 		params.put("waybillNos", waybillNos);
-		List<DpsOutbWaybill> dpsOutbTcds = queryManager.selectListBySql(byOutbTcdSql, params, DpsOutbWaybill.class, 0, 10000);
+		List<DpsOutbWaybill> dpsOutbTcds = wmsQueryMgr.selectListBySql(byOutbTcdSql, params, DpsOutbWaybill.class, 0, 10000);
 		
 		Map<String, DpsOutbWaybill> outbTcds = new HashMap<>();
 		for (DpsOutbWaybill obj: dpsOutbTcds) {

@@ -32,10 +32,11 @@ public class DpsOutbTcdSum extends AbstractQueryService {
 		
 		List<String> waybillNos = new ArrayList<>();
 		List<DpsOutbWaybill> dpsOutbTcds = new ArrayList<>();
-		for (DpsOutbWaybill obj: dpsOutbs) {
+		for (int i = 0; i < dpsOutbs.size(); i++) {
+			DpsOutbWaybill obj = dpsOutbs.get(i);
 			waybillNos.add(obj.getWaybillNo());
 			
-			if (waybillNos.size()%1000 == 0) {
+			if (waybillNos.size() % 1000 == 0 || i == waybillNos.size() - 1) {
 				IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager("WMS");
 				String byOutbTcdSql = FnfUtils.queryCustServiceWithCheck("board_dps_outb_tcd_summary");
 				params.put("waybillNos", waybillNos);
@@ -43,6 +44,8 @@ public class DpsOutbTcdSum extends AbstractQueryService {
 				
 				dpsOutbTcds.addAll(sumDpsOutbTcds);
 			}
+			
+			waybillNos = new ArrayList<>();
 		}
 		
 		if (waybillNos.size() == 0) {

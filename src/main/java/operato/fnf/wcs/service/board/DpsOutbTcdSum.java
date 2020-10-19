@@ -31,18 +31,23 @@ public class DpsOutbTcdSum extends AbstractQueryService {
 		List<DpsOutbWaybill> dpsOutbs = queryManager.selectListBySql(byBrandSql, params, DpsOutbWaybill.class, 0, 10000);
 		
 		List<String> waybillNos = new ArrayList<>();
+		List<DpsOutbWaybill> dpsOutbTcds = new ArrayList<>();
 		for (DpsOutbWaybill obj: dpsOutbs) {
 			waybillNos.add(obj.getWaybillNo());
+			
+			if (waybillNos.size()%1000 == 0) {
+				IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager("WMS");
+				String byOutbTcdSql = FnfUtils.queryCustServiceWithCheck("board_dps_outb_tcd_summary");
+				params.put("waybillNos", waybillNos);
+				List<DpsOutbWaybill> sumDpsOutbTcds = wmsQueryMgr.selectListBySql(byOutbTcdSql, params, DpsOutbWaybill.class, 0, 10000);
+				
+				dpsOutbTcds.addAll(sumDpsOutbTcds);
+			}
 		}
 		
 		if (waybillNos.size() == 0) {
 			return new ResponseObj();
 		}
-		
-		IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager("WMS");
-		String byOutbTcdSql = FnfUtils.queryCustServiceWithCheck("board_dps_outb_tcd_summary");
-		params.put("waybillNos", waybillNos);
-		List<DpsOutbWaybill> dpsOutbTcds = wmsQueryMgr.selectListBySql(byOutbTcdSql, params, DpsOutbWaybill.class, 0, 10000);
 		
 		Map<String, DpsOutbWaybill> outbTcds = new HashMap<>();
 		for (DpsOutbWaybill obj: dpsOutbTcds) {

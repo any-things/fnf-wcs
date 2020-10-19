@@ -32,6 +32,10 @@ public class DpsOutbTcdSum extends AbstractQueryService {
 			waybillNos.add(obj.getWaybillNo());
 		}
 		
+		if (waybillNos.size() == 0) {
+			return new ResponseObj();
+		}
+		
 		String byOutbTcdSql = FnfUtils.queryCustServiceWithCheck("board_dps_outb_tcd_summary");
 		params.put("waybillNos", waybillNos);
 		List<DpsOutbWaybill> dpsOutbTcds = queryManager.selectListBySql(byOutbTcdSql, params, DpsOutbWaybill.class, 0, 10000);

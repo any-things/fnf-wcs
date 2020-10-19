@@ -20,7 +20,7 @@ import xyz.elidom.util.ValueUtil;
 @Component
 public class DpsOutbTcdSum extends AbstractQueryService {
 	public ResponseObj dpsOutbTcdSum(Map<String, Object> params) throws Exception {
-		// TODO FNF_IF.MPS_EXPRESS_WAYBILL_PRINT.OUTB_TCD, 
+		// FNF_IF.MPS_EXPRESS_WAYBILL_PRINT.OUTB_TCD, 
 
 		String date = String.valueOf(params.get("date"));
 		if (ValueUtil.isEmpty(date)) {
@@ -30,6 +30,9 @@ public class DpsOutbTcdSum extends AbstractQueryService {
 		String byBrandSql = FnfUtils.queryCustServiceWithCheck("board_dps_outb_brand_summary");
 		List<DpsOutbWaybill> dpsOutbs = queryManager.selectListBySql(byBrandSql, params, DpsOutbWaybill.class, 0, 10000);
 		
+		IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager("WMS");
+		String byOutbTcdSql = FnfUtils.queryCustServiceWithCheck("board_dps_outb_tcd_summary");
+
 		List<String> waybillNos = new ArrayList<>();
 		List<DpsOutbWaybill> dpsOutbTcds = new ArrayList<>();
 		for (int i = 0; i < dpsOutbs.size(); i++) {
@@ -37,8 +40,6 @@ public class DpsOutbTcdSum extends AbstractQueryService {
 			waybillNos.add(obj.getWaybillNo());
 			
 			if (((float)waybillNos.size()) % 1000 == 0 || i == dpsOutbs.size() - 1) {
-				IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager("WMS");
-				String byOutbTcdSql = FnfUtils.queryCustServiceWithCheck("board_dps_outb_tcd_summary");
 				params.put("waybillNos", waybillNos);
 				List<DpsOutbWaybill> sumDpsOutbTcds = wmsQueryMgr.selectListBySql(byOutbTcdSql, params, DpsOutbWaybill.class, 0, 10000);
 				
@@ -60,6 +61,17 @@ public class DpsOutbTcdSum extends AbstractQueryService {
 			DpsOutbWaybill dpsOutbTcd = outbTcds.get(obj.getWaybillNo());
 			String brand = dpsOutbTcd.getStrrId();
 			obj.setStrrId(brand);
+			if ("M".equals(obj.getStrrId())) {
+				obj.setStrrNm("MLB");
+			} else if ("I".equals(obj.getStrrId())) {
+				obj.setStrrNm("MLB Kids");
+			} else if ("X".equals(obj.getStrrId())) {
+				obj.setStrrNm("Discovery Expedition");
+			} else if ("A".equals(obj.getStrrId())) {
+				obj.setStrrNm("Stretch Angels");
+			} else if ("V".equals(obj.getStrrId())) {
+				obj.setStrrNm("Duvetica");
+			}
 			obj.setOutbTcd(dpsOutbTcd.getOutbTcd());
 		}
 		

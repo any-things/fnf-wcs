@@ -419,7 +419,7 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 			AnyOrmUtil.insertBatch(dasOrderList, 100);
 			
 			String maxPltNoSql = "select COALESCE(max(cast(plt_no as int)), 0) + 1 as seq from mhe_das_order where batch_no = :batchId";
-			Map<String, Object> condition = ValueUtil.newMap("batchIds", batch.getBatchGroupId());
+			Map<String, Object> condition = ValueUtil.newMap("batchId", batch.getBatchGroupId());
 			Map<String, Object> maxResult = this.queryManager.selectBySql(maxPltNoSql, condition, Map.class);
 			int pltNo = ValueUtil.toInteger(maxResult.get("seq"));
 			

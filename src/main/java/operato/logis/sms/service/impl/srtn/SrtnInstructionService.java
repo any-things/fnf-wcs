@@ -272,10 +272,12 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 						wcsMhePasOrder.setChuteNo(ValueUtil.toString(skuInfo.get("sub_equip_cd")));	
 					}
 				}
-				pasOrderList.add(wcsMhePasOrder);
-				
-				rtnCnfm.setWcsIfChk(LogisConstants.Y_CAP_STRING);
-				rtnCnfm.setWcsIfChkDtm(srtDate);
+				if(ValueUtil.isNotEmpty(wcsMhePasOrder.getChuteNo())) {
+					pasOrderList.add(wcsMhePasOrder);
+					
+					rtnCnfm.setWcsIfChk(LogisConstants.Y_CAP_STRING);
+					rtnCnfm.setWcsIfChkDtm(srtDate);
+				}
 			}
 			
 			if(ValueUtil.isNotEmpty(pasOrderList)) {

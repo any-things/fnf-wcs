@@ -2,7 +2,6 @@ package operato.fnf.wcs.service.send;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -114,10 +113,12 @@ public class SmsInspSendService extends AbstractQueryService {
 						wcsMhePasOrder.setChuteNo(ValueUtil.toString(skuInfo.get("sub_equip_cd")));	
 					}
 				}
-				pasOrderList.add(wcsMhePasOrder);
-				
-				rtnCnfm.setWcsIfChk(LogisConstants.Y_CAP_STRING);
-				rtnCnfm.setWcsIfChkDtm(srtDate);
+				if(ValueUtil.isNotEmpty(wcsMhePasOrder.getChuteNo())) {
+					pasOrderList.add(wcsMhePasOrder);
+					
+					rtnCnfm.setWcsIfChk(LogisConstants.Y_CAP_STRING);
+					rtnCnfm.setWcsIfChkDtm(srtDate);
+				}
 			}
 			
 			if(ValueUtil.isNotEmpty(pasOrderList)) {

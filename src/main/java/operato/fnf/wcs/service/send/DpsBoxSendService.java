@@ -280,7 +280,7 @@ public class DpsBoxSendService extends AbstractQueryService {
 	 * @return
 	 */
 	public String newWaybillNo(String boxId, boolean exceptionWhenResNotOk) {
-		String waybillReqUrl = SettingUtil.getValue("fnf.waybill_no.request.url", "http://dev.wms.fnf.co.kr/onlineInvoiceMultiPackService/issue_express_waybill");
+		String waybillReqUrl = SettingUtil.getValue("fnf.waybill_no.request.url", "https://dev.wms.fnf.co.kr/onlineInvoiceMultiPackService/issue_express_waybill");
 		waybillReqUrl += "?WH_CD=ICF&BOX_ID=" + boxId;
 		RestTemplate rest = new RestTemplate();
 		StringHttpMessageConverter shmc = new StringHttpMessageConverter(Charset.forName(SysConstants.CHAR_SET_UTF8));

@@ -6,6 +6,8 @@ SELECT
 	, B.SUPPR_NM
 	, B.inb__date
 	, B.STRR_ID
+	, B.interface_crt_dt
+	, B.interface_no
 FROM (
 	SELECT 
 		REF_NO

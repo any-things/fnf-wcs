@@ -263,7 +263,7 @@ public class SmsInspSendService extends AbstractQueryService {
 		
 		IQueryManager wmsQueryManager = this.getDataSourceQueryManager(WmsWmtUifImpMheRtnScan.class);
 		
-		String wmsSeq = "select max(interface_no) from wmt_uif_imp_mhe_rtn_scan where ins_person_id = :sorterNo";
+		String wmsSeq = "select max(interface_no) as seq from wmt_uif_imp_mhe_rtn_scan where ins_person_id = :sorterNo";
 		Map<String, Object> maxSeq = wmsQueryManager.selectBySql(wmsSeq, ValueUtil.newMap("sorterNo", FnFConstants.SORTER_NO), Map.class);
 		String srtnInterfaceNo = ValueUtil.toString(maxSeq.get("seq")).replaceAll(FnFConstants.RTN_SCAN_PREFIX, "0");
 		int interfaceNo = ValueUtil.toInteger(srtnInterfaceNo);

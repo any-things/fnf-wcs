@@ -8,6 +8,7 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 import operato.fnf.wcs.FnfUtils;
+import operato.fnf.wcs.entity.DpsJobInstance;
 import operato.fnf.wcs.service.model.DpsOutbWaybill;
 import xyz.anythings.base.model.ResponseObj;
 import xyz.anythings.sys.service.AbstractQueryService;
@@ -27,39 +28,38 @@ public class DpsOutbTcdSum extends AbstractQueryService {
 			params.put("date", DateUtil.getCurrentDay());
 		}
 		
+		// outb_tcd 업데이트
+		String outbEmptySql = FnfUtils.queryCustServiceWithCheck("board_dps_outb_empty_list");
+		List<DpsJobInstance> dpsEmptyOutbs = queryManager.selectListBySql(outbEmptySql, params, DpsJobInstance.class, 0, 1000);
+		List<String> waybillNos = new ArrayList<>();
+		for (DpsJobInstance obj: dpsEmptyOutbs) {
+			waybillNos.add(obj.getWaybillNo());
+		}
+		
+		if (dpsEmptyOutbs.size() > 0) {
+			IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager("WMS");
+			String byOutbTcdSql = FnfUtils.queryCustServiceWithCheck("board_dps_outb_tcd_summary");
+			params.put("waybillNos", waybillNos);
+			List<DpsOutbWaybill> sumDpsOutbTcds = wmsQueryMgr.selectListBySql(byOutbTcdSql, params, DpsOutbWaybill.class, 0, 1000);
+			
+			Map<String, DpsJobInstance> outbTcds = new HashMap<>();
+			for (DpsJobInstance obj: dpsEmptyOutbs) {
+				outbTcds.put(obj.getWaybillNo(), obj);
+			}
+			for (DpsOutbWaybill obj: sumDpsOutbTcds) {
+				DpsJobInstance jobInstance = outbTcds.get(obj.getWaybillNo());
+				jobInstance.setOutbTcd(obj.getOutbTcd());
+			}
+			
+			queryManager.updateBatch(dpsEmptyOutbs, "outbTcd");
+			
+		}
+		
 		String byBrandSql = FnfUtils.queryCustServiceWithCheck("board_dps_outb_brand_summary");
 		List<DpsOutbWaybill> dpsOutbs = queryManager.selectListBySql(byBrandSql, params, DpsOutbWaybill.class, 0, 10000);
 		
-		IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager("WMS");
-		String byOutbTcdSql = FnfUtils.queryCustServiceWithCheck("board_dps_outb_tcd_summary");
-
-		List<String> waybillNos = new ArrayList<>();
-		List<DpsOutbWaybill> dpsOutbTcds = new ArrayList<>();
-		for (int i = 0; i < dpsOutbs.size(); i++) {
-			DpsOutbWaybill obj = dpsOutbs.get(i);
-			waybillNos.add(obj.getWaybillNo());
-			
-			if (((float)waybillNos.size()) % 1000 == 0 || i == dpsOutbs.size() - 1) {
-				params.put("waybillNos", waybillNos);
-				List<DpsOutbWaybill> sumDpsOutbTcds = wmsQueryMgr.selectListBySql(byOutbTcdSql, params, DpsOutbWaybill.class, 0, 10000);
-				
-				dpsOutbTcds.addAll(sumDpsOutbTcds);
-				waybillNos = new ArrayList<>();
-			}			
-		}
-		
-		if (dpsOutbTcds.size() == 0) {
-			return new ResponseObj();
-		}
-		
-		Map<String, DpsOutbWaybill> outbTcds = new HashMap<>();
-		for (DpsOutbWaybill obj: dpsOutbTcds) {
-			outbTcds.put(obj.getWaybillNo(), obj);
-		}
-		
 		for (DpsOutbWaybill obj: dpsOutbs) {
-			DpsOutbWaybill dpsOutbTcd = outbTcds.get(obj.getWaybillNo());
-			String brand = dpsOutbTcd.getStrrId();
+			String brand = obj.getStrrId();
 			obj.setStrrId(brand);
 			if ("M".equals(obj.getStrrId())) {
 				obj.setStrrNm("MLB");
@@ -72,7 +72,6 @@ public class DpsOutbTcdSum extends AbstractQueryService {
 			} else if ("V".equals(obj.getStrrId())) {
 				obj.setStrrNm("Duvetica");
 			}
-			obj.setOutbTcd(dpsOutbTcd.getOutbTcd());
 		}
 		
 		//Map<String, Object> result = new HashMap<>();

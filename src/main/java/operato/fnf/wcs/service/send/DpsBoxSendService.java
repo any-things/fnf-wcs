@@ -1,13 +1,21 @@
 package operato.fnf.wcs.service.send;
 
 import java.nio.charset.Charset;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import javax.net.ssl.SSLContext;
+
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustStrategy;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -283,6 +291,14 @@ public class DpsBoxSendService extends AbstractQueryService {
 		String waybillReqUrl = SettingUtil.getValue("fnf.waybill_no.request.url", "https://dev.wms.fnf.co.kr/onlineInvoiceMultiPackService/issue_express_waybill");
 		waybillReqUrl += "?WH_CD=ICF&BOX_ID=" + boxId;
 		RestTemplate rest = new RestTemplate();
+		try {
+			if (waybillReqUrl.contains("https")) {				
+				rest = this.restTemplate();
+			}
+		} catch(Exception e) {
+			logger.error(e.getMessage(), e);
+		}
+		
 		StringHttpMessageConverter shmc = new StringHttpMessageConverter(Charset.forName(SysConstants.CHAR_SET_UTF8));
 		shmc.setSupportedMediaTypes(ValueUtil.toList(MediaType.APPLICATION_JSON_UTF8));
 		rest.getMessageConverters().add(0, shmc);
@@ -332,4 +348,19 @@ public class DpsBoxSendService extends AbstractQueryService {
 		mheNo = ValueUtil.isEmpty(mheNo) ? "M1" : mheNo;
 		return RangedSeq.increaseSequence(domainId, "DPS_SINGLE_PACK_SEQ", "D", "DATE", dateStr, "MHE_NO", mheNo);
 	}
+	
+	private RestTemplate restTemplate() throws Exception {
+        TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
+
+        SSLContext sslContext = org.apache.http.ssl.SSLContexts.custom()
+                .loadTrustMaterial(null, acceptingTrustStrategy)
+                .build();
+        SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext);
+
+        CloseableHttpClient httpClient = HttpClients.custom()
+                .setSSLSocketFactory(csf)
+                .build();
+        HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory(httpClient);
+        return new RestTemplate(factory);
+    }
 }

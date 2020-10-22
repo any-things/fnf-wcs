@@ -411,7 +411,7 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 	private void alreadyAssignSku(List<OrderPreprocess> items) {
 		Query query = new Query();
 		query.addFilter("equipType", "Sorter");
-		query.addFilter("categoryFlag", false);
+//		query.addFilter("categoryFlag", false);
 		query.addFilter("batchId", LogisConstants.IS_NOT_NULL, LogisConstants.EMPTY_STRING);
 		List<Cell> cellList = this.queryManager.selectList(Cell.class, query);
 		for (Cell cell : cellList) {

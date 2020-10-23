@@ -207,7 +207,7 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		condition.addFilter("id", batch.getBatchGroupId());
 		JobBatch mainBatch = this.queryManager.select(JobBatch.class, condition);
 
-		Map<String, Object> inspParams = ValueUtil.newMap("batchId,jobDate", batch.getId(), mainBatch.getJobDate());
+		Map<String, Object> inspParams = ValueUtil.newMap("batchId,jobDate", batch.getId(), mainBatch.getJobDate().replaceAll("-", ""));
 		
 		List<WcsMhePasOrder> pasOrderList = this.queryManager.selectListBySql(queryStore.getSrtnUploadBatchSendPasOrder(), inspParams, WcsMhePasOrder.class, 0, 0);
 		if(ValueUtil.isNotEmpty(pasOrderList)) {

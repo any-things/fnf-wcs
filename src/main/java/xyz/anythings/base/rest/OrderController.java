@@ -130,7 +130,7 @@ public class OrderController extends AbstractRestService {
 		List<Order> orderList = new ArrayList<Order>(list.size());
 		
 		Map<String, Object> seqParams = ValueUtil.newMap("jobType,batchType", SmsConstants.JOB_TYPE_SRTN, FnFConstants.ORDER_RECEIVE_UPLOAD);
-		String seqSql = "select cast(COALESCE(max(job_seq), '0') as integer) + 1 as job_seq from job_batches where job_type = :jobType and batch_type = :batchType";
+		String seqSql = "select cast(COALESCE(max(cast(job_seq as int)), '0') as integer) + 1 as job_seq from job_batches where job_type = :jobType and batch_type = :batchType";
 		Map<String, Object> seqMap = this.queryManager.selectBySql(seqSql, seqParams, Map.class);
 		String tempJobSeq = "1";
 		if(ValueUtil.isNotEmpty(seqMap)) {

@@ -34,12 +34,20 @@ public class GetWmsDpsSummary extends AbstractLogisService {
 		Integer orderPcsQty = Integer.parseInt(String.valueOf(wmsDpsSum.get("order_pcs_qty")));
 		Integer doneOrderCnt = Integer.parseInt(String.valueOf(wmsDpsSum.get("done_order_cnt")));
 		Integer totalOrderCnt = Integer.parseInt(String.valueOf(wmsDpsSum.get("total_order_cnt")));
+		Integer doneShipIdCnt = Integer.parseInt(String.valueOf(wmsDpsSum.get("done_shipid_cnt")));
+		Integer totalShipIdCnt = Integer.parseInt(String.valueOf(wmsDpsSum.get("total_shipid_cnt")));
+		Integer doneSkuCnt = Integer.parseInt(String.valueOf(wmsDpsSum.get("done_sku_cnt")));
+		Integer totalSkuCnt = Integer.parseInt(String.valueOf(wmsDpsSum.get("total_sku_cnt")));
 		
 		Map<String, Object> result = new HashMap<>();
 		result.put("done_pcs_qty", donePcsQty);
 		result.put("total_pcs_qty", orderPcsQty);
 		result.put("done_order_qty", doneOrderCnt);
 		result.put("total_order_qty", totalOrderCnt);
+		result.put("done_shipid_cnt", doneShipIdCnt);
+		result.put("total_shipid_cnt", totalShipIdCnt);
+		result.put("done_sku_cnt", doneSkuCnt);
+		result.put("total_sku_cnt", totalSkuCnt);
 		
 		// WCS 합포수량 조회
 		String wcsSql = FnfUtils.queryCustServiceWithCheck("board_wcs_dps_summary");

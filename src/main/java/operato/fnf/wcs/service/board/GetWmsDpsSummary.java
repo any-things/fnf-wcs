@@ -31,7 +31,7 @@ public class GetWmsDpsSummary extends AbstractLogisService {
 		}
 		
 		Integer donePcsQty = Integer.parseInt(String.valueOf(wmsDpsSum.get("done_pcs_qty")));
-		Integer orderPcsQty = Integer.parseInt(String.valueOf(wmsDpsSum.get("order_pcs_qty")));
+		Integer totalPcsQty = Integer.parseInt(String.valueOf(wmsDpsSum.get("total_pcs_qty")));
 		Integer doneOrderCnt = Integer.parseInt(String.valueOf(wmsDpsSum.get("done_order_cnt")));
 		Integer totalOrderCnt = Integer.parseInt(String.valueOf(wmsDpsSum.get("total_order_cnt")));
 		Integer doneShipIdCnt = Integer.parseInt(String.valueOf(wmsDpsSum.get("done_shipid_cnt")));
@@ -41,7 +41,7 @@ public class GetWmsDpsSummary extends AbstractLogisService {
 		
 		Map<String, Object> result = new HashMap<>();
 		result.put("done_pcs_qty", donePcsQty);
-		result.put("total_pcs_qty", orderPcsQty);
+		result.put("total_pcs_qty", totalPcsQty);
 		result.put("done_order_qty", doneOrderCnt);
 		result.put("total_order_qty", totalOrderCnt);
 		result.put("done_shipid_cnt", doneShipIdCnt);
@@ -61,14 +61,14 @@ public class GetWmsDpsSummary extends AbstractLogisService {
 		
 //		Integer hDonePcsQty = wcsDpsSum.get("h_done_pcs_qty");
 //		Integer hOrderPcsQty = wcsDpsSum.get("h_order_pcs_qty");
-		Integer hDoneOrderCnt = Integer.parseInt(String.valueOf(wcsDpsSum.get("h_done_order_cnt")));
-		Integer hTotalOrderCnt = Integer.parseInt(String.valueOf(wcsDpsSum.get("h_total_order_cnt")));
+		Float hDoneOrderCnt = Float.parseFloat(String.valueOf(wcsDpsSum.get("h_done_order_cnt")));
+		Float hTotalOrderCnt = Float.parseFloat(String.valueOf(wcsDpsSum.get("h_total_order_cnt")));
 		
 		// WMS 전체수량 - WCS 합포수량 = 단포수량 
 //		Integer dDonePcsQty = donePcsQty - hDonePcsQty;
 //		Integer dOrderPcsQty = doneOrderCnt - hOrderPcsQty;
-		Integer dDoneOrderCnt = doneOrderCnt - hDoneOrderCnt;
-		Integer dTotalOrderCnt = totalOrderCnt - hTotalOrderCnt;
+		Float dDoneOrderCnt = doneOrderCnt - hDoneOrderCnt;
+		Float dTotalOrderCnt = totalOrderCnt - hTotalOrderCnt;
 		
 		
 		result.put("multi_done_ord_cnt", hDoneOrderCnt);
@@ -79,10 +79,10 @@ public class GetWmsDpsSummary extends AbstractLogisService {
 		if (ValueUtil.isNotEmpty(totalOrderCnt) && totalOrderCnt > 0) {			
 			result.put("done_order_rate", doneOrderCnt/totalOrderCnt * 100);
 		}
-		if (ValueUtil.isNotEmpty(orderPcsQty) && orderPcsQty > 0) {			
-			result.put("done_pcs_rate", donePcsQty/orderPcsQty * 100);
+		if (ValueUtil.isNotEmpty(totalPcsQty) && totalPcsQty > 0) {
+			result.put("done_pcs_rate", donePcsQty/totalPcsQty * 100);
 		}
-		if (ValueUtil.isNotEmpty(hTotalOrderCnt) && hTotalOrderCnt > 0) {			
+		if (ValueUtil.isNotEmpty(hTotalOrderCnt) && hTotalOrderCnt > 0) {
 			result.put("multi_done_ord_rate", hDoneOrderCnt/hTotalOrderCnt * 100);
 		}
 		if (ValueUtil.isNotEmpty(dTotalOrderCnt) && dTotalOrderCnt > 0) {

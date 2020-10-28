@@ -8,6 +8,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import operato.fnf.wcs.service.batch.SmsCloseBatchService;
 import operato.fnf.wcs.service.send.DasBoxSendService;
 import operato.fnf.wcs.service.send.PickingResultSendService;
 import operato.fnf.wcs.service.send.SmsInspSendService;
@@ -45,6 +46,11 @@ public class SmsResultSendJob extends AbstractFnFJob {
 	 */
 	@Autowired
 	private SmsInspSendService smsInspSendSvc;
+	/**
+	 * SRTN Box 전송 서비스
+	 */
+	@Autowired
+	private SmsCloseBatchService smsCloseBatchSvc;
 	
 	/**
 	 * 매 20초 마다  
@@ -70,12 +76,16 @@ public class SmsResultSendJob extends AbstractFnFJob {
 				
 				if(ValueUtil.isNotEmpty(batches)) {
 					for(JobBatch batch : batches) {
-						// 1. DAS에서 올려 준 피킹 실적을 WMS에 피킹 실적 전송 - 별도 트랜잭션
-						this.sendPickResults(domain, batch);
-						// 2. SDAS인 경우 RFID에 박스 실적 전송 - 박스 실적 전송 & 박스 취소까지 처리 - 별도 트랜잭션
-						// this.sendBoxResults(domain, batch);
-						// 3. SDPS인 경우 Job Instances 테이블에 박스 실적 전송
-						this.sendSdpsBoxResults(domain, batch);
+						if(ValueUtil.isEqual(batch.getJobType(), SmsConstants.JOB_TYPE_SRTN)) {
+							this.sendSrtnBoxResults(batch);
+						} else {
+							// 1. DAS에서 올려 준 피킹 실적을 WMS에 피킹 실적 전송 - 별도 트랜잭션
+							this.sendPickResults(domain, batch);
+							// 2. SDAS인 경우 RFID에 박스 실적 전송 - 박스 실적 전송 & 박스 취소까지 처리 - 별도 트랜잭션
+							// this.sendBoxResults(domain, batch);
+							// 3. SDPS인 경우 Job Instances 테이블에 박스 실적 전송
+							this.sendSdpsBoxResults(domain, batch);
+						}
 					}
 				}
 			} catch (Exception e) {
@@ -99,7 +109,7 @@ public class SmsResultSendJob extends AbstractFnFJob {
 	private List<JobBatch> searchRunningBatches(Long domainId) {
 		Query condition = AnyOrmUtil.newConditionForExecution(domainId);
 		condition.addFilter("status", JobBatch.STATUS_RUNNING);
-		condition.addFilter("jobType", LogisConstants.IN, ValueUtil.toList(SmsConstants.JOB_TYPE_SDAS, SmsConstants.JOB_TYPE_SDPS));
+		condition.addFilter("jobType", LogisConstants.IN, ValueUtil.toList(SmsConstants.JOB_TYPE_SDAS, SmsConstants.JOB_TYPE_SDPS, SmsConstants.JOB_TYPE_SRTN));
 		condition.addOrder("jobType", false);
 		condition.addOrder("instructedAt", true);
 		List<JobBatch> jobBatches = this.queryManager.selectList(JobBatch.class, condition);
@@ -153,6 +163,19 @@ public class SmsResultSendJob extends AbstractFnFJob {
 	private void sendSdpsBoxResults(Domain domain, JobBatch batch) {
 		if(ValueUtil.isEqual(batch.getJobType(), SmsConstants.JOB_TYPE_SDPS)) {
 			this.smsInspSendSvc.sendSdpsBoxResults(domain, batch);
+		}
+	}
+	
+	/**
+	 * 박스 실적을 WMS 로 전송
+	 * 
+	 * @param domain
+	 * @param batch
+	 * @return
+	 */
+	private void sendSrtnBoxResults(JobBatch batch) {
+		if(ValueUtil.isEqual(batch.getJobType(), SmsConstants.JOB_TYPE_SRTN)) {
+			this.smsCloseBatchSvc.sendRtnBoxResultToWms(batch);
 		}
 	}
 }

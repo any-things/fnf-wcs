@@ -30,7 +30,6 @@ public class SmsSrtnBatchClose extends AbstractLogisService {
 		}
 		
 		this.smsCloseBatchSvc.sendInspBoxScanResultToWms(batch);
-		this.smsCloseBatchSvc.sendRtnBoxResultToWms(batch);
 		
 		return new ResponseObj();
 	}

@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import operato.fnf.wcs.service.batch.SmsCloseBatchService;
@@ -20,8 +21,11 @@ import xyz.anythings.sys.util.AnyOrmUtil;
 import xyz.anythings.sys.util.AnyValueUtil;
 import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.sys.entity.Domain;
+import xyz.elidom.sys.entity.Setting;
 import xyz.elidom.sys.system.context.DomainContext;
+import xyz.elidom.sys.util.SettingUtil;
 import xyz.elidom.sys.util.ValueUtil;
+import xyz.elidom.util.BeanUtil;
 
 /**
  * SMS(SDAS/SDPS) 박스 처리 실적 전송 Job
@@ -52,6 +56,8 @@ public class SmsResultSendJob extends AbstractFnFJob {
 	@Autowired
 	private SmsCloseBatchService smsCloseBatchSvc;
 	
+	private final String JOB_STATUS = "srtn.sending.processing";
+	
 	/**
 	 * 매 20초 마다  
 	 */
@@ -62,6 +68,13 @@ public class SmsResultSendJob extends AbstractFnFJob {
 		if(!this.isJobEnabeld()) {
 			return;
 		}
+		
+		String isRunning = SettingUtil.getValue(1l, JOB_STATUS);
+		if ("Y".equals(isRunning)) {
+			return;
+		}
+		
+		BeanUtil.get(SmsResultSendJob.class).updateJobStatus("Y");
 		
 		// 모든 도메인 조회
 		List<Domain> domainList = this.domainCtrl.domainList();
@@ -98,6 +111,20 @@ public class SmsResultSendJob extends AbstractFnFJob {
 				DomainContext.unsetAll();
 			}
 		}
+		
+		BeanUtil.get(SmsResultSendJob.class).updateJobStatus("N");
+	}
+	
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public Setting updateJobStatus(String value) {
+		Query conds = new Query(0, 1);
+		conds.addFilter("name", JOB_STATUS);
+		Setting setting = queryManager.selectByCondition(true, Setting.class, conds);
+		
+		setting.setValue(value);
+		queryManager.update(setting);
+		
+		return setting;
 	}
 	
 	/**

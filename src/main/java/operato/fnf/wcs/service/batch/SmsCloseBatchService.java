@@ -14,6 +14,7 @@ import operato.fnf.wcs.entity.WcsMheBox;
 import operato.fnf.wcs.entity.WcsMheDasRtnBoxRslt;
 import operato.fnf.wcs.entity.WcsMheDr;
 import operato.fnf.wcs.entity.WcsMheHr;
+import operato.fnf.wcs.entity.WcsMhePasRlst;
 import operato.fnf.wcs.entity.WmsMheBox;
 import operato.fnf.wcs.entity.WmsMheDr;
 import operato.fnf.wcs.entity.WmsMheHr;
@@ -162,18 +163,23 @@ public class SmsCloseBatchService extends AbstractQueryService {
 		int jobSeq = ValueUtil.toInteger(maxSeq.get("seq"));
 		Map<String, Object> brandList = new HashMap<String, Object>();
 		
-		for (JobBatch jobBatch : jobBatches) {
-			brandList.put(jobBatch.getBrandCd(), jobSeq);
-			WmsRtnSortHr rtnSortHr = new WmsRtnSortHr();
-			rtnSortHr.setWhCd(FnFConstants.WH_CD_ICF);
-			rtnSortHr.setMheNo(jobBatch.getEquipCd());
-			rtnSortHr.setStrrId(jobBatch.getBrandCd());
-			rtnSortHr.setSortDate(mainBatch.getJobDate().replaceAll("-", ""));
-			rtnSortHr.setSortSeq(ValueUtil.toString(jobSeq));
-			rtnSortHr.setStatus("A");
-			rtnSortHr.setInsDatetime(new Date());
-			this.getDataSourceQueryManager(WmsRtnSortHr.class).insert(rtnSortHr);
-			jobSeq++;
+		int ifYnCnt = this.queryManager.selectSize(WcsMhePasRlst.class, ValueUtil.newMap("batchNo,ifYn", batch.getBatchGroupId(), LogisConstants.CAP_Y_STRING));
+		
+		
+		if(ifYnCnt == 0) {
+			for (JobBatch jobBatch : jobBatches) {
+				brandList.put(jobBatch.getBrandCd(), jobSeq);
+				WmsRtnSortHr rtnSortHr = new WmsRtnSortHr();
+				rtnSortHr.setWhCd(FnFConstants.WH_CD_ICF);
+				rtnSortHr.setMheNo(jobBatch.getEquipCd());
+				rtnSortHr.setStrrId(jobBatch.getBrandCd());
+				rtnSortHr.setSortDate(mainBatch.getJobDate().replaceAll("-", ""));
+				rtnSortHr.setSortSeq(ValueUtil.toString(jobSeq));
+				rtnSortHr.setStatus("A");
+				rtnSortHr.setInsDatetime(new Date());
+				this.getDataSourceQueryManager(WmsRtnSortHr.class).insert(rtnSortHr);
+				jobSeq++;
+			}
 		}
 		
 		Query wmsCondition = new Query();

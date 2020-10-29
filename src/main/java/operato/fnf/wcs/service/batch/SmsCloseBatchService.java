@@ -156,7 +156,7 @@ public class SmsCloseBatchService extends AbstractQueryService {
 		mainConds.addFilter("id", batch.getBatchGroupId());
 		JobBatch mainBatch = this.queryManager.select(JobBatch.class, mainConds);
 		
-		String sql = "SELECT nvl(max(SORT_SEQ), 0) + 1 AS seq FROM RTN_SORT_HR WHERE WH_CD = :whCd AND MHE_NO = :mheNo AND SORT_DATE = :sortDate";
+		String sql = "SELECT nvl(max(TO_NUMBER(SORT_SEQ)), 0) + 1 AS seq FROM RTN_SORT_HR WHERE WH_CD = :whCd AND MHE_NO = :mheNo AND SORT_DATE = :sortDate";
 		Map<String, Object> conds = ValueUtil.newMap("whCd,mheNo,sortDate", FnFConstants.WH_CD_ICF, batch.getEquipCd(), mainBatch.getJobDate().replaceAll("-", ""));
 		Map<String, Object> maxSeq = this.getDataSourceQueryManager(WmsRtnSortHr.class).selectBySql(sql, conds, Map.class);
 		

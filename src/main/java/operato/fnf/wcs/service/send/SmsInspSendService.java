@@ -78,8 +78,9 @@ public class SmsInspSendService extends AbstractQueryService {
 				skuCdList.add("1");
 			}
 			
-			String skuInfoQuery = queryStore.getSrtnCnfmQuery();
-			Map<String,Object> sqlParams = ValueUtil.newMap("batchId,skuCd", batch.getId(), skuCdList);
+//			String skuInfoQuery = queryStore.getSrtnCnfmQuery();
+			String skuInfoQuery = queryStore.getSrtnReCnfmQuery();
+			Map<String,Object> sqlParams = ValueUtil.newMap("batchGroupId,batchId,skuCd", batch.getBatchGroupId(), batch.getId(), skuCdList);
 			List<Map> skuInfoList = this.queryManager.selectListBySql(skuInfoQuery, sqlParams, Map.class, 0, 0);
 			
 			Query condition = new Query();
@@ -148,8 +149,9 @@ public class SmsInspSendService extends AbstractQueryService {
 			List<WcsMhePasOrder> pasList = this.queryManager.selectList(WcsMhePasOrder.class, pasConds);
 			
 			
-			String skuInfoQuery = queryStore.getSrtnCnfmQuery();
-			Map<String,Object> sqlParams = ValueUtil.newMap("batchId,skuCd", batch.getId(), skuCdList);
+//			String skuInfoQuery = queryStore.getSrtnCnfmQuery();
+			String skuInfoQuery = queryStore.getSrtnReCnfmQuery();
+			Map<String,Object> sqlParams = ValueUtil.newMap("batchGroupId,batchId,skuCd", batch.getBatchGroupId(), batch.getId(), skuCdList);
 			List<Map> skuInfoList = this.queryManager.selectListBySql(skuInfoQuery, sqlParams, Map.class, 0, 0);
 			
 			Query condition = new Query();
@@ -189,7 +191,9 @@ public class SmsInspSendService extends AbstractQueryService {
 						wcsMhePasOrder.setSkuBcd(ValueUtil.toString(skuInfo.get("sku_barcd2")));
 						wcsMhePasOrder.setChuteNo(ValueUtil.toString(skuInfo.get("sub_equip_cd")));	
 						
-						pasOrderList.add(wcsMhePasOrder);
+						if(ValueUtil.isNotEmpty(wcsMhePasOrder.getChuteNo())) {
+							pasOrderList.add(wcsMhePasOrder);
+						}
 						break;
 					}
 				}

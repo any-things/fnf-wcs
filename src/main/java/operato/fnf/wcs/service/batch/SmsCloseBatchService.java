@@ -14,7 +14,6 @@ import operato.fnf.wcs.entity.WcsMheBox;
 import operato.fnf.wcs.entity.WcsMheDasRtnBoxRslt;
 import operato.fnf.wcs.entity.WcsMheDr;
 import operato.fnf.wcs.entity.WcsMheHr;
-import operato.fnf.wcs.entity.WcsMhePasRlst;
 import operato.fnf.wcs.entity.WmsMheBox;
 import operato.fnf.wcs.entity.WmsMheDr;
 import operato.fnf.wcs.entity.WmsMheHr;
@@ -163,7 +162,7 @@ public class SmsCloseBatchService extends AbstractQueryService {
 		int jobSeq = ValueUtil.toInteger(maxSeq.get("seq"));
 		Map<String, Object> brandList = new HashMap<String, Object>();
 		
-		int ifYnCnt = this.queryManager.selectSize(WcsMhePasRlst.class, ValueUtil.newMap("batchNo,ifYn", batch.getBatchGroupId(), LogisConstants.CAP_Y_STRING));
+		int ifYnCnt = this.queryManager.selectSize(WcsMheDasRtnBoxRslt.class, ValueUtil.newMap("batchNo,ifYn", batch.getBatchGroupId(), LogisConstants.CAP_Y_STRING));
 		
 		
 		if(ifYnCnt == 0) {

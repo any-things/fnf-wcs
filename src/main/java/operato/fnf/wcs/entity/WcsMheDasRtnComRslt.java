@@ -32,7 +32,7 @@ public class WcsMheDasRtnComRslt extends xyz.elidom.orm.entity.basic.AbstractSta
 	@Column (name = "item_cd", nullable = false, length = 30)
 	private String itemCd;
 
-	@Column (name = "work_qty", length = 3)
+	@Column (name = "work_qty", length = 5)
 	private String workQty;
 
 	@Column (name = "ins_datetime", type = xyz.elidom.dbist.annotation.ColumnType.DATETIME)

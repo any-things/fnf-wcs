@@ -18,6 +18,7 @@ import operato.fnf.wcs.entity.WmsWmtUifWcsInbRtnCnfm;
 import operato.logis.sms.query.SmsQueryStore;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.Cell;
+import xyz.anythings.base.entity.EquipGroup;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.base.entity.OrderPreprocess;
 import xyz.anythings.base.entity.Rack;
@@ -168,7 +169,16 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 			batch.setStatus(JobBatch.STATUS_RUNNING);
 			batch.setInstructedAt(new Date());
 			batch.setEquipGroupCd(batch.getEquipCd());
-			this.queryManager.update(batch, "status", "instructedAt", "equipGroupCd");
+			
+			Query conds = AnyOrmUtil.newConditionForExecution(batch.getDomainId());
+			conds.addFilter("equipGroupCd", batch.getEquipGroupCd());
+			EquipGroup eg = this.queryManager.selectByCondition(EquipGroup.class, conds);
+			
+			if(eg != null) {
+				batch.setInputWorkers(eg.getInputWorkers());
+				batch.setTotalWorkers(eg.getTotalWorkers());
+			}
+			this.queryManager.update(batch, "status", "instructedAt", "equipGroupCd", "inputWorkers", "totalWorkers");
 		}
 		
 		return preprocesses.size();

@@ -155,32 +155,6 @@ public class SmsCloseBatchService extends AbstractQueryService {
 		mainConds.addFilter("id", batch.getBatchGroupId());
 		JobBatch mainBatch = this.queryManager.select(JobBatch.class, mainConds);
 		
-		String sql = "SELECT nvl(max(TO_NUMBER(SORT_SEQ)), 0) + 1 AS seq FROM RTN_SORT_HR WHERE WH_CD = :whCd AND MHE_NO = :mheNo AND SORT_DATE = :sortDate";
-		Map<String, Object> conds = ValueUtil.newMap("whCd,mheNo,sortDate", FnFConstants.WH_CD_ICF, batch.getEquipCd(), mainBatch.getJobDate().replaceAll("-", ""));
-		Map<String, Object> maxSeq = this.getDataSourceQueryManager(WmsRtnSortHr.class).selectBySql(sql, conds, Map.class);
-		
-		int jobSeq = ValueUtil.toInteger(maxSeq.get("seq"));
-		Map<String, Object> brandList = new HashMap<String, Object>();
-		
-		int ifYnCnt = this.queryManager.selectSize(WcsMheDasRtnBoxRslt.class, ValueUtil.newMap("batchNo,ifYn", batch.getBatchGroupId(), LogisConstants.CAP_Y_STRING));
-		
-		
-		if(ifYnCnt == 0) {
-			for (JobBatch jobBatch : jobBatches) {
-				brandList.put(jobBatch.getBrandCd(), jobSeq);
-				WmsRtnSortHr rtnSortHr = new WmsRtnSortHr();
-				rtnSortHr.setWhCd(FnFConstants.WH_CD_ICF);
-				rtnSortHr.setMheNo(jobBatch.getEquipCd());
-				rtnSortHr.setStrrId(jobBatch.getBrandCd());
-				rtnSortHr.setSortDate(mainBatch.getJobDate().replaceAll("-", ""));
-				rtnSortHr.setSortSeq(ValueUtil.toString(jobSeq));
-				rtnSortHr.setStatus("A");
-				rtnSortHr.setInsDatetime(new Date());
-				this.getDataSourceQueryManager(WmsRtnSortHr.class).insert(rtnSortHr);
-				jobSeq++;
-			}
-		}
-		
 		Query wmsCondition = new Query();
 		wmsCondition.addFilter("WH_CD", FnFConstants.WH_CD_ICF);
 		wmsCondition.addFilter("BATCH_NO", batch.getBatchGroupId());
@@ -189,25 +163,55 @@ public class SmsCloseBatchService extends AbstractQueryService {
 		List<WcsMheDasRtnBoxRslt> boxList = this.queryManager.selectList(WcsMheDasRtnBoxRslt.class, wmsCondition);
 		List<WmsRtnSortDr> rtnSortDrList = new ArrayList<WmsRtnSortDr>(boxList.size());
 		
-		for (WcsMheDasRtnBoxRslt rtnBox : boxList) {
-			WmsRtnSortDr sortDr = new WmsRtnSortDr();
-			sortDr.setWhCd(FnFConstants.WH_CD_ICF);
-			sortDr.setMheNo(rtnBox.getMheNo());
-			sortDr.setStrrId(rtnBox.getStrrId());
-			sortDr.setSortDate(rtnBox.getSortDate());
-			sortDr.setSortSeq(ValueUtil.toString(brandList.get(rtnBox.getStrrId())) == null ? "1" : ValueUtil.toString(brandList.get(rtnBox.getStrrId())));
-			sortDr.setItemCd(rtnBox.getItemCd());
-			sortDr.setBoxNo(rtnBox.getBoxNo());
-			sortDr.setCmptQty(rtnBox.getCmptQty());
-			sortDr.setInsDatetime(new Date());
+		if(boxList.size() > 0) {
+			String sql = "SELECT nvl(max(TO_NUMBER(SORT_SEQ)), 0) + 1 AS seq FROM RTN_SORT_HR WHERE WH_CD = :whCd AND MHE_NO = :mheNo AND SORT_DATE = :sortDate";
+			Map<String, Object> conds = ValueUtil.newMap("whCd,mheNo,sortDate", FnFConstants.WH_CD_ICF, batch.getEquipCd(), mainBatch.getJobDate().replaceAll("-", ""));
+			Map<String, Object> maxSeq = this.getDataSourceQueryManager(WmsRtnSortHr.class).selectBySql(sql, conds, Map.class);
 			
-			rtnSortDrList.add(sortDr);
+			int jobSeq = ValueUtil.toInteger(maxSeq.get("seq"));
+			Map<String, Object> brandList = new HashMap<String, Object>();
 			
-			rtnBox.setIfYn(LogisConstants.CAP_Y_STRING);
-			rtnBox.setCnfDatetime(new Date());
+			int ifYnCnt = this.queryManager.selectSize(WcsMheDasRtnBoxRslt.class, ValueUtil.newMap("batchNo,ifYn", batch.getBatchGroupId(), LogisConstants.CAP_Y_STRING));
+			
+			
+			if(ifYnCnt == 0) {
+				for (JobBatch jobBatch : jobBatches) {
+					brandList.put(jobBatch.getBrandCd(), jobSeq);
+					WmsRtnSortHr rtnSortHr = new WmsRtnSortHr();
+					rtnSortHr.setWhCd(FnFConstants.WH_CD_ICF);
+					rtnSortHr.setMheNo(jobBatch.getEquipCd());
+					rtnSortHr.setStrrId(jobBatch.getBrandCd());
+					rtnSortHr.setSortDate(mainBatch.getJobDate().replaceAll("-", ""));
+					rtnSortHr.setSortSeq(ValueUtil.toString(jobSeq));
+					rtnSortHr.setStatus("A");
+					rtnSortHr.setInsDatetime(new Date());
+					this.getDataSourceQueryManager(WmsRtnSortHr.class).insert(rtnSortHr);
+					jobSeq++;
+				}
+			}
+			
+			
+			
+			for (WcsMheDasRtnBoxRslt rtnBox : boxList) {
+				WmsRtnSortDr sortDr = new WmsRtnSortDr();
+				sortDr.setWhCd(FnFConstants.WH_CD_ICF);
+				sortDr.setMheNo(rtnBox.getMheNo());
+				sortDr.setStrrId(rtnBox.getStrrId());
+				sortDr.setSortDate(rtnBox.getSortDate());
+				sortDr.setSortSeq(ValueUtil.toString(brandList.get(rtnBox.getStrrId())) == null ? "1" : ValueUtil.toString(brandList.get(rtnBox.getStrrId())));
+				sortDr.setItemCd(rtnBox.getItemCd());
+				sortDr.setBoxNo(rtnBox.getBoxNo());
+				sortDr.setCmptQty(rtnBox.getCmptQty());
+				sortDr.setInsDatetime(new Date());
+				
+				rtnSortDrList.add(sortDr);
+				
+				rtnBox.setIfYn(LogisConstants.CAP_Y_STRING);
+				rtnBox.setCnfDatetime(new Date());
+			}
+			this.getDataSourceQueryManager(WmsRtnSortDr.class).insertBatch(rtnSortDrList);
+			this.queryManager.updateBatch(boxList);
 		}
-		this.getDataSourceQueryManager(WmsRtnSortDr.class).insertBatch(rtnSortDrList);
-		this.queryManager.updateBatch(boxList);
 	}
 	
 	/**

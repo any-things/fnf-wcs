@@ -109,8 +109,12 @@ public class CalcSmsProductivity extends AbstractQueryService {
 		for (DpsProductivity obj: smsProductivities) {
 			obj.setWorkMinutes((float)Math.round(obj.getWorkMinutes()*100)/100);
 			obj.setWorkHours((float)Math.round(obj.getWorkHours()*100)/100);
-			obj.setPh((float)Math.round(obj.getPh()*100)/100);
-			obj.setPhp((float)Math.round(obj.getPhp()*100)/100);
+			obj.setPh((float)Math.round(obj.getDoneQty() / obj.getWorkHours()*100)/100);
+			if(obj.getWorkers() > 0) {
+				obj.setPhp((float)Math.round(obj.getPh() / obj.getWorkers() *100)/100);
+			} else {
+				obj.setPhp(0);
+			}
 		}
 		
 		Collections.sort(smsProductivities);

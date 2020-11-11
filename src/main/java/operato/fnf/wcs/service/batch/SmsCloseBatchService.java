@@ -28,6 +28,7 @@ import xyz.anythings.sys.service.AbstractQueryService;
 import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.SysConstants;
+import xyz.elidom.sys.util.DateUtil;
 import xyz.elidom.util.ValueUtil;
 
 /**
@@ -163,9 +164,11 @@ public class SmsCloseBatchService extends AbstractQueryService {
 		List<WcsMheDasRtnBoxRslt> boxList = this.queryManager.selectList(WcsMheDasRtnBoxRslt.class, wmsCondition);
 		List<WmsRtnSortDr> rtnSortDrList = new ArrayList<WmsRtnSortDr>(boxList.size());
 		
+		String srtDate = DateUtil.dateStr(new Date(), "yyyyMMdd");
+		
 		if(boxList.size() > 0) {
 			String sql = "SELECT nvl(max(TO_NUMBER(SORT_SEQ)), 0) + 1 AS seq FROM RTN_SORT_HR WHERE WH_CD = :whCd AND MHE_NO = :mheNo AND SORT_DATE = :sortDate";
-			Map<String, Object> conds = ValueUtil.newMap("whCd,mheNo,sortDate", FnFConstants.WH_CD_ICF, batch.getEquipCd(), mainBatch.getJobDate().replaceAll("-", ""));
+			Map<String, Object> conds = ValueUtil.newMap("whCd,mheNo,sortDate", FnFConstants.WH_CD_ICF, batch.getEquipCd(), srtDate);
 			Map<String, Object> maxSeq = this.getDataSourceQueryManager(WmsRtnSortHr.class).selectBySql(sql, conds, Map.class);
 			
 			int jobSeq = ValueUtil.toInteger(maxSeq.get("seq"));
@@ -181,7 +184,7 @@ public class SmsCloseBatchService extends AbstractQueryService {
 					rtnSortHr.setWhCd(FnFConstants.WH_CD_ICF);
 					rtnSortHr.setMheNo(jobBatch.getEquipCd());
 					rtnSortHr.setStrrId(jobBatch.getBrandCd());
-					rtnSortHr.setSortDate(mainBatch.getJobDate().replaceAll("-", ""));
+					rtnSortHr.setSortDate(srtDate);
 					rtnSortHr.setSortSeq(ValueUtil.toString(jobSeq));
 					rtnSortHr.setStatus("A");
 					rtnSortHr.setInsDatetime(new Date());
@@ -197,7 +200,7 @@ public class SmsCloseBatchService extends AbstractQueryService {
 				sortDr.setWhCd(FnFConstants.WH_CD_ICF);
 				sortDr.setMheNo(rtnBox.getMheNo());
 				sortDr.setStrrId(rtnBox.getStrrId());
-				sortDr.setSortDate(rtnBox.getSortDate());
+				sortDr.setSortDate(srtDate);
 				sortDr.setSortSeq(ValueUtil.toString(brandList.get(rtnBox.getStrrId())) == null ? "1" : ValueUtil.toString(brandList.get(rtnBox.getStrrId())));
 				sortDr.setItemCd(rtnBox.getItemCd());
 				sortDr.setBoxNo(rtnBox.getBoxNo());

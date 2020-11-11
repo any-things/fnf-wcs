@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import operato.fnf.wcs.service.batch.SmsCloseBatchService;
 import operato.fnf.wcs.service.send.DasBoxSendService;
 import operato.fnf.wcs.service.send.PickingResultSendService;
 import operato.fnf.wcs.service.send.SmsInspSendService;
@@ -53,8 +52,8 @@ public class SmsResultSendJob extends AbstractFnFJob {
 	/**
 	 * SRTN Box 전송 서비스
 	 */
-	@Autowired
-	private SmsCloseBatchService smsCloseBatchSvc;
+//	@Autowired
+//	private SmsCloseBatchService smsCloseBatchSvc;
 	
 	private final String JOB_STATUS = "srtn.sending.processing";
 	
@@ -202,7 +201,7 @@ public class SmsResultSendJob extends AbstractFnFJob {
 	 */
 	private void sendSrtnBoxResults(JobBatch batch) {
 		if(ValueUtil.isEqual(batch.getJobType(), SmsConstants.JOB_TYPE_SRTN)) {
-			this.smsCloseBatchSvc.sendRtnBoxResultToWms(batch);
+//			this.smsCloseBatchSvc.sendRtnBoxResultToWms(batch);
 		}
 	}
 }

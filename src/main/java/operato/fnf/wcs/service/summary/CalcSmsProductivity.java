@@ -56,13 +56,7 @@ public class CalcSmsProductivity extends AbstractQueryService {
 					}
 					
 					fromDate = String.valueOf(filter.getValue()).split(",")[0];
-					if (ValueUtil.isNotEmpty(fromDate)) {
-						fromDate = fromDate.replace("-", "").replace(" ", "").replace(":", "");
-					}
 					toDate = String.valueOf(filter.getValue()).split(",")[1];
-					if (ValueUtil.isNotEmpty(toDate)) {
-						toDate = toDate.replace("-", "").replace(" ", "").replace(":", "");
-					}
 				}
 			}
 		}

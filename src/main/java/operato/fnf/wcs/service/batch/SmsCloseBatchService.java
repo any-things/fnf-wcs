@@ -152,10 +152,6 @@ public class SmsCloseBatchService extends AbstractQueryService {
 		Map<String, Object> query = ValueUtil.newMap("batchGroupId", batch.getBatchGroupId());
 		List<JobBatch> jobBatches = this.queryManager.selectListBySql(jobBatchSql, query, JobBatch.class, 0, 0);
 		
-		Query mainConds = new Query();
-		mainConds.addFilter("id", batch.getBatchGroupId());
-		JobBatch mainBatch = this.queryManager.select(JobBatch.class, mainConds);
-		
 		Query wmsCondition = new Query();
 		wmsCondition.addFilter("WH_CD", FnFConstants.WH_CD_ICF);
 		wmsCondition.addFilter("BATCH_NO", batch.getBatchGroupId());

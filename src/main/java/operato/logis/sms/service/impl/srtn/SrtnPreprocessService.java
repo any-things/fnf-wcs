@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import operato.fnf.wcs.entity.WcsMheDasOrder;
 import operato.logis.sms.entity.Chute;
 import operato.logis.sms.query.SmsQueryStore;
 import operato.logis.sms.service.model.ChuteStatus;
@@ -196,6 +197,7 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 		// 2-1. 현재 셀에 매핑되어 있는 sku를 조회하여 할당할 batch에서 미리 셀을 할당한다.
 		this.alreadyAssignSku(items);
 		// 2-2. 기본 로직대로 할당 후 카테고리에 할당해야 한다면 다시 기존에 카테고리 셀에 할당되어 있는 카테고리 목록을 조회하여 할당한다.
+		this.alreadyAssignCategorySku(batch, items);
 		// 2-3. 기본 카테고리할당 로직을 수행한다.
 		
 		
@@ -373,6 +375,27 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 		
 		List<String> category = AnyValueUtil.filterValueListBy(preprocessList, "cellAssgnNm");
 		
+		Query conds = new Query();
+		conds.addFilter("activeFlag", true);
+		conds.addFilter("categoryFlag", true);
+		List<Cell> alreadyCategoryCellList = this.queryManager.selectList(Cell.class, conds);
+		for (OrderPreprocess preprocess : preprocessList) {
+			for (Cell cell : alreadyCategoryCellList) {
+				if(ValueUtil.isNotEmpty(cell.getClassCd())) {
+					String[] strVal = cell.getClassCd().split(",");
+					for (String val : strVal) {
+						if(ValueUtil.isEqual(preprocess.getCellAssgnNm(), val)) {
+							String chuteNo = cell.getEquipCd().split("-")[1];
+							int chuteCd = Integer.parseInt(chuteNo);
+							preprocess.setSubEquipCd(String.format("%03d", chuteCd));
+							preprocess.setClassCd(cell.getCellCd());
+							break;
+						}
+					}
+				}
+			}
+		}
+		
 		
 		String categoryCellSql = queryStore.getSrtnCellStatusQuery();
 		Map<String, Object> categoryCellParamMap = ValueUtil.newMap("chuteNo,activeFlag,categoryFlag", enableChute, true, true);
@@ -385,23 +408,25 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 		
 		
 		for(int i = 0 ; i < preprocessList.size() ; i++) {
-			if(ValueUtil.isEqual(preprocessList.get(i).getCellAssgnNm(), skuType)) {
-				preprocessList.get(i).setSubEquipCd(ValueUtil.toString(categoryCellList.get(categoryCellIdx).get("chute_no")));
-				preprocessList.get(i).setClassCd(ValueUtil.toString(categoryCellList.get(categoryCellIdx).get("cell_cd")));
-			} else {
-				skuType = preprocessList.get(i).getCellAssgnNm();
-				selectIdx++;
-				preprocessList.get(i).setSubEquipCd(ValueUtil.toString(categoryCellList.get(categoryCellIdx).get("chute_no")));
-				preprocessList.get(i).setClassCd(ValueUtil.toString(categoryCellList.get(categoryCellIdx).get("cell_cd")));
-			}
-			
-			if(categoryCnt <= selectIdx && i + 1 < preprocessList.size() && ValueUtil.isNotEqual(preprocessList.get(i + 1).getCellAssgnNm(), skuType)) {
-				categoryCellIdx++;
-				selectIdx = 0;
-			}
-			
-			if(categoryCellList.size() <= categoryCellIdx) {
-				categoryCellIdx = 0;
+			if(ValueUtil.isEmpty(preprocessList.get(i).getSubEquipCd())) {
+				if(ValueUtil.isEqual(preprocessList.get(i).getCellAssgnNm(), skuType)) {
+					preprocessList.get(i).setSubEquipCd(ValueUtil.toString(categoryCellList.get(categoryCellIdx).get("chute_no")));
+					preprocessList.get(i).setClassCd(ValueUtil.toString(categoryCellList.get(categoryCellIdx).get("cell_cd")));
+				} else {
+					skuType = preprocessList.get(i).getCellAssgnNm();
+					selectIdx++;
+					preprocessList.get(i).setSubEquipCd(ValueUtil.toString(categoryCellList.get(categoryCellIdx).get("chute_no")));
+					preprocessList.get(i).setClassCd(ValueUtil.toString(categoryCellList.get(categoryCellIdx).get("cell_cd")));
+				}
+				
+				if(categoryCnt <= selectIdx && i + 1 < preprocessList.size() && ValueUtil.isNotEqual(preprocessList.get(i + 1).getCellAssgnNm(), skuType)) {
+					categoryCellIdx++;
+					selectIdx = 0;
+				}
+				
+				if(categoryCellList.size() <= categoryCellIdx) {
+					categoryCellIdx = 0;
+				}
 			}
 		}
 		
@@ -421,6 +446,28 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 					int chuteCd = Integer.parseInt(chuteNo);
 					item.setSubEquipCd(String.format("%03d", chuteCd));
 					item.setClassCd(cell.getCellCd());
+				}
+			}
+		}
+	}
+	
+	private void alreadyAssignCategorySku(JobBatch batch, List<OrderPreprocess> items) {
+		Query query = new Query();
+		query.addFilter("equipType", "Sorter");
+		query.addFilter("categoryFlag", true);
+		List<Cell> cellList = this.queryManager.selectList(Cell.class, query);
+		List<String> cellCdList = AnyValueUtil.filterValueListBy(cellList, "cellCd");
+
+		Query conds = new Query();
+		conds.addFilter("batchNo", batch.getBatchGroupId());
+		conds.addFilter("cellNo", LogisConstants.IN, cellCdList);
+		List<WcsMheDasOrder> dasList = this.queryManager.selectList(WcsMheDasOrder.class, conds);
+		
+		for (OrderPreprocess item : items) {
+			for (WcsMheDasOrder dasOrder : dasList) {
+				if(ValueUtil.isEqual(item.getCellAssgnCd(), dasOrder.getItemCd())) {
+					item.setSubEquipCd(dasOrder.getChuteNo());
+					item.setClassCd(dasOrder.getCellNo());
 				}
 			}
 		}

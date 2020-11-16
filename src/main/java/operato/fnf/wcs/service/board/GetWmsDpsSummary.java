@@ -1,6 +1,8 @@
 package operato.fnf.wcs.service.board;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Component;
@@ -20,6 +22,12 @@ public class GetWmsDpsSummary extends AbstractLogisService {
 		String date = String.valueOf(params.get("date"));
 		if (ValueUtil.isEmpty(date)) {
 			params.put("date", DateUtil.getCurrentDay());
+		}
+		
+		List<String> brands = null;
+		if (ValueUtil.isNotEmpty(params.get("brand"))) {
+			brands = Arrays.asList(String.valueOf(params.get("brand")).split(","));
+			params.put("brand", brands);
 		}
 		
 		String wmsSql = FnfUtils.queryCustServiceWithCheck("board_wms_dps_summary");

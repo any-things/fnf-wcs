@@ -1,6 +1,7 @@
 package operato.fnf.wcs.service.board;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,12 @@ public class GetDpsOrderSum extends AbstractLogisService {
 		if (ValueUtil.isEmpty(date)) {
 			date = DateUtil.getCurrentDay();
 			params.put("date", date);
+		}
+		
+		List<String> brands = null;
+		if (ValueUtil.isNotEmpty(params.get("brand"))) {
+			brands = Arrays.asList(String.valueOf(params.get("brand")).split(","));
+			params.put("brand", brands);
 		}
 		
 		IQueryManager wmsQueryMgr = BeanUtil.get(DataSourceManager.class).getQueryManager("WMS");

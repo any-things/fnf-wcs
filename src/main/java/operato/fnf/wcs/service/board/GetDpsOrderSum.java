@@ -45,9 +45,10 @@ public class GetDpsOrderSum extends AbstractLogisService {
 //		List<DpsOrderDetail> orderSums = queryManager.selectListBySql(orderSumParams, params, DpsOrderDetail.class, 0, 0);
 		
 		String itemGroupSql = FnfUtils.queryCustServiceWithCheck("dps_order_item_group");
-		Map<String, Object> itemGroupParams = new HashMap<>();
-		itemGroupParams.put("skuCds", skuCds);
-		List<DpsOrderDetail> dpsItemGroups = queryManager.selectListBySql(itemGroupSql, itemGroupParams, DpsOrderDetail.class, 0, 0);
+//		Map<String, Object> itemGroupParams = new HashMap<>();
+//		itemGroupParams.put("skuCds", skuCds);
+		params.put("skuCds", skuCds);
+		List<DpsOrderDetail> dpsItemGroups = queryManager.selectListBySql(itemGroupSql, params, DpsOrderDetail.class, 0, 0);
 		
 		Map<String, DpsOrderDetail> itemGroupMap = new HashMap<>();
 		for (DpsOrderDetail obj: dpsItemGroups) {

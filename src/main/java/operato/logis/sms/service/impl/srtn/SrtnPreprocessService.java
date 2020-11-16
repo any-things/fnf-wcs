@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.StringJoiner;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -375,27 +376,32 @@ public class SrtnPreprocessService extends AbstractExecutionService implements I
 		
 		List<String> category = AnyValueUtil.filterValueListBy(preprocessList, "cellAssgnNm");
 		
-		Query conds = new Query();
-		conds.addFilter("activeFlag", true);
-		conds.addFilter("categoryFlag", true);
-		List<Cell> alreadyCategoryCellList = this.queryManager.selectList(Cell.class, conds);
-		for (OrderPreprocess preprocess : preprocessList) {
-			for (Cell cell : alreadyCategoryCellList) {
-				if(ValueUtil.isNotEmpty(cell.getClassCd())) {
-					String[] strVal = cell.getClassCd().split(",");
-					for (String val : strVal) {
-						if(ValueUtil.isEqual(preprocess.getCellAssgnNm(), val)) {
-							String chuteNo = cell.getEquipCd().split("-")[1];
-							int chuteCd = Integer.parseInt(chuteNo);
-							preprocess.setSubEquipCd(String.format("%03d", chuteCd));
-							preprocess.setClassCd(cell.getCellCd());
-							break;
-						}
-					}
+		StringJoiner alreadyCategorySql = new StringJoiner(SysConstants.LINE_SEPARATOR);
+		alreadyCategorySql.add("select");
+		alreadyCategorySql.add("	mhe_das_order.chute_no, mhe_das_order.cell_no, sku.sku_type");
+		alreadyCategorySql.add("from");
+		alreadyCategorySql.add("	mhe_das_order");
+		alreadyCategorySql.add("left outer join sku");
+		alreadyCategorySql.add("on");
+		alreadyCategorySql.add("	mhe_das_order.item_Cd = sku.sku_cd");
+		alreadyCategorySql.add("left outer join cells");
+		alreadyCategorySql.add("on");
+		alreadyCategorySql.add("	mhe_das_order.cell_no = cells.cell_cd");
+		alreadyCategorySql.add("where");
+		alreadyCategorySql.add("	mhe_das_order.batch_no = :batchId and cells.category_flag = :categoryFlag");
+		alreadyCategorySql.add("group by");
+		alreadyCategorySql.add("	mhe_das_order.chute_no, mhe_das_order.cell_no, sku.sku_type");
+		Map<String, Object> alreadyCategoryParams = ValueUtil.newMap("batchId,categoryFlag", batch.getBatchGroupId(), true);
+		List<Map> alreadyCategoryList = this.queryManager.selectListBySql(alreadyCategorySql.toString(), alreadyCategoryParams, Map.class, 0, 0);
+		
+		for (Map order : alreadyCategoryList) {
+			for (OrderPreprocess preprocess : preprocessList) {
+				if(ValueUtil.isEqual(order.get("sku_type"), preprocess.getCellAssgnNm())) {
+					preprocess.setSubEquipCd(ValueUtil.toString(order.get("chute_no")));
+					preprocess.setClassCd(ValueUtil.toString(order.get("cell_no")));
 				}
 			}
 		}
-		
 		
 		String categoryCellSql = queryStore.getSrtnCellStatusQuery();
 		Map<String, Object> categoryCellParamMap = ValueUtil.newMap("chuteNo,activeFlag,categoryFlag", enableChute, true, true);

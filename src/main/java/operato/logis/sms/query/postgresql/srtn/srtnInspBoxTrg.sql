@@ -18,5 +18,7 @@ AND
 	SHOP_RTN_TYPE = :rtnType 
 AND 
 	SHOP_RTN_SEQ = :jobSeq
+AND 
+	length(ref_no) = 8
 ORDER BY 
 	REF_NO, ITEM_CD

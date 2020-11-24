@@ -25,6 +25,8 @@ FROM (
 		SHOP_RTN_SEQ = :jobSeq
 	AND 
 		WCS_IF_CHK = :wcsIfChk 
+	AND
+		length(ref_no) = 8
 	GROUP BY 
 		REF_NO, ITEM_CD ) A
 LEFT OUTER JOIN 
@@ -45,5 +47,7 @@ AND
 	B.SHOP_RTN_SEQ = :jobSeq
 AND 
 	B.WCS_IF_CHK = :wcsIfChk 
+AND
+	length(B.ref_no) = 8
 ORDER BY 
 	B.REF_NO, B.ITEM_CD

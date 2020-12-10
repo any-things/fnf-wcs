@@ -14,6 +14,7 @@ import operato.fnf.wcs.config.ModuleProperties;
 import operato.fnf.wcs.query.store.FnFDasQueryStore;
 import operato.fnf.wcs.query.store.FnFDpsQueryStore;
 import operato.fnf.wcs.query.store.FnFSmsQueryStore;
+import operato.logis.das.query.store.DasQueryStore;
 import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.config.ModuleConfigSet;
 import xyz.elidom.sys.system.config.module.IModuleProperties;
@@ -48,6 +49,9 @@ public class OperatoFnFWcsInitializer {
 	
 	@Autowired
 	private IQueryManager queryManager;
+	
+	@Autowired
+	private DasQueryStore dasQueryStore;
 	
 	@Autowired
 	private FnFDasQueryStore fnfDasQueryStore;
@@ -102,6 +106,7 @@ public class OperatoFnFWcsInitializer {
 	 */
 	private void initQueryStores() {
 		String dbType = this.queryManager.getDbType();
+		this.dasQueryStore.initQueryStore(dbType);
 		this.fnfDasQueryStore.initQueryStore(dbType);
 		this.fnfDpsQueryStore.initQueryStore(dbType);
 		this.fnfSmsQueryStore.initQueryStore(dbType);

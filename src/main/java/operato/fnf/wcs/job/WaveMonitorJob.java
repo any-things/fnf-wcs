@@ -18,6 +18,7 @@ import operato.logis.wcs.service.impl.WcsBatchProgressService;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.JobBatch;
 import xyz.anythings.sys.event.model.ErrorEvent;
+import xyz.anythings.sys.service.ICustomService;
 import xyz.elidom.dbist.dml.Query;
 import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.sys.system.context.DomainContext;
@@ -50,6 +51,11 @@ public class WaveMonitorJob extends AbstractFnFJob {
 	 */
 	@Autowired
 	private WcsBatchProgressService progressSvc;
+	/**
+	* 커스텀 서비스 실행기
+	*/
+	@Autowired
+	protected ICustomService customService;
 	
 	/**
 	 * 매 2분 마다 실행되어 작업 배치 상태 모니터링 후 변경된 Wave에 대해서 JobBatch에 반영
@@ -139,6 +145,8 @@ public class WaveMonitorJob extends AbstractFnFJob {
 			for(WcsMheHr wave : waveList) {
 				try {
 					this.closeBatchSvc.closeBatch(domain.getId(), wave);
+					
+					this.customService.doCustomService(Domain.currentDomainId(), "diy-das-after-batch-close", ValueUtil.newMap("wave", wave));
 				} catch (Exception e) {
 					logger.error("monitorWave.processFinishedWaveList Error~~", e);
 					ErrorEvent errorEvent = new ErrorEvent(domain.getId(), "JOB_BATCH_CLOSE_ERROR", e, null, true, true);

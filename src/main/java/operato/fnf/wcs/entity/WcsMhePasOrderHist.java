@@ -7,14 +7,29 @@ import xyz.elidom.dbist.annotation.GenerationRule;
 import xyz.elidom.dbist.annotation.Index;
 import xyz.elidom.dbist.annotation.Table;
 
-@Table(name = "mhe_pas_rlst", idStrategy = GenerationRule.UUID, indexes = {
-		@Index(name = "ix_mhe_pas_rlst_1", columnList = "batch_no"),
-		@Index(name = "ix_mhe_pas_rlst_2", columnList = "batch_no,box_id,chute_no,sku_cd") })
-public class WcsMhePasRlst extends xyz.elidom.orm.entity.basic.AbstractStamp {
+@Table(name = "mhe_pas_order_hists", idStrategy = GenerationRule.UUID, uniqueFields="batchNo,jobDate,jobType,boxId,chuteNo,skuCd,mheNo", indexes = {
+		@Index(name = "ix_mhe_pas_order_hists_01", columnList = "batch_no,job_date,job_type,box_id,chute_no,sku_cd,mhe_no")
+	})
+public class WcsMhePasOrderHist extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	/**
 	 * SerialVersion UID
 	 */
-	private static final long serialVersionUID = 965711965809362155L;
+	private static final long serialVersionUID = 304397296243144420L;
+	
+	/**
+	 * JOB_TYPE : 출고
+	 */
+	public static final String JOB_TYPE_DAS = "1";	
+	
+	/**
+	 * JOB_TYPE : 반품
+	 */
+	public static final String JOB_TYPE_RTN = "0";
+	
+	/**
+	 * 출고인 경우 BOX_ID
+	 */
+	public static final String DAS_BOX_ID = "9";
 
 	@PrimaryKey
 	@Column (name = "id", nullable = false, length = 40)
@@ -23,10 +38,13 @@ public class WcsMhePasRlst extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "batch_no", nullable = false, length = 20)
 	private String batchNo;
 
+	@Column (name = "job_date", nullable = false, length = 8)
+	private String jobDate;
+
 	@Column (name = "job_type", nullable = false, length = 1)
 	private String jobType;
 
-	@Column (name = "box_id", nullable = false, length = 30)
+	@Column (name = "box_id", nullable = false, length = 8)
 	private String boxId;
 
 	@Column (name = "chute_no", nullable = false, length = 3)
@@ -35,35 +53,35 @@ public class WcsMhePasRlst extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	@Column (name = "sku_cd", nullable = false, length = 20)
 	private String skuCd;
 
-	@Column (name = "sku_bcd", length = 30)
+	@Column (name = "sku_bcd", length = 20)
 	private String skuBcd;
-
+	
 	@Column (name = "mhe_no", nullable = false, length = 10)
 	private String mheNo;
 
-	@Column (name = "qty", length = 10)
-	private Integer qty;
+	@Column (name = "shop_cd", length = 20)
+	private String shopCd;
 
-	@Column (name = "dmg_qty", length = 10)
-	private Integer dmgQty;
+	@Column (name = "shop_nm", length = 200)
+	private String shopNm;
 
-	@Column (name = "new_qty", length = 10)
-	private Integer newQty;
-
-	@Column (name = "new_yn", length = 1)
-	private String newYn;
+	@Column (name = "order_qty", length = 10)
+	private Integer orderQty;
 
 	@Column (name = "if_yn", length = 1)
 	private String ifYn;
 
 	@Column (name = "ins_datetime", type = xyz.elidom.dbist.annotation.ColumnType.DATETIME)
 	private Date insDatetime;
+
+	@Column (name = "upd_datetime", type = xyz.elidom.dbist.annotation.ColumnType.DATETIME)
+	private Date updDatetime;
+	
+	@Column (name = "input_date", length = 8)
+	private String inputDate;
 	
 	@Column (name = "strr_id", length = 20)
 	private String strrId;
-	
-	@Column (name = "pas_seq", length = 22)
-	private Long pasSeq;
   
 	public String getId() {
 		return id;
@@ -79,6 +97,14 @@ public class WcsMhePasRlst extends xyz.elidom.orm.entity.basic.AbstractStamp {
 
 	public void setBatchNo(String batchNo) {
 		this.batchNo = batchNo;
+	}
+
+	public String getJobDate() {
+		return jobDate;
+	}
+
+	public void setJobDate(String jobDate) {
+		this.jobDate = jobDate;
 	}
 
 	public String getJobType() {
@@ -121,44 +147,28 @@ public class WcsMhePasRlst extends xyz.elidom.orm.entity.basic.AbstractStamp {
 		this.skuBcd = skuBcd;
 	}
 
-	public String getMheNo() {
-		return mheNo;
+	public String getShopCd() {
+		return shopCd;
 	}
 
-	public void setMheNo(String mheNo) {
-		this.mheNo = mheNo;
+	public void setShopCd(String shopCd) {
+		this.shopCd = shopCd;
 	}
 
-	public Integer getQty() {
-		return qty;
+	public String getShopNm() {
+		return shopNm;
 	}
 
-	public void setQty(Integer qty) {
-		this.qty = qty;
+	public void setShopNm(String shopNm) {
+		this.shopNm = shopNm;
 	}
 
-	public Integer getDmgQty() {
-		return dmgQty;
+	public Integer getOrderQty() {
+		return orderQty;
 	}
 
-	public void setDmgQty(Integer dmgQty) {
-		this.dmgQty = dmgQty;
-	}
-
-	public Integer getNewQty() {
-		return newQty;
-	}
-
-	public void setNewQty(Integer newQty) {
-		this.newQty = newQty;
-	}
-
-	public String getNewYn() {
-		return newYn;
-	}
-
-	public void setNewYn(String newYn) {
-		this.newYn = newYn;
+	public void setOrderQty(Integer orderQty) {
+		this.orderQty = orderQty;
 	}
 
 	public String getIfYn() {
@@ -177,19 +187,35 @@ public class WcsMhePasRlst extends xyz.elidom.orm.entity.basic.AbstractStamp {
 		this.insDatetime = insDatetime;
 	}
 
+	public Date getUpdDatetime() {
+		return updDatetime;
+	}
+
+	public void setUpdDatetime(Date updDatetime) {
+		this.updDatetime = updDatetime;
+	}
+
+	public String getMheNo() {
+		return mheNo;
+	}
+
+	public void setMheNo(String mheNo) {
+		this.mheNo = mheNo;
+	}
+
+	public String getInputDate() {
+		return inputDate;
+	}
+
+	public void setInputDate(String inputDate) {
+		this.inputDate = inputDate;
+	}
+
 	public String getStrrId() {
 		return strrId;
 	}
 
 	public void setStrrId(String strrId) {
 		this.strrId = strrId;
-	}
-
-	public Long getPasSeq() {
-		return pasSeq;
-	}
-
-	public void setPasSeq(Long pasSeq) {
-		this.pasSeq = pasSeq;
 	}
 }

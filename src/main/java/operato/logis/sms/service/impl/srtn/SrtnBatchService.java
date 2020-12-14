@@ -17,9 +17,11 @@ import xyz.anythings.base.event.main.BatchCloseEvent;
 import xyz.anythings.base.service.api.IBatchService;
 import xyz.anythings.base.service.impl.AbstractLogisService;
 import xyz.anythings.sys.event.model.SysEvent;
+import xyz.anythings.sys.service.ICustomService;
 import xyz.anythings.sys.util.AnyOrmUtil;
 import xyz.elidom.dbist.dml.Filter;
 import xyz.elidom.dbist.dml.Query;
+import xyz.elidom.sys.entity.Domain;
 import xyz.elidom.sys.util.MessageUtil;
 import xyz.elidom.sys.util.ThrowUtil;
 import xyz.elidom.util.ValueUtil;
@@ -37,6 +39,11 @@ public class SrtnBatchService extends AbstractLogisService implements IBatchServ
 	 */
 	@Autowired
 	private SmsCloseBatchService smsCloseBatchSvc;
+	/**
+	* 커스텀 서비스 실행기
+	*/
+	@Autowired
+	protected ICustomService customService;
 		
 	@Override
 	public void isPossibleCloseBatch(JobBatch batch, boolean closeForcibly) {
@@ -123,6 +130,9 @@ public class SrtnBatchService extends AbstractLogisService implements IBatchServ
 
 //		// 6. JobBatch 상태 변경 
 		this.updateJobBatchFinished(batch, new Date());
+		
+		// 7. 커스텀 서비스 호출(이력 테이블 Insert)
+		this.customService.doCustomService(Domain.currentDomainId(), "diy-expas-after-srtn-batch-close", ValueUtil.newMap("batch", batch));
 	}
 
 	@Override

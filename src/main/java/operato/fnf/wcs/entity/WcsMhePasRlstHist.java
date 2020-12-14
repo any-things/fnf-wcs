@@ -7,10 +7,10 @@ import xyz.elidom.dbist.annotation.GenerationRule;
 import xyz.elidom.dbist.annotation.Index;
 import xyz.elidom.dbist.annotation.Table;
 
-@Table(name = "mhe_pas_rlst", idStrategy = GenerationRule.UUID, indexes = {
-		@Index(name = "ix_mhe_pas_rlst_1", columnList = "batch_no"),
-		@Index(name = "ix_mhe_pas_rlst_2", columnList = "batch_no,box_id,chute_no,sku_cd") })
-public class WcsMhePasRlst extends xyz.elidom.orm.entity.basic.AbstractStamp {
+@Table(name = "mhe_pas_rlst_hists", idStrategy = GenerationRule.UUID, indexes = {
+		@Index(name = "ix_mhe_pas_rlst_hists_1", columnList = "batch_no"),
+		@Index(name = "ix_mhe_pas_rlst_hists_2", columnList = "batch_no,box_id,chute_no,sku_cd") })
+public class WcsMhePasRlstHist extends xyz.elidom.orm.entity.basic.AbstractStamp {
 	/**
 	 * SerialVersion UID
 	 */

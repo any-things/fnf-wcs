@@ -125,11 +125,11 @@ public class SmsInspSendService extends AbstractQueryService {
 			if(ValueUtil.isNotEmpty(pasOrderList)) {
 				AnyOrmUtil.insertBatch(pasOrderList, 100);
 			}
-			dsQueryManager.updateBatch(rtnCnfmList);
+//			dsQueryManager.updateBatch(rtnCnfmList);
 			
-//			String wmsUpdateSql = "update WMT_UIF_WCS_INB_RTN_CNFM set wcs_if_chk = :updateWcsIfChk, wcs_if_chk_dtm = :wcsIfChkDtm where STRR_ID = :strrId and REF_SEASON = :season and SHOP_RTN_TYPE = :rtnType and SHOP_RTN_SEQ = :jobSeq and WCS_IF_CHK = :wcsIfChk";
-//			Map<String, Object> updateParams = ValueUtil.newMap("updateWcsIfChk,wcsIfChkDtm,strrId,season,rtnType,jobSeq,wcsIfChk", LogisConstants.CAP_Y_STRING, srtDate, batchInfo[0], batchInfo[1], batchInfo[2], batchInfo[3], LogisConstants.N_CAP_STRING);
-//			dsQueryManager.executeBySql(wmsUpdateSql, updateParams);
+			String wmsUpdateSql = "update WMT_UIF_WCS_INB_RTN_CNFM set wcs_if_chk = :updateWcsIfChk, wcs_if_chk_dtm = :wcsIfChkDtm where STRR_ID = :strrId and REF_SEASON = :season and SHOP_RTN_TYPE = :rtnType and SHOP_RTN_SEQ = :jobSeq and WCS_IF_CHK = :wcsIfChk and length(ref_no) = 8";
+			Map<String, Object> updateParams = ValueUtil.newMap("updateWcsIfChk,wcsIfChkDtm,strrId,season,rtnType,jobSeq,wcsIfChk", LogisConstants.CAP_Y_STRING, srtDate, batchInfo[0], batchInfo[1], batchInfo[2], batchInfo[3], LogisConstants.N_CAP_STRING);
+			dsQueryManager.executeBySql(wmsUpdateSql, updateParams);
 		} else {
 			Map<String, Object> inspParams = ValueUtil.newMap(
 					"whCd,strrId,season,rtnType,jobSeq", FnFConstants.WH_CD_ICF, batchInfo[0], batchInfo[1], batchInfo[2], batchInfo[3]);

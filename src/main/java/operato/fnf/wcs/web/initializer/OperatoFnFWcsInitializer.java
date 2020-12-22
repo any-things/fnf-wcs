@@ -15,6 +15,10 @@ import operato.fnf.wcs.query.store.FnFDasQueryStore;
 import operato.fnf.wcs.query.store.FnFDpsQueryStore;
 import operato.fnf.wcs.query.store.FnFSmsQueryStore;
 import operato.logis.das.query.store.DasQueryStore;
+import operato.logis.dps.query.store.DpsBatchQueryStore;
+import operato.logis.dps.query.store.DpsBoxQueryStore;
+import operato.logis.dps.query.store.DpsInspectionQueryStore;
+import operato.logis.dps.query.store.DpsPickQueryStore;
 import xyz.elidom.orm.IQueryManager;
 import xyz.elidom.sys.config.ModuleConfigSet;
 import xyz.elidom.sys.system.config.module.IModuleProperties;
@@ -52,6 +56,18 @@ public class OperatoFnFWcsInitializer {
 	
 	@Autowired
 	private DasQueryStore dasQueryStore;
+	
+	@Autowired
+	private DpsBatchQueryStore dpsBatchQueryStore;
+	
+	@Autowired
+	private DpsBoxQueryStore dpsBoxQueryStore;
+	
+	@Autowired
+	private DpsInspectionQueryStore dpsInspectionQueryStore;
+	
+	@Autowired
+	private DpsPickQueryStore dpsPickQueryStore;
 	
 	@Autowired
 	private FnFDasQueryStore fnfDasQueryStore;
@@ -107,6 +123,11 @@ public class OperatoFnFWcsInitializer {
 	private void initQueryStores() {
 		String dbType = this.queryManager.getDbType();
 		this.dasQueryStore.initQueryStore(dbType);
+		this.dpsBatchQueryStore.initQueryStore(dbType);
+		this.dpsBoxQueryStore.initQueryStore(dbType);
+		this.dpsInspectionQueryStore.initQueryStore(dbType);
+		this.dpsPickQueryStore.initQueryStore(dbType);
+		
 		this.fnfDasQueryStore.initQueryStore(dbType);
 		this.fnfDpsQueryStore.initQueryStore(dbType);
 		this.fnfSmsQueryStore.initQueryStore(dbType);

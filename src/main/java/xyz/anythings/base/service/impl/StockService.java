@@ -89,7 +89,7 @@ public class StockService extends AbstractLogisService implements IStockService 
 				stock.setSkuCd(skuCd);
 			}
 			
-			return stock;			
+			return stock;
 		}
 	}
 	

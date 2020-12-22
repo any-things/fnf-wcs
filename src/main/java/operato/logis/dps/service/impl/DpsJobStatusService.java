@@ -84,38 +84,6 @@ public class DpsJobStatusService extends AbstractJobStatusService implements IDp
 		
 		return this.queryManager.selectPageBySql(sql, params, JobInput.class, page, limit);
 	}
-
-	/**
-	 * 태블릿 작업 화면 탭 리스트 
-	 */
-	@Override
-	public List<JobInput> searchInputList(JobBatch batch, String equipCd, String stationCd, String selectedInputId) {
-		
-		Map<String, Object> params = ValueUtil.newMap("domainId,equipType,equipCd,equipZone,batchId"
-									, batch.getDomainId(), batch.getEquipType(), equipCd, stationCd, batch.getId());
-		
-		String query = this.dpsBatchQueryStore.getBatchBoxInputTabListQuery();
-		
-		if(ValueUtil.isNotEmpty(selectedInputId)) {
-			// 태블릿 작업 화면에 나올 하단 박스 리스트 (투입 정보 리스트) 중에 기준이 될 박스 투입 ID
-			params.put("selectedInputId", selectedInputId);
-		}
-		
-		return AnyEntityUtil.searchItems(batch.getDomainId(), false, JobInput.class, query, params);
-	}
-
-	/**
-	 * 태블릿 작업 화면 탭 상세 리스트 
-	 */
-	@Override
-	public List<JobInstance> searchInputJobList(JobBatch batch, JobInput input, String stationCd) {
-		
-		String inputJobsSql = this.dpsBatchQueryStore.getBatchBoxInputTabDetailQuery();
-		Map<String, Object> params = ValueUtil.newMap("domainId,batchId,equipType,equipCd,orderNo,stationCd,stageCd"
-									, batch.getDomainId(),batch.getId(), batch.getEquipType(), input.getEquipCd()
-									, input.getOrderNo(), stationCd, batch.getStageCd());
-		return AnyEntityUtil.searchItems(batch.getDomainId(), false, JobInstance.class, inputJobsSql, params);
-	}
 	
 	@Override
 	public List<JobInstance> searchInputJobList(JobBatch batch, Map<String, Object> condition) {
@@ -163,6 +131,40 @@ public class DpsJobStatusService extends AbstractJobStatusService implements IDp
 		}
 		
 		return AnyEntityUtil.searchItems(batch.getDomainId(), false, DpsSinglePackSummary.class, singlePackSummaryQuery, params);
+	}
+	
+	/**
+	 * @deprecated
+	 * 태블릿 작업 화면 탭 리스트 
+	 */
+	@Override
+	public List<JobInput> searchInputList(JobBatch batch, String equipCd, String stationCd, String selectedInputId) {
+		
+		Map<String, Object> params = ValueUtil.newMap("domainId,equipType,equipCd,equipZone,batchId"
+									, batch.getDomainId(), batch.getEquipType(), equipCd, stationCd, batch.getId());
+		
+		String query = this.dpsBatchQueryStore.getBatchBoxInputTabListQuery();
+		
+		if(ValueUtil.isNotEmpty(selectedInputId)) {
+			// 태블릿 작업 화면에 나올 하단 박스 리스트 (투입 정보 리스트) 중에 기준이 될 박스 투입 ID
+			params.put("selectedInputId", selectedInputId);
+		}
+		
+		return AnyEntityUtil.searchItems(batch.getDomainId(), false, JobInput.class, query, params);
+	}
+
+	/**
+	 * @deprecated
+	 * 태블릿 작업 화면 탭 상세 리스트 
+	 */
+	@Override
+	public List<JobInstance> searchInputJobList(JobBatch batch, JobInput input, String stationCd) {
+		
+		String inputJobsSql = this.dpsBatchQueryStore.getBatchBoxInputTabDetailQuery();
+		Map<String, Object> params = ValueUtil.newMap("domainId,batchId,equipType,equipCd,orderNo,stationCd,stageCd"
+									, batch.getDomainId(),batch.getId(), batch.getEquipType(), input.getEquipCd()
+									, input.getOrderNo(), stationCd, batch.getStageCd());
+		return AnyEntityUtil.searchItems(batch.getDomainId(), false, JobInstance.class, inputJobsSql, params);
 	}
 
 }

@@ -17,7 +17,7 @@ public class FnFDasQueryStore extends AbstractQueryStore {
 	public void initQueryStore(String databaseType) {
 		this.databaseType = databaseType;
 		this.basePath = "operato/fnf/wcs/query/" + this.databaseType + SysConstants.SLASH;
-		this.defaultBasePath = "operato/fnf/wcs/query/ansi/";		
+		this.defaultBasePath = "operato/fnf/wcs/query/ansi/";
 	}
 
 	/**

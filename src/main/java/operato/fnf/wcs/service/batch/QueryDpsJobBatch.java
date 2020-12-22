@@ -50,13 +50,13 @@ public class QueryDpsJobBatch extends AbstractRestService {
 			if (obj.getWmsBatchNo().equals(obj.getBatchGroupId())) {
 				mainJob = obj;
 				
-//				String orderQtySql = FnfUtils.queryCustServiceWithError("dps-main-job-wms-order-qty");				
+//				String orderQtySql = FnfUtils.queryCustServiceWithError("dps-main-job-wms-order-qty");
 //				Map<String, Object> wmsOrdCntParams = new HashMap<>();
 //				wmsOrdCntParams.put("workUnit", obj.getWmsBatchNo());
 //				IQueryManager wmsQueryManager = BeanUtil.get(DataSourceManager.class).getQueryManager(WmsMheDr.class);
 //				Integer wmsOrderCnt = wmsQueryManager.selectBySql(orderQtySql, wmsOrdCntParams, Integer.class);
 				
-				String orderQtySql = FnfUtils.queryCustServiceWithCheck("dps-main-job-order-qty");				
+				String orderQtySql = FnfUtils.queryCustServiceWithCheck("dps-main-job-order-qty");
 				Map<String, Object> wmsOrdCntParams = new HashMap<>();
 				wmsOrdCntParams.put("waveNo", obj.getWcsBatchNo());
 				wmsOrdCntParams.put("workseqNo", obj.getJobSeq());

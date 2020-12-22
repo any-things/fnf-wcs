@@ -1,10 +1,16 @@
 package xyz.anythings.base.entity;
 
+import java.util.List;
+
 import xyz.elidom.dbist.annotation.Column;
 import xyz.elidom.dbist.annotation.GenerationRule;
+import xyz.elidom.dbist.annotation.Ignore;
 import xyz.elidom.dbist.annotation.Index;
 import xyz.elidom.dbist.annotation.PrimaryKey;
 import xyz.elidom.dbist.annotation.Table;
+import xyz.elidom.orm.IQueryManager;
+import xyz.elidom.util.BeanUtil;
+import xyz.elidom.util.ValueUtil;
 
 @Table(name = "box_packs", idStrategy = GenerationRule.UUID, indexes = {
 	@Index(name = "ix_box_packs_0", columnList = "domain_id,batch_id,wcs_batch_no,wms_batch_no"),
@@ -176,7 +182,10 @@ public class BoxPack extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 
 	@Column (name = "cancel_flag", length = 1)
 	private Boolean cancelFlag;
-  
+	
+	@Ignore
+	private List<BoxItem> items;
+
 	public String getId() {
 		return id;
 	}
@@ -503,6 +512,18 @@ public class BoxPack extends xyz.elidom.orm.entity.basic.ElidomStampHook {
 
 	public void setCancelFlag(Boolean cancelFlag) {
 		this.cancelFlag = cancelFlag;
+	}
+
+	public List<BoxItem> getItems() {
+		return items;
+	}
+
+	public void setItems(List<BoxItem> items) {
+		this.items = items;
+	}
+
+	public void searchBoxItems() {
+		this.items = BeanUtil.get(IQueryManager.class).selectList(BoxItem.class, ValueUtil.newMap("boxPackId", this.getId()));
 	}
 
 }

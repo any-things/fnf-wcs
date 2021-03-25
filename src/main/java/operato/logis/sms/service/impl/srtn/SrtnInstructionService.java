@@ -123,6 +123,16 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 			// '작업 지시 대기' 상태가 아닙니다
 			throw ThrowUtil.newValidationErrorWithNoLog(MessageUtil.getTerm("terms.text.is_not_wait_state", "JobBatch status is not 'READY'"));
 		}
+		
+		Query condition = AnyOrmUtil.newConditionForExecution(batch.getDomainId());
+		condition.addSelect("id");
+		condition.addFilter("jobType", "");
+		condition.addFilter("status", JobBatch.STATUS_RUNNING);
+		List<JobBatch> batchList = this.queryManager.selectList(JobBatch.class, condition);
+		
+		if(batchList.size() > 0) {
+			throw ThrowUtil.newValidationErrorWithNoLog(MessageUtil.getTerm("terms.text.already_running", "실행중인 배치가 있습니다."));
+		}
 
 		return true;
 	}

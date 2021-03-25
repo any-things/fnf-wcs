@@ -15,6 +15,7 @@ import operato.fnf.wcs.entity.WcsMheDasOrder;
 import operato.fnf.wcs.entity.WcsMhePasOrder;
 import operato.fnf.wcs.entity.WmsWmtUifImpInbRtnTrg;
 import operato.fnf.wcs.entity.WmsWmtUifWcsInbRtnCnfm;
+import operato.logis.sms.SmsConstants;
 import operato.logis.sms.query.SmsQueryStore;
 import xyz.anythings.base.LogisConstants;
 import xyz.anythings.base.entity.Cell;
@@ -125,8 +126,7 @@ public class SrtnInstructionService extends AbstractQueryService implements IIns
 		}
 		
 		Query condition = AnyOrmUtil.newConditionForExecution(batch.getDomainId());
-		condition.addSelect("id");
-		condition.addFilter("jobType", "");
+		condition.addFilter("jobType", LogisConstants.IN, ValueUtil.toList(SmsConstants.JOB_TYPE_SRTN, SmsConstants.JOB_TYPE_SDAS, SmsConstants.JOB_TYPE_SDPS));
 		condition.addFilter("status", JobBatch.STATUS_RUNNING);
 		List<JobBatch> batchList = this.queryManager.selectList(JobBatch.class, condition);
 		

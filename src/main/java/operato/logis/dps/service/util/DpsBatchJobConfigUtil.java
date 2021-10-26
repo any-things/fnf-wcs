@@ -51,7 +51,7 @@ public class DpsBatchJobConfigUtil extends BatchJobConfigUtil {
 	 */
 	public static String getBoxMappingTargetField(JobBatch batch) {
 		// dps.preproces.cell.mapping.field
-		return getConfigValue(batch, DpsConfigConstants.DPS_PREPROCESS_CELL_MAPPING_FIELD, true);
+		return getConfigValue(batch, DpsConfigConstants.DPS_BOX_MAPPING_FIELD, true);
 	}
 		
 	/**

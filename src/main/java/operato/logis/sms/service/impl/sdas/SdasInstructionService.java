@@ -37,11 +37,6 @@ public class SdasInstructionService extends AbstractQueryService implements IIns
 	private SmsQueryStore queryStore;
 	
 	@Override
-	public void targetClassing(JobBatch batch, Object... params) {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
 	public Map<String, Object> searchInstructionData(JobBatch batch, Object... params) {
 		// TODO Auto-generated method stub
 		return null;

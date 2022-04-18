@@ -249,13 +249,7 @@ public class JobBatchController extends AbstractRestService {
 	@RequestMapping(value = "/{id}/target_class", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiDesc(description = "Target classing")
 	public BaseResponse targetClass(@PathVariable("id") String batchId) {
-		
-		// 1. 작업 배치 조회 
-		JobBatch batch = this.findWithLock(true, batchId, false);
-		// 2. 대상 분류 작업 호출
-		this.serviceDispatcher.getInstructionService(batch).targetClassing(batch);
-		// 3. 대상 분류 결과 리턴 
-		return new BaseResponse(true);
+		throw ThrowUtil.newNotSupportedMethod();
 	}
 	
 	/**
